@@ -12,3 +12,6 @@
 **/docs/**
 tsconfig.json
 
+
+# Payload regenerates this; Prettier reformatting it causes churn
+src/app/(payload)/admin/importMap.js
