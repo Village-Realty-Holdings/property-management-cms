@@ -13,6 +13,28 @@ Parallel work happens in git worktrees. How they are set up is personal
 workflow rather than project configuration, so it isn't tracked here — see the
 `worktrees` skill. Start worktrees from `dev` so they descend from it.
 
+# Ownership zones
+
+Agents own a zone, so parallel work doesn't collide on the same files. See
+`.claude/agents/` for the two role definitions.
+
+| Zone | Paths |
+|---|---|
+| Backend | `src/collections/` `src/access/` `src/fields/` `src/endpoints/` `src/plugins/` `src/search/` `src/server/` `src/payload.config.ts` |
+| UI | `src/components/` `src/heros/` `src/Header/` `src/Footer/` `src/providers/` `src/app/(frontend)/` |
+| Shared | `src/lib/` `src/seo/` `src/app/(payload)/` `src/payload-types.ts` |
+
+`src/blocks/` and `src/heros/` straddle the line. The rule is **`config.ts` is
+backend, `Component.tsx` is UI** — same folder, different owners, no conflict.
+
+Reading data is not a boundary violation: server components under
+`src/app/(frontend)/` import `@payload-config`, and `@/server/*` exists for
+cached reads. Importing collection or access *config* into a component is the
+violation, and `no-restricted-imports` in `eslint.config.mjs` enforces it.
+
+`src/payload-types.ts` is generated. Run `pnpm generate:types` rather than
+resolving conflicts in it by hand; `.gitattributes` marks it generated.
+
 # Dependencies
 
 **Do not edit `package.json`.** The `node_modules` symlink that makes worktrees
