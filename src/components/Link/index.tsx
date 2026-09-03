@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { cn } from '@/utilities/ui'
+import { cn } from '@/lib/ui'
 import Link from 'next/link'
 import React from 'react'
 
