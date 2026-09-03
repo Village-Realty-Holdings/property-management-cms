@@ -32,8 +32,10 @@ export const Pagination: React.FC<{
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              disabled={!hasPrevPage}
+              aria-disabled={!hasPrevPage}
+              className={cn(!hasPrevPage && 'pointer-events-none opacity-50')}
               onClick={() => {
+                if (!hasPrevPage) return
                 router.push(`/posts/page/${page - 1}`)
               }}
             />
@@ -88,8 +90,10 @@ export const Pagination: React.FC<{
 
           <PaginationItem>
             <PaginationNext
-              disabled={!hasNextPage}
+              aria-disabled={!hasNextPage}
+              className={cn(!hasNextPage && 'pointer-events-none opacity-50')}
               onClick={() => {
+                if (!hasNextPage) return
                 router.push(`/posts/page/${page + 1}`)
               }}
             />

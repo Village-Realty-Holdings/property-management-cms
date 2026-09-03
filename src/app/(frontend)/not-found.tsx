@@ -10,9 +10,11 @@ export default function NotFound() {
         <h1 style={{ marginBottom: 0 }}>404</h1>
         <p className="mb-4">This page could not be found.</p>
       </div>
-      <Button asChild variant="default">
-        <Link href="/">Go home</Link>
-      </Button>
+      <Button
+        nativeButton={false}
+        render={<Link href="/">Go home</Link>}
+        variant="default"
+      />
     </div>
   )
 }
