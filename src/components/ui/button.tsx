@@ -31,6 +31,8 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // Local addition: no box, for links rendered through CMSLink.
+        clear: "h-auto gap-1 rounded-none px-0 py-0",
       },
     },
     defaultVariants: {
