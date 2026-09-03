@@ -3,36 +3,15 @@
 This project uses the Payload CMS skill at `.claude/skills/payload/`.
 Start with `.claude/skills/payload/SKILL.md` for a quick reference, then see `.claude/skills/payload/reference/` for detailed docs.
 
-# Branching and worktrees
+# Branching
 
 `master` is the release branch. `dev` is the integration branch — **all work
 branches off `dev` and merges back into `dev`**, never into `master` directly.
 Promoting `dev` to `master` is a human decision; don't do it unasked.
 
-Parallel work happens in worktrees, which Claude Code creates and cleans up
-itself (`--worktree`, or `isolation: worktree` on a subagent). `worktree.baseRef`
-is `head`, so a worktree branches from whatever is checked out — start from
-`dev` so agent worktrees descend from it. `.env` is copied in automatically via
-`.worktreeinclude`.
-
-A fresh worktree still needs its port, database and dependencies. Run once,
-from inside it:
-
-```bash
-scripts/worktree-setup.sh            # port, database, node_modules symlink
-scripts/worktree-setup.sh --install  # real pnpm install instead of the symlink
-```
-
-It rewrites the copied `.env` to the first free port from 3001 up and to its own
-`property_management-<slug>` database, then creates that database.
-
-Worktrees are removed automatically, but their databases outlive them. Reconcile
-occasionally from the main checkout:
-
-```bash
-scripts/worktree-db-prune.sh         # list orphaned databases
-scripts/worktree-db-prune.sh --yes   # drop them
-```
+Parallel work happens in git worktrees. How they are set up is personal
+workflow rather than project configuration, so it isn't tracked here — see the
+`worktrees` skill. Start worktrees from `dev` so they descend from it.
 
 # Dependencies
 

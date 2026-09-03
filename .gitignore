@@ -21,6 +21,4 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 
-# Agent worktrees
-.claude/worktrees/
 tsconfig.tsbuildinfo
