@@ -141,7 +141,7 @@ function prepare(collection: string, doc: any) {
 }
 
 async function upsert(payload: Payload, collection: string, doc: any, pass: 1 | 2) {
-  const fields = payload.collections[collection].config.fields
+  const fields = (payload.collections as any)[collection].config.fields
   const data = remapFields(fields, prepare(collection, doc))
   const where = naturalKey(collection, doc)
   const existing = where ? (await payload.find({ collection: collection as any, where, limit: 1, depth: 0 })).docs[0] : undefined
@@ -150,7 +150,7 @@ async function upsert(payload: Payload, collection: string, doc: any, pass: 1 | 
 
   // Pass 1 saves versioned collections as drafts so required relationships to
   // documents that do not exist yet do not fail validation; pass 2 publishes.
-  const hasDrafts = Boolean((payload.collections[collection].config.versions as any)?.drafts)
+  const hasDrafts = Boolean(((payload.collections as any)[collection].config.versions as any)?.drafts)
   const draft = pass === 1 && hasDrafts
   if (hasDrafts) data._status = draft ? 'draft' : (doc._status ?? 'published')
   const opts: any = { collection, data, context, depth: 0, draft }
@@ -185,7 +185,7 @@ async function run() {
     payload.logger.info(`--- pass ${pass}`)
     for (const collection of ORDER) {
       const docs = dump[collection] ?? []
-      if (!payload.collections[collection]) { if (docs.length) payload.logger.warn(`${collection}: not in config, skipped`); continue }
+      if (!(payload.collections as any)[collection]) { if (docs.length) payload.logger.warn(`${collection}: not in config, skipped`); continue }
       for (const doc of docs) await upsert(payload, collection, doc, pass)
     }
   }

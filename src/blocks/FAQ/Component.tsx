@@ -23,18 +23,25 @@ const lexicalToText = (data: unknown): string => {
 export const FAQBlock: React.FC<FAQBlockProps> = ({ heading, intro, items }) => {
   const list = items || []
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: list.map((item) => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: lexicalToText(item.answer),
-      },
-    })),
-  }
+  // On the visual editor canvas, inline-editable text props arrive as React
+  // nodes rather than strings (see `src/puck/fields.tsx`), and stringifying
+  // them throws. Structured data is only for the public page anyway.
+  const plainItems = list.filter((item) => typeof item.question === 'string')
+  const jsonLd =
+    plainItems.length === list.length && list.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: plainItems.map((item) => ({
+            '@type': 'Question',
+            name: item.question,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: lexicalToText(item.answer),
+            },
+          })),
+        }
+      : null
 
   return (
     <div className="container">
@@ -59,7 +66,7 @@ export const FAQBlock: React.FC<FAQBlockProps> = ({ heading, intro, items }) => 
         </div>
       </div>
 
-      {list.length > 0 && (
+      {jsonLd && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
