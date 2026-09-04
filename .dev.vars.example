@@ -1,0 +1,8 @@
+# Values the Worker reads under `pnpm preview` (and `pnpm dev` via the wrangler proxy).
+# Copy to `.dev.vars`; it is gitignored. In production these are wrangler secrets
+# (`pnpm wrangler secret put <NAME>`) plus the `vars` block in `wrangler.jsonc`.
+PAYLOAD_SECRET=YOUR_SECRET_HERE
+PREVIEW_SECRET=YOUR_SECRET_HERE
+CRON_SECRET=YOUR_CRON_SECRET_HERE
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+DEFAULT_TENANT=warren-beach
