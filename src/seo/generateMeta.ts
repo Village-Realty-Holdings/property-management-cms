@@ -8,9 +8,8 @@ import { getTenantGlobal } from '@/server/getGlobals'
 
 const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   if (!image || typeof image !== 'object' || !('url' in image)) return undefined
-  const serverUrl = getServerSideURL()
-  const ogUrl = image.sizes?.og?.url
-  return ogUrl ? serverUrl + ogUrl : serverUrl + image.url
+  // Media keeps only the original (no `imageSizes` without sharp on Workers).
+  return getServerSideURL() + image.url
 }
 
 /** The site name and description the tenant set in its header and footer. */

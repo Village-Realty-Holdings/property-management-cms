@@ -1,5 +1,8 @@
-import { postgresAdapter } from '@payloadcms/db-postgres'
-import sharp from 'sharp'
+import { sqliteD1Adapter } from '@payloadcms/db-d1-sqlite'
+import { r2Storage } from '@payloadcms/storage-r2'
+import { getCloudflareContext, type CloudflareContext } from '@opennextjs/cloudflare'
+import type { GetPlatformProxyOptions } from 'wrangler'
+import fs from 'fs'
 import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
@@ -19,6 +22,70 @@ import { getServerSideURL } from '@/lib/getURL'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// --- Cloudflare bindings -------------------------------------------------
+// Adapted from Payload's `templates/with-cloudflare-d1`. Inside the deployed
+// Worker the D1/R2 bindings come from `getCloudflareContext`. Under `next dev`
+// and the Payload CLI (`payload migrate`, `generate:types`) they come from
+// wrangler's local platform proxy instead.
+
+const realpath = (value: string) => {
+  try {
+    return fs.existsSync(value) ? fs.realpathSync(value) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const isCLI = process.argv.some((value) => {
+  const resolved = realpath(value)
+  if (!resolved) return false
+  return (
+    resolved.endsWith(path.join('payload', 'bin.js')) ||
+    resolved.endsWith(path.join('next', 'dist', 'bin', 'next'))
+  )
+})
+const isProduction = process.env.NODE_ENV === 'production'
+
+// `wrangler` must never be bundled into the Worker, hence the obfuscated
+// dynamic import. `remoteBindings` is only true in production mode, so
+// `NODE_ENV=production payload migrate` targets the real D1 database while
+// local dev uses the copy under `.wrangler/state`.
+function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
+  return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(
+    ({ getPlatformProxy }) =>
+      getPlatformProxy({
+        environment: process.env.CLOUDFLARE_ENV,
+        remoteBindings: isProduction,
+      } satisfies GetPlatformProxyOptions),
+  )
+}
+
+const createLog =
+  (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
+    if (typeof objOrMsg === 'string') {
+      fn(JSON.stringify({ level, msg: objOrMsg }))
+    } else {
+      fn(JSON.stringify({ level, ...objOrMsg, msg: msg ?? (objOrMsg as { msg?: string }).msg }))
+    }
+  }
+
+// Pino does not run in workerd; log JSON lines through console instead.
+const cloudflareLogger = {
+  level: process.env.PAYLOAD_LOG_LEVEL || 'info',
+  trace: createLog('trace', console.debug),
+  debug: createLog('debug', console.debug),
+  info: createLog('info', console.log),
+  warn: createLog('warn', console.warn),
+  error: createLog('error', console.error),
+  fatal: createLog('fatal', console.error),
+  silent: () => {},
+} as any // Use PayloadLogger type when it's exported
+
+const cloudflare =
+  isCLI || !isProduction
+    ? await getCloudflareContextFromWrangler()
+    : await getCloudflareContext({ async: true })
 
 export default buildConfig({
   admin: {
@@ -56,16 +123,21 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
-  }),
+  db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
   collections: [Pages, Posts, Media, Categories, Tenants, Users, Header, Footer, Theme],
   cors: [getServerSideURL()].filter(Boolean),
-  plugins,
+  logger: isProduction ? cloudflareLogger : undefined,
+  plugins: [
+    ...plugins,
+    // Uploads land in the R2 bucket bound as `R2` in `wrangler.jsonc`.
+    r2Storage({
+      bucket: cloudflare.env.R2,
+      collections: { media: true },
+    }),
+  ],
   secret: process.env.PAYLOAD_SECRET,
-  sharp,
+  // No `sharp`: it cannot run in Workers. Images are resized at render time
+  // by `next/image` through the Cloudflare Images binding instead.
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
@@ -79,7 +151,7 @@ export default buildConfig({
         if (!secret) return false
 
         // If there is no logged in user, then check
-        // for the Vercel Cron secret to be present as an
+        // for the cron secret to be present as an
         // Authorization header:
         const authHeader = req.headers.get('authorization')
         return authHeader === `Bearer ${secret}`
