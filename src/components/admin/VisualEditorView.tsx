@@ -46,7 +46,7 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
       docId={page.id}
       formHref={`${config.routes.admin}/collections/pages/${page.id}`}
       initialLayout={page.layout}
-      previewHref={generatePreviewPath({ collection: 'pages', slug: page.slug ?? '', req })}
+      previewHref={generatePreviewPath({ collection: 'pages', slug: page.slug ?? '', req, data: page })}
       schemas={blocksToSchema(blocks)}
       title={page.title}
     />

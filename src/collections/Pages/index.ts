@@ -70,6 +70,7 @@ export const Pages: CollectionConfig<'pages'> = {
       url: ({ data, req }) =>
         generatePreviewPath({
           slug: data?.slug,
+          data,
           collection: 'pages',
           req,
         }),
