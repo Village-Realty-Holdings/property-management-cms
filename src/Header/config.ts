@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { link } from '@/fields/link'
+import { generateHomePreviewPath } from '@/seo/generatePreviewPath'
 import { revalidateHeader } from './hooks/revalidateHeader'
 
 /**
@@ -15,6 +16,8 @@ export const Header: CollectionConfig = {
   },
   admin: {
     group: 'Site',
+    livePreview: { url: generateHomePreviewPath },
+    preview: (data, { req }) => generateHomePreviewPath({ data, req }),
   },
   fields: [
     {

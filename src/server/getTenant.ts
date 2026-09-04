@@ -2,13 +2,19 @@ import type { Tenant } from '@/payload-types'
 
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import { headers } from 'next/headers'
+import { cookies, draftMode, headers } from 'next/headers'
 import { unstable_cache } from 'next/cache'
+
+/**
+ * Cookie set by `/next/preview` naming the tenant to render. Only read while
+ * draft mode is on, so it cannot leak into normal visits.
+ */
+export const PREVIEW_TENANT_COOKIE = 'preview-tenant'
 
 /**
  * Which tenant a request belongs to, by hostname.
  *
- * Order: a tenant whose `domains` lists the request host, then the tenant
+ * Order: in draft mode, the tenant named by the preview cookie; then a tenant whose `domains` lists the request host, then the tenant
  * named by `DEFAULT_TENANT` (a slug), then the first tenant. Tenant docs are
  * cached under the `tenants` tag; the Tenants collection revalidates it.
  */
@@ -37,6 +43,13 @@ const hostOf = async () => {
 export const resolveTenant = async (host?: string): Promise<Tenant | null> => {
   const tenants = await listTenants()
   if (tenants.length === 0) return null
+
+  if (!host && (await draftMode()).isEnabled) {
+    const previewId = (await cookies()).get(PREVIEW_TENANT_COOKIE)?.value
+    const byPreview = previewId ? tenants.find((t) => String(t.id) === previewId) : undefined
+    if (byPreview) return byPreview
+  }
+
   const hostname = host ?? (await hostOf())
 
   const byDomain = tenants.find((t) => (t.domains ?? []).some((d) => d.domain.toLowerCase() === hostname))

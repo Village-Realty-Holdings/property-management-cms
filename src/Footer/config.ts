@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { link } from '@/fields/link'
+import { generateHomePreviewPath } from '@/seo/generatePreviewPath'
 import { revalidateFooter } from './hooks/revalidateFooter'
 
 /** One footer per tenant; see Header for the `isGlobal` note. */
@@ -12,6 +13,8 @@ export const Footer: CollectionConfig = {
   },
   admin: {
     group: 'Site',
+    livePreview: { url: generateHomePreviewPath },
+    preview: (data, { req }) => generateHomePreviewPath({ data, req }),
   },
   fields: [
     {

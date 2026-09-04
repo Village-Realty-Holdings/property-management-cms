@@ -1,16 +1,23 @@
 import type { PayloadRequest } from 'payload'
 import { getPayload } from 'payload'
 
-import { draftMode } from 'next/headers'
+import { cookies, draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { NextRequest } from 'next/server'
 
 import configPromise from '@payload-config'
+import { isSuperAdminUser } from '@/access/isSuperAdmin'
+import { PREVIEW_TENANT_COOKIE } from '@/server/getTenant'
 
 export type PreviewSearchParams = {
   path: string
   previewSecret: string
+  /** Tenant id to render; only honoured for users who can access that tenant. */
+  tenant?: string
 }
+
+const tenantIdsOf = (user: { tenants?: { tenant: number | { id: number } }[] | null }) =>
+  (user.tenants ?? []).map(({ tenant }) => String(typeof tenant === 'object' ? tenant.id : tenant))
 
 export async function GET(req: NextRequest): Promise<Response> {
   const payload = await getPayload({ config: configPromise })
@@ -52,7 +59,19 @@ export async function GET(req: NextRequest): Promise<Response> {
     return new Response('You are not allowed to preview this page', { status: 403 })
   }
 
-  // You can add additional checks here to see if the user is allowed to preview this page
+  const tenant = searchParams.get('tenant')
+  const cookieStore = await cookies()
+
+  if (tenant) {
+    const allowed = isSuperAdminUser(user) || ('tenants' in user && tenantIdsOf(user).includes(tenant))
+    if (!allowed) {
+      draft.disable()
+      return new Response('You are not allowed to preview this tenant', { status: 403 })
+    }
+    cookieStore.set(PREVIEW_TENANT_COOKIE, tenant, { httpOnly: true, sameSite: 'lax', path: '/' })
+  } else {
+    cookieStore.delete(PREVIEW_TENANT_COOKIE)
+  }
 
   draft.enable()
 

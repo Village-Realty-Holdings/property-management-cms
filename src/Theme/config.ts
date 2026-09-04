@@ -1,6 +1,7 @@
 import type { CollectionConfig, Field, TextField } from 'payload'
 
 import { FONT_OPTIONS, RADIUS_OPTIONS } from '@/lib/themeCss'
+import { generateHomePreviewPath } from '@/seo/generatePreviewPath'
 import { revalidateTheme } from './hooks/revalidateTheme'
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -53,6 +54,8 @@ export const Theme: CollectionConfig = {
   },
   admin: {
     group: 'Site',
+    livePreview: { url: generateHomePreviewPath },
+    preview: (data, { req }) => generateHomePreviewPath({ data, req }),
     description: 'Colours, fonts and corner rounding for this site. Empty fields keep the default look.',
   },
   fields: [
