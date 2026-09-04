@@ -1,5 +1,6 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { mcpPlugin } from '@payloadcms/plugin-mcp'
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -13,6 +14,7 @@ import { beforeSyncWithSearch } from '@/search/beforeSync'
 
 import { Page, Post } from '@/payload-types'
 import { getServerSideURL } from '@/lib/getURL'
+import { isSuperAdminUser } from '@/access/isSuperAdmin'
 
 const generateTitle: GenerateTitle<Post | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Website Template` : 'Payload Website Template'
@@ -24,7 +26,7 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
-export const plugins: Plugin[] = [
+const basePlugins: Plugin[] = [
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
@@ -121,3 +123,21 @@ export const plugins: Plugin[] = [
     },
   }),
 ]
+
+// Applied last so it also scopes the collections the plugins above add (forms, redirects, search).
+const tenantScoping = multiTenantPlugin({
+  collections: {
+    pages: {},
+    posts: {},
+    media: {},
+    categories: {},
+    forms: {},
+    'form-submissions': {},
+    redirects: {},
+    search: {},
+  },
+  tenantsSlug: 'tenants',
+  userHasAccessToAllTenants: isSuperAdminUser,
+})
+
+export const plugins: Plugin[] = [...basePlugins, tenantScoping]
