@@ -25,7 +25,12 @@ const nextConfig: NextConfig = {
     ],
     qualities: [100],
     remotePatterns: [
-      ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
+      // The server URL plus every tenant hostname that serves media.
+      ...[
+        NEXT_PUBLIC_SERVER_URL,
+        'https://warrenbeachrentals.com',
+        'https://www.warrenbeachrentals.com',
+      ].map((item) => {
         const url = new URL(item)
 
         return {
