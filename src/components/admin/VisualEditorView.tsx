@@ -7,7 +7,7 @@ import { VisualEditor } from '@/puck/VisualEditor'
 import { generatePreviewPath } from '@/seo/generatePreviewPath'
 
 /**
- * Custom document view at /admin/collections/pages/:id/visual.
+ * The document view at /admin/collections/pages/:id.
  * Loads the latest draft as the logged-in user (access rules apply, no
  * override), derives the block schema from the live Pages config, and fetches
  * the public page's stylesheets for the canvas.
@@ -16,7 +16,7 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
   const { req, docID } = initPageResult
   const { config } = req.payload
   if (!docID) {
-    return <p style={{ padding: 'var(--base)' }}>Save the page once in the form view, then open the visual editor.</p>
+    return <p style={{ padding: 'var(--base)' }}>Save the page once, then reopen it to use the visual editor.</p>
   }
 
   const pages = config.collections.find((c) => c.slug === 'pages')
@@ -44,7 +44,7 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
     <VisualEditor
       canvasStyles={canvasStyles}
       docId={page.id}
-      formHref={`${config.routes.admin}/collections/pages/${page.id}`}
+      formHref={`${config.routes.admin}/collections/pages/${page.id}/form`}
       initialLayout={page.layout}
       previewHref={generatePreviewPath({ collection: 'pages', slug: page.slug ?? '', req, data: page })}
       schemas={blocksToSchema(blocks)}

@@ -57,11 +57,16 @@ export const Pages: CollectionConfig<'pages'> = {
     components: {
       views: {
         edit: {
-          // Visual editor as a document tab: same layout data, same access rules.
-          visual: {
-            path: '/visual',
-            Component: '@/components/admin/VisualEditorView#VisualEditorView',
-            tab: { label: 'Visual editor', href: '/visual', order: 150 },
+          // The visual editor is the default editor for a saved page; the
+          // form stays one tab away. Same layout data, same access rules.
+          default: {
+            Component: '@/components/admin/PagesEditView#PagesEditView',
+            tab: { label: 'Visual editor' },
+          },
+          form: {
+            path: '/form',
+            Component: '@/components/admin/FormView#FormView',
+            tab: { label: 'Form', href: '/form', order: 150 },
           },
         },
       },
@@ -78,6 +83,7 @@ export const Pages: CollectionConfig<'pages'> = {
     preview: (data, { req }) =>
       generatePreviewPath({
         slug: data?.slug as string,
+        data,
         collection: 'pages',
         req,
       }),
