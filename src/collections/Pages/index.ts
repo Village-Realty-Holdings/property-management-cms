@@ -3,6 +3,9 @@ import type { CollectionConfig } from 'payload'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { Amenities } from '../../blocks/Amenities/config'
+import { AreaGuide } from '../../blocks/AreaGuide/config'
+import { AvailabilitySearch } from '../../blocks/AvailabilitySearch/config'
+import { BookingSteps } from '../../blocks/BookingSteps/config'
 import { Archive } from '../../blocks/ArchiveBlock/config'
 import { CallToAction } from '../../blocks/CallToAction/config'
 import { Content } from '../../blocks/Content/config'
@@ -11,7 +14,13 @@ import { FormBlock } from '../../blocks/Form/config'
 import { Gallery } from '../../blocks/Gallery/config'
 import { Location } from '../../blocks/Location/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
+import { Newsletter } from '../../blocks/Newsletter/config'
+import { OwnerCta } from '../../blocks/OwnerCta/config'
 import { Pricing } from '../../blocks/Pricing/config'
+import { Promos } from '../../blocks/Promos/config'
+import { PropertyDetail } from '../../blocks/PropertyDetail/config'
+import { PropertyListing } from '../../blocks/PropertyListing/config'
+import { ReviewsFeed } from '../../blocks/ReviewsFeed/config'
 import { Section } from '../../blocks/Section/config'
 import { Testimonials } from '../../blocks/Testimonials/config'
 import { hero } from '@/heros/config'
@@ -92,6 +101,15 @@ export const Pages: CollectionConfig<'pages'> = {
                 Testimonials,
                 FAQ,
                 Archive,
+                AvailabilitySearch,
+                PropertyListing,
+                PropertyDetail,
+                ReviewsFeed,
+                Promos,
+                BookingSteps,
+                OwnerCta,
+                AreaGuide,
+                Newsletter,
               ],
               required: true,
               admin: {

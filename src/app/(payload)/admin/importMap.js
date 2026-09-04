@@ -19,6 +19,10 @@ import { FeatureRowLabel as FeatureRowLabel_6822cfe5135c41e38f3fb45485b7d11e } f
 import { RowLabel as RowLabel_6822cfe5135c41e38f3fb45485b7d11e } from '@/blocks/Pricing/RowLabel'
 import { RowLabel as RowLabel_7d0512708dc3b45d4316940f413f8c38 } from '@/blocks/Testimonials/RowLabel'
 import { RowLabel as RowLabel_7a0a1ede3caede510531ae1d1981b8cd } from '@/blocks/FAQ/RowLabel'
+import { RowLabel as RowLabel_ed59aff613ae9dcb15473808b13d7e30 } from '@/blocks/PropertyListing/RowLabel'
+import { RowLabel as RowLabel_92a70dbe2d03c97f6c56138597b7c230 } from '@/blocks/BookingSteps/RowLabel'
+import { RowLabel as RowLabel_f4c7f2a9c95b5aef7d7f0790575109e7 } from '@/blocks/OwnerCta/RowLabel'
+import { RowLabel as RowLabel_3a02cd44fcdc919f40edba43409915e4 } from '@/blocks/AreaGuide/RowLabel'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -64,6 +68,10 @@ export const importMap = {
   "@/blocks/Pricing/RowLabel#RowLabel": RowLabel_6822cfe5135c41e38f3fb45485b7d11e,
   "@/blocks/Testimonials/RowLabel#RowLabel": RowLabel_7d0512708dc3b45d4316940f413f8c38,
   "@/blocks/FAQ/RowLabel#RowLabel": RowLabel_7a0a1ede3caede510531ae1d1981b8cd,
+  "@/blocks/PropertyListing/RowLabel#RowLabel": RowLabel_ed59aff613ae9dcb15473808b13d7e30,
+  "@/blocks/BookingSteps/RowLabel#RowLabel": RowLabel_92a70dbe2d03c97f6c56138597b7c230,
+  "@/blocks/OwnerCta/RowLabel#RowLabel": RowLabel_f4c7f2a9c95b5aef7d7f0790575109e7,
+  "@/blocks/AreaGuide/RowLabel#RowLabel": RowLabel_3a02cd44fcdc919f40edba43409915e4,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
