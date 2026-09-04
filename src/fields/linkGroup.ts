@@ -20,7 +20,10 @@ export const linkGroup: LinkGroupType = ({ appearances, overrides = {} } = {}) =
       }),
     ],
     admin: {
-      initCollapsed: true,
+      initCollapsed: false,
+      components: {
+        RowLabel: '@/fields/LinkRowLabel#LinkRowLabel',
+      },
     },
   }
 

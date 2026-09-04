@@ -13,7 +13,10 @@ const columnFields: Field[] = [
   {
     name: 'size',
     type: 'select',
-    defaultValue: 'oneThird',
+    defaultValue: 'full',
+    admin: {
+      description: 'Columns wrap onto a new row when their widths add up past full.',
+    },
     options: [
       {
         label: 'One Third',
@@ -51,6 +54,7 @@ const columnFields: Field[] = [
   {
     name: 'enableLink',
     type: 'checkbox',
+    label: 'Add a link below the text',
   },
   link({
     overrides: {
@@ -66,12 +70,29 @@ const columnFields: Field[] = [
 export const Content: Block = {
   slug: 'content',
   interfaceName: 'ContentBlock',
+  labels: {
+    singular: 'Text Columns',
+    plural: 'Text Columns',
+  },
+  admin: {
+    group: 'Content',
+    images: {
+      thumbnail: { url: '/admin/blocks/content.svg', alt: 'Text columns' },
+    },
+  },
   fields: [
     {
       name: 'columns',
       type: 'array',
+      minRows: 1,
+      maxRows: 4,
+      defaultValue: [{ size: 'full' }],
       admin: {
-        initCollapsed: true,
+        initCollapsed: false,
+        description: 'One column for plain body copy. Add more to place text side by side.',
+        components: {
+          RowLabel: '@/blocks/Content/RowLabel#RowLabel',
+        },
       },
       fields: columnFields,
     },

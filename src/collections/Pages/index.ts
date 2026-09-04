@@ -2,11 +2,18 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
+import { Amenities } from '../../blocks/Amenities/config'
 import { Archive } from '../../blocks/ArchiveBlock/config'
 import { CallToAction } from '../../blocks/CallToAction/config'
 import { Content } from '../../blocks/Content/config'
+import { FAQ } from '../../blocks/FAQ/config'
 import { FormBlock } from '../../blocks/Form/config'
+import { Gallery } from '../../blocks/Gallery/config'
+import { Location } from '../../blocks/Location/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
+import { Pricing } from '../../blocks/Pricing/config'
+import { Section } from '../../blocks/Section/config'
+import { Testimonials } from '../../blocks/Testimonials/config'
 import { hero } from '@/heros/config'
 import { slugField } from 'payload'
 import { populatePublishedAt } from '../hooks/populatePublishedAt'
@@ -72,7 +79,20 @@ export const Pages: CollectionConfig<'pages'> = {
             {
               name: 'layout',
               type: 'blocks',
-              blocks: [CallToAction, Content, MediaBlock, Archive, FormBlock],
+              blocks: [
+                Section,
+                Content,
+                MediaBlock,
+                CallToAction,
+                FormBlock,
+                Gallery,
+                Amenities,
+                Location,
+                Pricing,
+                Testimonials,
+                FAQ,
+                Archive,
+              ],
               required: true,
               admin: {
                 initCollapsed: true,

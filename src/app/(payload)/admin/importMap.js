@@ -10,6 +10,15 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { LinkFeatureClient as LinkFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { LinkRowLabel as LinkRowLabel_2ee5c1cc6ec1bdfffb6889bec35fcad7 } from '@/fields/LinkRowLabel'
+import { RowLabel as RowLabel_51c3dfee50eb83899fbad8523b6b162e } from '@/blocks/Content/RowLabel'
+import { RowLabel as RowLabel_d9a56da69d04b0cf80e79b8e55310a2d } from '@/blocks/Gallery/RowLabel'
+import { RowLabel as RowLabel_2e8537f4fa6e097f0247f959bbd0b170 } from '@/blocks/Amenities/RowLabel'
+import { RowLabel as RowLabel_f44226c771498fd152aefb4d29701182 } from '@/blocks/Location/RowLabel'
+import { FeatureRowLabel as FeatureRowLabel_6822cfe5135c41e38f3fb45485b7d11e } from '@/blocks/Pricing/RowLabel'
+import { RowLabel as RowLabel_6822cfe5135c41e38f3fb45485b7d11e } from '@/blocks/Pricing/RowLabel'
+import { RowLabel as RowLabel_7d0512708dc3b45d4316940f413f8c38 } from '@/blocks/Testimonials/RowLabel'
+import { RowLabel as RowLabel_7a0a1ede3caede510531ae1d1981b8cd } from '@/blocks/FAQ/RowLabel'
 import { OverviewComponent as OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
@@ -46,6 +55,15 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#LinkFeatureClient": LinkFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/fields/LinkRowLabel#LinkRowLabel": LinkRowLabel_2ee5c1cc6ec1bdfffb6889bec35fcad7,
+  "@/blocks/Content/RowLabel#RowLabel": RowLabel_51c3dfee50eb83899fbad8523b6b162e,
+  "@/blocks/Gallery/RowLabel#RowLabel": RowLabel_d9a56da69d04b0cf80e79b8e55310a2d,
+  "@/blocks/Amenities/RowLabel#RowLabel": RowLabel_2e8537f4fa6e097f0247f959bbd0b170,
+  "@/blocks/Location/RowLabel#RowLabel": RowLabel_f44226c771498fd152aefb4d29701182,
+  "@/blocks/Pricing/RowLabel#FeatureRowLabel": FeatureRowLabel_6822cfe5135c41e38f3fb45485b7d11e,
+  "@/blocks/Pricing/RowLabel#RowLabel": RowLabel_6822cfe5135c41e38f3fb45485b7d11e,
+  "@/blocks/Testimonials/RowLabel#RowLabel": RowLabel_7d0512708dc3b45d4316940f413f8c38,
+  "@/blocks/FAQ/RowLabel#RowLabel": RowLabel_7a0a1ede3caede510531ae1d1981b8cd,
   "@payloadcms/plugin-seo/client#OverviewComponent": OverviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaTitleComponent": MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
