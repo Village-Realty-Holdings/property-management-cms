@@ -72,6 +72,7 @@ export interface Config {
     posts: Post;
     media: Media;
     categories: Category;
+    tenants: Tenant;
     users: User;
     redirects: Redirect;
     forms: Form;
@@ -95,6 +96,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
@@ -178,6 +180,7 @@ export interface PayloadMcpApiKeyAuthOperations {
  */
 export interface Page {
   id: number;
+  tenant?: (number | null) | Tenant;
   title: string;
   hero: {
     type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
@@ -243,10 +246,25 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  name: string;
+  /**
+   * Short identifier for this tenant, used in URLs and integrations.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: number;
+  tenant?: (number | null) | Tenant;
   title: string;
   heroImage?: (number | null) | Media;
   content: {
@@ -297,6 +315,7 @@ export interface Post {
  */
 export interface Media {
   id: number;
+  tenant?: (number | null) | Tenant;
   alt?: string | null;
   caption?: {
     root: {
@@ -416,6 +435,7 @@ export interface FolderInterface {
  */
 export interface Category {
   id: number;
+  tenant?: (number | null) | Tenant;
   title: string;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -441,6 +461,16 @@ export interface Category {
 export interface User {
   id: number;
   name?: string | null;
+  /**
+   * Super admins see every tenant. Users only see the tenants assigned below.
+   */
+  roles?: ('super-admin' | 'user')[] | null;
+  tenants?:
+    | {
+        tenant: number | Tenant;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -634,6 +664,7 @@ export interface FormBlock {
  */
 export interface Form {
   id: number;
+  tenant?: (number | null) | Tenant;
   title: string;
   fields?:
     | (
@@ -799,6 +830,7 @@ export interface Form {
  */
 export interface Redirect {
   id: number;
+  tenant?: (number | null) | Tenant;
   /**
    * You will need to rebuild the website when changing this field.
    */
@@ -825,6 +857,7 @@ export interface Redirect {
  */
 export interface FormSubmission {
   id: number;
+  tenant?: (number | null) | Tenant;
   form: number | Form;
   submissionData?:
     | {
@@ -844,6 +877,7 @@ export interface FormSubmission {
  */
 export interface Search {
   id: number;
+  tenant?: (number | null) | Tenant;
   title?: string | null;
   priority?: number | null;
   doc: {
@@ -1107,6 +1141,10 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -1191,6 +1229,7 @@ export interface PayloadMigration {
  * via the `definition` "pages_select".
  */
 export interface PagesSelect<T extends boolean = true> {
+  tenant?: T;
   title?: T;
   hero?:
     | T
@@ -1326,6 +1365,7 @@ export interface FormBlockSelect<T extends boolean = true> {
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
+  tenant?: T;
   title?: T;
   heroImage?: T;
   content?: T;
@@ -1357,6 +1397,7 @@ export interface PostsSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  tenant?: T;
   alt?: T;
   caption?: T;
   folder?: T;
@@ -1451,6 +1492,7 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
+  tenant?: T;
   title?: T;
   generateSlug?: T;
   slug?: T;
@@ -1468,10 +1510,27 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants_select".
+ */
+export interface TenantsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  roles?: T;
+  tenants?:
+    | T
+    | {
+        tenant?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1494,6 +1553,7 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
+  tenant?: T;
   from?: T;
   to?:
     | T
@@ -1510,6 +1570,7 @@ export interface RedirectsSelect<T extends boolean = true> {
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
+  tenant?: T;
   title?: T;
   fields?:
     | T
@@ -1643,6 +1704,7 @@ export interface FormsSelect<T extends boolean = true> {
  * via the `definition` "form-submissions_select".
  */
 export interface FormSubmissionsSelect<T extends boolean = true> {
+  tenant?: T;
   form?: T;
   submissionData?:
     | T
@@ -1659,6 +1721,7 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
  * via the `definition` "search_select".
  */
 export interface SearchSelect<T extends boolean = true> {
+  tenant?: T;
   title?: T;
   priority?: T;
   doc?: T;
