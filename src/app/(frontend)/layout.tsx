@@ -9,7 +9,6 @@ import { AdminBar } from '@/components/AdminBar'
 import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
 import { Providers } from '@/providers'
-import { InitTheme } from '@/providers/Theme/InitTheme'
 import { TenantThemeStyle } from '@/Theme/Component'
 import { fontClassNames } from '@/Theme/fonts'
 import { getTenantGlobal } from '@/server/getGlobals'
@@ -32,7 +31,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
-        <InitTheme />
         <TenantThemeStyle theme={theme} />
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />

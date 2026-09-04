@@ -16,7 +16,7 @@ const color = (name: string, label: string, description?: string): TextField => 
   },
 })
 
-/** The same colour slots for light and dark mode; empty slots fall back to the built-in palette. */
+/** Colour slots; empty slots fall back to the built-in palette. */
 const palette = (): Field[] => [
   { type: 'row', fields: [color('background', 'Background'), color('foreground', 'Text')] },
   {
@@ -59,13 +59,7 @@ export const Theme: CollectionConfig = {
     {
       type: 'tabs',
       tabs: [
-        { name: 'light', label: 'Light mode', fields: palette() },
-        {
-          name: 'dark',
-          label: 'Dark mode',
-          description: 'Used when a visitor prefers dark mode or picks it in the footer.',
-          fields: palette(),
-        },
+        { name: 'light', label: 'Colours', fields: palette() },
         {
           name: 'typography',
           label: 'Typography',

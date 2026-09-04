@@ -31,7 +31,13 @@
   --header-height: 4rem;
 }
 
-[data-theme='dark'] {
+/*
+ * Inverted tokens for surfaces that sit over a photo (hero, header over it,
+ * image-backed sections). The site has no visitor dark mode; the first
+ * selector only serves the Payload admin's own dark theme.
+ */
+[data-theme='dark'],
+[data-surface='inverted'] {
   --background: oklch(0.18 0.015 235);
   --foreground: oklch(0.96 0.005 95);
   --card: oklch(0.22 0.015 235);

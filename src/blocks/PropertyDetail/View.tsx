@@ -95,7 +95,7 @@ export const PropertyDetailView: React.FC<Props & { property: Property }> = asyn
           )}
 
           {show.has('description') && (
-            <section className="prose max-w-none dark:prose-invert">
+            <section className="prose max-w-none">
               {p.description.split(/\n\n+/).map((para, i) => (
                 <p key={i}>{para}</p>
               ))}

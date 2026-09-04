@@ -2,7 +2,6 @@ import { getTenantGlobal } from '@/server/getGlobals'
 import Link from 'next/link'
 import React from 'react'
 
-import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 
@@ -77,7 +76,6 @@ export async function Footer() {
           <span>
             © {new Date().getFullYear()} {footerData?.copyright ?? brand ?? ''}
           </span>
-          <ThemeSelector />
         </div>
       </div>
     </footer>

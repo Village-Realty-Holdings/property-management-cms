@@ -3,12 +3,12 @@ import { useHeaderTheme } from '@/providers/HeaderTheme'
 import React, { useEffect } from 'react'
 
 const PageClient: React.FC = () => {
-  /* Force the header to be dark mode while we have an image behind it */
-  const { setHeaderTheme } = useHeaderTheme()
+  /* Tell the header whether a photo sits behind it. */
+  const { setOverHero } = useHeaderTheme()
 
   useEffect(() => {
-    setHeaderTheme('light')
-  }, [setHeaderTheme])
+    setOverHero(false)
+  }, [setOverHero])
   return <React.Fragment />
 }
 

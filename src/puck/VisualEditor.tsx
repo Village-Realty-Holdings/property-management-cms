@@ -152,8 +152,6 @@ function CanvasFrame({ styles, children }: { styles: CanvasStyles; children: Rea
   useEffect(() => {
     const html = marker.current?.ownerDocument.documentElement
     if (!html) return
-    // The site's CSS keeps <html> invisible until the theme script sets this.
-    html.setAttribute('data-theme', 'light')
     const classes = styles.htmlClass.split(/\s+/).filter(Boolean)
     html.classList.add(...classes)
     return () => html.classList.remove(...classes)

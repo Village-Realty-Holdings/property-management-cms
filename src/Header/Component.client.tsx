@@ -21,7 +21,7 @@ type Props = { data: Header | null }
  * else it is solid from the start.
  */
 export const HeaderClient: React.FC<Props> = ({ data }) => {
-  const { headerTheme, setHeaderTheme } = useHeaderTheme()
+  const { overHero: hasHero, setOverHero } = useHeaderTheme()
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
@@ -29,8 +29,8 @@ export const HeaderClient: React.FC<Props> = ({ data }) => {
 
   // Each page decides whether it has a hero behind the header.
   useEffect(() => {
-    setHeaderTheme(null)
-  }, [pathname, setHeaderTheme])
+    setOverHero(false)
+  }, [pathname, setOverHero])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -39,7 +39,7 @@ export const HeaderClient: React.FC<Props> = ({ data }) => {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const overHero = headerTheme === 'dark' && !scrolled && !open
+  const overHero = hasHero && !scrolled && !open
   const navItems = data?.navItems || []
   const cta = data?.ctaLink
 
@@ -51,7 +51,7 @@ export const HeaderClient: React.FC<Props> = ({ data }) => {
           ? 'text-white'
           : 'border-b border-border/70 bg-background/85 text-foreground backdrop-blur-md supports-[backdrop-filter]:bg-background/75',
       )}
-      {...(overHero ? { 'data-theme': 'dark' } : {})}
+      {...(overHero ? { 'data-surface': 'inverted' } : {})}
     >
       <div className="container flex h-header items-center justify-between gap-6">
         <Link href="/" className="flex items-center rounded-md">

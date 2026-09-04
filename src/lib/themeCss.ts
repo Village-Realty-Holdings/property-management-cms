@@ -62,7 +62,6 @@ export type ThemePalette = Partial<Record<ColorSlot, string | null>>
 
 export type ThemeInput = {
   light?: ThemePalette | null
-  dark?: ThemePalette | null
   typography?: { bodyFont?: string | null; headingFont?: string | null } | null
   shape?: { radius?: string | null } | null
 }
@@ -94,16 +93,14 @@ export const themeFonts = (theme: ThemeInput | null | undefined): FontKey[] => {
 }
 
 /**
- * CSS overriding the default tokens. Selectors use `html:root` and
- * `html[data-theme='dark']` so they beat the `:root` / `[data-theme]` rules
- * in the stylesheet regardless of load order. Empty string when the theme
+ * CSS overriding the default tokens. The selector uses `html:root` so it
+ * beats the `:root` rule in the stylesheet regardless of load order. Empty string when the theme
  * changes nothing.
  */
 export const themeToCss = (theme: ThemeInput | null | undefined): string => {
   if (!theme) return ''
 
   const root = paletteDeclarations(theme.light)
-  const dark = paletteDeclarations(theme.dark)
 
   const body = theme.typography?.bodyFont
   if (isFont(body) && body !== 'geist') root.push(`--font-sans:var(${FONT_VARIABLES[body]})`)
@@ -119,6 +116,5 @@ export const themeToCss = (theme: ThemeInput | null | undefined): string => {
 
   const blocks: string[] = []
   if (root.length) blocks.push(`html:root{${root.join(';')}}`)
-  if (dark.length) blocks.push(`html[data-theme='dark']{${dark.join(';')}}`)
   return blocks.join('\n')
 }

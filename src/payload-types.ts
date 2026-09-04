@@ -1619,24 +1619,6 @@ export interface Theme {
     border?: string | null;
     muted?: string | null;
   };
-  dark?: {
-    background?: string | null;
-    foreground?: string | null;
-    /**
-     * Buttons, links and other highlighted elements.
-     */
-    primary?: string | null;
-    primaryForeground?: string | null;
-    secondary?: string | null;
-    secondaryForeground?: string | null;
-    /**
-     * Hover states and subtle highlights.
-     */
-    accent?: string | null;
-    accentForeground?: string | null;
-    border?: string | null;
-    muted?: string | null;
-  };
   typography?: {
     bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
     headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
@@ -2838,20 +2820,6 @@ export interface FooterSelect<T extends boolean = true> {
 export interface ThemeSelect<T extends boolean = true> {
   tenant?: T;
   light?:
-    | T
-    | {
-        background?: T;
-        foreground?: T;
-        primary?: T;
-        primaryForeground?: T;
-        secondary?: T;
-        secondaryForeground?: T;
-        accent?: T;
-        accentForeground?: T;
-        border?: T;
-        muted?: T;
-      };
-  dark?:
     | T
     | {
         background?: T;

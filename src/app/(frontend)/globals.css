@@ -6,8 +6,6 @@
 @config '../../../tailwind.config.mjs';
 @plugin '@tailwindcss/typography';
 
-@custom-variant dark (&:is([data-theme='dark'] *));
-
 @theme {
   --breakpoint-sm: 40rem;
   --breakpoint-md: 48rem;

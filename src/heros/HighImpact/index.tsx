@@ -15,16 +15,16 @@ import { useHeaderTheme } from '@/providers/HeaderTheme'
  * for a search block to overlap the edge.
  */
 export const HighImpactHero: React.FC<Page['hero']> = ({ links, media, richText }) => {
-  const { setHeaderTheme } = useHeaderTheme()
+  const { setOverHero } = useHeaderTheme()
 
   useEffect(() => {
-    setHeaderTheme('dark')
-  }, [setHeaderTheme])
+    setOverHero(true)
+  }, [setOverHero])
 
   return (
     <section
       className="relative -mt-header flex min-h-[min(88svh,52rem)] items-end overflow-hidden bg-foreground text-white"
-      data-theme="dark"
+      data-surface="inverted"
     >
       {media && typeof media === 'object' && (
         <Media fill className="absolute inset-0" imgClassName="object-cover" priority resource={media} />

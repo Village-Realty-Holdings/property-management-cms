@@ -11,13 +11,12 @@ describe('themeToCss', () => {
     ).toBe('')
   })
 
-  it('overrides light and dark tokens with higher-specificity selectors', () => {
+  it('overrides tokens with a higher-specificity selector', () => {
     const css = themeToCss({
       light: { primary: '#1D4ED8', primaryForeground: '#fff' },
-      dark: { primary: '#93c5fd' },
     })
     expect(css).toBe(
-      "html:root{--primary:#1d4ed8;--primary-foreground:#fff}\nhtml[data-theme='dark']{--primary:#93c5fd}",
+      'html:root{--primary:#1d4ed8;--primary-foreground:#fff}',
     )
   })
 

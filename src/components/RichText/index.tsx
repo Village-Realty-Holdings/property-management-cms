@@ -63,7 +63,7 @@ export default function RichText(props: Props) {
         'payload-richtext',
         {
           container: enableGutter,
-          'prose md:prose-lg dark:prose-invert': enableProse,
+          'prose md:prose-lg': enableProse,
         },
         className,
       )}

@@ -120,7 +120,7 @@ export const SectionBlock: React.FC<SectionBlockProps> = (props) => {
 
   if (hasBackgroundImage) {
     return (
-      <div className={cn('relative overflow-hidden text-white', paddingClass)} data-theme="dark">
+      <div className={cn('relative overflow-hidden text-white', paddingClass)} data-surface="inverted">
         <Media fill resource={backgroundImage} imgClassName="object-cover" className="absolute inset-0" />
         <div aria-hidden="true" className="absolute inset-0 bg-black/55" />
         {inner}
