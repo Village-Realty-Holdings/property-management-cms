@@ -58,4 +58,7 @@ export default withPayload(nextConfig, { devBundleServerPackages: false })
 
 // Makes the D1 and R2 bindings from `wrangler.jsonc` available under plain
 // `next dev`. Local state lives in `.wrangler/state`, one per worktree.
-initOpenNextCloudflareForDev()
+// `remoteBindings: false` keeps dev on the local copies even though the D1
+// binding is marked `remote: true` for production; otherwise `next dev`
+// tries to open a remote session and needs a Cloudflare login.
+initOpenNextCloudflareForDev({ remoteBindings: false })
