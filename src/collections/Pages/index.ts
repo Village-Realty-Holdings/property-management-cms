@@ -54,6 +54,18 @@ export const Pages: CollectionConfig<'pages'> = {
   },
   admin: {
     defaultColumns: ['title', 'slug', 'updatedAt'],
+    components: {
+      views: {
+        edit: {
+          // Visual editor as a document tab: same layout data, same access rules.
+          visual: {
+            path: '/visual',
+            Component: '@/components/admin/VisualEditorView#VisualEditorView',
+            tab: { label: 'Visual editor', href: '/visual', order: 150 },
+          },
+        },
+      },
+    },
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
