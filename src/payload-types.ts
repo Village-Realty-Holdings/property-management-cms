@@ -1543,6 +1543,10 @@ export interface Footer {
 export interface Theme {
   id: number;
   tenant?: (number | null) | Tenant;
+  /**
+   * A starting point. Applying it fills the fields below, which you can then fine-tune.
+   */
+  preset?: ('coastal-teal' | 'warren-beach-classic') | null;
   light?: {
     background?: string | null;
     foreground?: string | null;
@@ -1562,8 +1566,8 @@ export interface Theme {
     muted?: string | null;
   };
   typography?: {
-    bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
-    headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
+    bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans') | null;
+    headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans') | null;
   };
   shape?: {
     /**
@@ -2742,6 +2746,7 @@ export interface FooterSelect<T extends boolean = true> {
  */
 export interface ThemeSelect<T extends boolean = true> {
   tenant?: T;
+  preset?: T;
   light?:
     | T
     | {

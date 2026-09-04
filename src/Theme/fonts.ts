@@ -1,4 +1,4 @@
-import { DM_Sans, Inter, Lora, Playfair_Display } from 'next/font/google'
+import { DM_Sans, Inter, Lora, Playfair_Display, Source_Sans_3 } from 'next/font/google'
 
 import type { FontKey } from '@/lib/themeCss'
 
@@ -12,12 +12,14 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', preload: fal
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', preload: false })
 const lora = Lora({ subsets: ['latin'], variable: '--font-lora', preload: false })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', preload: false })
+const sourceSans = Source_Sans_3({ subsets: ['latin'], variable: '--font-source-sans', preload: false })
 
 const FONT_CLASSES: Record<Exclude<FontKey, 'geist'>, string> = {
   inter: inter.variable,
   'dm-sans': dmSans.variable,
   lora: lora.variable,
   playfair: playfair.variable,
+  'source-sans': sourceSans.variable,
 }
 
 /** `<html>` class names that define the CSS variables for the given presets. */

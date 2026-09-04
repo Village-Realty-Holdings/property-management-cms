@@ -99,6 +99,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     user: Users.slug,
+    theme: 'light',
     livePreview: {
       breakpoints: [
         {

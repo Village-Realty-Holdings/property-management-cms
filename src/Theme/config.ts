@@ -1,6 +1,7 @@
 import type { CollectionConfig, Field, TextField } from 'payload'
 
 import { FONT_OPTIONS, RADIUS_OPTIONS } from '@/lib/themeCss'
+import { PRESET_OPTIONS } from '@/lib/themePresets'
 import { generateHomePreviewPath } from '@/seo/generatePreviewPath'
 import { revalidateTheme } from './hooks/revalidateTheme'
 
@@ -59,6 +60,21 @@ export const Theme: CollectionConfig = {
     description: 'Colours, fonts and corner rounding for this site. Empty fields keep the default look.',
   },
   fields: [
+    {
+      name: 'preset',
+      type: 'select',
+      label: 'Theme preset',
+      options: [...PRESET_OPTIONS],
+      admin: {
+        width: '50%',
+        description: 'A starting point. Applying it fills the fields below, which you can then fine-tune.',
+      },
+    },
+    {
+      name: 'applyPreset',
+      type: 'ui',
+      admin: { components: { Field: '@/Theme/ApplyPreset#ApplyPreset' } },
+    },
     {
       type: 'tabs',
       tabs: [
