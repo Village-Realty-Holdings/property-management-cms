@@ -2,11 +2,11 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { unstable_cache } from 'next/cache'
 
-import type { Footer, Header, Theme } from '@/payload-types'
+import type { Footer, Header, SiteSetting, Theme } from '@/payload-types'
 
 import { resolveTenant } from './getTenant'
 
-type TenantGlobals = { header: Header; footer: Footer; theme: Theme }
+type TenantGlobals = { header: Header; footer: Footer; theme: Theme; 'site-settings': SiteSetting }
 type Slug = keyof TenantGlobals
 
 const idOf = (tenant: unknown): string =>

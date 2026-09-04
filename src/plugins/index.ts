@@ -122,6 +122,10 @@ const basePlugins: Plugin[] = [
         description: 'Per-tenant colours, fonts and corner rounding',
         enabled: { find: true },
       },
+      'site-settings': {
+        description: 'Per-tenant site name, SEO defaults and social links',
+        enabled: { find: true },
+      },
     },
   }),
 ]
@@ -140,6 +144,7 @@ const tenantScoping = multiTenantPlugin({
     header: { isGlobal: true },
     footer: { isGlobal: true },
     theme: { isGlobal: true },
+    'site-settings': { isGlobal: true },
   },
   tenantsSlug: 'tenants',
   userHasAccessToAllTenants: isSuperAdminUser,

@@ -13,10 +13,13 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   return ogUrl ? serverUrl + ogUrl : serverUrl + image.url
 }
 
-/** The site name and description the tenant set in its header and footer. */
+/** The site name and description the tenant set in Site Settings. */
 export const getSiteMeta = async () => {
-  const [header, footer] = await Promise.all([getTenantGlobal('header', 0), getTenantGlobal('footer', 0)])
-  return { name: header?.brand ?? null, description: footer?.tagline ?? null }
+  const siteSettings = await getTenantGlobal('site-settings', 0)
+  return {
+    name: siteSettings?.general?.siteName ?? null,
+    description: siteSettings?.general?.siteDescription ?? null,
+  }
 }
 
 export const generateMeta = async (args: {

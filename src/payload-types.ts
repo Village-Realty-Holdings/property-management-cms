@@ -77,6 +77,7 @@ export interface Config {
     header: Header;
     footer: Footer;
     theme: Theme;
+    'site-settings': SiteSetting;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -104,6 +105,7 @@ export interface Config {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     theme: ThemeSelect<false> | ThemeSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1634,6 +1636,53 @@ export interface Theme {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  general?: {
+    /**
+     * Used in page titles and search results, e.g. "Warren Beach Rentals".
+     */
+    siteName?: string | null;
+    /**
+     * Fallback description for pages that don’t set their own, shown in search results.
+     */
+    siteDescription?: string | null;
+    /**
+     * Shown in browser tabs and bookmarks. Square image recommended.
+     */
+    favicon?: (number | null) | Media;
+  };
+  seo?: {
+    /**
+     * Used when a page shares to social media without its own image.
+     */
+    defaultOgImage?: (number | null) | Media;
+    /**
+     * Appended to every page title, e.g. " | Warren Beach Rentals". Leave empty to use the site name.
+     */
+    metaTitleSuffix?: string | null;
+    /**
+     * Enable while staging or building the site. Turn off before launch.
+     */
+    noIndex?: boolean | null;
+  };
+  social?: {
+    socialLinks?:
+      | {
+          platform?: ('facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'tiktok') | null;
+          url?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1807,6 +1856,12 @@ export interface PayloadMcpApiKey {
      */
     find?: boolean | null;
   };
+  siteSettings?: {
+    /**
+     * Allow clients to find site-settings.
+     */
+    find?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
   enableAPIKey?: boolean | null;
@@ -1965,6 +2020,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'theme';
         value: number | Theme;
+      } | null)
+    | ({
+        relationTo: 'site-settings';
+        value: number | SiteSetting;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2849,6 +2908,40 @@ export interface ThemeSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  tenant?: T;
+  general?:
+    | T
+    | {
+        siteName?: T;
+        siteDescription?: T;
+        favicon?: T;
+      };
+  seo?:
+    | T
+    | {
+        defaultOgImage?: T;
+        metaTitleSuffix?: T;
+        noIndex?: T;
+      };
+  social?:
+    | T
+    | {
+        socialLinks?:
+          | T
+          | {
+              platform?: T;
+              url?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -3091,6 +3184,11 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         find?: T;
       };
   theme?:
+    | T
+    | {
+        find?: T;
+      };
+  siteSettings?:
     | T
     | {
         find?: T;
