@@ -1,12 +1,14 @@
-import type { GlobalAfterChangeHook } from 'payload'
+import type { CollectionAfterChangeHook } from 'payload'
 
 import { revalidateTag } from 'next/cache'
 
-export const revalidateFooter: GlobalAfterChangeHook = ({ doc, req: { payload, context } }) => {
-  if (!context.disableRevalidate) {
-    payload.logger.info(`Revalidating footer`)
+import { tenantGlobalTag } from '@/server/getGlobals'
 
-    revalidateTag('global_footer', 'max')
+export const revalidateFooter: CollectionAfterChangeHook = ({ doc, req: { payload, context } }) => {
+  if (!context.disableRevalidate) {
+    const tag = tenantGlobalTag('footer', doc.tenant)
+    payload.logger.info(`Revalidating ${tag}`)
+    revalidateTag(tag, 'max')
   }
 
   return doc

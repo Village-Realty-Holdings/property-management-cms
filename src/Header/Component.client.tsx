@@ -10,7 +10,7 @@ import { Logo } from '@/components/Logo/Logo'
 import { HeaderNav } from './Nav'
 
 interface HeaderClientProps {
-  data: Header
+  data: Header | null
 }
 
 export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
@@ -32,8 +32,12 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   return (
     <header className="container relative z-20   " {...(theme ? { 'data-theme': theme } : {})}>
       <div className="py-8 flex justify-between">
-        <Link href="/">
-          <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+        <Link href="/" className="flex items-center">
+          {data?.brand ? (
+            <span className="text-xl font-semibold tracking-tight">{data.brand}</span>
+          ) : (
+            <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+          )}
         </Link>
         <HeaderNav data={data} />
       </div>

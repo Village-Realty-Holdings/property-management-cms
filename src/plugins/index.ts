@@ -110,15 +110,13 @@ const basePlugins: Plugin[] = [
         description: 'Uploaded images and files',
         enabled: { find: true },
       },
-    },
-    globals: {
       header: {
-        description: 'Site header navigation',
-        enabled: true,
+        description: 'Per-tenant site header navigation',
+        enabled: { find: true },
       },
       footer: {
-        description: 'Site footer navigation',
-        enabled: true,
+        description: 'Per-tenant site footer navigation',
+        enabled: { find: true },
       },
     },
   }),
@@ -135,6 +133,8 @@ const tenantScoping = multiTenantPlugin({
     'form-submissions': {},
     redirects: {},
     search: {},
+    header: { isGlobal: true },
+    footer: { isGlobal: true },
   },
   tenantsSlug: 'tenants',
   userHasAccessToAllTenants: isSuperAdminUser,
