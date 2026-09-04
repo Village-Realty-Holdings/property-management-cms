@@ -7,9 +7,8 @@ import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { Media } from '@/components/Media'
+import { SectionHeader } from '@/components/SectionHeader'
 import { cn } from '@/lib/ui'
-
-type Props = SectionBlockProps & { disableInnerContainer?: boolean }
 
 type SlotBlocks = SectionBlockProps['main']
 
@@ -20,29 +19,21 @@ const slotComponents = {
   mediaBlock: MediaBlock,
 }
 
-// Nested block components render their own `.container`; neutralise it inside a slot.
-const slotClassName = 'flex flex-col gap-8 [&_.container]:max-w-none [&_.container]:px-0'
-
-const RenderSlot: React.FC<{ blocks?: SlotBlocks; className?: string }> = ({
-  blocks,
-  className,
-}) => {
+const RenderSlot: React.FC<{ blocks?: SlotBlocks; className?: string }> = ({ blocks, className }) => {
   if (!blocks || blocks.length === 0) return null
 
   return (
-    <div className={cn(slotClassName, className)}>
+    <div className={cn('flex flex-col gap-8', className)}>
       {blocks.map((block, index) => {
         const { blockType } = block
         if (blockType && blockType in slotComponents) {
           const Block = slotComponents[blockType as keyof typeof slotComponents]
-          if (Block) {
-            return (
-              <div key={index}>
-                {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                <Block {...block} disableInnerContainer />
-              </div>
-            )
-          }
+          return (
+            <div key={index}>
+              {/* @ts-expect-error there may be some mismatch between the expected types here */}
+              <Block {...block} disableInnerContainer />
+            </div>
+          )
         }
         return null
       })}
@@ -52,20 +43,18 @@ const RenderSlot: React.FC<{ blocks?: SlotBlocks; className?: string }> = ({
 
 const widthClasses = {
   container: 'container',
-  wide: 'max-w-7xl mx-auto px-4',
-  full: 'w-full px-4',
+  wide: 'container max-w-none',
+  full: 'w-full px-5 md:px-8',
 }
 
 const paddingClasses = {
   none: 'py-0',
-  sm: 'py-8',
-  md: 'py-16',
-  lg: 'py-24',
+  sm: 'py-8 md:py-10',
+  md: 'py-14 md:py-20',
+  lg: 'py-20 md:py-28',
 }
 
-const cardClassName = 'bg-card rounded border border-border p-6'
-
-export const SectionBlock: React.FC<Props> = (props) => {
+export const SectionBlock: React.FC<SectionBlockProps> = (props) => {
   const {
     heading,
     subheading,
@@ -79,14 +68,13 @@ export const SectionBlock: React.FC<Props> = (props) => {
     third,
   } = props
 
-  const hasBackgroundImage =
-    background === 'image' && backgroundImage && typeof backgroundImage === 'object'
+  const hasBackgroundImage = background === 'image' && backgroundImage && typeof backgroundImage === 'object'
 
   let body: React.ReactNode
   switch (layout) {
     case 'twoColumns':
       body = (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 lg:gap-16">
           <RenderSlot blocks={main} />
           <RenderSlot blocks={secondary} />
         </div>
@@ -94,7 +82,7 @@ export const SectionBlock: React.FC<Props> = (props) => {
       break
     case 'mediaLeft':
       body = (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-12 md:gap-12 lg:gap-16">
           <RenderSlot blocks={secondary} className="md:col-span-5" />
           <RenderSlot blocks={main} className="md:col-span-7" />
         </div>
@@ -102,7 +90,7 @@ export const SectionBlock: React.FC<Props> = (props) => {
       break
     case 'mediaRight':
       body = (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-12 md:gap-12 lg:gap-16">
           <RenderSlot blocks={main} className="md:col-span-7" />
           <RenderSlot blocks={secondary} className="md:col-span-5" />
         </div>
@@ -110,10 +98,10 @@ export const SectionBlock: React.FC<Props> = (props) => {
       break
     case 'threeCards':
       body = (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <RenderSlot blocks={main} className={cardClassName} />
-          <RenderSlot blocks={secondary} className={cardClassName} />
-          <RenderSlot blocks={third} className={cardClassName} />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          <RenderSlot blocks={main} className="surface p-6" />
+          <RenderSlot blocks={secondary} className="surface p-6" />
+          <RenderSlot blocks={third} className="surface p-6" />
         </div>
       )
       break
@@ -123,12 +111,7 @@ export const SectionBlock: React.FC<Props> = (props) => {
 
   const inner = (
     <div className={cn(widthClasses[width ?? 'container'], 'relative')}>
-      {(heading || subheading) && (
-        <div className="mb-8 max-w-[48rem]">
-          {heading && <h2 className="text-3xl font-semibold">{heading}</h2>}
-          {subheading && <p className="mt-2 text-lg text-muted-foreground">{subheading}</p>}
-        </div>
-      )}
+      <SectionHeader heading={heading} intro={subheading} />
       {body}
     </div>
   )
@@ -137,17 +120,13 @@ export const SectionBlock: React.FC<Props> = (props) => {
 
   if (hasBackgroundImage) {
     return (
-      <div className={cn('relative overflow-hidden', paddingClass)}>
-        <Media
-          fill
-          resource={backgroundImage}
-          imgClassName="object-cover"
-          className="absolute inset-0 -z-10"
-        />
+      <div className={cn('relative overflow-hidden text-white', paddingClass)} data-theme="dark">
+        <Media fill resource={backgroundImage} imgClassName="object-cover" className="absolute inset-0" />
+        <div aria-hidden="true" className="absolute inset-0 bg-black/55" />
         {inner}
       </div>
     )
   }
 
-  return <div className={cn(paddingClass, { 'bg-muted': background === 'muted' })}>{inner}</div>
+  return <div className={cn(paddingClass, background === 'muted' && 'bg-muted/60')}>{inner}</div>
 }

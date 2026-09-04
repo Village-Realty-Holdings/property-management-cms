@@ -6,10 +6,9 @@ import RichText from '@/components/RichText'
 
 import type { MediaBlock as MediaBlockProps } from '@/payload-types'
 
-import { Media } from '../../components/Media'
+import { Media } from '@/components/Media'
 
 type Props = MediaBlockProps & {
-  breakout?: boolean
   captionClassName?: string
   className?: string
   enableGutter?: boolean
@@ -19,49 +18,21 @@ type Props = MediaBlockProps & {
 }
 
 export const MediaBlock: React.FC<Props> = (props) => {
-  const {
-    captionClassName,
-    className,
-    enableGutter = true,
-    imgClassName,
-    media,
-    staticImage,
-    disableInnerContainer,
-  } = props
+  const { captionClassName, className, enableGutter = true, imgClassName, media, staticImage, disableInnerContainer } =
+    props
 
-  let caption
-  if (media && typeof media === 'object') caption = media.caption
+  const caption = media && typeof media === 'object' ? media.caption : undefined
 
   return (
-    <div
-      className={cn(
-        '',
-        {
-          container: enableGutter,
-        },
-        className,
-      )}
-    >
+    <figure className={cn(enableGutter && !disableInnerContainer && 'container', className)}>
       {(media || staticImage) && (
-        <Media
-          imgClassName={cn('border border-border rounded-[0.8rem]', imgClassName)}
-          resource={media}
-          src={staticImage}
-        />
+        <Media imgClassName={cn('w-full rounded-lg bg-muted', imgClassName)} resource={media} src={staticImage} />
       )}
       {caption && (
-        <div
-          className={cn(
-            'mt-6',
-            {
-              container: !disableInnerContainer,
-            },
-            captionClassName,
-          )}
-        >
-          <RichText data={caption} enableGutter={false} />
-        </div>
+        <figcaption className={cn('mt-3 text-sm text-muted-foreground', captionClassName)}>
+          <RichText data={caption} enableGutter={false} enableProse={false} />
+        </figcaption>
       )}
-    </div>
+    </figure>
   )
 }

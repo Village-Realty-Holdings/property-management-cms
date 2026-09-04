@@ -1,14 +1,16 @@
 import React from 'react'
 
+import { cn } from '@/lib/ui'
+
 const defaultLabels = {
-  plural: 'Docs',
-  singular: 'Doc',
+  plural: 'results',
+  singular: 'result',
 }
 
 const defaultCollectionLabels = {
   posts: {
-    plural: 'Posts',
-    singular: 'Post',
+    plural: 'posts',
+    singular: 'post',
   },
 }
 
@@ -39,19 +41,16 @@ export const PageRange: React.FC<{
   if (totalDocs && indexEnd > totalDocs) indexEnd = totalDocs
 
   const { plural, singular } =
-    collectionLabelsFromProps ||
-    (collection ? defaultCollectionLabels[collection] : undefined) ||
-    defaultLabels ||
-    {}
+    collectionLabelsFromProps || (collection ? defaultCollectionLabels[collection] : undefined) || defaultLabels
 
   return (
-    <div className={[className, 'font-semibold'].filter(Boolean).join(' ')}>
-      {(typeof totalDocs === 'undefined' || totalDocs === 0) && 'Search produced no results.'}
+    <p className={cn('text-sm text-muted-foreground', className)}>
+      {(typeof totalDocs === 'undefined' || totalDocs === 0) && 'No results.'}
       {typeof totalDocs !== 'undefined' &&
         totalDocs > 0 &&
-        `Showing ${indexStart}${indexStart > 0 ? ` - ${indexEnd}` : ''} of ${totalDocs} ${
+        `Showing ${indexStart}${indexStart > 0 ? ` to ${indexEnd}` : ''} of ${totalDocs} ${
           totalDocs > 1 ? plural : singular
         }`}
-    </div>
+    </p>
   )
 }

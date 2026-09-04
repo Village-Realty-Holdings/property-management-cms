@@ -1,13 +1,15 @@
 import React from 'react'
-import { MapPin } from 'lucide-react'
+import { ArrowUpRight, MapPin } from 'lucide-react'
 
 import type { LocationBlock as LocationBlockProps } from '@/payload-types'
 
 import RichText from '@/components/RichText'
+import { SectionHeader } from '@/components/SectionHeader'
 
-type Props = LocationBlockProps & { disableInnerContainer?: boolean }
+const linkClass =
+  'inline-flex w-fit items-center gap-1 rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline'
 
-export const LocationBlock: React.FC<Props> = (props) => {
+export const LocationBlock: React.FC<LocationBlockProps> = (props) => {
   const { heading, address, latitude, longitude, zoom, showMap, nearby, notes } = props
 
   const addressLines = [
@@ -35,62 +37,60 @@ export const LocationBlock: React.FC<Props> = (props) => {
   }
 
   return (
-    <div className="container my-16">
-      {heading && <h2 className="mb-8 text-3xl font-semibold">{heading}</h2>}
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="space-y-6">
+    <div className="container">
+      <SectionHeader heading={heading} />
+      <div className="grid gap-8 md:grid-cols-[2fr_3fr] md:gap-12">
+        <div className="flex flex-col gap-6">
           {addressLines.length > 0 && (
-            <address className="not-italic">
-              {addressLines.map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
+            <address className="flex flex-col gap-3 text-lead not-italic">
+              <span>
+                {addressLines.map((line, i) => (
+                  <span key={i} className="block">
+                    {line}
+                  </span>
+                ))}
+              </span>
               {directionsHref && (
-                <a
-                  href={directionsHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-block text-sm underline"
-                >
+                <a href={directionsHref} target="_blank" rel="noopener noreferrer" className={linkClass}>
                   Get directions
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
               )}
             </address>
           )}
 
           {nearby && nearby.length > 0 && (
-            <ul className="space-y-2">
+            <ul className="flex flex-col gap-2 text-sm">
               {nearby.map((place, index) => (
                 <li key={place.id ?? index} className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <span>
                     {place.name}
-                    {place.distance && (
-                      <span className="text-muted-foreground"> · {place.distance}</span>
-                    )}
+                    {place.distance && <span className="text-muted-foreground">, {place.distance}</span>}
                   </span>
                 </li>
               ))}
             </ul>
           )}
 
-          {notes && <RichText data={notes} enableGutter={false} />}
+          {notes && (
+            <div className="text-sm text-muted-foreground">
+              <RichText data={notes} enableGutter={false} />
+            </div>
+          )}
         </div>
 
         {embedSrc && mapHref && (
-          <div>
+          <div className="flex flex-col gap-2">
             <iframe
               src={embedSrc}
-              title={`Map of ${formattedAddress || 'the property'}`}
+              title={`Map of ${heading || formattedAddress || 'the location'}`}
               loading="lazy"
-              className="w-full aspect-[4/3] rounded border border-border"
+              className="aspect-[4/3] w-full rounded-lg border border-border bg-muted"
             />
-            <a
-              href={mapHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm text-muted-foreground underline"
-            >
+            <a href={mapHref} target="_blank" rel="noopener noreferrer" className={linkClass}>
               Open in maps
+              <ArrowUpRight className="size-4" aria-hidden="true" />
             </a>
           </div>
         )}

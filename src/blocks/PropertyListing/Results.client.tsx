@@ -85,31 +85,36 @@ export const ListingResults: React.FC<Props> = ({
   // previous result while the new one loads).
   const result = key ? (fetched?.result ?? initial) : initial
 
-  const summary = refined
+  const filters = refined
     ? [
-        refined.arrival && refined.departure ? `${refined.arrival} → ${refined.departure}` : null,
+        refined.arrival && refined.departure ? `${refined.arrival} to ${refined.departure}` : null,
         refined.guests ? `${refined.guests}+ guests` : null,
         refined.bedrooms ? `${refined.bedrooms}+ bedrooms` : null,
         refined.pets ? 'pet friendly' : null,
-      ]
-        .filter(Boolean)
-        .join(' · ')
-    : null
+      ].filter((f): f is string => Boolean(f))
+    : []
 
   return (
     <div className={cn(pending && 'opacity-60 transition-opacity')} aria-busy={pending}>
-      {summary && (
-        <p className="mb-4 text-sm text-muted-foreground">
-          {result.total} {result.total === 1 ? 'rental' : 'rentals'} · {summary}
+      {refined && (
+        <p className="mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">
+            {result.total} {result.total === 1 ? 'rental' : 'rentals'}
+          </span>
+          {filters.map((f) => (
+            <span key={f} className="rounded-md bg-muted px-2 py-0.5">
+              {f}
+            </span>
+          ))}
         </p>
       )}
 
       {result.items.length === 0 ? (
-        <p className="rounded border border-dashed border-border p-8 text-center text-muted-foreground">
+        <p className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
           {emptyMessage}
         </p>
       ) : view === 'carousel' ? (
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4">
+        <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 md:-mx-8 md:px-8">
           {result.items.map((p) => (
             <PropertyCard
               key={p.code}
@@ -121,7 +126,7 @@ export const ListingResults: React.FC<Props> = ({
           ))}
         </div>
       ) : (
-        <div className={cn('grid grid-cols-1 gap-6', columnClasses[columns])}>
+        <div className={cn('grid grid-cols-1 gap-5 md:gap-6', columnClasses[columns])}>
           {result.items.map((p) => (
             <PropertyCard key={p.code} property={p} href={detailHref} />
           ))}

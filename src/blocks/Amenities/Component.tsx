@@ -21,9 +21,8 @@ import {
 
 import type { AmenitiesBlock as AmenitiesBlockProps } from '@/payload-types'
 
+import { SectionHeader } from '@/components/SectionHeader'
 import { cn } from '@/lib/ui'
-
-type Props = AmenitiesBlockProps & { disableInnerContainer?: boolean }
 
 const icons: Record<string, LucideIcon> = {
   wifi: Wifi,
@@ -50,24 +49,23 @@ const columnClasses: Record<string, string> = {
   '4': 'md:grid-cols-2 lg:grid-cols-4',
 }
 
-export const AmenitiesBlock: React.FC<Props> = ({ heading, columns, items }) => {
+export const AmenitiesBlock: React.FC<AmenitiesBlockProps> = ({ heading, columns, items }) => {
   if (!items || items.length === 0) return null
 
   return (
-    <div className="container my-16">
-      {heading && <h2 className="mb-8 text-3xl font-semibold">{heading}</h2>}
+    <div className="container">
+      <SectionHeader heading={heading} />
       <ul className={cn('grid grid-cols-1 gap-4', columnClasses[columns ?? '3'])}>
         {items.map((item, index) => {
           const Icon = icons[item.icon ?? 'wifi'] ?? Wifi
           return (
-            <li
-              key={item.id ?? index}
-              className="flex items-start gap-3 rounded border border-border bg-card p-4"
-            >
-              <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <li key={item.id ?? index} className="surface flex items-start gap-4 p-5">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
               <div className="min-w-0">
-                <div className="font-medium">{item.label}</div>
-                {item.note && <div className="text-sm text-muted-foreground">{item.note}</div>}
+                <p className="font-medium">{item.label}</p>
+                {item.note && <p className="mt-0.5 text-sm text-muted-foreground">{item.note}</p>}
               </div>
             </li>
           )
