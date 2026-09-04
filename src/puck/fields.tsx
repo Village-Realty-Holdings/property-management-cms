@@ -10,10 +10,21 @@ import { defaultProps } from './adapters'
 /**
  * Sidebar editors for the visual editor, built from the block schema.
  *
- * Simple fields map onto Puck's own fields. Uploads get a media picker,
- * single relationships a document picker. Rich text and nested blocks keep
- * their data but are edited in the form view; the sidebar says so.
+ * Simple fields map onto Puck's own fields. Text and textarea fields are also
+ * editable inline on the canvas. Uploads get a media picker, single
+ * relationships a document picker. Rich text and nested blocks keep their
+ * data but are edited in the form view; the sidebar says so.
  */
+
+/**
+ * Text fields that are not prose: links, ids, codes and address parts. Puck
+ * hands an inline-editable field to the block as a React node instead of a
+ * string, so anything a block uses as an attribute or runs string methods on
+ * stays sidebar-only.
+ */
+const NOT_INLINE = /^(url|href|link|linkUrl|email|code|slug|anchor|nodeId|currency|street|city|region|postalCode|country)$|(url|href|id|code)$/i
+
+export const isInlineText = (name: string): boolean => !NOT_INLINE.test(name)
 export function toPuckFields(fields: FieldSchema[]): Record<string, Field> {
   const out: Record<string, Field> = {}
   for (const field of fields) out[field.name] = toPuckField(field)
@@ -31,6 +42,7 @@ export function toPuckField(field: FieldSchema): Field {
       if (field.hasMany) return listField(field.label)
       switch (field.type) {
         case 'textarea':
+          return { type: 'textarea', label: field.label, contentEditable: isInlineText(field.name) }
         case 'json':
           return { type: 'textarea', label: field.label }
         case 'number':
@@ -46,6 +58,8 @@ export function toPuckField(field: FieldSchema): Field {
           }
         case 'point':
           return noteField(field.label, 'Edit in the form view.')
+        case 'text':
+          return { type: 'text', label: field.label, contentEditable: isInlineText(field.name) }
         default:
           return { type: 'text', label: field.label }
       }
