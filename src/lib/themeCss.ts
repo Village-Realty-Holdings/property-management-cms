@@ -11,6 +11,7 @@ export const FONT_OPTIONS = [
   { label: 'DM Sans', value: 'dm-sans' },
   { label: 'Lora (serif)', value: 'lora' },
   { label: 'Playfair Display (serif)', value: 'playfair' },
+  { label: 'Source Sans 3', value: 'source-sans' },
 ] as const
 
 export type FontKey = (typeof FONT_OPTIONS)[number]['value']
@@ -22,6 +23,7 @@ export const FONT_VARIABLES: Record<FontKey, string> = {
   'dm-sans': '--font-dm-sans',
   lora: '--font-lora',
   playfair: '--font-playfair',
+  'source-sans': '--font-source-sans',
 }
 
 export const RADIUS_OPTIONS = [
@@ -82,6 +84,48 @@ const paletteDeclarations = (palette: ThemePalette | null | undefined): string[]
   return out
 }
 
+const validHex = (value: unknown): string | null =>
+  typeof value === 'string' && HEX.test(value) ? value.toLowerCase() : null
+
+const mix = (a: string, b: string, pct: number) => `color-mix(in oklch,${a},${b} ${pct}%)`
+
+/**
+ * Tokens for `[data-surface='inverted']` (photo heros, image-backed sections,
+ * the header while it sits over a hero). The stylesheet hard-codes a dark
+ * palette there, which the root override never reaches, so surfaces inside
+ * would ignore the tenant's colours. Swaps the tenant's background and
+ * foreground and derives the surface tokens from them; primary carries over as-is.
+ */
+const invertedDeclarations = (palette: ThemePalette | null | undefined): string[] => {
+  if (!palette) return []
+  const bg = validHex(palette.foreground)
+  const fg = validHex(palette.background)
+  if (!bg || !fg) return []
+  const primary = validHex(palette.primary)
+  const out = [
+    `--background:${bg}`,
+    `--foreground:${fg}`,
+    `--card:${mix(bg, fg, 6)}`,
+    `--card-foreground:${fg}`,
+    `--popover:${mix(bg, fg, 6)}`,
+    `--popover-foreground:${fg}`,
+    `--secondary:${mix(bg, fg, 12)}`,
+    `--secondary-foreground:${fg}`,
+    `--muted:${mix(bg, fg, 10)}`,
+    `--muted-foreground:${mix(fg, bg, 30)}`,
+    `--accent:${primary ? mix(bg, primary, 30) : mix(bg, fg, 14)}`,
+    `--accent-foreground:${fg}`,
+    `--border:${mix(bg, fg, 20)}`,
+    `--input:${mix(bg, fg, 20)}`,
+  ]
+  if (primary) {
+    out.push(`--primary:${primary}`)
+    const primaryFg = validHex(palette.primaryForeground)
+    if (primaryFg) out.push(`--primary-foreground:${primaryFg}`)
+  }
+  return out
+}
+
 /** Font presets the theme actually uses, so the layout can load only those. */
 export const themeFonts = (theme: ThemeInput | null | undefined): FontKey[] => {
   const keys = new Set<FontKey>()
@@ -116,5 +160,8 @@ export const themeToCss = (theme: ThemeInput | null | undefined): string => {
 
   const blocks: string[] = []
   if (root.length) blocks.push(`html:root{${root.join(';')}}`)
+
+  const inverted = invertedDeclarations(theme.light)
+  if (inverted.length) blocks.push(`html:root [data-surface='inverted']{${inverted.join(';')}}`)
   return blocks.join('\n')
 }
