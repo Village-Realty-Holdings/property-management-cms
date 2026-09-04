@@ -22,7 +22,7 @@ export const PropertyCard: React.FC<Props> = ({ property, href, className, compa
   return (
     <article
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded border border-border bg-card',
+        'group surface relative flex flex-col overflow-hidden transition-shadow has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/40 hover:shadow-lg hover:shadow-foreground/5',
         className,
       )}
     >
@@ -34,29 +34,31 @@ export const PropertyCard: React.FC<Props> = ({ property, href, className, compa
             src={cover.url}
             alt={cover.caption ?? property.name}
             loading="lazy"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
           />
         )}
         {property.featured && (
-          <span className="absolute left-3 top-3 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+          <span className="absolute top-3 left-3 rounded-md bg-background/95 px-2 py-1 text-xs font-medium text-foreground">
             Featured
           </span>
         )}
         {property.rating && (
-          <span className="absolute right-3 top-3 flex items-center gap-1 rounded bg-background/90 px-2 py-0.5 text-xs font-medium">
-            <Star className="size-3 fill-current" aria-hidden="true" />
+          <span className="absolute top-3 right-3 flex items-center gap-1 rounded-md bg-background/95 px-2 py-1 text-xs font-medium">
+            <Star className="size-3 fill-warning text-warning" aria-hidden="true" />
             {property.rating.toFixed(1)}
             <span className="text-muted-foreground">({property.reviewCount})</span>
           </span>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">
+      <div className="flex flex-1 flex-col gap-1.5 p-4 md:p-5">
+        <p className="text-sm text-muted-foreground">
           {property.address.city}, {property.address.state}
-        </div>
-        <h3 className="text-lg font-semibold leading-tight">
-          <Title {...(link ? { href: link, className: 'after:absolute after:inset-0' } : {})}>
+        </p>
+        <h3 className="text-lg leading-snug">
+          <Title
+            {...(link ? { href: link, className: 'after:absolute after:inset-0 outline-none' } : {})}
+          >
             {property.name}
           </Title>
         </h3>
@@ -64,33 +66,31 @@ export const PropertyCard: React.FC<Props> = ({ property, href, className, compa
           <p className="text-sm text-muted-foreground">{property.headline}</p>
         )}
 
-        <ul className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-2 text-sm text-muted-foreground">
-          <li className="flex items-center gap-1">
-            <BedDouble className="size-4" aria-hidden="true" /> {property.bedrooms} BR
+        <ul className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-3 text-sm text-muted-foreground">
+          <li className="flex items-center gap-1.5">
+            <BedDouble className="size-4" aria-hidden="true" /> {property.bedrooms} bed
           </li>
-          <li className="flex items-center gap-1">
-            <Bath className="size-4" aria-hidden="true" /> {formatBaths(property.bathrooms)} BA
+          <li className="flex items-center gap-1.5">
+            <Bath className="size-4" aria-hidden="true" /> {formatBaths(property.bathrooms)} bath
           </li>
-          <li className="flex items-center gap-1">
+          <li className="flex items-center gap-1.5">
             <Users className="size-4" aria-hidden="true" /> Sleeps {property.sleeps}
           </li>
           {property.petsAllowed && (
-            <li className="flex items-center gap-1">
+            <li className="flex items-center gap-1.5">
               <PawPrint className="size-4" aria-hidden="true" /> Pets
             </li>
           )}
         </ul>
 
-        <div className="flex items-baseline justify-between border-t border-border pt-3">
-          <div>
+        <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
+          <p>
             <span className="text-lg font-semibold">
               {formatRate(property.rates.avgNightly, property.rates.currency)}
             </span>
             <span className="text-sm text-muted-foreground"> avg / night</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {property.rates.minStay}-night min
-          </span>
+          </p>
+          <span className="text-xs text-muted-foreground">{property.rates.minStay}-night min</span>
         </div>
       </div>
     </article>

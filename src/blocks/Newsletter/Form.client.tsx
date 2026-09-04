@@ -44,7 +44,11 @@ export const NewsletterForm: React.FC<Props> = ({
   }
 
   if (state === 'done') {
-    return <p className="text-lg font-medium" role="status">{successMessage}</p>
+    return (
+      <p className="text-lead font-medium" role="status">
+        {successMessage}
+      </p>
+    )
   }
 
   return (
@@ -58,21 +62,15 @@ export const NewsletterForm: React.FC<Props> = ({
         type="email"
         required
         autoComplete="email"
-        placeholder="you@example.com"
-        className={cn('h-11 flex-1', inverted && 'bg-background text-foreground')}
+        placeholder="Your email"
+        className={cn('h-12 flex-1 text-base', inverted && 'border-transparent bg-background text-foreground')}
       />
-      <Button
-        type="submit"
-        size="lg"
-        variant={inverted ? 'secondary' : 'default'}
-        className="h-11"
-        disabled={state === 'sending'}
-      >
+      <Button type="submit" size="lg" variant={inverted ? 'inverse' : 'default'} disabled={state === 'sending'}>
         {state === 'sending' ? 'Sending…' : buttonLabel}
       </Button>
       {state === 'error' && (
         <p className="text-sm sm:basis-full" role="alert">
-          Something went wrong. Please try again.
+          We couldn&apos;t save your email. Please try again.
         </p>
       )}
     </form>

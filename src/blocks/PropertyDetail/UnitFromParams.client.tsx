@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import type { PropertyDetailBlock as Props } from '@/payload-types'
@@ -32,11 +33,24 @@ export const UnitFromParams: React.FC<Props> = (props) => {
   if (!code) {
     return (
       <div className="container">
-        <p className="rounded border border-dashed border-border p-8 text-center text-muted-foreground">
-          Pick a rental to see its details.
+        <p className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
+          Choose a rental to see its details.{' '}
+          <Link href="/rentals" className="font-medium text-primary underline-offset-4 hover:underline">
+            Browse rentals
+          </Link>
         </p>
       </div>
     )
   }
-  return <>{tree?.code === code ? tree.node : null}</>
+
+  if (tree?.code !== code) {
+    return (
+      <div className="container" aria-busy="true">
+        <div className="h-8 w-1/2 animate-pulse rounded-md bg-muted" />
+        <div className="mt-6 aspect-[3/2] w-full animate-pulse rounded-lg bg-muted md:aspect-[3/1]" />
+      </div>
+    )
+  }
+
+  return <>{tree.node}</>
 }

@@ -13,6 +13,8 @@ import {
 
 import type { BookingStepsBlock as Props } from '@/payload-types'
 
+import { SectionHeader } from '@/components/SectionHeader'
+
 const icons: Record<string, LucideIcon> = {
   search: Search,
   calendar: CalendarDays,
@@ -24,33 +26,33 @@ const icons: Record<string, LucideIcon> = {
   check: Check,
 }
 
-export const BookingStepsBlock: React.FC<Props & { disableInnerContainer?: boolean }> = ({
-  heading,
-  intro,
-  steps,
-}) => {
+/** The steps really are a sequence, so they are numbered and joined by a line. */
+export const BookingStepsBlock: React.FC<Props> = ({ heading, intro, steps }) => {
   if (!steps?.length) return null
   return (
     <div className="container">
-      {(heading || intro) && (
-        <header className="mb-10 max-w-[40rem] text-center mx-auto">
-          {heading && <h2 className="text-3xl font-semibold">{heading}</h2>}
-          {intro && <p className="mt-2 text-muted-foreground">{intro}</p>}
-        </header>
-      )}
-      <ol className="grid gap-8 md:grid-cols-3">
+      <SectionHeader heading={heading} intro={intro} />
+      <ol className="grid gap-8 md:grid-cols-3 md:gap-6">
         {steps.map((step, i) => {
           const Icon = icons[step.icon ?? 'search'] ?? Search
           return (
-            <li key={step.id ?? i} className="relative flex flex-col items-center text-center">
-              <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Icon className="size-6" aria-hidden="true" />
+            <li key={step.id ?? i} className="relative flex gap-4 md:flex-col md:gap-5">
+              <div className="relative flex shrink-0 flex-col items-center md:w-full md:flex-row">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                {i < steps.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 w-px flex-1 bg-border md:mt-0 md:ml-3 md:h-px md:w-auto"
+                  />
+                )}
               </div>
-              <span className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Step {i + 1}
-              </span>
-              <h3 className="text-lg font-semibold">{step.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{step.text}</p>
+              <div className="pb-2 md:pb-0">
+                <p className="text-sm text-muted-foreground">Step {i + 1}</p>
+                <h3 className="mt-1 text-subtitle">{step.title}</h3>
+                <p className="mt-2 text-muted-foreground">{step.text}</p>
+              </div>
             </li>
           )
         })}

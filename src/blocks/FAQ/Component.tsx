@@ -4,8 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import type { FAQBlock as FAQBlockProps } from '@/payload-types'
 
 import RichText from '@/components/RichText'
-
-type Props = FAQBlockProps & { disableInnerContainer?: boolean }
+import { SectionHeader } from '@/components/SectionHeader'
 
 type LexicalNode = { text?: string; children?: LexicalNode[] }
 
@@ -21,7 +20,7 @@ const lexicalToText = (data: unknown): string => {
   return walk(root).replace(/\s+/g, ' ').trim()
 }
 
-export const FAQBlock: React.FC<Props> = ({ heading, intro, items }) => {
+export const FAQBlock: React.FC<FAQBlockProps> = ({ heading, intro, items }) => {
   const list = items || []
 
   const jsonLd = {
@@ -39,21 +38,20 @@ export const FAQBlock: React.FC<Props> = ({ heading, intro, items }) => {
 
   return (
     <div className="container">
-      <div className="mx-auto max-w-3xl">
-        {heading && <h2 className="text-3xl font-semibold">{heading}</h2>}
-        {intro && <p className="mt-3 text-muted-foreground">{intro}</p>}
+      <div className="grid gap-8 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <SectionHeader heading={heading} intro={intro} className="mb-0" />
 
-        <div className="mt-8">
+        <div className="divide-y divide-border border-y border-border">
           {list.map((item, i) => (
-            <details key={item.id || i} className="group border-b border-border">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left font-medium [&::-webkit-details-marker]:hidden">
+            <details key={item.id || i} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 text-left text-lg font-medium [&::-webkit-details-marker]:hidden">
                 <span>{item.question}</span>
                 <ChevronDown
                   className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-                  aria-hidden
+                  aria-hidden="true"
                 />
               </summary>
-              <div className="pb-4">
+              <div className="pb-6 text-muted-foreground">
                 <RichText data={item.answer} enableGutter={false} />
               </div>
             </details>

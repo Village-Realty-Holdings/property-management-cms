@@ -1,54 +1,12 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'shadcn/tailwind.css';
 @import '../shadcn-theme.css';
 
 @config '../../../tailwind.config.mjs';
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is([data-theme='dark'] *));
-@custom-variant sm (@media (width >= theme(--breakpoint-sm)));
-@custom-variant md (@media (width >= theme(--breakpoint-md)));
-@custom-variant lg (@media (width >= theme(--breakpoint-lg)));
-@custom-variant xl (@media (width >= theme(--breakpoint-xl)));
-@custom-variant 2xl (@media (width >= theme(--breakpoint-2xl)));
-
-@layer base {
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: unset;
-    font-size: unset;
-    font-family: var(--font-heading);
-  }
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
-
-@plugin "@tailwindcss/typography";
-
-@source inline("lg:col-span-4");
-@source inline("lg:col-span-6");
-@source inline("lg:col-span-8");
-@source inline("lg:col-span-12");
-@source inline("border-border");
-@source inline("bg-card");
-@source inline("border-error");
-@source inline("bg-error/30");
-@source inline("border-success");
-@source inline("bg-success/30");
-@source inline("border-warning");
-@source inline("bg-warning/30");
 
 @theme {
   --breakpoint-sm: 40rem;
@@ -60,94 +18,90 @@
   --font-sans: var(--font-geist-sans);
 }
 
-@layer utilities {
-  .container {
-    width: 100%;
-    margin-inline: auto;
-    padding-inline: 1rem;
-  }
-
-  @variant sm {
-    .container {
-      max-width: var(--breakpoint-sm);
-    }
-  }
-
-  @variant md {
-    .container {
-      max-width: var(--breakpoint-md);
-      padding-inline: 2rem;
-    }
-  }
-
-  @variant lg {
-    .container {
-      max-width: var(--breakpoint-lg);
-    }
-  }
-
-  @variant xl {
-    .container {
-      max-width: var(--breakpoint-xl);
-    }
-  }
-
-  @variant 2xl {
-    .container {
-      max-width: var(--breakpoint-2xl);
-    }
-  }
-}
-
+/* Classes built at runtime from CMS values; Tailwind can't see them in source. */
+@source inline('lg:col-span-{4,6,8,12}');
+@source inline('{border,bg}-{error,success,warning}');
+@source inline('bg-{error,success,warning}/15');
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
-    @apply bg-background text-foreground min-h-[100vh] flex flex-col;
+    @apply flex min-h-svh flex-col bg-background text-foreground antialiased;
+    overflow-x: clip;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-html {
-  opacity: 0;
+@utility container {
+  width: 100%;
+  max-width: var(--breakpoint-2xl);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @variant md {
+    padding-inline: 2rem;
+  }
+  @variant xl {
+    padding-inline: 3rem;
+  }
 }
 
-html[data-theme='dark'],
-html[data-theme='light'] {
-  opacity: initial;
+/* Type scale. Headings pick up the tenant's heading font from the base layer. */
+@utility text-display {
+  font-size: clamp(2.5rem, 1.5rem + 3.6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+@utility text-title {
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+@utility text-subtitle {
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+@utility text-lead {
+  font-size: 1.125rem;
+  line-height: 1.6;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* A bordered surface that follows the tenant's corner rounding. */
+@utility surface {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
 }

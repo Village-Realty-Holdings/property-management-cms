@@ -13,18 +13,12 @@ export const PhotoGrid: React.FC<{ photos: PropertyPhoto[]; name: string }> = ({
   const hero = sorted[active] ?? sorted[0]!
 
   return (
-    <div className="grid gap-2 md:grid-cols-[2fr_1fr]">
-      <figure className="overflow-hidden rounded border border-border bg-muted">
-        <img
-          src={hero.url}
-          alt={hero.caption ?? name}
-          className="aspect-[3/2] size-full object-cover"
-        />
-        {hero.caption && (
-          <figcaption className="px-3 py-2 text-sm text-muted-foreground">{hero.caption}</figcaption>
-        )}
+    <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+      <figure className="overflow-hidden rounded-xl bg-muted">
+        <img src={hero.url} alt={hero.caption ?? name} className="aspect-[3/2] size-full object-cover" />
+        {hero.caption && <figcaption className="px-1 py-2 text-sm text-muted-foreground">{hero.caption}</figcaption>}
       </figure>
-      <ul className="grid grid-cols-3 gap-2 md:grid-cols-2">
+      <ul className="grid grid-cols-3 gap-3 md:grid-cols-2">
         {sorted.slice(0, 6).map((photo, i) => (
           <li key={photo.url}>
             <button
@@ -33,8 +27,8 @@ export const PhotoGrid: React.FC<{ photos: PropertyPhoto[]; name: string }> = ({
               aria-label={photo.caption ? `Show ${photo.caption}` : `Show photo ${i + 1}`}
               aria-pressed={i === active}
               className={cn(
-                'block aspect-[3/2] w-full overflow-hidden rounded border bg-muted',
-                i === active ? 'border-primary' : 'border-border',
+                'block aspect-[3/2] w-full overflow-hidden rounded-lg bg-muted ring-2 ring-offset-2 ring-offset-background transition-[ring-color]',
+                i === active ? 'ring-primary' : 'ring-transparent hover:ring-border',
               )}
             >
               <img src={photo.url} alt="" loading="lazy" className="size-full object-cover" />

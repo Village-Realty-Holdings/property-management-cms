@@ -13,14 +13,14 @@ describe('buttonVariants', () => {
 
     expect(classes).toContain('h-auto')
     expect(classes).toContain('px-0')
-    expect(classes).not.toMatch(/\bh-8\b/)
-    expect(classes).not.toMatch(/\bpx-2\.5\b/)
+    expect(classes).not.toMatch(/\bh-10\b/)
+    expect(classes).not.toMatch(/\bpx-4\b/)
   })
 
   it('still boxes the default size', () => {
     const classes = buttonVariants({ variant: 'default', size: 'default' })
 
-    expect(classes).toMatch(/\bh-8\b/)
-    expect(classes).toMatch(/\bpx-2\.5\b/)
+    expect(classes).toMatch(/\bh-10\b/)
+    expect(classes).toMatch(/\bpx-4\b/)
   })
 })

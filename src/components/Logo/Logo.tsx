@@ -1,29 +1,16 @@
-import clsx from 'clsx'
 import React from 'react'
 
-interface Props {
+import { cn } from '@/lib/ui'
+
+type Props = {
+  /** Site name from the tenant's header. */
+  brand?: string | null
   className?: string
-  loading?: 'lazy' | 'eager'
-  priority?: 'auto' | 'high' | 'low'
 }
 
-export const Logo = (props: Props) => {
-  const { loading: loadingFromProps, priority: priorityFromProps, className } = props
-
-  const loading = loadingFromProps || 'lazy'
-  const priority = priorityFromProps || 'low'
-
-  return (
-    /* eslint-disable @next/next/no-img-element */
-    <img
-      alt="Payload Logo"
-      width={193}
-      height={34}
-      loading={loading}
-      fetchPriority={priority}
-      decoding="async"
-      className={clsx('max-w-[9.375rem] w-full h-[34px]', className)}
-      src="https://raw.githubusercontent.com/payloadcms/payload/3.x/packages/ui/src/assets/payload-logo-light.svg"
-    />
-  )
-}
+/** The wordmark used in the header and footer. */
+export const Logo: React.FC<Props> = ({ brand, className }) => (
+  <span className={cn('font-heading text-xl font-semibold tracking-tight', className)}>
+    {brand || 'Home'}
+  </span>
+)

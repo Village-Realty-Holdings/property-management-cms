@@ -19,8 +19,8 @@ export async function renderPropertyDetail(
       { className: 'container' },
       React.createElement(
         'p',
-        { className: 'rounded border border-dashed border-border p-8 text-center text-muted-foreground' },
-        `Unit ${code} is not available right now.`,
+        { className: 'rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground' },
+        "This rental isn't available right now.",
       ),
     )
   }

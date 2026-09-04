@@ -24,15 +24,15 @@ export const hero: Field = {
           value: 'none',
         },
         {
-          label: 'High Impact',
+          label: 'Full-screen photo',
           value: 'highImpact',
         },
         {
-          label: 'Medium Impact',
+          label: 'Text, then photo',
           value: 'mediumImpact',
         },
         {
-          label: 'Low Impact',
+          label: 'Text only',
           value: 'lowImpact',
         },
       ],

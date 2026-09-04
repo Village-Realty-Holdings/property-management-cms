@@ -3,6 +3,7 @@ import React from 'react'
 import type { AvailabilitySearchBlock as Props } from '@/payload-types'
 
 import { getPropertyProvider } from '@/server/properties'
+import { pagePath } from '@/lib/pagePath'
 import { SearchForm } from './Form.client'
 
 const collectScoped = (
@@ -24,7 +25,7 @@ const collectScoped = (
   return nodes.filter((n) => keep.has(n.id) && n.id !== scope)
 }
 
-export const AvailabilitySearchBlock: React.FC<Props & { disableInnerContainer?: boolean }> = async ({
+export const AvailabilitySearchBlock: React.FC<Props & { raised?: boolean }> = async ({
   heading,
   resultsPage,
   showBedrooms,
@@ -33,15 +34,15 @@ export const AvailabilitySearchBlock: React.FC<Props & { disableInnerContainer?:
   nodeScope,
   layout,
   buttonLabel,
+  raised,
 }) => {
-  const page = typeof resultsPage === 'object' ? resultsPage : null
-  const action = page?.slug ? (page.slug === 'home' ? '/' : `/${page.slug}`) : '/'
-
+  const action = pagePath(resultsPage) ?? '/'
   const nodes = showNode ? collectScoped(await getPropertyProvider().listNodes(), nodeScope) : []
 
   return (
     <div className="container">
-      {heading && <h2 className="mb-4 text-2xl font-semibold">{heading}</h2>}
+      {/* When the form overlaps the hero the heading would sit on the photo, so it is read but not shown. */}
+      {heading && <h2 className={raised ? 'sr-only' : 'mb-4 text-subtitle'}>{heading}</h2>}
       <SearchForm
         action={action}
         buttonLabel={buttonLabel || 'Search'}

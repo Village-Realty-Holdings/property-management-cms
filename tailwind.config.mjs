@@ -4,41 +4,18 @@ const config = {
     extend: {
       typography: {
         DEFAULT: {
-          css: [
-            {
-              '--tw-prose-body': 'var(--text)',
-              '--tw-prose-headings': 'var(--text)',
-              h1: {
-                fontWeight: 'normal',
-                marginBottom: '0.25em',
-              },
-            },
-          ],
-        },
-        base: {
-          css: [
-            {
-              h1: {
-                fontSize: '2.5rem',
-              },
-              h2: {
-                fontSize: '1.25rem',
-                fontWeight: 600,
-              },
-            },
-          ],
-        },
-        md: {
-          css: [
-            {
-              h1: {
-                fontSize: '3.5rem',
-              },
-              h2: {
-                fontSize: '1.5rem',
-              },
-            },
-          ],
+          css: {
+            '--tw-prose-body': 'var(--color-foreground)',
+            '--tw-prose-headings': 'var(--color-foreground)',
+            '--tw-prose-links': 'var(--color-primary)',
+            '--tw-prose-bold': 'var(--color-foreground)',
+            '--tw-prose-quotes': 'var(--color-foreground)',
+            maxWidth: '65ch',
+            h1: { fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.05 },
+            h2: { fontWeight: 600, letterSpacing: '-0.015em', lineHeight: 1.15 },
+            h3: { fontWeight: 600, lineHeight: 1.25 },
+            a: { fontWeight: 500, textUnderlineOffset: '3px' },
+          },
         },
       },
     },

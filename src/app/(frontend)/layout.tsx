@@ -14,6 +14,7 @@ import { TenantThemeStyle } from '@/Theme/Component'
 import { fontClassNames } from '@/Theme/fonts'
 import { getTenantGlobal } from '@/server/getGlobals'
 import { themeFonts } from '@/lib/themeCss'
+import { getSiteMeta } from '@/seo/generateMeta'
 import { mergeOpenGraph } from '@/seo/mergeOpenGraph'
 import { draftMode } from 'next/headers'
 
@@ -45,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
 
           <Header />
-          {children}
+          <main className="flex-1">{children}</main>
           <Footer />
         </Providers>
       </body>
@@ -53,11 +54,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   )
 }
 
-export const metadata: Metadata = {
-  metadataBase: new URL(getServerSideURL()),
-  openGraph: mergeOpenGraph(),
-  twitter: {
-    card: 'summary_large_image',
-    creator: '@payloadcms',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteMeta()
+  return {
+    metadataBase: new URL(getServerSideURL()),
+    title: site.name ?? undefined,
+    description: site.description ?? undefined,
+    openGraph: mergeOpenGraph(site),
+    twitter: {
+      card: 'summary_large_image',
+    },
+  }
 }
