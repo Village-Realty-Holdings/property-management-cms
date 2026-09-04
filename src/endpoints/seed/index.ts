@@ -18,9 +18,12 @@ const collections: CollectionSlug[] = [
   'forms',
   'form-submissions',
   'search',
+  'payload-mcp-api-keys',
 ]
 
 const globals: GlobalSlug[] = ['header', 'footer']
+
+const MCP_SEED_API_KEY = 'seed-mcp-full-access-key'
 
 const categories = ['Technology', 'News', 'Finance', 'Design', 'Software', 'Engineering']
 
@@ -273,6 +276,31 @@ export const seed = async ({
       },
     }),
   ])
+
+  payload.logger.info(`— Seeding MCP API key...`)
+
+  // TEMPORARY: a full-access MCP key for local development. Tracked for removal in
+  // the vault backlog. Do not ship this seed step to a shared environment.
+  const fullAccess = { create: true, delete: true, find: true, update: true }
+
+  await payload.create({
+    collection: 'payload-mcp-api-keys',
+    data: {
+      user: demoAuthor.id,
+      label: 'Seed full access',
+      description: 'Development key with every MCP capability enabled',
+      enableAPIKey: true,
+      apiKey: MCP_SEED_API_KEY,
+      pages: fullAccess,
+      posts: fullAccess,
+      categories: fullAccess,
+      media: { find: true },
+      header: { find: true, update: true },
+      footer: { find: true, update: true },
+    },
+  })
+
+  payload.logger.info(`— MCP API key: ${MCP_SEED_API_KEY}`)
 
   payload.logger.info('Seeded database successfully!')
 }

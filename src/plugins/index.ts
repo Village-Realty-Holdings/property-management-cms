@@ -1,4 +1,5 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
+import { mcpPlugin } from '@payloadcms/plugin-mcp'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -86,6 +87,36 @@ export const plugins: Plugin[] = [
     searchOverrides: {
       fields: ({ defaultFields }) => {
         return [...defaultFields, ...searchFields]
+      },
+    },
+  }),
+  mcpPlugin({
+    collections: {
+      pages: {
+        description: 'Website pages built from layout blocks',
+        enabled: true,
+      },
+      posts: {
+        description: 'Blog posts with rich text content and categories',
+        enabled: true,
+      },
+      categories: {
+        description: 'Nested categories used to group posts',
+        enabled: true,
+      },
+      media: {
+        description: 'Uploaded images and files',
+        enabled: { find: true },
+      },
+    },
+    globals: {
+      header: {
+        description: 'Site header navigation',
+        enabled: true,
+      },
+      footer: {
+        description: 'Site footer navigation',
+        enabled: true,
       },
     },
   }),
