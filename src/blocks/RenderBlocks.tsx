@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 
 import type { Page } from '@/payload-types'
 
@@ -23,6 +23,7 @@ import { PropertyListingBlock } from '@/blocks/PropertyListing/Component'
 import { ReviewsFeedBlock } from '@/blocks/ReviewsFeed/Component'
 import { SectionBlock } from '@/blocks/Section/Component'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
+import { cn } from '@/lib/ui'
 
 const blockComponents = {
   amenities: AmenitiesBlock,
@@ -48,36 +49,36 @@ const blockComponents = {
   testimonials: TestimonialsBlock,
 }
 
-export const RenderBlocks: React.FC<{
+type Props = {
   blocks: Page['layout'][0][]
-}> = (props) => {
-  const { blocks } = props
+  /** Set when the page opens with a full-bleed hero so a leading search block can overlap its edge. */
+  afterFullBleedHero?: boolean
+}
 
-  const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
+/**
+ * Renders the page's blocks with one shared vertical rhythm. Blocks own
+ * their horizontal layout only; the gap between them lives here.
+ */
+export const RenderBlocks: React.FC<Props> = ({ blocks, afterFullBleedHero }) => {
+  if (!Array.isArray(blocks) || blocks.length === 0) return null
 
-  if (hasBlocks) {
-    return (
-      <Fragment>
-        {blocks.map((block, index) => {
-          const { blockType } = block
+  const overlapFirst = afterFullBleedHero && blocks[0]?.blockType === 'availabilitySearch'
 
-          if (blockType && blockType in blockComponents) {
-            const Block = blockComponents[blockType]
+  return (
+    <div className={cn('flex flex-col gap-16 md:gap-24', !afterFullBleedHero && 'mt-12 md:mt-16')}>
+      {blocks.map((block, index) => {
+        const { blockType } = block
+        if (!blockType || !(blockType in blockComponents)) return null
+        const Block = blockComponents[blockType]
 
-            if (Block) {
-              return (
-                <div className="my-16" key={index}>
-                  {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                  <Block {...block} disableInnerContainer />
-                </div>
-              )
-            }
-          }
-          return null
-        })}
-      </Fragment>
-    )
-  }
-
-  return null
+        const raised = overlapFirst && index === 0
+        return (
+          <div key={index} className={cn(raised && 'relative z-10 -mt-20 md:-mt-24')}>
+            {/* @ts-expect-error there may be some mismatch between the expected types here */}
+            <Block {...block} raised={raised} />
+          </div>
+        )
+      })}
+    </div>
+  )
 }

@@ -1,22 +1,23 @@
 'use client'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import React, { useState } from 'react'
+import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 
 import type { Theme } from './types'
 
 import { useTheme } from '..'
 import { themeLocalStorageKey } from './types'
 
+const options = [
+  { value: 'auto', label: 'System', Icon: MonitorIcon },
+  { value: 'light', label: 'Light', Icon: SunIcon },
+  { value: 'dark', label: 'Dark', Icon: MoonIcon },
+]
+
 export const ThemeSelector: React.FC = () => {
   const { setTheme } = useTheme()
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState('auto')
 
   const onThemeChange = (themeToSet: string | null) => {
     if (!themeToSet || themeToSet === 'auto') {
@@ -35,16 +36,16 @@ export const ThemeSelector: React.FC = () => {
 
   return (
     <Select onValueChange={onThemeChange} value={value}>
-      <SelectTrigger
-        aria-label="Select a theme"
-        className="w-auto bg-transparent gap-2 pl-0 md:pl-3 border-none"
-      >
+      <SelectTrigger aria-label="Colour theme" size="sm" className="w-auto gap-2 bg-background">
         <SelectValue placeholder="Theme" />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="auto">Auto</SelectItem>
-        <SelectItem value="light">Light</SelectItem>
-        <SelectItem value="dark">Dark</SelectItem>
+      <SelectContent align="end">
+        {options.map(({ value, label, Icon }) => (
+          <SelectItem key={value} value={value}>
+            <Icon className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            {label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   )

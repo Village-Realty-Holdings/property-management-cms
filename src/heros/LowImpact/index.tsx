@@ -14,12 +14,20 @@ type LowImpactHeroType =
       richText?: Page['hero']['richText']
     })
 
+/** A page title and a short intro, nothing else. */
 export const LowImpactHero: React.FC<LowImpactHeroType> = ({ children, richText }) => {
   return (
-    <div className="container mt-16">
-      <div className="max-w-[48rem]">
-        {children || (richText && <RichText data={richText} enableGutter={false} />)}
+    <section className="container pt-12 md:pt-20">
+      <div className="max-w-[44rem]">
+        {children ||
+          (richText && (
+            <RichText
+              data={richText}
+              enableGutter={false}
+              className="prose-h1:text-display prose-h2:text-title prose-p:text-lead prose-p:text-muted-foreground max-w-none"
+            />
+          ))}
       </div>
-    </div>
+    </section>
   )
 }

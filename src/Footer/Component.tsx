@@ -27,42 +27,58 @@ export async function Footer() {
   const brand = headerData?.brand
 
   return (
-    <footer className="mt-auto border-t border-border bg-black dark:bg-card text-white">
-      <div className="container py-10 grid gap-8 md:grid-cols-[1.5fr_1fr_1fr]">
-        <div className="flex flex-col gap-3">
-          <Link className="flex items-center" href="/">
-            {brand ? <span className="text-xl font-semibold">{brand}</span> : <Logo />}
+    <footer className="mt-24 border-t border-border bg-muted/60 md:mt-32">
+      <div className="container grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr] md:gap-12 md:py-20">
+        <div className="flex max-w-sm flex-col gap-3">
+          <Link className="inline-flex w-fit items-center rounded-md" href="/">
+            <Logo brand={brand} />
           </Link>
-          {footerData?.tagline && <p className="text-sm text-white/70">{footerData.tagline}</p>}
+          {footerData?.tagline && <p className="text-sm text-muted-foreground">{footerData.tagline}</p>}
         </div>
 
-        <nav className="flex flex-col gap-2 text-sm">
-          {navItems.map(({ link }, i) => (
-            <CMSLink className="text-white" key={i} {...link} />
-          ))}
-        </nav>
+        {navItems.length > 0 && (
+          <nav aria-label="Footer" className="flex flex-col gap-2.5 text-sm">
+            {navItems.map(({ link }, i) => (
+              <CMSLink
+                className="w-fit rounded-sm transition-colors hover:text-primary"
+                key={i}
+                {...link}
+              />
+            ))}
+          </nav>
+        )}
 
         {hasContact && (
-          <address className="not-italic text-sm text-white/80 flex flex-col gap-2">
+          <address className="flex flex-col gap-3 text-sm not-italic">
             {contact?.phone && (
-              <a className="text-white" href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}>
+              <a
+                className="w-fit rounded-sm font-medium transition-colors hover:text-primary"
+                href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
+              >
                 {contact.phone}
               </a>
             )}
-            <span>
-              <Lines text={contact?.address} />
-            </span>
-            <span className="text-white/60">
-              <Lines text={contact?.hours} />
-            </span>
+            {contact?.address && (
+              <span>
+                <Lines text={contact.address} />
+              </span>
+            )}
+            {contact?.hours && (
+              <span className="text-muted-foreground">
+                <Lines text={contact.hours} />
+              </span>
+            )}
           </address>
         )}
       </div>
-      <div className="container pb-6 flex flex-col-reverse gap-4 md:flex-row md:items-center md:justify-between text-xs text-white/60">
-        <span>
-          © {new Date().getFullYear()} {footerData?.copyright ?? brand ?? ''}
-        </span>
-        <ThemeSelector />
+
+      <div className="border-t border-border">
+        <div className="container flex flex-col-reverse gap-4 py-5 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <span>
+            © {new Date().getFullYear()} {footerData?.copyright ?? brand ?? ''}
+          </span>
+          <ThemeSelector />
+        </div>
       </div>
     </footer>
   )
