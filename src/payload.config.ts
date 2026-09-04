@@ -124,7 +124,9 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
-  db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
+  // `push: false`: local D1 is built from `src/migrations/` like production
+  // (`pnpm migrate`). Dev-mode push conflicts with a migrated database.
+  db: sqliteD1Adapter({ binding: cloudflare.env.D1, push: false }),
   collections: [Pages, Posts, Media, Categories, Tenants, Users, Header, Footer, Theme, SiteSettings],
   cors: [getServerSideURL()].filter(Boolean),
   logger: isProduction ? cloudflareLogger : undefined,
