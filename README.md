@@ -88,6 +88,10 @@ See the [Globals](https://payloadcms.com/docs/configuration/globals) docs for de
 
   Same as above but for the footer of your site.
 
+- `Theme`
+
+  Per-tenant look: light and dark colours, body and heading fonts, and corner rounding. The frontend turns it into CSS custom properties that override the defaults in `src/app/shadcn-theme.css`; empty fields keep the default look.
+
 ## Access control
 
 Basic access control is setup to limit access to various content based based on publishing status.

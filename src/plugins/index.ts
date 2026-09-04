@@ -118,6 +118,10 @@ const basePlugins: Plugin[] = [
         description: 'Per-tenant site footer navigation',
         enabled: { find: true },
       },
+      theme: {
+        description: 'Per-tenant colours, fonts and corner rounding',
+        enabled: { find: true },
+      },
     },
   }),
 ]
@@ -135,6 +139,7 @@ const tenantScoping = multiTenantPlugin({
     search: {},
     header: { isGlobal: true },
     footer: { isGlobal: true },
+    theme: { isGlobal: true },
   },
   tenantsSlug: 'tenants',
   userHasAccessToAllTenants: isSuperAdminUser,

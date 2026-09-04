@@ -22,6 +22,7 @@
   h6 {
     font-weight: unset;
     font-size: unset;
+    font-family: var(--font-heading);
   }
   * {
     @apply border-border outline-ring/50;

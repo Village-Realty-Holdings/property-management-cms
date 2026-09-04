@@ -76,6 +76,7 @@ export interface Config {
     users: User;
     header: Header;
     footer: Footer;
+    theme: Theme;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -102,6 +103,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    theme: ThemeSelect<false> | ThemeSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1591,6 +1593,64 @@ export interface Footer {
   createdAt: string;
 }
 /**
+ * Colours, fonts and corner rounding for this site. Empty fields keep the default look.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme".
+ */
+export interface Theme {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  light?: {
+    background?: string | null;
+    foreground?: string | null;
+    /**
+     * Buttons, links and other highlighted elements.
+     */
+    primary?: string | null;
+    primaryForeground?: string | null;
+    secondary?: string | null;
+    secondaryForeground?: string | null;
+    /**
+     * Hover states and subtle highlights.
+     */
+    accent?: string | null;
+    accentForeground?: string | null;
+    border?: string | null;
+    muted?: string | null;
+  };
+  dark?: {
+    background?: string | null;
+    foreground?: string | null;
+    /**
+     * Buttons, links and other highlighted elements.
+     */
+    primary?: string | null;
+    primaryForeground?: string | null;
+    secondary?: string | null;
+    secondaryForeground?: string | null;
+    /**
+     * Hover states and subtle highlights.
+     */
+    accent?: string | null;
+    accentForeground?: string | null;
+    border?: string | null;
+    muted?: string | null;
+  };
+  typography?: {
+    bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
+    headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair') | null;
+  };
+  shape?: {
+    /**
+     * Applies to buttons, cards, inputs and images.
+     */
+    radius?: ('none' | 'sm' | 'md' | 'lg' | 'xl') | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1759,6 +1819,12 @@ export interface PayloadMcpApiKey {
      */
     find?: boolean | null;
   };
+  theme?: {
+    /**
+     * Allow clients to find theme.
+     */
+    find?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
   enableAPIKey?: boolean | null;
@@ -1913,6 +1979,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'footer';
         value: number | Footer;
+      } | null)
+    | ({
+        relationTo: 'theme';
+        value: number | Theme;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2763,6 +2833,54 @@ export interface FooterSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme_select".
+ */
+export interface ThemeSelect<T extends boolean = true> {
+  tenant?: T;
+  light?:
+    | T
+    | {
+        background?: T;
+        foreground?: T;
+        primary?: T;
+        primaryForeground?: T;
+        secondary?: T;
+        secondaryForeground?: T;
+        accent?: T;
+        accentForeground?: T;
+        border?: T;
+        muted?: T;
+      };
+  dark?:
+    | T
+    | {
+        background?: T;
+        foreground?: T;
+        primary?: T;
+        primaryForeground?: T;
+        secondary?: T;
+        secondaryForeground?: T;
+        accent?: T;
+        accentForeground?: T;
+        border?: T;
+        muted?: T;
+      };
+  typography?:
+    | T
+    | {
+        bodyFont?: T;
+        headingFont?: T;
+      };
+  shape?:
+    | T
+    | {
+        radius?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -3000,6 +3118,11 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         find?: T;
       };
   footer?:
+    | T
+    | {
+        find?: T;
+      };
+  theme?:
     | T
     | {
         find?: T;

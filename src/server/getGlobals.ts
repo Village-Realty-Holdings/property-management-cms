@@ -2,11 +2,11 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { unstable_cache } from 'next/cache'
 
-import type { Footer, Header } from '@/payload-types'
+import type { Footer, Header, Theme } from '@/payload-types'
 
 import { resolveTenant } from './getTenant'
 
-type TenantGlobals = { header: Header; footer: Footer }
+type TenantGlobals = { header: Header; footer: Footer; theme: Theme }
 type Slug = keyof TenantGlobals
 
 const idOf = (tenant: unknown): string =>
@@ -14,7 +14,7 @@ const idOf = (tenant: unknown): string =>
     ? String((tenant as { id: unknown }).id)
     : String(tenant ?? '')
 
-/** Cache tag for one tenant's header or footer document. */
+/** Cache tag for one tenant's header, footer or theme document. */
 export const tenantGlobalTag = (slug: Slug, tenant: unknown) => `${slug}_${idOf(tenant)}`
 
 async function findTenantGlobal<T extends Slug>(slug: T, tenantId: string, depth: number) {
@@ -30,7 +30,7 @@ async function findTenantGlobal<T extends Slug>(slug: T, tenantId: string, depth
 }
 
 /**
- * The header or footer for the tenant of the current request, or null when
+ * The header, footer or theme for the tenant of the current request, or null when
  * the tenant has none yet. Cached per tenant and invalidated by the
  * collection's afterChange hook.
  */
