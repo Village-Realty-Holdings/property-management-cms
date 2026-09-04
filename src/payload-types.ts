@@ -225,7 +225,29 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (
+    | SectionBlock
+    | ContentBlock
+    | MediaBlock
+    | CallToActionBlock
+    | FormBlock
+    | GalleryBlock
+    | AmenitiesBlock
+    | LocationBlock
+    | PricingBlock
+    | TestimonialsBlock
+    | FAQBlock
+    | ArchiveBlock
+    | AvailabilitySearchBlock
+    | PropertyListingBlock
+    | PropertyDetailBlock
+    | ReviewsFeedBlock
+    | PromosBlock
+    | BookingStepsBlock
+    | OwnerCtaBlock
+    | AreaGuideBlock
+    | NewsletterBlock
+  )[];
   meta?: {
     title?: string | null;
     /**
@@ -492,59 +514,66 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock".
+ * via the `definition` "SectionBlock".
  */
-export interface CallToActionBlock {
-  richText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  links?:
-    | {
-        link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: number | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-          /**
-           * Choose how the link should be rendered.
-           */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
+export interface SectionBlock {
+  /**
+   * Optional title shown above the section content.
+   */
+  heading?: string | null;
+  /**
+   * Optional short intro shown under the heading.
+   */
+  subheading?: string | null;
+  /**
+   * Pick a shape, then fill its slots. Slots that the shape does not use are hidden.
+   */
+  layout?: ('single' | 'twoColumns' | 'mediaLeft' | 'mediaRight' | 'threeCards') | null;
+  /**
+   * How wide the section content can grow.
+   */
+  width?: ('container' | 'wide' | 'full') | null;
+  /**
+   * Vertical space above and below the section.
+   */
+  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+  /**
+   * Background behind the whole section.
+   */
+  background?: ('none' | 'muted' | 'image') | null;
+  /**
+   * Shown behind the section when Background is set to Image.
+   */
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Primary content. In media layouts this is the text side; in Three cards this is the first card.
+   */
+  main?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
+  /**
+   * Second column. In media layouts this is the media side; in Three cards this is the second card.
+   */
+  secondary?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
+  /**
+   * Third card.
+   */
+  third?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'cta';
+  blockType: 'section';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContentBlock".
  */
 export interface ContentBlock {
+  /**
+   * One column for plain body copy. Add more to place text side by side.
+   */
   columns?:
     | {
+        /**
+         * Columns wrap onto a new row when their widths add up past full.
+         */
         size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
         richText?: {
           root: {
@@ -593,6 +622,9 @@ export interface ContentBlock {
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
+  /**
+   * The caption set on the media item is shown under it.
+   */
   media: number | Media;
   id?: string | null;
   blockName?: string | null;
@@ -600,10 +632,13 @@ export interface MediaBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock".
+ * via the `definition` "CallToActionBlock".
  */
-export interface ArchiveBlock {
-  introContent?: {
+export interface CallToActionBlock {
+  /**
+   * A short heading and one or two sentences. The buttons sit beside it.
+   */
+  richText?: {
     root: {
       type: string;
       children: {
@@ -618,25 +653,45 @@ export interface ArchiveBlock {
     };
     [k: string]: unknown;
   } | null;
-  populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (number | Category)[] | null;
-  limit?: number | null;
-  selectedDocs?:
+  /**
+   * Up to two buttons. The first one is the primary action.
+   */
+  links?:
     | {
-        relationTo: 'posts';
-        value: number | Post;
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered.
+           */
+          appearance?: ('default' | 'outline') | null;
+        };
+        id?: string | null;
       }[]
     | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'archive';
+  blockType: 'cta';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FormBlock".
  */
 export interface FormBlock {
+  /**
+   * Forms are built under Forms in the sidebar. Pick one to embed here.
+   */
   form: number | Form;
   enableIntro?: boolean | null;
   introContent?: {
@@ -823,6 +878,619 @@ export interface Form {
     | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  /**
+   * Optional title shown above the images.
+   */
+  heading?: string | null;
+  /**
+   * Grid keeps images in even rows (first image is larger with 5+ images). Masonry stacks by height. Strip scrolls sideways.
+   */
+  layout?: ('grid' | 'masonry' | 'strip') | null;
+  images?:
+    | {
+        image: number | Media;
+        /**
+         * Short caption shown under the image.
+         */
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AmenitiesBlock".
+ */
+export interface AmenitiesBlock {
+  heading?: string | null;
+  /**
+   * Number of columns on desktop; stacks on small screens.
+   */
+  columns?: ('2' | '3' | '4') | null;
+  items?:
+    | {
+        /**
+         * Icon shown next to the label.
+         */
+        icon?:
+          | (
+              | 'wifi'
+              | 'parking'
+              | 'pool'
+              | 'gym'
+              | 'kitchen'
+              | 'laundry'
+              | 'airConditioning'
+              | 'heating'
+              | 'petFriendly'
+              | 'tv'
+              | 'elevator'
+              | 'balcony'
+              | 'security'
+              | 'garden'
+              | 'bbq'
+              | 'beach'
+            )
+          | null;
+        label: string;
+        /**
+         * Optional short note, e.g. "Free", "Shared", "On request".
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'amenities';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LocationBlock".
+ */
+export interface LocationBlock {
+  heading?: string | null;
+  address?: {
+    street?: string | null;
+    city?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  /**
+   * Right-click the spot in Google Maps and click the coordinates to copy them. First number is latitude.
+   */
+  latitude?: number | null;
+  /**
+   * Second number from the Google Maps coordinates.
+   */
+  longitude?: number | null;
+  /**
+   * Map zoom level: 1 is the whole world, 14 a neighbourhood, 19 a single building.
+   */
+  zoom?: number | null;
+  /**
+   * Embed an OpenStreetMap map. Requires latitude and longitude.
+   */
+  showMap?: boolean | null;
+  /**
+   * Points of interest close to the property.
+   */
+  nearby?:
+    | {
+        name: string;
+        /**
+         * e.g. "5 min walk", "2 km".
+         */
+        distance?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional directions, access instructions or neighbourhood notes.
+   */
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'location';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PricingBlock".
+ */
+export interface PricingBlock {
+  heading?: string | null;
+  /**
+   * Three-letter ISO currency code, e.g. USD, EUR, MXN.
+   */
+  currency?: string | null;
+  /**
+   * One card per rate or unit type, e.g. "Low season" or "Studio".
+   */
+  plans?:
+    | {
+        /**
+         * e.g. "Low season", "Studio".
+         */
+        name: string;
+        price: number;
+        /**
+         * What the price covers.
+         */
+        period?: ('night' | 'week' | 'month' | 'year' | 'once') | null;
+        /**
+         * Short blurb shown under the price.
+         */
+        description?: string | null;
+        /**
+         * Bullet points listed on the card.
+         */
+        features?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Visually emphasise this plan
+         */
+        highlighted?: boolean | null;
+        /**
+         * Add a call-to-action button to this plan.
+         */
+        enableLink?: boolean | null;
+        link?: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered.
+           */
+          appearance?: ('default' | 'outline') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Small print below the cards, e.g. "Taxes and cleaning fee not included".
+   */
+  footnote?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pricing';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock".
+ */
+export interface TestimonialsBlock {
+  heading?: string | null;
+  /**
+   * "Grid" shows every item as a card; "Single" shows only the first item, large and centered.
+   */
+  layout?: ('grid' | 'single') | null;
+  items?:
+    | {
+        quote: string;
+        author: string;
+        /**
+         * Context under the name, e.g. "Stayed March 2026".
+         */
+        role?: string | null;
+        /**
+         * 1 to 5 stars, leave empty to hide
+         */
+        rating?: number | null;
+        /**
+         * Optional photo of the guest.
+         */
+        avatar?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'testimonials';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FAQBlock".
+ */
+export interface FAQBlock {
+  heading?: string | null;
+  /**
+   * Optional short paragraph under the heading.
+   */
+  intro?: string | null;
+  /**
+   * Each item renders as an expandable question. Also emitted as FAQPage structured data for search engines.
+   */
+  items?:
+    | {
+        question: string;
+        answer: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ArchiveBlock".
+ */
+export interface ArchiveBlock {
+  introContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  populateBy?: ('collection' | 'selection') | null;
+  relationTo?: 'posts' | null;
+  categories?: (number | Category)[] | null;
+  limit?: number | null;
+  selectedDocs?:
+    | {
+        relationTo: 'posts';
+        value: number | Post;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'archive';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AvailabilitySearchBlock".
+ */
+export interface AvailabilitySearchBlock {
+  /**
+   * Shown above the form. Leave empty inside a hero.
+   */
+  heading?: string | null;
+  /**
+   * The page that holds a Property Listing block with "Follow the URL search" turned on. The form sends dates and guests there.
+   */
+  resultsPage: number | Page;
+  showBedrooms?: boolean | null;
+  /**
+   * Lists areas and complexes from the booking system.
+   */
+  showNode?: boolean | null;
+  showPets?: boolean | null;
+  /**
+   * Optional. Only offer locations under this node id (e.g. a region, so a tenant never sees another tenant's areas). Leave empty to list everything.
+   */
+  nodeScope?: string | null;
+  layout?: ('bar' | 'card') | null;
+  buttonLabel?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'availabilitySearch';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PropertyListingBlock".
+ */
+export interface PropertyListingBlock {
+  heading?: string | null;
+  /**
+   * Optional short text under the heading.
+   */
+  intro?: string | null;
+  source?: ('query' | 'codes') | null;
+  /**
+   * Unit codes from the booking system, shown in this order.
+   */
+  codes?:
+    | {
+        code: string;
+        id?: string | null;
+      }[]
+    | null;
+  query?: {
+    /**
+     * Region, area or complex id. Includes everything under it.
+     */
+    nodeId?: string | null;
+    /**
+     * Empty means any type.
+     */
+    types?: ('condo' | 'house' | 'townhome' | 'cabin' | 'villa')[] | null;
+    bedrooms?: number | null;
+    guests?: number | null;
+    pets?: boolean | null;
+    featuredOnly?: boolean | null;
+    /**
+     * Amenity ids the unit must have, e.g. beachfront, pool, pets.
+     */
+    amenityIds?: string[] | null;
+    sort?:
+      | (
+          | 'featured'
+          | 'random'
+          | 'name-asc'
+          | 'bedrooms-desc'
+          | 'bedrooms-asc'
+          | 'sleeps-desc'
+          | 'rate-asc'
+          | 'rate-desc'
+          | 'rating-desc'
+          | 'availability-desc'
+        )
+      | null;
+    limit?: number | null;
+    /**
+     * Turn on for the results page of an Availability Search block. Dates, guests, bedrooms and location from the URL narrow this filter.
+     */
+    followSearchParams?: boolean | null;
+  };
+  view?: ('grid' | 'carousel') | null;
+  columns?: ('2' | '3' | '4') | null;
+  /**
+   * Page holding a Property Detail block set to "From the URL". Cards link there with the unit code. Leave empty for plain cards.
+   */
+  detailPage?: (number | null) | Page;
+  emptyMessage?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'propertyListing';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PropertyDetailBlock".
+ */
+export interface PropertyDetailBlock {
+  source?: ('code' | 'param') | null;
+  /**
+   * The unit code in the booking system, e.g. WS-A312.
+   */
+  code?: string | null;
+  /**
+   * Which parts to show, in this fixed order.
+   */
+  sections?:
+    | ('photos' | 'summary' | 'description' | 'amenities' | 'reasons' | 'rates' | 'reviews' | 'tours' | 'promos')[]
+    | null;
+  bookLabel?: string | null;
+  /**
+   * Where the book button goes. "{code}" is replaced with the unit code. Empty hides the button.
+   */
+  bookUrl?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'propertyDetail';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReviewsFeedBlock".
+ */
+export interface ReviewsFeedBlock {
+  heading?: string | null;
+  /**
+   * Leave empty for reviews across all rentals.
+   */
+  propertyCode?: string | null;
+  /**
+   * Hide reviews below this.
+   */
+  minRating?: number | null;
+  limit?: number | null;
+  layout?: ('grid' | 'carousel') | null;
+  showUnit?: boolean | null;
+  showSummary?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'reviewsFeed';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PromosBlock".
+ */
+export interface PromosBlock {
+  heading?: string | null;
+  /**
+   * Only offers valid in this region or area.
+   */
+  nodeId?: string | null;
+  limit?: number | null;
+  ctaLabel?: string | null;
+  /**
+   * Where each offer's button goes, usually the search page.
+   */
+  ctaPage?: (number | null) | Page;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'promos';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BookingStepsBlock".
+ */
+export interface BookingStepsBlock {
+  heading?: string | null;
+  intro?: string | null;
+  steps?:
+    | {
+        icon?: ('search' | 'calendar' | 'card' | 'key' | 'home' | 'sun' | 'phone' | 'check') | null;
+        title: string;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'bookingSteps';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OwnerCtaBlock".
+ */
+export interface OwnerCtaBlock {
+  /**
+   * Small label above the heading.
+   */
+  eyebrow?: string | null;
+  heading: string;
+  text?: string | null;
+  benefits?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional photo beside the text.
+   */
+  image?: (number | null) | Media;
+  /**
+   * e.g. "Get a free rental projection" and "Owner login".
+   */
+  links?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered.
+           */
+          appearance?: ('default' | 'outline') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  tone?: ('accent' | 'plain') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ownerCta';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AreaGuideBlock".
+ */
+export interface AreaGuideBlock {
+  heading?: string | null;
+  intro?: string | null;
+  layout?: ('cards' | 'rows') | null;
+  items?:
+    | {
+        title: string;
+        /**
+         * e.g. "Beaches", "Dining", "Things to do", "Nightlife".
+         */
+        category?: string | null;
+        text: string;
+        image: number | Media;
+        /**
+         * Optional, e.g. "5 min walk", "12 mi".
+         */
+        distance?: string | null;
+        /**
+         * Optional. When set, a "See rentals here" link goes to the search page filtered to this node.
+         */
+        nodeId?: string | null;
+        /**
+         * Optional, e.g. a blog post or the town's site.
+         */
+        linkUrl?: string | null;
+        linkLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Used by the "See rentals here" links. Usually the search results page.
+   */
+  searchPage?: (number | null) | Page;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'areaGuide';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock".
+ */
+export interface NewsletterBlock {
+  heading?: string | null;
+  text?: string | null;
+  /**
+   * The form that receives the email. Create one with a single email field; submissions land in Form Submissions like any other form.
+   */
+  form: number | Form;
+  buttonLabel?: string | null;
+  successMessage?: string | null;
+  tone?: ('band' | 'card') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'newsletter';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1256,11 +1924,27 @@ export interface PagesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
-        cta?: T | CallToActionBlockSelect<T>;
+        section?: T | SectionBlockSelect<T>;
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
-        archive?: T | ArchiveBlockSelect<T>;
+        cta?: T | CallToActionBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        pricing?: T | PricingBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        faq?: T | FAQBlockSelect<T>;
+        archive?: T | ArchiveBlockSelect<T>;
+        availabilitySearch?: T | AvailabilitySearchBlockSelect<T>;
+        propertyListing?: T | PropertyListingBlockSelect<T>;
+        propertyDetail?: T | PropertyDetailBlockSelect<T>;
+        reviewsFeed?: T | ReviewsFeedBlockSelect<T>;
+        promos?: T | PromosBlockSelect<T>;
+        bookingSteps?: T | BookingStepsBlockSelect<T>;
+        ownerCta?: T | OwnerCtaBlockSelect<T>;
+        areaGuide?: T | AreaGuideBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
       };
   meta?:
     | T
@@ -1278,24 +1962,39 @@ export interface PagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock_select".
+ * via the `definition` "SectionBlock_select".
  */
-export interface CallToActionBlockSelect<T extends boolean = true> {
-  richText?: T;
-  links?:
+export interface SectionBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  layout?: T;
+  width?: T;
+  padding?: T;
+  background?: T;
+  backgroundImage?: T;
+  main?:
     | T
     | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
+        content?: T | ContentBlockSelect<T>;
+        mediaBlock?: T | MediaBlockSelect<T>;
+        cta?: T | CallToActionBlockSelect<T>;
+        formBlock?: T | FormBlockSelect<T>;
+      };
+  secondary?:
+    | T
+    | {
+        content?: T | ContentBlockSelect<T>;
+        mediaBlock?: T | MediaBlockSelect<T>;
+        cta?: T | CallToActionBlockSelect<T>;
+        formBlock?: T | FormBlockSelect<T>;
+      };
+  third?:
+    | T
+    | {
+        content?: T | ContentBlockSelect<T>;
+        mediaBlock?: T | MediaBlockSelect<T>;
+        cta?: T | CallToActionBlockSelect<T>;
+        formBlock?: T | FormBlockSelect<T>;
       };
   id?: T;
   blockName?: T;
@@ -1337,6 +2036,181 @@ export interface MediaBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  richText?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FormBlock_select".
+ */
+export interface FormBlockSelect<T extends boolean = true> {
+  form?: T;
+  enableIntro?: T;
+  introContent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  heading?: T;
+  layout?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AmenitiesBlock_select".
+ */
+export interface AmenitiesBlockSelect<T extends boolean = true> {
+  heading?: T;
+  columns?: T;
+  items?:
+    | T
+    | {
+        icon?: T;
+        label?: T;
+        note?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LocationBlock_select".
+ */
+export interface LocationBlockSelect<T extends boolean = true> {
+  heading?: T;
+  address?:
+    | T
+    | {
+        street?: T;
+        city?: T;
+        region?: T;
+        postalCode?: T;
+        country?: T;
+      };
+  latitude?: T;
+  longitude?: T;
+  zoom?: T;
+  showMap?: T;
+  nearby?:
+    | T
+    | {
+        name?: T;
+        distance?: T;
+        id?: T;
+      };
+  notes?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PricingBlock_select".
+ */
+export interface PricingBlockSelect<T extends boolean = true> {
+  heading?: T;
+  currency?: T;
+  plans?:
+    | T
+    | {
+        name?: T;
+        price?: T;
+        period?: T;
+        description?: T;
+        features?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        highlighted?: T;
+        enableLink?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  footnote?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock_select".
+ */
+export interface TestimonialsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  layout?: T;
+  items?:
+    | T
+    | {
+        quote?: T;
+        author?: T;
+        role?: T;
+        rating?: T;
+        avatar?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FAQBlock_select".
+ */
+export interface FAQBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  items?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ArchiveBlock_select".
  */
 export interface ArchiveBlockSelect<T extends boolean = true> {
@@ -1351,12 +2225,184 @@ export interface ArchiveBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock_select".
+ * via the `definition` "AvailabilitySearchBlock_select".
  */
-export interface FormBlockSelect<T extends boolean = true> {
+export interface AvailabilitySearchBlockSelect<T extends boolean = true> {
+  heading?: T;
+  resultsPage?: T;
+  showBedrooms?: T;
+  showNode?: T;
+  showPets?: T;
+  nodeScope?: T;
+  layout?: T;
+  buttonLabel?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PropertyListingBlock_select".
+ */
+export interface PropertyListingBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  source?: T;
+  codes?:
+    | T
+    | {
+        code?: T;
+        id?: T;
+      };
+  query?:
+    | T
+    | {
+        nodeId?: T;
+        types?: T;
+        bedrooms?: T;
+        guests?: T;
+        pets?: T;
+        featuredOnly?: T;
+        amenityIds?: T;
+        sort?: T;
+        limit?: T;
+        followSearchParams?: T;
+      };
+  view?: T;
+  columns?: T;
+  detailPage?: T;
+  emptyMessage?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PropertyDetailBlock_select".
+ */
+export interface PropertyDetailBlockSelect<T extends boolean = true> {
+  source?: T;
+  code?: T;
+  sections?: T;
+  bookLabel?: T;
+  bookUrl?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReviewsFeedBlock_select".
+ */
+export interface ReviewsFeedBlockSelect<T extends boolean = true> {
+  heading?: T;
+  propertyCode?: T;
+  minRating?: T;
+  limit?: T;
+  layout?: T;
+  showUnit?: T;
+  showSummary?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PromosBlock_select".
+ */
+export interface PromosBlockSelect<T extends boolean = true> {
+  heading?: T;
+  nodeId?: T;
+  limit?: T;
+  ctaLabel?: T;
+  ctaPage?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BookingStepsBlock_select".
+ */
+export interface BookingStepsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  steps?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OwnerCtaBlock_select".
+ */
+export interface OwnerCtaBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  text?: T;
+  benefits?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  image?: T;
+  links?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+              appearance?: T;
+            };
+        id?: T;
+      };
+  tone?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AreaGuideBlock_select".
+ */
+export interface AreaGuideBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  layout?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        category?: T;
+        text?: T;
+        image?: T;
+        distance?: T;
+        nodeId?: T;
+        linkUrl?: T;
+        linkLabel?: T;
+        id?: T;
+      };
+  searchPage?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock_select".
+ */
+export interface NewsletterBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
   form?: T;
-  enableIntro?: T;
-  introContent?: T;
+  buttonLabel?: T;
+  successMessage?: T;
+  tone?: T;
   id?: T;
   blockName?: T;
 }

@@ -27,16 +27,28 @@ export const CallToAction: Block = {
         },
       }),
       label: false,
+      admin: {
+        description: 'A short heading and one or two sentences. The buttons sit beside it.',
+      },
     },
     linkGroup({
       appearances: ['default', 'outline'],
       overrides: {
         maxRows: 2,
+        admin: {
+          description: 'Up to two buttons. The first one is the primary action.',
+        },
       },
     }),
   ],
   labels: {
     plural: 'Calls to Action',
     singular: 'Call to Action',
+  },
+  admin: {
+    group: 'Capture',
+    images: {
+      thumbnail: { url: '/admin/blocks/cta.svg', alt: 'Call to action' },
+    },
   },
 }

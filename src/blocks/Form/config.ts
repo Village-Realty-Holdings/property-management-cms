@@ -16,6 +16,9 @@ export const FormBlock: Block = {
       type: 'relationship',
       relationTo: 'forms',
       required: true,
+      admin: {
+        description: 'Forms are built under Forms in the sidebar. Pick one to embed here.',
+      },
     },
     {
       name: 'enableIntro',
@@ -45,7 +48,13 @@ export const FormBlock: Block = {
     singularName: 'FormBlock',
   },
   labels: {
-    plural: 'Form Blocks',
-    singular: 'Form Block',
+    plural: 'Forms',
+    singular: 'Form',
+  },
+  admin: {
+    group: 'Capture',
+    images: {
+      thumbnail: { url: '/admin/blocks/formBlock.svg', alt: 'Form' },
+    },
   },
 }
