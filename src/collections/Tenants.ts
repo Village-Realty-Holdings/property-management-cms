@@ -26,7 +26,6 @@ export const Tenants: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
-      index: true,
       admin: {
         description: 'Short identifier for this tenant, used in URLs and integrations.',
       },

@@ -12,7 +12,7 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { searchFields } from '@/search/fieldOverrides'
 import { beforeSyncWithSearch } from '@/search/beforeSync'
 
-import { Config, Page, Post } from '@/payload-types'
+import { Page, Post } from '@/payload-types'
 import { getServerSideURL } from '@/lib/getURL'
 import { isSuperAdminUser } from '@/access/isSuperAdmin'
 
@@ -26,7 +26,7 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
-export const plugins: Plugin[] = [
+const basePlugins: Plugin[] = [
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
@@ -122,19 +122,22 @@ export const plugins: Plugin[] = [
       },
     },
   }),
-  // Must stay last: it scopes collections other plugins add (forms, redirects, search).
-  multiTenantPlugin<Config>({
-    collections: {
-      pages: {},
-      posts: {},
-      media: {},
-      categories: {},
-      forms: {},
-      'form-submissions': {},
-      redirects: {},
-      search: {},
-    },
-    tenantsSlug: 'tenants',
-    userHasAccessToAllTenants: isSuperAdminUser,
-  }),
 ]
+
+// Applied last so it also scopes the collections the plugins above add (forms, redirects, search).
+const tenantScoping = multiTenantPlugin({
+  collections: {
+    pages: {},
+    posts: {},
+    media: {},
+    categories: {},
+    forms: {},
+    'form-submissions': {},
+    redirects: {},
+    search: {},
+  },
+  tenantsSlug: 'tenants',
+  userHasAccessToAllTenants: isSuperAdminUser,
+})
+
+export const plugins: Plugin[] = [...basePlugins, tenantScoping]

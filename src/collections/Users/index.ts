@@ -36,7 +36,7 @@ export const Users: CollectionConfig = {
         update: isSuperAdminField,
       },
       admin: {
-        description: 'Super admins see every tenant. Users only see the tenants assigned below.',
+        description: 'Super admins see every tenant. Users only see the tenants assigned to them.',
       },
     },
   ],

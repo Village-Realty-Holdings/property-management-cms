@@ -462,7 +462,7 @@ export interface User {
   id: number;
   name?: string | null;
   /**
-   * Super admins see every tenant. Users only see the tenants assigned below.
+   * Super admins see every tenant. Users only see the tenants assigned to them.
    */
   roles?: ('super-admin' | 'user')[] | null;
   tenants?:
