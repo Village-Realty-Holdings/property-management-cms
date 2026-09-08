@@ -19,8 +19,7 @@
     {
       "binding": "D1",
       "database_name": "property-management-cms",
-      // Paste the id printed by `npx wrangler d1 create property-management-cms`
-      "database_id": "DATABASE_ID",
+      "database_id": "e5fde511-d252-4236-9bbc-c195823b3cbb",
       "remote": true,
     },
   ],
