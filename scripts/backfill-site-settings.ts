@@ -4,7 +4,7 @@
  * regress now that generateMeta reads from Site Settings instead of Header/
  * Footer. Safe to re-run: only fills siteName/siteDescription when empty.
  *
- * Run with: pnpm payload run scripts/backfill-site-settings.ts
+ * Run with: npx payload run scripts/backfill-site-settings.ts
  */
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'

@@ -32,7 +32,7 @@ Reading data is not a boundary violation: server components under
 cached reads. Importing collection or access *config* into a component is the
 violation, and `no-restricted-imports` in `eslint.config.mjs` enforces it.
 
-`src/payload-types.ts` is generated. Run `pnpm generate:types` rather than
+`src/payload-types.ts` is generated. Run `npm run generate:types` rather than
 resolving conflicts in it by hand; `.gitattributes` marks it generated.
 
 # Dependencies

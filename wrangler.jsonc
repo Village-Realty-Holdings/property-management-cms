@@ -19,7 +19,7 @@
     {
       "binding": "D1",
       "database_name": "property-management-cms",
-      // Paste the id printed by `pnpm wrangler d1 create property-management-cms`
+      // Paste the id printed by `npx wrangler d1 create property-management-cms`
       "database_id": "DATABASE_ID",
       "remote": true,
     },
@@ -36,7 +36,7 @@
     "binding": "IMAGES",
   },
   // Non-secret runtime variables. Secrets (PAYLOAD_SECRET, PREVIEW_SECRET,
-  // CRON_SECRET) are set with `pnpm wrangler secret put <NAME>`.
+  // CRON_SECRET) are set with `npx wrangler secret put <NAME>`.
   // Local overrides live in `.dev.vars` (gitignored).
   "vars": {
     // Warren Beach is the first tenant; its domains are added to the Worker as

@@ -17,10 +17,10 @@ is yours, the component is not. Don't edit `Component.tsx`, `src/components/`,
 or anything under `src/app/(frontend)/`.
 
 `src/payload-types.ts` is generated from your collections. Regenerate it with
-`pnpm generate:types` rather than editing it, and never resolve a conflict in
+`npm run generate:types` rather than editing it, and never resolve a conflict in
 it by hand.
 
 Do not edit `package.json`. If a task needs a new package, stop and ask.
 
-Verify with `pnpm exec tsc --noEmit`, `pnpm lint` and `pnpm build`. Lint
+Verify with `npx tsc --noEmit`, `npm run lint` and `npm run build`. Lint
 enforces the zone boundary, so a restricted-import error means you crossed it.

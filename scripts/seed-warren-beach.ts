@@ -6,7 +6,7 @@
  * tenant, then created or updated. Pages, media and nav items that link to
  * pages are not seeded here; they come with the content import.
  *
- * Run with: pnpm seed:warren-beach   (local D1; NODE_ENV=production targets the remote database)
+ * Run with: npm run seed:warren-beach   (local D1; NODE_ENV=production targets the remote database)
  * Not `payload run`: it swallows errors and drops the log lines on exit.
  */
 import configPromise from '@payload-config'

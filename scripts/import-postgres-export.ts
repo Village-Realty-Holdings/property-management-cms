@@ -7,7 +7,7 @@
  * Idempotent: documents are matched on a natural key (email, slug, filename,
  * title, tenant) and updated when they already exist.
  *
- * Run with: pnpm import:postgres <export.json> [media-dir]
+ * Run with: npm run import:postgres -- <export.json> [media-dir]
  */
 import configPromise from '@payload-config'
 import { getPayload, type Field, type Payload, type Block } from 'payload'

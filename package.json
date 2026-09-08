@@ -6,13 +6,13 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "deploy": "pnpm run deploy:database && pnpm run deploy:app",
+    "deploy": "npm run deploy:database && npm run deploy:app",
     "deploy:app": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "deploy:database": "NODE_ENV=production PAYLOAD_SECRET=ignore payload migrate && wrangler d1 execute D1 --command 'PRAGMA optimize' --remote",
     "dev": "next dev",
-    "dev:prod": "rm -rf .next && pnpm build && pnpm start",
+    "dev:prod": "rm -rf .next && npm run build && npm run start",
     "generate:importmap": "payload generate:importmap",
-    "generate:types": "pnpm run generate:types:cloudflare && pnpm run generate:types:payload",
+    "generate:types": "npm run generate:types:cloudflare && npm run generate:types:payload",
     "generate:types:cloudflare": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "generate:types:payload": "payload generate:types",
     "import:postgres": "node --env-file=.env --import tsx scripts/import-postgres-export.ts",
@@ -26,7 +26,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "seed:warren-beach": "node --env-file=.env --import tsx scripts/seed-warren-beach.ts",
     "start": "next start",
-    "test": "pnpm run test:int && pnpm run test:e2e",
+    "test": "npm run test:int && npm run test:e2e",
     "test:e2e": "NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
     "test:int": "vitest run --config ./vitest.config.mts"
   },
@@ -99,7 +99,12 @@
     "wrangler": "^4.128.0"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0",
-    "pnpm": "^9 || ^10 || ^11"
+    "node": "^18.20.2 || >=20.9.0"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "sharp": true,
+    "unrs-resolver": true,
+    "workerd": true
   }
 }
