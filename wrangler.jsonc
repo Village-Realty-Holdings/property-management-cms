@@ -36,7 +36,7 @@
   },
   // Non-secret runtime variables. Secrets (PAYLOAD_SECRET, PREVIEW_SECRET,
   // CRON_SECRET) are set with `npx wrangler secret put <NAME>`.
-  // Local overrides live in `.dev.vars` (gitignored).
+  // Local overrides live in `.env` (gitignored); wrangler loads it when `.dev.vars` is absent.
   "vars": {
     // Warren Beach is the first tenant; its domains are added to the Worker as
     // Custom Domains in the dashboard (Workers > Settings > Domains & Routes).
