@@ -35,13 +35,6 @@ violation, and `no-restricted-imports` in `eslint.config.mjs` enforces it.
 `src/payload-types.ts` is generated. Run `npm run generate:types` rather than
 resolving conflicts in it by hand; `.gitattributes` marks it generated.
 
-# Dependencies
-
-**Do not edit `package.json`.** The `node_modules` symlink that makes worktrees
-cheap is only valid while dependencies are unchanged, and parallel agents each
-adding their own libraries produces drift. If a task genuinely needs a new
-package, stop and ask.
-
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
