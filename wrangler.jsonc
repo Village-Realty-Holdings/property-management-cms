@@ -18,8 +18,8 @@
   "d1_databases": [
     {
       "binding": "D1",
-      "database_name": "property-management-cms",
-      "database_id": "e5fde511-d252-4236-9bbc-c195823b3cbb",
+      "database_name": "property-management-cms-v2",
+      "database_id": "5039d97d-9e17-4bd9-b090-0b6a09a80ec5",
       "remote": true,
     },
   ],
