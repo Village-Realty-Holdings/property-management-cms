@@ -21,10 +21,18 @@ export const Header: CollectionConfig = {
   },
   fields: [
     {
+      name: 'logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Wordmark shown in the header and footer. Wide, on a transparent background.',
+      },
+    },
+    {
       name: 'brand',
       type: 'text',
       admin: {
-        description: 'Site name shown in place of the logo. Leave empty to show the logo.',
+        description: 'Site name shown when there is no logo, and read out by screen readers when there is.',
       },
     },
     {

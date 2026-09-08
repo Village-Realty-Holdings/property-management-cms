@@ -18,7 +18,7 @@ const Lines: React.FC<{ text?: string | null }> = ({ text }) =>
 
 export async function Footer() {
   const footerData = await getTenantGlobal('footer', 1)
-  const headerData = await getTenantGlobal('header', 0)
+  const headerData = await getTenantGlobal('header', 1)
 
   const navItems = footerData?.navItems || []
   const contact = footerData?.contact
@@ -30,7 +30,7 @@ export async function Footer() {
       <div className="container grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr] md:gap-12 md:py-20">
         <div className="flex max-w-sm flex-col gap-3">
           <Link className="inline-flex w-fit items-center rounded-md" href="/">
-            <Logo brand={brand} />
+            <Logo brand={brand} logo={headerData?.logo} />
           </Link>
           {footerData?.tagline && <p className="text-sm text-muted-foreground">{footerData.tagline}</p>}
         </div>

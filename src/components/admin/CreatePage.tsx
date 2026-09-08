@@ -3,15 +3,23 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+type Props = {
+  adminRoute: string
+  /**
+   * An existing draft that has no title yet. With autosave on, Payload creates
+   * an empty draft and redirects to it before this view can run, so the page
+   * is named here instead of created.
+   */
+  docId?: number | string
+}
+
 /**
- * Stands in for Payload's create form. It creates a draft page straight away
- * (title "New page", the layout's default hero) through the REST API as the
- * logged-in user, then opens the visual editor for it. Naming the page and
- * setting its slug happen in the editor's page settings.
- *
- * The slug field is unique, so a second "New page" gets a number appended.
+ * Stands in for Payload's create form. It gives the page a title ("New page",
+ * numbered when the slug is taken) through the REST API as the logged-in
+ * user, then opens the visual editor for it. Renaming and setting the slug
+ * happen in the editor's page settings.
  */
-export function CreatePage({ adminRoute }: { adminRoute: string }) {
+export function CreatePage({ adminRoute, docId }: Props) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const started = useRef(false)
@@ -20,15 +28,18 @@ export function CreatePage({ adminRoute }: { adminRoute: string }) {
     if (started.current) return
     started.current = true
     let cancelled = false
-    createDraft()
+    setUpPage(docId)
       .then((id) => {
-        if (!cancelled) router.replace(`${adminRoute}/collections/pages/${id}`)
+        if (cancelled) return
+        // Same URL: refresh re-runs the server view, which now sees a title and renders the editor.
+        if (docId) router.refresh()
+        else router.replace(`${adminRoute}/collections/pages/${id}`)
       })
       .catch((e: Error) => !cancelled && setError(e.message))
     return () => {
       cancelled = true
     }
-  }, [adminRoute, router])
+  }, [adminRoute, docId, router])
 
   return (
     <div style={{ padding: 'var(--base)' }}>
@@ -48,12 +59,13 @@ export function CreatePage({ adminRoute }: { adminRoute: string }) {
 
 const MAX_TRIES = 25
 
-async function createDraft(): Promise<number | string> {
+/** Names the draft (creating it first when there is none) and returns its id. */
+async function setUpPage(docId?: number | string): Promise<number | string> {
   let lastError = 'Save failed'
   for (let n = 1; n <= MAX_TRIES; n++) {
     const title = n === 1 ? 'New page' : `New page ${n}`
-    const res = await fetch('/api/pages?draft=true&depth=0', {
-      method: 'POST',
+    const res = await fetch(docId ? `/api/pages/${docId}?draft=true&depth=0` : '/api/pages?draft=true&depth=0', {
+      method: docId ? 'PATCH' : 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, _status: 'draft' }),

@@ -1,9 +1,10 @@
 /**
- * Seeds the root super admin and the two tenants. Nothing else: settings,
- * pages and media come from the admin UI or the content import.
+ * Seeds the root super admin, the two tenants, and each tenant's starter
+ * content: settings, theme, header, footer and the first pages. Photos are
+ * fetched from the tenant's current site.
  *
- * Idempotent: the user is matched by email and each tenant by slug, then
- * created or updated.
+ * Idempotent: every document is matched on a natural key (email, slug,
+ * filename, title) within its tenant, then created or updated.
  *
  * Run with: npm run seed
  * (local D1; NODE_ENV=production targets the remote database)
@@ -11,6 +12,10 @@
  */
 import configPromise from '@payload-config'
 import { getPayload, type Payload } from 'payload'
+
+import { findPreset } from '@/lib/themePresets'
+import { context, upsertGlobal } from './seed/lib'
+import { seedWarrenBeach } from './seed/warren-beach'
 
 // Dev credentials. Set SEED_ADMIN_PASSWORD when seeding a remote database.
 const admin = {
@@ -26,9 +31,6 @@ const tenants = [
   { name: 'Warren Beach', slug: 'warren-beach', domains: [{ domain: 'warren-beach.localhost' }] },
   { name: 'Sun Palace', slug: 'sun-palace', domains: [{ domain: 'sun-palace.localhost' }] },
 ]
-
-// Hooks call revalidateTag, which only works inside a Next request.
-const context = { disableRevalidate: true }
 
 async function seedAdmin(payload: Payload) {
   const { docs } = await payload.find({ collection: 'users', where: { email: { equals: admin.email } }, limit: 1 })
@@ -47,12 +49,27 @@ async function seedTenant(payload: Payload, tenant: (typeof tenants)[number]) {
     ? await payload.update({ collection: 'tenants', id: docs[0].id, data: tenant, context })
     : await payload.create({ collection: 'tenants', data: tenant, context })
   payload.logger.info(`tenant ${tenant.slug}: ${docs[0] ? 'updated' : 'created'} (id ${doc.id})`)
+  return doc.id
+}
+
+/** Sun Palace has no content yet; a name and a theme keep it distinct from Warren Beach. */
+async function seedSunPalace(payload: Payload, tenant: number | string) {
+  await upsertGlobal(payload, 'site-settings', tenant, {
+    general: { siteName: 'Sun Palace Vacation Homes' },
+    seo: { noIndex: true },
+  })
+  await upsertGlobal(payload, 'header', tenant, { brand: 'Sun Palace' })
+  const preset = findPreset('coastal-teal')!
+  await upsertGlobal(payload, 'theme', tenant, { preset: preset.key, ...preset })
 }
 
 async function run() {
   const payload = await getPayload({ config: configPromise })
   await seedAdmin(payload)
-  for (const tenant of tenants) await seedTenant(payload, tenant)
+  const ids: Record<string, number | string> = {}
+  for (const tenant of tenants) ids[tenant.slug] = await seedTenant(payload, tenant)
+  await seedWarrenBeach(payload, ids['warren-beach']!)
+  await seedSunPalace(payload, ids['sun-palace']!)
   payload.logger.info('Done.')
   process.exit(0)
 }

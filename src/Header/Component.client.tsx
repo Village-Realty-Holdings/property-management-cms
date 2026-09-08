@@ -55,7 +55,7 @@ export const HeaderClient: React.FC<Props> = ({ data }) => {
     >
       <div className="container flex h-header items-center justify-between gap-6">
         <Link href="/" className="flex items-center rounded-md">
-          <Logo brand={data?.brand} />
+          <Logo brand={data?.brand} logo={data?.logo} />
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">

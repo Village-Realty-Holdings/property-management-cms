@@ -1479,7 +1479,11 @@ export interface Header {
   id: number;
   tenant?: (number | null) | Tenant;
   /**
-   * Site name shown in place of the logo. Leave empty to show the logo.
+   * Wordmark shown in the header and footer. Wide, on a transparent background.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Site name shown when there is no logo, and read out by screen readers when there is.
    */
   brand?: string | null;
   navItems?:
@@ -2723,6 +2727,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface HeaderSelect<T extends boolean = true> {
   tenant?: T;
+  logo?: T;
   brand?: T;
   navItems?:
     | T
