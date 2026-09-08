@@ -1,13 +1,13 @@
 import React from 'react'
 
-import type { Page } from '@/payload-types'
+import type { HeroBlock } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Media } from '@/components/Media'
 import RichText from '@/components/RichText'
 
 /** Copy first, then a wide photo. */
-export const MediumImpactHero: React.FC<Page['hero']> = ({ links, media, richText }) => {
+export const MediumImpactHero: React.FC<HeroBlock> = ({ links, media, richText }) => {
   return (
     <section className="container pt-12 md:pt-20">
       <div className="max-w-[44rem]">

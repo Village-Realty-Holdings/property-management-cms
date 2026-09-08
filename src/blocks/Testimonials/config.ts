@@ -36,6 +36,10 @@ export const Testimonials: Block = {
       name: 'items',
       type: 'array',
       minRows: 1,
+      defaultValue: [
+        { quote: 'Spotless, quiet and two minutes from the sand. We booked again before we left.', author: 'Maria and Tom', role: 'Stayed June 2026', rating: 5 },
+        { quote: 'The check-in code arrived on time and the host answered every question within minutes.', author: 'Priya S.', role: 'Stayed April 2026', rating: 5 },
+      ],
       admin: {
         initCollapsed: false,
         components: {

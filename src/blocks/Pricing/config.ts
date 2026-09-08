@@ -35,6 +35,10 @@ export const Pricing: Block = {
       type: 'array',
       minRows: 1,
       maxRows: 4,
+      defaultValue: [
+        { name: 'Low season', price: 180, period: 'night', description: 'November to March, two-night minimum.', features: [{ text: 'Linen and towels included' }, { text: 'Free parking' }] },
+        { name: 'High season', price: 320, period: 'night', description: 'June to August, weekly stays.', highlighted: true, features: [{ text: 'Linen and towels included' }, { text: 'Free parking' }, { text: 'Mid-stay clean' }] },
+      ],
       admin: {
         initCollapsed: false,
         description: 'One card per rate or unit type, e.g. "Low season" or "Studio".',
@@ -134,6 +138,7 @@ export const Pricing: Block = {
     {
       name: 'footnote',
       type: 'text',
+      defaultValue: 'Taxes and cleaning fee not included.',
       admin: {
         description: 'Small print below the cards, e.g. "Taxes and cleaning fee not included".',
       },

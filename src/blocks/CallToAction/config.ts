@@ -8,6 +8,7 @@ import {
 } from '@payloadcms/richtext-lexical'
 
 import { linkGroup } from '../../fields/linkGroup'
+import { heading, paragraph, richTextDefault } from '@/fields/richTextDefault'
 
 export const CallToAction: Block = {
   slug: 'cta',
@@ -27,6 +28,7 @@ export const CallToAction: Block = {
         },
       }),
       label: false,
+      defaultValue: richTextDefault([heading('Ready to book your stay?', 'h2'), paragraph('Check live availability or talk to the team about the right home for you.')]),
       admin: {
         description: 'A short heading and one or two sentences. The buttons sit beside it.',
       },
@@ -35,6 +37,10 @@ export const CallToAction: Block = {
       appearances: ['default', 'outline'],
       overrides: {
         maxRows: 2,
+        defaultValue: [
+          { link: { type: 'custom', url: '/search', label: 'Check availability', appearance: 'default' } },
+          { link: { type: 'custom', url: '/contact', label: 'Contact us', appearance: 'outline' } },
+        ],
         admin: {
           description: 'Up to two buttons. The first one is the primary action.',
         },

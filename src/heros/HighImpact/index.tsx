@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 
-import type { Page } from '@/payload-types'
+import type { HeroBlock } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Media } from '@/components/Media'
@@ -14,7 +14,7 @@ import { useHeaderTheme } from '@/providers/HeaderTheme'
  * header, which turns transparent over it, and leaves room at the bottom
  * for a search block to overlap the edge.
  */
-export const HighImpactHero: React.FC<Page['hero']> = ({ links, media, richText }) => {
+export const HighImpactHero: React.FC<HeroBlock> = ({ links, media, richText }) => {
   const { setOverHero } = useHeaderTheme()
 
   useEffect(() => {

@@ -14,6 +14,7 @@ import type { BlockSchema } from './schema'
 type Props = {
   docId: number | string
   title: string
+  slug: string
   initialLayout: Page['layout']
   schemas: BlockSchema[]
   formHref: string
@@ -25,6 +26,19 @@ type Status = { kind: 'idle' | 'saving' | 'saved' | 'error'; message?: string }
 
 const AUTOSAVE_MS = 1500
 
+/** What one save carries: the block layout plus the page settings edited on the root. */
+type Draft = { layout: Page['layout']; title: string; slug: string }
+
+/** Puck's root props hold the page settings; the canvas is the layout. */
+export function puckToDraft(data: Data, schemas: BlockSchema[]): Draft {
+  const root = (data.root.props ?? {}) as { title?: unknown; slug?: unknown }
+  return {
+    layout: puckToLayout(data, schemas),
+    title: typeof root.title === 'string' ? root.title : '',
+    slug: typeof root.slug === 'string' ? root.slug : '',
+  }
+}
+
 /**
  * Visual editor for a page. Every edit becomes a draft save through the REST
  * API as the logged-in user: `?draft=true` with `_status: 'draft'`, the same
@@ -32,22 +46,26 @@ const AUTOSAVE_MS = 1500
  * this component. Publish is the same PATCH the Publish button sends. Nothing
  * here touches the public cache; the collection hooks revalidate on publish.
  */
-export function VisualEditor({ docId, title, initialLayout, schemas, formHref, previewHref, canvasStyles }: Props) {
+export function VisualEditor({ docId, title, slug, initialLayout, schemas, formHref, previewHref, canvasStyles }: Props) {
   const config = useMemo(() => buildPuckConfig(schemas), [schemas])
-  const initialData = useMemo(() => layoutToPuck(initialLayout), [initialLayout])
+  const initialData = useMemo(() => ({ ...layoutToPuck(initialLayout), root: { props: { title, slug } } }), [initialLayout, title, slug])
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
-  const lastSaved = useRef(JSON.stringify(puckToLayout(initialData, schemas)))
-  const pending = useRef<Page['layout'] | null>(null)
+  const lastSaved = useRef(JSON.stringify(puckToDraft(initialData, schemas)))
+  const pending = useRef<Draft | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const patch = useCallback(
-    async (layout: Page['layout'], publish: boolean) => {
+    async (draft: Draft, publish: boolean) => {
       const query = publish ? 'draft=false&depth=0' : 'draft=true&depth=0'
+      // An empty title or slug is not sent; the page keeps what it had rather than failing validation.
+      const body: Record<string, unknown> = { layout: draft.layout, _status: publish ? 'published' : 'draft' }
+      if (draft.title.trim()) body.title = draft.title.trim()
+      if (draft.slug.trim()) body.slug = draft.slug.trim()
       const res = await fetch(`/api/pages/${docId}?${query}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ layout, _status: publish ? 'published' : 'draft' }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error(await describeError(res))
     },
@@ -57,14 +75,14 @@ export function VisualEditor({ docId, title, initialLayout, schemas, formHref, p
   const flush = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current)
     timer.current = null
-    const layout = pending.current
+    const draft = pending.current
     pending.current = null
-    if (!layout) return
-    const json = JSON.stringify(layout)
+    if (!draft) return
+    const json = JSON.stringify(draft)
     if (json === lastSaved.current) return
     setStatus({ kind: 'saving' })
     try {
-      await patch(layout, false)
+      await patch(draft, false)
       lastSaved.current = json
       setStatus({ kind: 'saved' })
     } catch (e) {
@@ -74,15 +92,15 @@ export function VisualEditor({ docId, title, initialLayout, schemas, formHref, p
 
   const onChange = useCallback(
     (data: Data) => {
-      let layout: Page['layout']
+      let draft: Draft
       try {
-        layout = puckToLayout(data, schemas)
+        draft = puckToDraft(data, schemas)
       } catch (e) {
         pending.current = null
         setStatus({ kind: 'error', message: `${(e as Error).message}. Not saved.` })
         return
       }
-      pending.current = layout
+      pending.current = draft
       setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s))
       if (timer.current) clearTimeout(timer.current)
       timer.current = setTimeout(() => void flush(), AUTOSAVE_MS)
@@ -104,10 +122,10 @@ export function VisualEditor({ docId, title, initialLayout, schemas, formHref, p
 
   const publish = useCallback(async () => {
     await flush()
-    const layout = JSON.parse(lastSaved.current) as Page['layout']
+    const draft = JSON.parse(lastSaved.current) as Draft
     setStatus({ kind: 'saving', message: 'Publishing' })
     try {
-      await patch(layout, true)
+      await patch(draft, true)
       setStatus({ kind: 'saved', message: 'Published' })
     } catch (e) {
       setStatus({ kind: 'error', message: (e as Error).message })

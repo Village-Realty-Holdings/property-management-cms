@@ -17,10 +17,10 @@ export type FieldSchema =
   | { kind: 'scalar'; name: string; label: string; type: ScalarType; hasMany?: boolean; min?: number; max?: number; defaultValue?: unknown }
   | { kind: 'choice'; name: string; label: string; type: 'select' | 'radio'; options: Option[]; hasMany?: boolean; defaultValue?: unknown }
   | { kind: 'relation'; name: string; label: string; type: 'upload' | 'relationship'; relationTo: string | string[]; hasMany?: boolean }
-  | { kind: 'richText'; name: string; label: string }
-  | { kind: 'array'; name: string; label: string; fields: FieldSchema[]; minRows?: number; maxRows?: number }
+  | { kind: 'richText'; name: string; label: string; defaultValue?: unknown }
+  | { kind: 'array'; name: string; label: string; fields: FieldSchema[]; minRows?: number; maxRows?: number; defaultValue?: unknown }
   | { kind: 'group'; name: string; label: string; fields: FieldSchema[] }
-  | { kind: 'blocks'; name: string; label: string; blocks: BlockSchema[] }
+  | { kind: 'blocks'; name: string; label: string; blocks: BlockSchema[]; defaultValue?: unknown }
 
 export type ScalarType = 'text' | 'textarea' | 'number' | 'checkbox' | 'date' | 'email' | 'code' | 'json' | 'point'
 
@@ -92,13 +92,21 @@ export function fieldsToSchema(fields: Field[]): FieldSchema[] {
     } else if (field.type === 'upload' || field.type === 'relationship') {
       out.push({ kind: 'relation', name, label, type: field.type, relationTo: field.relationTo as string | string[], hasMany: Boolean(field.hasMany) })
     } else if (field.type === 'richText') {
-      out.push({ kind: 'richText', name, label })
+      out.push({ kind: 'richText', name, label, defaultValue: literal(field.defaultValue) })
     } else if (field.type === 'array') {
-      out.push({ kind: 'array', name, label, fields: fieldsToSchema(field.fields), minRows: field.minRows, maxRows: field.maxRows })
+      out.push({
+        kind: 'array',
+        name,
+        label,
+        fields: fieldsToSchema(field.fields),
+        minRows: field.minRows,
+        maxRows: field.maxRows,
+        defaultValue: literal(field.defaultValue),
+      })
     } else if (field.type === 'group') {
       out.push({ kind: 'group', name, label, fields: fieldsToSchema(field.fields) })
     } else if (field.type === 'blocks') {
-      out.push({ kind: 'blocks', name, label, blocks: blocksToSchema(field.blocks as Block[]) })
+      out.push({ kind: 'blocks', name, label, blocks: blocksToSchema(field.blocks as Block[]), defaultValue: literal(field.defaultValue) })
     } else if ((SCALARS as string[]).includes(field.type)) {
       const scalar: FieldSchema = { kind: 'scalar', name, label, type: field.type as ScalarType, defaultValue: literal(field.defaultValue) }
       if ('hasMany' in field && field.hasMany) scalar.hasMany = true

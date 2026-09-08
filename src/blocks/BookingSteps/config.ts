@@ -28,6 +28,7 @@ export const BookingSteps: Block = {
     {
       name: 'intro',
       type: 'textarea',
+      defaultValue: 'From first look to front door, booking takes a few minutes.',
     },
     {
       name: 'steps',

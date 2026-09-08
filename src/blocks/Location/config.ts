@@ -6,6 +6,7 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
+import { paragraph, richTextDefault } from '@/fields/richTextDefault'
 
 export const Location: Block = {
   slug: 'location',
@@ -25,11 +26,11 @@ export const Location: Block = {
       name: 'address',
       type: 'group',
       fields: [
-        { name: 'street', type: 'text' },
-        { name: 'city', type: 'text' },
-        { name: 'region', type: 'text', label: 'State / Region' },
-        { name: 'postalCode', type: 'text' },
-        { name: 'country', type: 'text' },
+        { name: 'street', type: 'text', defaultValue: '123 Ocean Drive' },
+        { name: 'city', type: 'text', defaultValue: 'Seaside' },
+        { name: 'region', type: 'text', label: 'State / Region', defaultValue: 'CA' },
+        { name: 'postalCode', type: 'text', defaultValue: '90000' },
+        { name: 'country', type: 'text', defaultValue: 'USA' },
       ],
     },
     {
@@ -78,6 +79,11 @@ export const Location: Block = {
     {
       name: 'nearby',
       type: 'array',
+      defaultValue: [
+        { name: 'Beach', distance: '5 min walk' },
+        { name: 'Grocery store', distance: '3 min drive' },
+        { name: 'Airport', distance: '40 min drive' },
+      ],
       admin: {
         initCollapsed: false,
         components: { RowLabel: '@/blocks/Location/RowLabel#RowLabel' },
@@ -103,6 +109,7 @@ export const Location: Block = {
           InlineToolbarFeature(),
         ],
       }),
+      defaultValue: richTextDefault([paragraph('Free parking on the driveway. The door code arrives by text on the morning of arrival.')]),
       admin: { description: 'Optional directions, access instructions or neighbourhood notes.' },
     },
   ],

@@ -6,6 +6,7 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
+import { heading, paragraph, richTextDefault } from '@/fields/richTextDefault'
 
 export const Archive: Block = {
   slug: 'archive',
@@ -25,6 +26,7 @@ export const Archive: Block = {
         },
       }),
       label: 'Intro Content',
+      defaultValue: richTextDefault([heading('From the journal', 'h2'), paragraph('Local tips, seasonal guides and news from the team.')]),
     },
     {
       name: 'populateBy',

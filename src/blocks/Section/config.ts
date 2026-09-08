@@ -9,12 +9,13 @@ const slotBlocks = [Content, MediaBlock, CallToAction, FormBlock]
 
 type Layout = 'single' | 'twoColumns' | 'mediaLeft' | 'mediaRight' | 'threeCards'
 
-const slot = (name: string, label: string, layouts: Layout[], description: string): Field => ({
+const slot = (name: string, label: string, layouts: Layout[], description: string, defaultValue?: { blockType: string }[]): Field => ({
   name,
   type: 'blocks',
   label,
   blocks: slotBlocks,
   maxRows: 3,
+  defaultValue,
   admin: {
     description,
     initCollapsed: false,
@@ -39,6 +40,7 @@ export const Section: Block = {
     {
       name: 'heading',
       type: 'text',
+      defaultValue: 'Section heading',
       admin: {
         description: 'Optional title shown above the section content.',
       },
@@ -46,6 +48,7 @@ export const Section: Block = {
     {
       name: 'subheading',
       type: 'textarea',
+      defaultValue: 'A sentence that sets up what this section is about.',
       admin: {
         description: 'Optional short intro shown under the heading.',
       },
@@ -125,6 +128,7 @@ export const Section: Block = {
       'Main',
       ['single', 'twoColumns', 'mediaLeft', 'mediaRight', 'threeCards'],
       'Primary content. In media layouts this is the text side; in Three cards this is the first card.',
+      [{ blockType: 'content' }],
     ),
     slot(
       'secondary',

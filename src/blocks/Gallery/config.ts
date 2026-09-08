@@ -17,6 +17,7 @@ export const Gallery: Block = {
     {
       name: 'heading',
       type: 'text',
+      defaultValue: 'Photos',
       admin: {
         description: 'Optional title shown above the images.',
       },

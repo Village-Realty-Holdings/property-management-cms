@@ -8,6 +8,7 @@ import {
 } from '@payloadcms/richtext-lexical'
 
 import { link } from '@/fields/link'
+import { heading, paragraph, richTextDefault } from '@/fields/richTextDefault'
 
 const columnFields: Field[] = [
   {
@@ -50,6 +51,10 @@ const columnFields: Field[] = [
       },
     }),
     label: false,
+    defaultValue: richTextDefault([
+      heading('A heading for this section', 'h2'),
+      paragraph('Write a paragraph or two here. Keep it short and specific: what the home is like, who it suits and what makes the area worth the trip.'),
+    ]),
   },
   {
     name: 'enableLink',

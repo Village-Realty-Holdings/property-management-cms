@@ -17,6 +17,7 @@ export const AreaGuide: Block = {
     {
       name: 'intro',
       type: 'textarea',
+      defaultValue: 'Beaches, restaurants and things to do, all a short drive from the front door.',
     },
     {
       name: 'layout',
@@ -32,6 +33,11 @@ export const AreaGuide: Block = {
       type: 'array',
       minRows: 1,
       maxRows: 8,
+      defaultValue: [
+        { title: 'The beach', category: 'Beaches', text: 'Wide sand, gentle surf and lifeguards in season. Bring a chair and stay for sunset.', distance: '5 min walk' },
+        { title: 'Old town', category: 'Dining', text: 'Family-run kitchens, a Saturday market and the best coffee for miles.', distance: '10 min drive' },
+        { title: 'Coastal trail', category: 'Things to do', text: 'An easy loop along the cliffs with lookouts every few hundred metres.', distance: '15 min drive' },
+      ],
       admin: {
         initCollapsed: false,
         components: { RowLabel: '@/blocks/AreaGuide/RowLabel#RowLabel' },
@@ -44,7 +50,7 @@ export const AreaGuide: Block = {
           admin: { description: 'e.g. "Beaches", "Dining", "Things to do", "Nightlife".' },
         },
         { name: 'text', type: 'textarea', required: true },
-        { name: 'image', type: 'upload', relationTo: 'media', required: true },
+        { name: 'image', type: 'upload', relationTo: 'media' },
         {
           name: 'distance',
           type: 'text',

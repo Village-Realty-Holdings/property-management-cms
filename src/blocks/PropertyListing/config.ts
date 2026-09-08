@@ -38,6 +38,7 @@ export const PropertyListing: Block = {
     {
       name: 'intro',
       type: 'textarea',
+      defaultValue: 'Hand-picked homes with real-time availability.',
       admin: { description: 'Optional short text under the heading.' },
     },
     {

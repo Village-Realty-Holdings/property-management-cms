@@ -12,6 +12,7 @@ import { ContentBlock } from '@/blocks/Content/Component'
 import { FAQBlock } from '@/blocks/FAQ/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { GalleryBlock } from '@/blocks/Gallery/Component'
+import { HeroBlock, isFullBleedHero } from '@/blocks/Hero/Component'
 import { LocationBlock } from '@/blocks/Location/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { NewsletterBlock } from '@/blocks/Newsletter/Component'
@@ -36,6 +37,7 @@ const blockComponents = {
   faq: FAQBlock,
   formBlock: FormBlock,
   gallery: GalleryBlock,
+  hero: HeroBlock,
   location: LocationBlock,
   mediaBlock: MediaBlock,
   newsletter: NewsletterBlock,
@@ -51,29 +53,32 @@ const blockComponents = {
 
 type Props = {
   blocks: Page['layout'][0][]
-  /** Set when the page opens with a full-bleed hero so a leading search block can overlap its edge. */
-  afterFullBleedHero?: boolean
 }
 
 /**
  * Renders the page's blocks with one shared vertical rhythm. Blocks own
  * their horizontal layout only; the gap between them lives here.
+ *
+ * A hero is a block like any other. When the page opens with a full-bleed
+ * hero, a search block right after it overlaps the hero's bottom edge.
  */
-export const RenderBlocks: React.FC<Props> = ({ blocks, afterFullBleedHero }) => {
+export const RenderBlocks: React.FC<Props> = ({ blocks }) => {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
 
-  const overlapFirst = afterFullBleedHero && blocks[0]?.blockType === 'availabilitySearch'
+  const opensWithHero = blocks[0]?.blockType === 'hero'
+  const overlapSecond = isFullBleedHero(blocks[0]) && blocks[1]?.blockType === 'availabilitySearch'
 
   return (
-    <div className={cn('flex flex-col gap-16 md:gap-24', !afterFullBleedHero && 'mt-12 md:mt-16')}>
+    <div className={cn('flex flex-col gap-16 md:gap-24', !opensWithHero && 'mt-12 md:mt-16')}>
       {blocks.map((block, index) => {
         const { blockType } = block
         if (!blockType || !(blockType in blockComponents)) return null
         const Block = blockComponents[blockType]
 
-        const raised = overlapFirst && index === 0
+        // The negative margin also has to swallow the flex gap above the block.
+        const raised = overlapSecond && index === 1
         return (
-          <div key={index} className={cn(raised && 'relative z-10 -mt-20 md:-mt-24')}>
+          <div key={index} className={cn(raised && 'relative z-10 -mt-36 md:-mt-48')}>
             {/* @ts-expect-error there may be some mismatch between the expected types here */}
             <Block {...block} raised={raised} />
           </div>

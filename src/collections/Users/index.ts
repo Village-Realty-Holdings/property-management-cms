@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
-import { isSuperAdminField } from '../../access/isSuperAdmin'
+import { isSuperAdmin, isSuperAdminField } from '../../access/isSuperAdmin'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -11,6 +11,8 @@ export const Users: CollectionConfig = {
     delete: authenticated,
     read: authenticated,
     update: authenticated,
+    // GHSA-jg8r-5jh2-v2xj: Payload's default lets any authenticated user unlock other accounts.
+    unlock: isSuperAdmin,
   },
   admin: {
     defaultColumns: ['name', 'email'],

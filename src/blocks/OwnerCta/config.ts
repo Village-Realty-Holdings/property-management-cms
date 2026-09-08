@@ -52,6 +52,7 @@ export const OwnerCta: Block = {
       appearances: ['default', 'outline'],
       overrides: {
         maxRows: 2,
+        defaultValue: [{ link: { type: 'custom', url: '/owners', label: 'Get a free rental projection', appearance: 'default' } }],
         admin: { description: 'e.g. "Get a free rental projection" and "Owner login".' },
       },
     }),

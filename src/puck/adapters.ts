@@ -94,7 +94,12 @@ export function puckToLayout(data: Pick<PuckData, 'content'>, schemas: BlockSche
   })
 }
 
-/** Starting props for a freshly dropped block: literal defaults from the config. */
+/**
+ * Starting props for a freshly dropped block: the literal defaults from the
+ * Payload config, applied the way Payload's own beforeValidate does it. Rows
+ * in an array or blocks default are filled in with their fields' defaults, so
+ * `[{ blockType: 'content' }]` becomes a complete content block.
+ */
 export function defaultProps(fields: FieldSchema[]): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const field of fields) {
@@ -112,15 +117,28 @@ export function defaultProps(fields: FieldSchema[]): Record<string, unknown> {
         out[field.name] = field.hasMany ? [] : null
         break
       case 'array':
+        out[field.name] = Array.isArray(field.defaultValue)
+          ? field.defaultValue.map((row) => ({ ...defaultProps(field.fields), ...asRecord(row), id: newId() }))
+          : []
+        break
       case 'blocks':
-        out[field.name] = []
+        out[field.name] = Array.isArray(field.defaultValue)
+          ? field.defaultValue.flatMap((row) => {
+              const block = asRecord(row)
+              const schema = field.blocks.find((b) => b.slug === block.blockType)
+              return schema ? [{ ...defaultProps(schema.fields), ...block, id: newId(), blockType: schema.slug }] : []
+            })
+          : []
         break
       case 'group':
         out[field.name] = defaultProps(field.fields)
         break
       case 'richText':
+        if (field.defaultValue !== undefined) out[field.name] = field.defaultValue
         break
     }
   }
   return out
 }
+
+const asRecord = (row: unknown): Record<string, unknown> => (row && typeof row === 'object' ? (row as Record<string, unknown>) : {})

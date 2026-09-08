@@ -11,6 +11,7 @@ import { ContentBlock } from '@/blocks/Content/Component'
 import { FAQBlock } from '@/blocks/FAQ/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { GalleryBlock } from '@/blocks/Gallery/Component'
+import { HeroBlock } from '@/blocks/Hero/Component'
 import { LocationBlock } from '@/blocks/Location/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { NewsletterBlock } from '@/blocks/Newsletter/Component'
@@ -44,6 +45,7 @@ const clientBlocks: Record<string, AnyBlock> = {
   faq: FAQBlock,
   formBlock: FormBlock,
   gallery: GalleryBlock,
+  hero: HeroBlock,
   location: LocationBlock,
   mediaBlock: MediaBlock,
   newsletter: NewsletterBlock,
@@ -96,7 +98,11 @@ export function buildPuckConfig(schemas: BlockSchema[]): Config {
   return {
     categories,
     root: {
-      fields: {},
+      // Page settings, shown when nothing on the canvas is selected.
+      fields: {
+        title: { type: 'text', label: 'Page title' },
+        slug: { type: 'text', label: 'URL slug' },
+      },
       render: ({ children }: { children?: ReactNode }) => (
         <article className="min-h-screen bg-background pt-16 pb-24 text-foreground">{children}</article>
       ),

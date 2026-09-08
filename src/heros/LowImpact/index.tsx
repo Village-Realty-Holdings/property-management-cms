@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { Page } from '@/payload-types'
+import type { HeroBlock } from '@/payload-types'
 
 import RichText from '@/components/RichText'
 
@@ -9,9 +9,9 @@ type LowImpactHeroType =
       children?: React.ReactNode
       richText?: never
     }
-  | (Omit<Page['hero'], 'richText'> & {
+  | (Omit<HeroBlock, 'richText'> & {
       children?: never
-      richText?: Page['hero']['richText']
+      richText?: HeroBlock['richText']
     })
 
 /** A page title and a short intro, nothing else. */

@@ -12,6 +12,7 @@ import { Content } from '../../blocks/Content/config'
 import { FAQ } from '../../blocks/FAQ/config'
 import { FormBlock } from '../../blocks/Form/config'
 import { Gallery } from '../../blocks/Gallery/config'
+import { Hero } from '../../blocks/Hero/config'
 import { Location } from '../../blocks/Location/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { Newsletter } from '../../blocks/Newsletter/config'
@@ -23,7 +24,6 @@ import { PropertyListing } from '../../blocks/PropertyListing/config'
 import { ReviewsFeed } from '../../blocks/ReviewsFeed/config'
 import { Section } from '../../blocks/Section/config'
 import { Testimonials } from '../../blocks/Testimonials/config'
-import { hero } from '@/heros/config'
 import { slugField } from 'payload'
 import { populatePublishedAt } from '../hooks/populatePublishedAt'
 import { generatePreviewPath } from '@/seo/generatePreviewPath'
@@ -99,15 +99,14 @@ export const Pages: CollectionConfig<'pages'> = {
       type: 'tabs',
       tabs: [
         {
-          fields: [hero],
-          label: 'Hero',
-        },
-        {
           fields: [
             {
               name: 'layout',
               type: 'blocks',
+              // A new page opens with a hero; the block's own field defaults fill it in.
+              defaultValue: [{ blockType: 'hero' }],
               blocks: [
+                Hero,
                 Section,
                 Content,
                 MediaBlock,
