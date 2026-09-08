@@ -12,6 +12,7 @@ export const FONT_OPTIONS = [
   { label: 'Lora (serif)', value: 'lora' },
   { label: 'Playfair Display (serif)', value: 'playfair' },
   { label: 'Source Sans 3', value: 'source-sans' },
+  { label: 'Quicksand', value: 'quicksand' },
 ] as const
 
 export type FontKey = (typeof FONT_OPTIONS)[number]['value']
@@ -24,6 +25,7 @@ export const FONT_VARIABLES: Record<FontKey, string> = {
   lora: '--font-lora',
   playfair: '--font-playfair',
   'source-sans': '--font-source-sans',
+  quicksand: '--font-quicksand',
 }
 
 export const RADIUS_OPTIONS = [

@@ -68,3 +68,9 @@ export const resolveTenant = async (host?: string): Promise<Tenant | null> => {
   const byEnv = fallbackSlug ? tenants.find((t) => t.slug === fallbackSlug) : undefined
   return byEnv ?? tenants[0] ?? null
 }
+
+/** `where` clause limiting a query to the current request's tenant; empty when there is none. */
+export const tenantWhere = async (): Promise<Record<string, unknown>> => {
+  const tenant = await resolveTenant()
+  return tenant ? { tenant: { equals: tenant.id } } : {}
+}

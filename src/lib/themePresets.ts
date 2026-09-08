@@ -56,6 +56,25 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
     typography: { bodyFont: 'source-sans', headingFont: 'source-sans' },
     shape: { radius: 'sm' },
   },
+  {
+    key: 'sun-palace',
+    label: 'Sun Palace',
+    description: 'The sunpalacevacationhomes.com look: turquoise buttons, navy text, a yellow accent and Quicksand headings. Pill-shaped corners.',
+    light: {
+      background: '#ffffff',
+      foreground: '#223a76',
+      primary: '#11a2c2',
+      primaryForeground: '#ffffff',
+      secondary: '#e7f6fa',
+      secondaryForeground: '#223a76',
+      accent: '#fdf3c4',
+      accentForeground: '#223a76',
+      border: '#d6e3ea',
+      muted: '#f3f8fa',
+    },
+    typography: { bodyFont: 'inter', headingFont: 'quicksand' },
+    shape: { radius: 'xl' },
+  },
 ]
 
 export const PRESET_OPTIONS = THEME_PRESETS.map(({ key, label }) => ({ label, value: key }))

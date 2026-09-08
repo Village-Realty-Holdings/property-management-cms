@@ -9,6 +9,7 @@ import React, { cache } from 'react'
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { generateMeta } from '@/seo/generateMeta'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { tenantWhere } from '@/server/getTenant'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -90,11 +91,7 @@ const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
     limit: 1,
     pagination: false,
     overrideAccess: draft,
-    where: {
-      slug: {
-        equals: slug,
-      },
-    },
+    where: { ...(await tenantWhere()), slug: { equals: slug } },
   })
 
   return result.docs?.[0] || null

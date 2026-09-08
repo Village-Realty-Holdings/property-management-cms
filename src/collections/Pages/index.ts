@@ -173,8 +173,10 @@ export const Pages: CollectionConfig<'pages'> = {
         position: 'sidebar',
       },
     },
-    slugField(),
+    // Slugs repeat across tenants; the compound index below keeps them unique within one.
+    slugField({ disableUnique: true }),
   ],
+  indexes: [{ fields: ['tenant', 'slug'], unique: true }],
   hooks: {
     afterChange: [revalidatePage],
     beforeChange: [populatePublishedAt],

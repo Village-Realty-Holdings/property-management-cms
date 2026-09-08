@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { authenticated } from '../access/authenticated'
 import { isSuperAdmin } from '../access/isSuperAdmin'
 import { isHexColor } from '../lib/adminBranding'
+import { copyTenantContent } from './hooks/copyTenantContent'
 import { revalidateTenants } from './hooks/revalidateTenants'
 
 export const Tenants: CollectionConfig = {
@@ -42,6 +43,17 @@ export const Tenants: CollectionConfig = {
       fields: [{ name: 'domain', type: 'text', required: true }],
     },
     {
+      name: 'copyFrom',
+      type: 'relationship',
+      relationTo: 'tenants',
+      label: 'Start from',
+      admin: {
+        description:
+          'Copy the pages, photos, forms, theme, header, footer and site settings of an existing tenant into this one. Leave empty to start with an empty site.',
+        condition: (data) => !data?.id,
+      },
+    },
+    {
       name: 'branding',
       type: 'group',
       admin: {
@@ -75,7 +87,7 @@ export const Tenants: CollectionConfig = {
     },
   ],
   hooks: {
-    afterChange: [revalidateTenants],
+    afterChange: [revalidateTenants, copyTenantContent],
     afterDelete: [revalidateTenants],
   },
   timestamps: true,

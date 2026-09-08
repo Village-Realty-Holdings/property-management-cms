@@ -4,6 +4,7 @@ import * as migration_20260904_132302_theme_preset from './20260904_132302_theme
 import * as migration_20260908_163841_hero_block from './20260908_163841_hero_block';
 import * as migration_20260908_170837_tenant_branding from './20260908_170837_tenant_branding';
 import * as migration_20260908_172529_header_logo from './20260908_172529_header_logo';
+import * as migration_20260908_175112_tenant_slugs from './20260908_175112_tenant_slugs';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20260908_172529_header_logo.up,
     down: migration_20260908_172529_header_logo.down,
-    name: '20260908_172529_header_logo'
+    name: '20260908_172529_header_logo',
+  },
+  {
+    up: migration_20260908_175112_tenant_slugs.up,
+    down: migration_20260908_175112_tenant_slugs.down,
+    name: '20260908_175112_tenant_slugs'
   },
 ];

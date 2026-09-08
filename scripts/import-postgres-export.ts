@@ -10,7 +10,7 @@
  * Run with: npm run import:postgres -- <export.json> [media-dir]
  */
 import configPromise from '@payload-config'
-import { getPayload, type Field, type Payload, type Block } from 'payload'
+import { getPayload, type Field, type Payload } from 'payload'
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
@@ -37,78 +37,8 @@ const mapId = (collection: string, old: unknown) => {
   return idMap[collection]?.get(key) ?? null
 }
 
-// ---- field walker ---------------------------------------------------------
-
-function remapRel(field: any, value: any): any {
-  if (value === null || value === undefined) return value
-  if (field.hasMany && Array.isArray(value)) return value.map((v) => remapRel({ ...field, hasMany: false }, v)).filter((v) => v !== null)
-  if (Array.isArray(field.relationTo)) {
-    if (typeof value === 'object' && 'relationTo' in value) {
-      const mapped = mapId(value.relationTo, value.value)
-      return mapped === null ? null : { relationTo: value.relationTo, value: mapped }
-    }
-    return null
-  }
-  return mapId(field.relationTo, value)
-}
-
-function remapLexical(node: any): any {
-  if (!node || typeof node !== 'object') return node
-  if (Array.isArray(node)) return node.map(remapLexical)
-  const out: any = {}
-  for (const [k, v] of Object.entries(node)) out[k] = remapLexical(v)
-  if (out.type === 'upload' || out.type === 'relationship') {
-    const mapped = mapId(out.relationTo, out.value)
-    out.value = mapped
-  }
-  if (out.type === 'link' && out.fields?.doc && typeof out.fields.doc === 'object') {
-    const mapped = mapId(out.fields.doc.relationTo, out.fields.doc.value)
-    out.fields.doc = mapped === null ? null : { relationTo: out.fields.doc.relationTo, value: mapped }
-  }
-  return out
-}
-
-function remapFields(fields: Field[], data: any): any {
-  if (!data || typeof data !== 'object') return data
-  const out = { ...data }
-  for (const field of fields as any[]) {
-    switch (field.type) {
-      case 'relationship':
-      case 'upload':
-        if (field.name in out) out[field.name] = remapRel(field, out[field.name])
-        break
-      case 'array':
-        if (Array.isArray(out[field.name])) out[field.name] = out[field.name].map((row: any) => remapFields(field.fields, row))
-        break
-      case 'blocks':
-        if (Array.isArray(out[field.name])) {
-          out[field.name] = out[field.name].map((row: any) => {
-            const block: Block | undefined = (field.blocks as Block[]).find((b) => b.slug === row.blockType)
-            return block ? remapFields(block.fields, row) : row
-          })
-        }
-        break
-      case 'group':
-        if (field.name) out[field.name] = remapFields(field.fields, out[field.name])
-        else Object.assign(out, remapFields(field.fields, out))
-        break
-      case 'row':
-      case 'collapsible':
-        Object.assign(out, remapFields(field.fields, out))
-        break
-      case 'tabs':
-        for (const tab of field.tabs) {
-          if ('name' in tab && tab.name) out[tab.name] = remapFields(tab.fields, out[tab.name])
-          else Object.assign(out, remapFields(tab.fields, out))
-        }
-        break
-      case 'richText':
-        if (out[field.name]) out[field.name] = remapLexical(out[field.name])
-        break
-    }
-  }
-  return out
-}
+import { remapFields as remapWithMap } from '@/lib/remapRelations'
+const remapFields = (fields: Field[], data: any) => remapWithMap(fields, data, mapId)
 
 // ---- natural keys for idempotency --------------------------------------
 

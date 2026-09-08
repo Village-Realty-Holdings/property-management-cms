@@ -216,7 +216,9 @@ export const Posts: CollectionConfig<'posts'> = {
         },
       ],
     },
-    slugField(),
+    // Slugs repeat across tenants. Payload names every compound index `tenant_slug_idx`, which
+    // SQLite rejects twice, so the per-tenant unique index lives in migration 20260908_175112_tenant_slugs.
+    slugField({ disableUnique: true }),
   ],
   hooks: {
     afterChange: [revalidatePost],

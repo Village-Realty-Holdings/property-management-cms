@@ -14,6 +14,7 @@ import { PostHero } from '@/heros/PostHero'
 import { generateMeta } from '@/seo/generateMeta'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { tenantWhere } from '@/server/getTenant'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -97,11 +98,7 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
     limit: 1,
     overrideAccess: draft,
     pagination: false,
-    where: {
-      slug: {
-        equals: slug,
-      },
-    },
+    where: { ...(await tenantWhere()), slug: { equals: slug } },
   })
 
   return result.docs?.[0] || null

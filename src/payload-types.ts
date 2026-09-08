@@ -247,6 +247,10 @@ export interface Tenant {
       }[]
     | null;
   /**
+   * Copy the pages, photos, forms, theme, header, footer and site settings of an existing tenant into this one. Leave empty to start with an empty site.
+   */
+  copyFrom?: (number | null) | Tenant;
+  /**
    * How the admin panel looks when it is opened on one of the domains above. Anything left empty falls back to the Awayday brand.
    */
   branding?: {
@@ -1578,7 +1582,7 @@ export interface Theme {
   /**
    * A starting point. Applying it fills the fields below, which you can then fine-tune.
    */
-  preset?: ('coastal-teal' | 'warren-beach-classic') | null;
+  preset?: ('coastal-teal' | 'warren-beach-classic' | 'sun-palace') | null;
   light?: {
     background?: string | null;
     foreground?: string | null;
@@ -1598,8 +1602,8 @@ export interface Theme {
     muted?: string | null;
   };
   typography?: {
-    bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans') | null;
-    headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans') | null;
+    bodyFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans' | 'quicksand') | null;
+    headingFont?: ('geist' | 'inter' | 'dm-sans' | 'lora' | 'playfair' | 'source-sans' | 'quicksand') | null;
   };
   shape?: {
     /**
@@ -2681,6 +2685,7 @@ export interface TenantsSelect<T extends boolean = true> {
         domain?: T;
         id?: T;
       };
+  copyFrom?: T;
   branding?:
     | T
     | {

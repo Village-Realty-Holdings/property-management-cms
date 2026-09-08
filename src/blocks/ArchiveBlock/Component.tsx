@@ -6,6 +6,7 @@ import React from 'react'
 import RichText from '@/components/RichText'
 
 import { CollectionArchive } from '@/components/CollectionArchive'
+import { tenantWhere } from '@/server/getTenant'
 
 export const ArchiveBlock: React.FC<
   ArchiveBlockProps & {
@@ -30,15 +31,10 @@ export const ArchiveBlock: React.FC<
       collection: 'posts',
       depth: 1,
       limit,
-      ...(flattenedCategories && flattenedCategories.length > 0
-        ? {
-            where: {
-              categories: {
-                in: flattenedCategories,
-              },
-            },
-          }
-        : {}),
+      where: {
+        ...(await tenantWhere()),
+        ...(flattenedCategories && flattenedCategories.length > 0 ? { categories: { in: flattenedCategories } } : {}),
+      },
     })
 
     posts = fetchedPosts.docs
