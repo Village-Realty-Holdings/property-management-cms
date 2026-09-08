@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import type { FieldSchema, Option } from './schema'
 import { defaultProps } from './adapters'
 import { NestedBlocks } from './NestedBlocks'
-import { richTextExcerpt, useRichTextSheet } from './RichTextSheet'
+import { richTextExcerpt, useRichTextSheet } from './richTextContext'
 
 /**
  * Sidebar editors for the visual editor, built from the block schema.

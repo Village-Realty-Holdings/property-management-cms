@@ -13,6 +13,7 @@ import { CanvasFrame } from './CanvasFrame'
 import type { CanvasStyles } from './canvasStyles'
 import { buildPuckConfig, viewports } from './config'
 import { EditorShell, type Status } from './EditorShell'
+import { RichTextSheetProvider } from './RichTextSheet'
 import type { BlockSchema } from './schema'
 
 type Props = {
@@ -170,6 +171,7 @@ export function VisualEditor({
         color: '#2f2f2f',
       }}
     >
+      <RichTextSheetProvider>
       <BlockPickerProvider canvasStyles={canvasStyles}>
         <Puck
           config={config}
@@ -208,6 +210,7 @@ export function VisualEditor({
           />
         </Puck>
       </BlockPickerProvider>
+      </RichTextSheetProvider>
     </div>
   )
 }

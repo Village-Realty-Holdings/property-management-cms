@@ -23,6 +23,9 @@ type BlocksField = Extract<FieldSchema, { kind: 'blocks' }> & { minRows?: number
 
 const HIDDEN = new Set(['id', 'blockName'])
 
+/** The row without Payload's bookkeeping keys, so a summary shows content rather than the block type. */
+const withoutMeta = ({ id: _id, blockType: _type, blockName: _name, ...rest }: Row): Record<string, unknown> => rest
+
 export function NestedBlocks({
   field,
   label,
@@ -107,7 +110,7 @@ export function NestedBlocks({
                 type="button"
               >
                 <span style={{ fontWeight: 600 }}>{schema?.label ?? row.blockType}</span>
-                <span style={{ opacity: 0.6, marginLeft: 6 }}>{summarize(row, schema?.label ?? row.blockType, i)}</span>
+                <span style={{ opacity: 0.6, marginLeft: 6 }}>{summarize(withoutMeta(row), schema?.label ?? row.blockType, i)}</span>
               </button>
               {!readOnly && (
                 <span style={{ display: 'flex', gap: 2 }}>
