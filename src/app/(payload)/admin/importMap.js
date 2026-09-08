@@ -44,9 +44,13 @@ import { RowLabel as RowLabel_09ed22ee1dbaccee5b656859c40b4abd } from '@/SiteSet
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
+import { Icon as Icon_a94f9437cda2e224a83913b64adb39ac } from '@/components/admin/Branding/Icon'
+import { Logo as Logo_00abac4535d2928c08947b7af3a8791a } from '@/components/admin/Branding/Logo'
 import { GlobalViewRedirect as GlobalViewRedirect_d6d5f193a167989e2ee7d14202901e62 } from '@payloadcms/plugin-multi-tenant/rsc'
+import { NavFooter as NavFooter_89dfa836e7ce8989768088056c8a1ee5 } from '@/components/admin/Branding/NavFooter'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
-import { TenantSelector as TenantSelector_d6d5f193a167989e2ee7d14202901e62 } from '@payloadcms/plugin-multi-tenant/rsc'
+import { TenantLock as TenantLock_ffee8132312d7515502692f829b8485f } from '@/components/admin/TenantLock'
+import { AccentStyle as AccentStyle_1b27166a2ee9524db746069c63b61917 } from '@/components/admin/Branding/AccentStyle'
 import { TenantSelectionProvider as TenantSelectionProvider_d6d5f193a167989e2ee7d14202901e62 } from '@payloadcms/plugin-multi-tenant/rsc'
 import { R2ClientUploadHandler as R2ClientUploadHandler_85cc02ed84006fcc91d3aff39dda669d } from '@payloadcms/storage-r2/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -99,9 +103,13 @@ export const importMap = {
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
+  "@/components/admin/Branding/Icon#Icon": Icon_a94f9437cda2e224a83913b64adb39ac,
+  "@/components/admin/Branding/Logo#Logo": Logo_00abac4535d2928c08947b7af3a8791a,
   "@payloadcms/plugin-multi-tenant/rsc#GlobalViewRedirect": GlobalViewRedirect_d6d5f193a167989e2ee7d14202901e62,
+  "@/components/admin/Branding/NavFooter#NavFooter": NavFooter_89dfa836e7ce8989768088056c8a1ee5,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
-  "@payloadcms/plugin-multi-tenant/rsc#TenantSelector": TenantSelector_d6d5f193a167989e2ee7d14202901e62,
+  "@/components/admin/TenantLock#TenantLock": TenantLock_ffee8132312d7515502692f829b8485f,
+  "@/components/admin/Branding/AccentStyle#AccentStyle": AccentStyle_1b27166a2ee9524db746069c63b61917,
   "@payloadcms/plugin-multi-tenant/rsc#TenantSelectionProvider": TenantSelectionProvider_d6d5f193a167989e2ee7d14202901e62,
   "@payloadcms/storage-r2/client#R2ClientUploadHandler": R2ClientUploadHandler_85cc02ed84006fcc91d3aff39dda669d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1

@@ -150,4 +150,24 @@ const tenantScoping = multiTenantPlugin({
   userHasAccessToAllTenants: isSuperAdminUser,
 })
 
-export const plugins: Plugin[] = [...basePlugins, tenantScoping]
+const PLUGIN_TENANT_SELECTOR = '@payloadcms/plugin-multi-tenant/rsc#TenantSelector'
+
+/**
+ * Swaps the multi-tenant plugin's free nav selector for one that pins the
+ * tenant whose domain the admin is served on. Must run after `tenantScoping`,
+ * which is what registers the selector in `beforeNav`.
+ */
+const lockTenantByHost: Plugin = (config) => {
+  const beforeNav = (config.admin?.components?.beforeNav ?? []).map((component) =>
+    typeof component === 'object' && component.path === PLUGIN_TENANT_SELECTOR
+      ? { ...component, path: '@/components/admin/TenantLock#TenantLock' }
+      : component,
+  )
+
+  return {
+    ...config,
+    admin: { ...config.admin, components: { ...config.admin?.components, beforeNav } },
+  }
+}
+
+export const plugins: Plugin[] = [...basePlugins, tenantScoping, lockTenantByHost]

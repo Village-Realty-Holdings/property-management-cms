@@ -90,10 +90,31 @@ const cloudflare =
 
 export default buildConfig({
   admin: {
+    // Branding follows the request host: a tenant's domain shows that tenant's
+    // logo, icon and accent, anything else shows Awayday. See `src/lib/adminBranding.ts`.
     components: {
-      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below.
+      afterNavLinks: ['@/components/admin/Branding/NavFooter#NavFooter'],
       beforeLogin: ['@/components/BeforeLogin'],
+      graphics: {
+        Icon: '@/components/admin/Branding/Icon#Icon',
+        Logo: '@/components/admin/Branding/Logo#Logo',
+      },
+      providers: ['@/components/admin/Branding/AccentStyle#AccentStyle'],
+    },
+    meta: {
+      description: 'Manage your Awayday site.',
+      icons: [
+        { rel: 'icon', sizes: '32x32', type: 'image/png', url: '/admin/awayday-favicon-32.png' },
+        { rel: 'icon', sizes: '192x192', type: 'image/png', url: '/admin/awayday-favicon-192.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', type: 'image/png', url: '/admin/awayday-apple-touch-icon.png' },
+      ],
+      openGraph: {
+        description: 'Manage your Awayday site.',
+        images: [{ url: '/admin/awayday-logo.png', width: 475, height: 101 }],
+        siteName: 'Awayday',
+        title: 'Awayday Admin',
+      },
+      titleSuffix: '· Awayday',
     },
     importMap: {
       baseDir: path.resolve(dirname),

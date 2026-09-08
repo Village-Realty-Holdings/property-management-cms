@@ -8,3 +8,120 @@
 @custom-variant dark (&:is([data-theme='dark'] *));
 
 @import '../shadcn-theme.css';
+
+/* ---------------------------------------------------------------------------
+   Admin branding. `--brand-accent` and `--brand-on-accent` are set per request
+   by the AccentStyle provider (Awayday teal by default, a tenant's colour on
+   its own domain). Everything below maps them onto Payload's own variables.
+   --------------------------------------------------------------------------- */
+:root {
+  --brand-accent: #2d4447;
+  --brand-on-accent: #ffffff;
+  --brand-accent-soft: color-mix(in srgb, var(--brand-accent) 12%, transparent);
+
+  /* Focus rings and "success" highlights follow the accent. */
+  --theme-success-500: var(--brand-accent);
+  --theme-success-400: color-mix(in srgb, var(--brand-accent) 80%, white);
+  --theme-success-600: color-mix(in srgb, var(--brand-accent) 85%, black);
+}
+
+/* Primary buttons carry the accent instead of Payload's near-black. */
+.btn--style-primary {
+  --bg-color: var(--brand-accent);
+  --color: var(--brand-on-accent);
+  --hover-bg: color-mix(in srgb, var(--brand-accent) 85%, black);
+}
+
+/* Active nav link. */
+.nav__link.active,
+.nav__link[aria-current='page'] {
+  color: var(--brand-accent);
+}
+
+/* Logo on the login screen, icon in the nav. */
+.brand-logo {
+  display: block;
+  width: min(240px, 60vw);
+  height: auto;
+  margin: 0 auto;
+}
+
+.brand-icon {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Pinned tenant badge at the top of the nav. */
+.tenant-lock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--base);
+  padding: calc(var(--base) * 0.5) calc(var(--base) * 0.6);
+  border-radius: var(--style-radius-m);
+  background: var(--brand-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--brand-accent) 30%, transparent);
+}
+
+.tenant-lock__label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--theme-elevation-500);
+}
+
+.tenant-lock__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--brand-accent);
+}
+
+.tenant-lock__note {
+  font-size: 12px;
+  color: var(--theme-error-500);
+}
+
+.tenant-lock[data-state='denied'] .tenant-lock__name {
+  color: var(--theme-elevation-500);
+}
+
+/* Login copy above the form. */
+.before-login {
+  margin-bottom: var(--base);
+  text-align: center;
+}
+
+.before-login__title {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.before-login__body {
+  margin: 0;
+  color: var(--theme-elevation-500);
+}
+
+/* Platform links under the nav. */
+.nav-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--base);
+  padding-top: var(--base);
+  border-top: 1px solid var(--theme-elevation-100);
+}
+
+.nav-footer__link {
+  font-size: 12px;
+  color: var(--theme-elevation-500);
+  text-decoration: none;
+}
+
+.nav-footer__link:hover {
+  color: var(--brand-accent);
+}
