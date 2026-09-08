@@ -34,10 +34,21 @@ const listTenants = unstable_cache(
   { tags: ['tenants'] },
 )
 
-const hostOf = async () => {
+export const hostOf = async () => {
   const h = await headers()
   const raw = h.get('x-forwarded-host') ?? h.get('host') ?? ''
   return raw.split(',')[0]!.trim().toLowerCase().replace(/:\d+$/, '')
+}
+
+/**
+ * The tenant whose `domains` list the request host, or null when no tenant
+ * claims it. Unlike `resolveTenant` there is no fallback: the admin panel uses
+ * this to decide whether it is being served on a tenant's own domain.
+ */
+export const findTenantByHost = async (host?: string): Promise<Tenant | null> => {
+  const tenants = await listTenants()
+  const hostname = host ?? (await hostOf())
+  return tenants.find((t) => (t.domains ?? []).some((d) => d.domain.toLowerCase() === hostname)) ?? null
 }
 
 export const resolveTenant = async (host?: string): Promise<Tenant | null> => {
@@ -50,9 +61,7 @@ export const resolveTenant = async (host?: string): Promise<Tenant | null> => {
     if (byPreview) return byPreview
   }
 
-  const hostname = host ?? (await hostOf())
-
-  const byDomain = tenants.find((t) => (t.domains ?? []).some((d) => d.domain.toLowerCase() === hostname))
+  const byDomain = await findTenantByHost(host)
   if (byDomain) return byDomain
 
   const fallbackSlug = process.env.DEFAULT_TENANT
