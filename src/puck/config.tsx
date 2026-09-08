@@ -49,14 +49,18 @@ function CanvasRoot({ children }: { children?: ReactNode }) {
   )
 }
 
-export function buildPuckConfig(schemas: BlockSchema[]): Config {
+/**
+ * @param layoutSchemaPath Payload's schema-map key of the layout field; each
+ * block's fields get `<key>.<slug>` so rich text can ask the server for its editor.
+ */
+export function buildPuckConfig(schemas: BlockSchema[], layoutSchemaPath = 'pages.layout'): Config {
   const components: Record<string, ComponentConfig> = {}
   const categories: Record<string, { title: string; components: string[] }> = {}
 
   for (const schema of schemas) {
     components[schema.slug] = {
       label: schema.label,
-      fields: toBlockFields(schema.fields),
+      fields: toBlockFields(schema.fields, `${layoutSchemaPath}.${schema.slug}`),
       defaultProps: defaultProps(schema.fields),
       render: ({ puck: _puck, editMode: _editMode, ...props }) => (
         <CanvasBlock id={props.id}>

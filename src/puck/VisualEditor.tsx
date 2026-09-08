@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Page } from '@/payload-types'
 
 import { layoutToPuck, puckToLayout } from './adapters'
-import { BlockPickerProvider, useBlockPicker } from './BlockPicker'
+import { BlockPickerProvider, useBlockPicker } from './pickerContext'
 import { CanvasFrame } from './CanvasFrame'
 import type { CanvasStyles } from './canvasStyles'
 import { buildPuckConfig, viewports } from './config'
@@ -20,13 +20,13 @@ type Props = {
   title: string
   slug: string
   initialLayout: Page['layout']
+  /** Payload schema-map key of the layout field; block fields build their own keys from it. */
+  layoutSchemaPath: string
   schemas: BlockSchema[]
   formHref: string
   previewHref: string | null
   canvasStyles: CanvasStyles
 }
-
-const AUTOSAVE_MS = 1500
 
 /** What one save carries: the block layout plus the page settings edited on the root. */
 type Draft = { layout: Page['layout']; title: string; slug: string }
@@ -42,23 +42,26 @@ export function puckToDraft(data: Data, schemas: BlockSchema[]): Draft {
 }
 
 /**
- * Visual editor for a page. Every edit becomes a draft save through the REST
- * API as the logged-in user: `?draft=true` with `_status: 'draft'`, the same
- * request the edit view's autosave makes, so collection access decides, not
- * this component. Publish is the same PATCH the Publish button sends. Nothing
- * here touches the public cache; the collection hooks revalidate on publish.
+ * Visual editor for a page. Edits stay in the browser until the user clicks
+ * "Save draft" or "Publish"; there is no autosave. A save is a PATCH through
+ * the REST API as the logged-in user: `?draft=true` with `_status: 'draft'`,
+ * the same request the form view makes, so collection access decides, not
+ * this component. Publish saves and publishes in one PATCH. Nothing here
+ * touches the public cache; the collection hooks revalidate on publish.
+ * Leaving the page with unsaved edits prompts the browser's leave warning.
  */
 export function VisualEditor({
   docId,
   title,
   slug,
   initialLayout,
+  layoutSchemaPath,
   schemas,
   formHref,
   previewHref,
   canvasStyles,
 }: Props) {
-  const config = useMemo(() => buildPuckConfig(schemas), [schemas])
+  const config = useMemo(() => buildPuckConfig(schemas, layoutSchemaPath), [schemas, layoutSchemaPath])
   const initialData = useMemo(
     () => ({ ...layoutToPuck(initialLayout), root: { props: { title, slug } } }),
     [initialLayout, title, slug],
@@ -66,7 +69,6 @@ export function VisualEditor({
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const lastSaved = useRef(JSON.stringify(puckToDraft(initialData, schemas)))
   const pending = useRef<Draft | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const patch = useCallback(
     async (draft: Draft, publish: boolean) => {
@@ -89,24 +91,30 @@ export function VisualEditor({
     [docId],
   )
 
-  const flush = useCallback(async () => {
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = null
+  /** Save whatever is pending as a draft. Returns false when the save failed. */
+  const saveDraft = useCallback(async (): Promise<boolean> => {
     const draft = pending.current
-    pending.current = null
-    if (!draft) return
+    if (!draft) return true
     const json = JSON.stringify(draft)
-    if (json === lastSaved.current) return
+    if (json === lastSaved.current) {
+      pending.current = null
+      setStatus({ kind: 'saved' })
+      return true
+    }
     setStatus({ kind: 'saving' })
     try {
       await patch(draft, false)
       lastSaved.current = json
+      pending.current = null
       setStatus({ kind: 'saved' })
+      return true
     } catch (e) {
       setStatus({ kind: 'error', message: (e as Error).message })
+      return false
     }
   }, [patch])
 
+  // Puck reports every edit; it is only remembered here until the user saves.
   const onChange = useCallback(
     (data: Data) => {
       let draft: Draft
@@ -114,40 +122,42 @@ export function VisualEditor({
         draft = puckToDraft(data, schemas)
       } catch (e) {
         pending.current = null
-        setStatus({ kind: 'error', message: `${(e as Error).message}. Not saved.` })
+        setStatus({ kind: 'error', message: `${(e as Error).message}. Cannot be saved.` })
+        return
+      }
+      if (JSON.stringify(draft) === lastSaved.current) {
+        pending.current = null
+        setStatus((s) => (s.kind === 'dirty' ? { kind: 'idle' } : s))
         return
       }
       pending.current = draft
-      setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s))
-      if (timer.current) clearTimeout(timer.current)
-      timer.current = setTimeout(() => void flush(), AUTOSAVE_MS)
+      setStatus({ kind: 'dirty' })
     },
-    [flush, schemas],
+    [schemas],
   )
 
-  // Save what is still pending when the editor is left.
+  // Leaving with unsaved edits asks first; nothing is saved behind the user's back.
   useEffect(() => {
-    const onHide = () => {
-      if (pending.current) void flush()
+    const warn = (e: BeforeUnloadEvent) => {
+      if (pending.current) e.preventDefault()
     }
-    window.addEventListener('pagehide', onHide)
-    return () => {
-      window.removeEventListener('pagehide', onHide)
-      onHide()
-    }
-  }, [flush])
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [])
 
+  /** Publish saves pending edits and publishes in one request. */
   const publish = useCallback(async () => {
-    await flush()
-    const draft = JSON.parse(lastSaved.current) as Draft
+    const draft = pending.current ?? (JSON.parse(lastSaved.current) as Draft)
     setStatus({ kind: 'saving', message: 'Publishing' })
     try {
       await patch(draft, true)
+      lastSaved.current = JSON.stringify(draft)
+      pending.current = null
       setStatus({ kind: 'saved', message: 'Published' })
     } catch (e) {
       setStatus({ kind: 'error', message: (e as Error).message })
     }
-  }, [flush, patch])
+  }, [patch])
 
   return (
     <div
@@ -190,6 +200,7 @@ export function VisualEditor({
           <EditorShell
             formHref={formHref}
             onPublish={publish}
+            onSave={saveDraft}
             previewHref={previewHref}
             schemas={schemas}
             status={status}

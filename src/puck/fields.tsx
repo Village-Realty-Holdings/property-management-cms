@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react'
 
 import type { FieldSchema, Option } from './schema'
 import { defaultProps } from './adapters'
+import { NestedBlocks } from './NestedBlocks'
+import { richTextExcerpt, useRichTextSheet } from './RichTextSheet'
 
 /**
  * Sidebar editors for the visual editor, built from the block schema.
@@ -13,8 +15,13 @@ import { defaultProps } from './adapters'
  * Simple fields map onto Puck's own fields. Text and textarea fields are also
  * editable inline on the canvas. Uploads get a media picker and relationships
  * a document picker, both handling `hasMany` and polymorphic `relationTo`.
- * Rich text and nested blocks keep their data but are edited in the form
- * view; the sidebar says so.
+ * Rich text opens a sheet with Payload's editor; nested blocks get a list
+ * that reuses the add-block dialog. Every field is editable here, so the form
+ * view is never required.
+ *
+ * `schemaPath` is Payload's schema-map key of the container (block, array or
+ * group) that owns the fields; rich text needs it to ask the server for the
+ * right editor. It is optional so pure field tests need not supply one.
  */
 
 /**
@@ -27,18 +34,18 @@ const NOT_INLINE =
   /^(url|href|link|linkUrl|email|code|slug|anchor|nodeId|currency|street|city|region|postalCode|country)$|(url|href|id|code)$/i
 
 export const isInlineText = (name: string): boolean => !NOT_INLINE.test(name)
-export function toPuckFields(fields: FieldSchema[]): Record<string, Field> {
+export function toPuckFields(fields: FieldSchema[], schemaPath = ''): Record<string, Field> {
   const out: Record<string, Field> = {}
-  for (const field of fields) out[field.name] = toPuckField(field)
+  for (const field of fields) out[field.name] = toPuckField(field, schemaPath)
   return out
 }
 
 /** Top-level block fields: the same, plus Payload's optional admin label. */
-export function toBlockFields(fields: FieldSchema[]): Record<string, Field> {
-  return { ...toPuckFields(fields), blockName: { type: 'text', label: 'Block name (admin label)' } }
+export function toBlockFields(fields: FieldSchema[], schemaPath = ''): Record<string, Field> {
+  return { ...toPuckFields(fields, schemaPath), blockName: { type: 'text', label: 'Block name (admin label)' } }
 }
 
-export function toPuckField(field: FieldSchema): Field {
+export function toPuckField(field: FieldSchema, schemaPath = ''): Field {
   switch (field.kind) {
     case 'scalar':
       if (field.hasMany) return listField(field.label)
@@ -46,7 +53,11 @@ export function toPuckField(field: FieldSchema): Field {
         case 'textarea':
           return { type: 'textarea', label: field.label, contentEditable: isInlineText(field.name) }
         case 'json':
-          return { type: 'textarea', label: field.label }
+          return jsonField(field.label)
+        case 'code':
+          return codeField(field.label)
+        case 'date':
+          return dateField(field.label)
         case 'number':
           return { type: 'number', label: field.label, min: field.min, max: field.max }
         case 'checkbox':
@@ -59,7 +70,7 @@ export function toPuckField(field: FieldSchema): Field {
             ],
           }
         case 'point':
-          return noteField(field.label, 'Edit in the form view.')
+          return pointField(field.label)
         case 'text':
           return { type: 'text', label: field.label, contentEditable: isInlineText(field.name) }
         default:
@@ -73,25 +84,25 @@ export function toPuckField(field: FieldSchema): Field {
         return mediaField(field.label, field.relationTo, Boolean(field.hasMany))
       return relationField(field.label, field.relationTo, Boolean(field.hasMany))
     case 'richText':
-      return noteField(field.label, 'Rich text: edit in the form view.')
+      return richTextField(field.label, field.name, schemaPath)
     case 'blocks':
-      return noteField(field.label, 'Nested blocks: edit in the form view.')
+      return nestedBlocksField(field, schemaPath)
     case 'group':
-      return { type: 'object', label: field.label, objectFields: toPuckFields(field.fields) }
+      return { type: 'object', label: field.label, objectFields: toPuckFields(field.fields, `${schemaPath}.${field.name}`) }
     case 'array':
       return {
         type: 'array',
         label: field.label,
         min: field.minRows,
         max: field.maxRows,
-        arrayFields: toPuckFields(field.fields),
+        arrayFields: toPuckFields(field.fields, `${schemaPath}.${field.name}`),
         defaultItemProps: defaultProps(field.fields),
         getItemSummary: (item, index) => summarize(item, field.label, index),
       }
   }
 }
 
-const summarize = (item: Record<string, unknown>, label: string, index = 0): string => {
+export const summarize = (item: Record<string, unknown>, label: string, index = 0): string => {
   for (const [key, value] of Object.entries(item)) {
     if (key === 'id') continue
     if (typeof value === 'string' && value.trim())
@@ -112,14 +123,198 @@ type Doc = {
   thumbnailURL?: string
 }
 
-const noteField = (label: string, note: string): CustomField<unknown> => ({
+/** A date-time input; stored as an ISO string, cleared to null. */
+const dateField = (label: string): CustomField<string | null | undefined> => ({
   type: 'custom',
   label,
-  render: ({ field }) => (
+  render: ({ field, value, onChange, readOnly }) => (
     <div>
       <FieldLabel label={field.label ?? label} />
-      <p style={{ fontSize: 12, opacity: 0.7, margin: 0 }}>{note}</p>
+      <input
+        disabled={readOnly}
+        onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+        style={input}
+        type="datetime-local"
+        value={toLocalInput(value)}
+      />
     </div>
+  ),
+})
+
+/** ISO → the `YYYY-MM-DDTHH:mm` a datetime-local input wants, in local time. */
+function toLocalInput(value: unknown): string {
+  if (typeof value !== 'string' || !value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** A monospace textarea for code fields. */
+const codeField = (label: string): CustomField<string | null | undefined> => ({
+  type: 'custom',
+  label,
+  render: ({ field, value, onChange, readOnly }) => (
+    <div>
+      <FieldLabel label={field.label ?? label} />
+      <textarea
+        disabled={readOnly}
+        onChange={(e) => onChange(e.target.value)}
+        rows={6}
+        spellCheck={false}
+        style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
+        value={value ?? ''}
+      />
+    </div>
+  ),
+})
+
+/** JSON edited as text; only valid JSON reaches the block, invalid text shows an error and waits. */
+const jsonField = (label: string): CustomField<unknown> => ({
+  type: 'custom',
+  label,
+  render: ({ field, value, onChange, readOnly }) => (
+    <JsonEditor label={field.label ?? label} onChange={onChange} readOnly={readOnly} value={value} />
+  ),
+})
+
+function JsonEditor({
+  label,
+  value,
+  onChange,
+  readOnly,
+}: {
+  label: string
+  value: unknown
+  onChange: (v: unknown) => void
+  readOnly?: boolean
+}) {
+  const [text, setText] = useState(() => (value === undefined || value === null ? '' : JSON.stringify(value, null, 2)))
+  const [error, setError] = useState<string | null>(null)
+  const commit = () => {
+    if (!text.trim()) {
+      setError(null)
+      onChange(null)
+      return
+    }
+    try {
+      onChange(JSON.parse(text))
+      setError(null)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  return (
+    <div>
+      <FieldLabel label={label} />
+      <textarea
+        disabled={readOnly}
+        onBlur={commit}
+        onChange={(e) => setText(e.target.value)}
+        rows={6}
+        spellCheck={false}
+        style={{ ...input, fontFamily: 'ui-monospace, monospace', fontSize: 12, borderColor: error ? '#b00' : undefined }}
+        value={text}
+      />
+      {error && <p style={{ color: '#b00', fontSize: 12, margin: '4px 0 0' }}>Not valid JSON: {error}</p>}
+    </div>
+  )
+}
+
+/** Longitude and latitude, stored in Payload's `[lng, lat]` order. */
+const pointField = (label: string): CustomField<[number, number] | null | undefined> => ({
+  type: 'custom',
+  label,
+  render: ({ field, value, onChange, readOnly }) => {
+    const [lng, lat] = Array.isArray(value) ? value : [undefined, undefined]
+    const set = (nextLng: string, nextLat: string) => {
+      if (nextLng === '' && nextLat === '') return onChange(null)
+      onChange([Number(nextLng), Number(nextLat)])
+    }
+    return (
+      <div>
+        <FieldLabel label={field.label ?? label} />
+        <div style={{ display: 'flex', gap: 6 }}>
+          <label style={{ flex: 1, fontSize: 12 }}>
+            Longitude
+            <input
+              disabled={readOnly}
+              onChange={(e) => set(e.target.value, lat === undefined ? '' : String(lat))}
+              step="any"
+              style={input}
+              type="number"
+              value={lng ?? ''}
+            />
+          </label>
+          <label style={{ flex: 1, fontSize: 12 }}>
+            Latitude
+            <input
+              disabled={readOnly}
+              onChange={(e) => set(lng === undefined ? '' : String(lng), e.target.value)}
+              step="any"
+              style={input}
+              type="number"
+              value={lat ?? ''}
+            />
+          </label>
+        </div>
+      </div>
+    )
+  },
+})
+
+/** A one-line excerpt plus an "Edit text" button that opens the rich text sheet. */
+const richTextField = (label: string, name: string, schemaPath: string): CustomField<unknown> => ({
+  type: 'custom',
+  label,
+  render: ({ field, value, onChange, readOnly }) => (
+    <RichTextSummary label={field.label ?? label} name={name} onChange={onChange} readOnly={readOnly} schemaPath={schemaPath} value={value} />
+  ),
+})
+
+function RichTextSummary({
+  label,
+  name,
+  schemaPath,
+  value,
+  onChange,
+  readOnly,
+}: {
+  label: string
+  name: string
+  schemaPath: string
+  value: unknown
+  onChange: (v: unknown) => void
+  readOnly?: boolean
+}) {
+  const sheet = useRichTextSheet()
+  const excerpt = richTextExcerpt(value)
+  return (
+    <div>
+      <FieldLabel label={label} />
+      <p style={{ fontSize: 12, margin: '0 0 6px', opacity: excerpt ? 0.85 : 0.6 }}>{excerpt || 'No text yet.'}</p>
+      <button
+        disabled={readOnly || !sheet.available}
+        onClick={() => sheet.open({ name, label, schemaPath, value, onChange })}
+        style={btn}
+        title={sheet.available ? undefined : 'Rich text editing is not available here.'}
+        type="button"
+      >
+        Edit text
+      </button>
+    </div>
+  )
+}
+
+/** Section slots and any other `blocks` field: a list of child blocks edited in place. */
+const nestedBlocksField = (
+  field: Extract<FieldSchema, { kind: 'blocks' }>,
+  schemaPath: string,
+): CustomField<unknown> => ({
+  type: 'custom',
+  label: field.label,
+  render: ({ field: f, value, onChange, readOnly }) => (
+    <NestedBlocks field={field} label={f.label ?? field.label} onChange={onChange} readOnly={readOnly} schemaPath={schemaPath} value={value} />
   ),
 })
 

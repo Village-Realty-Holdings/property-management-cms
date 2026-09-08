@@ -15,23 +15,26 @@ import { usePuckSelector as usePuck } from './usePuck'
  * the block picker dialog keep working.
  */
 
-export type Status = { kind: 'idle' | 'saving' | 'saved' | 'error'; message?: string }
+/** `dirty` means edits are waiting for the user to save them. */
+export type Status = { kind: 'idle' | 'dirty' | 'saving' | 'saved' | 'error'; message?: string }
 
 type Props = {
   title: string
   status: Status
+  onSave: () => void
   onPublish: () => void
   formHref: string
   previewHref: string | null
   schemas: BlockSchema[]
 }
 
-export function EditorShell({ title, status, onPublish, formHref, previewHref, schemas }: Props) {
+export function EditorShell({ title, status, onSave, onPublish, formHref, previewHref, schemas }: Props) {
   return (
     <div style={shell}>
       <EditorHeader
         formHref={formHref}
         onPublish={onPublish}
+        onSave={onSave}
         previewHref={previewHref}
         status={status}
         title={title}
@@ -45,7 +48,7 @@ export function EditorShell({ title, status, onPublish, formHref, previewHref, s
 
 /* ---------- header ---------- */
 
-function EditorHeader({ title, status, onPublish, formHref, previewHref }: Omit<Props, 'schemas'>) {
+function EditorHeader({ title, status, onSave, onPublish, formHref, previewHref }: Omit<Props, 'schemas'>) {
   return (
     <header style={header}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
@@ -58,7 +61,7 @@ function EditorHeader({ title, status, onPublish, formHref, previewHref }: Omit<
         <ViewportSwitch />
         <HistoryButtons />
       </div>
-      <SaveActions formHref={formHref} onPublish={onPublish} previewHref={previewHref} status={status} />
+      <SaveActions formHref={formHref} onPublish={onPublish} onSave={onSave} previewHref={previewHref} status={status} />
     </header>
   )
 }
@@ -108,11 +111,13 @@ function HistoryButtons() {
 
 function SaveActions({
   status,
+  onSave,
   onPublish,
   formHref,
   previewHref,
 }: {
   status: Status
+  onSave: () => void
   onPublish: () => void
   formHref: string
   previewHref: string | null
@@ -124,7 +129,11 @@ function SaveActions({
         ? (status.message ?? 'Draft saved')
         : status.kind === 'error'
           ? status.message
-          : 'Edits autosave as a draft'
+          : status.kind === 'dirty'
+            ? 'Unsaved edits'
+            : 'No changes'
+  const busy = status.kind === 'saving'
+  const dirty = status.kind === 'dirty' || status.kind === 'error'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, justifyContent: 'flex-end' }}>
       <span style={{ color: status.kind === 'error' ? '#b00020' : 'inherit', maxWidth: 360 }}>{label}</span>
@@ -136,7 +145,10 @@ function SaveActions({
           Preview draft
         </a>
       )}
-      <button disabled={status.kind === 'saving'} onClick={onPublish} style={publishStyle} type="button">
+      <button disabled={busy || !dirty} onClick={onSave} style={{ ...saveStyle, opacity: dirty ? 1 : 0.5 }} type="button">
+        Save draft
+      </button>
+      <button disabled={busy} onClick={onPublish} style={publishStyle} type="button">
         Publish
       </button>
     </div>
@@ -233,6 +245,15 @@ const toolButton: React.CSSProperties = {
   color: 'inherit',
 }
 const linkStyle: React.CSSProperties = { textDecoration: 'underline', color: 'inherit' }
+const saveStyle: React.CSSProperties = {
+  background: '#fff',
+  color: 'inherit',
+  border: '1px solid #bbb',
+  borderRadius: 4,
+  padding: '6px 14px',
+  fontWeight: 600,
+  cursor: 'pointer',
+}
 const publishStyle: React.CSSProperties = {
   background: '#1f6a78',
   color: '#fff',

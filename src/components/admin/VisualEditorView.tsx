@@ -1,3 +1,4 @@
+import { getSchemaMap } from '@payloadcms/ui/utilities/getSchemaMap'
 import type { DocumentViewServerProps } from 'payload'
 
 import type { Page } from '@/payload-types'
@@ -25,6 +26,15 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
     return <p style={{ padding: 'var(--base)' }}>The pages collection has no layout blocks field.</p>
   }
 
+  // Payload's schema-map key for the layout field (tabs add `_index-N`
+  // segments, so it is looked up rather than spelled out). Sidebar fields
+  // append `.<blockSlug>` and deeper names to address their own fields when
+  // asking the server to render a rich text editor.
+  const schemaMap = getSchemaMap({ collectionSlug: 'pages', config, i18n: req.i18n })
+  const layoutSchemaPath =
+    [...schemaMap.entries()].find(([key, entry]) => key.endsWith('.layout') && 'type' in entry && entry.type === 'blocks')?.[0] ??
+    'pages.layout'
+
   const page = (await req.payload.findByID({
     collection: 'pages',
     id: docID,
@@ -46,6 +56,7 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
       docId={page.id}
       formHref={`${config.routes.admin}/collections/pages/${page.id}/form`}
       initialLayout={page.layout}
+      layoutSchemaPath={layoutSchemaPath}
       previewHref={generatePreviewPath({ collection: 'pages', slug: page.slug ?? '', req, data: page })}
       schemas={blocksToSchema(blocks)}
       slug={page.slug ?? ''}

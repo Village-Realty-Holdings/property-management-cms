@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { ROOT_ZONE } from './BlockPicker'
+import { ROOT_ZONE } from './pickerContext'
 import { usePuckSelector as usePuck } from './usePuck'
 
 /**
