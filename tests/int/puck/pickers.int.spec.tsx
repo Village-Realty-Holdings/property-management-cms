@@ -76,7 +76,7 @@ describe('relationship picker', () => {
     const field = toPuckField({ kind: 'relation', name: 'reference', label: 'Document', type: 'relationship', relationTo: ['pages', 'posts'] }) as CustomField<unknown>
     const { onChange } = renderField(field, null)
     await flush()
-    const select = screen.getByRole('combobox') as HTMLSelectElement
+    const select = screen.getByRole('combobox') as unknown as HTMLSelectElement
     expect(select.querySelectorAll('optgroup')).toHaveLength(2)
     expect(screen.getByRole('option', { name: 'Summer offers' })).toBeTruthy()
 
@@ -88,7 +88,7 @@ describe('relationship picker', () => {
     const field = toPuckField({ kind: 'relation', name: 'reference', label: 'Document', type: 'relationship', relationTo: ['pages', 'posts'] }) as CustomField<unknown>
     renderField(field, { relationTo: 'pages', value: { id: 2, title: 'About' } })
     await flush()
-    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('pages:2')
+    expect((screen.getByRole('combobox') as unknown as HTMLSelectElement).value).toBe('pages:2')
   })
 
   it('toggles hasMany relations as checkboxes and keeps the rest', async () => {
