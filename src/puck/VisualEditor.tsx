@@ -1,12 +1,14 @@
 'use client'
 
-import { Puck, type Data } from '@puckeditor/core'
+import { ActionBar, Puck, type Data } from '@puckeditor/core'
+import { usePuckSelector as usePuck } from './usePuck'
 import '@puckeditor/core/puck.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Page } from '@/payload-types'
 
 import { layoutToPuck, puckToLayout } from './adapters'
+import { BlockPickerDialogSlot, BlockPickerProvider, useBlockPicker } from './BlockPicker'
 import type { CanvasStyles } from './canvasStyles'
 import { buildPuckConfig, viewports } from './config'
 import type { BlockSchema } from './schema'
@@ -46,9 +48,21 @@ export function puckToDraft(data: Data, schemas: BlockSchema[]): Draft {
  * this component. Publish is the same PATCH the Publish button sends. Nothing
  * here touches the public cache; the collection hooks revalidate on publish.
  */
-export function VisualEditor({ docId, title, slug, initialLayout, schemas, formHref, previewHref, canvasStyles }: Props) {
+export function VisualEditor({
+  docId,
+  title,
+  slug,
+  initialLayout,
+  schemas,
+  formHref,
+  previewHref,
+  canvasStyles,
+}: Props) {
   const config = useMemo(() => buildPuckConfig(schemas), [schemas])
-  const initialData = useMemo(() => ({ ...layoutToPuck(initialLayout), root: { props: { title, slug } } }), [initialLayout, title, slug])
+  const initialData = useMemo(
+    () => ({ ...layoutToPuck(initialLayout), root: { props: { title, slug } } }),
+    [initialLayout, title, slug],
+  )
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const lastSaved = useRef(JSON.stringify(puckToDraft(initialData, schemas)))
   const pending = useRef<Draft | null>(null)
@@ -58,7 +72,10 @@ export function VisualEditor({ docId, title, slug, initialLayout, schemas, formH
     async (draft: Draft, publish: boolean) => {
       const query = publish ? 'draft=false&depth=0' : 'draft=true&depth=0'
       // An empty title or slug is not sent; the page keeps what it had rather than failing validation.
-      const body: Record<string, unknown> = { layout: draft.layout, _status: publish ? 'published' : 'draft' }
+      const body: Record<string, unknown> = {
+        layout: draft.layout,
+        _status: publish ? 'published' : 'draft',
+      }
       if (draft.title.trim()) body.title = draft.title.trim()
       if (draft.slug.trim()) body.slug = draft.slug.trim()
       const res = await fetch(`/api/pages/${docId}?${query}`, {
@@ -137,26 +154,69 @@ export function VisualEditor({ docId, title, slug, initialLayout, schemas, formH
       className="visual-editor"
       // Puck's chrome is light-only; opt out of the admin's dark theme so its
       // inherited white text does not land on Puck's white panels.
-      style={{ height: 'calc(100vh - var(--visual-editor-offset, 8rem))', colorScheme: 'light', color: '#2f2f2f' }}
+      style={{
+        height: 'calc(100vh - var(--visual-editor-offset, 8rem))',
+        colorScheme: 'light',
+        color: '#2f2f2f',
+      }}
     >
-      <Puck
-        config={config}
-        data={initialData}
-        headerPath="/"
-        headerTitle={title}
-        iframe={{ syncHostStyles: false }}
-        onChange={onChange}
-        overrides={{
-          // Puck offers every item's `id` as an editable text field; Payload
-          // owns row ids, so hide it.
-          fieldTypes: { text: ({ children, name }) => (name === 'id' ? null : <>{children}</>) },
-          headerActions: () => <HeaderActions formHref={formHref} onPublish={publish} previewHref={previewHref} status={status} />,
-          // Public page CSS goes into the canvas only; the admin document never sees preflight.
-          iframe: ({ children }) => <CanvasFrame styles={canvasStyles}>{children}</CanvasFrame>,
-        }}
-        viewports={viewports}
-      />
+      <BlockPickerProvider>
+        <Puck
+          config={config}
+          data={initialData}
+          headerPath="/"
+          headerTitle={title}
+          iframe={{ syncHostStyles: false }}
+          onChange={onChange}
+          overrides={{
+            // Puck offers every item's `id` as an editable text field; Payload
+            // owns row ids, so hide it.
+            fieldTypes: { text: ({ children, name }) => (name === 'id' ? null : <>{children}</>) },
+            // The block picker dialog needs Puck's dispatch, so it mounts inside <Puck>.
+            puck: ({ children }) => (
+              <>
+                {children}
+                <BlockPickerDialogSlot schemas={schemas} />
+              </>
+            ),
+            actionBar: ({ children, label, parentAction }) => (
+              <ActionBar label={label}>
+                {parentAction}
+                <InsertBelowAction />
+                {children}
+              </ActionBar>
+            ),
+            headerActions: () => (
+              <HeaderActions
+                formHref={formHref}
+                onPublish={publish}
+                previewHref={previewHref}
+                status={status}
+              />
+            ),
+            // Public page CSS goes into the canvas only; the admin document never sees preflight.
+            iframe: ({ children }) => <CanvasFrame styles={canvasStyles}>{children}</CanvasFrame>,
+          }}
+          viewports={viewports}
+        />
+      </BlockPickerProvider>
     </div>
+  )
+}
+
+/** "Insert below" on the selected block's action bar: opens the picker at the next index. */
+function InsertBelowAction() {
+  const selector = usePuck((s) => s.appState.ui.itemSelector)
+  const { open } = useBlockPicker()
+  if (!selector || (selector.zone && selector.zone !== 'root:default-zone')) return null
+  return (
+    <ActionBar.Group>
+      <ActionBar.Action label="Insert block below" onClick={() => open(selector.index + 1)}>
+        <span aria-hidden style={{ fontSize: 18, lineHeight: 1, fontWeight: 600 }}>
+          +
+        </span>
+      </ActionBar.Action>
+    </ActionBar.Group>
   )
 }
 
@@ -209,7 +269,9 @@ function HeaderActions({
           : 'Edits autosave as a draft'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-      <span style={{ color: status.kind === 'error' ? '#b00020' : 'inherit', maxWidth: 360 }}>{label}</span>
+      <span style={{ color: status.kind === 'error' ? '#b00020' : 'inherit', maxWidth: 360 }}>
+        {label}
+      </span>
       <a href={formHref} style={linkStyle}>
         Form view
       </a>
@@ -218,7 +280,12 @@ function HeaderActions({
           Preview draft
         </a>
       )}
-      <button disabled={status.kind === 'saving'} onClick={onPublish} style={publishStyle} type="button">
+      <button
+        disabled={status.kind === 'saving'}
+        onClick={onPublish}
+        style={publishStyle}
+        type="button"
+      >
         Publish
       </button>
     </div>
@@ -248,5 +315,7 @@ async function describeError(res: Response): Promise<string> {
   } catch {
     /* not JSON */
   }
-  return res.status === 403 ? 'You do not have permission to do that.' : `Save failed (${res.status})`
+  return res.status === 403
+    ? 'You do not have permission to do that.'
+    : `Save failed (${res.status})`
 }

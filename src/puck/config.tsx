@@ -1,6 +1,7 @@
 'use client'
 
 import type { ComponentConfig, Config } from '@puckeditor/core'
+import { usePuckSelector as usePuck } from './usePuck'
 import type { ComponentType, ReactNode } from 'react'
 
 import { AmenitiesBlock } from '@/blocks/Amenities/Component'
@@ -21,6 +22,7 @@ import { SectionBlock } from '@/blocks/Section/Component'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
 
 import { defaultProps } from './adapters'
+import { EmptyCanvas, InsertStrip, useRootIndex } from './BlockPicker'
 import { toBlockFields } from './fields'
 import type { BlockSchema } from './schema'
 
@@ -62,14 +64,39 @@ export const viewports = [
   { width: 1440, height: 900, label: 'Desktop', icon: 'Monitor' as const },
 ]
 
+/** A block on the canvas with a "+" strip under it, so the next block can be added by clicking. */
+function CanvasBlock({ id, children }: { id: string; children: ReactNode }) {
+  const index = useRootIndex(id)
+  return (
+    <>
+      {children}
+      {index >= 0 && <InsertStrip index={index + 1} />}
+    </>
+  )
+}
+
 function Placeholder({ label }: { label: string }) {
   return (
     <div className="container">
       <div className="rounded-lg border border-dashed border-border bg-muted/40 p-8 text-center">
         <p className="text-lg font-semibold">{label}</p>
-        <p className="mt-1 text-sm text-muted-foreground">Fills in from live data on the site. Use Preview to see it; edit its settings in the sidebar.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Fills in from live data on the site. Use Preview to see it; edit its settings in the
+          sidebar.
+        </p>
       </div>
     </div>
+  )
+}
+
+/** The page frame: a "+" strip at the top, or the empty-state card when there are no blocks yet. */
+function CanvasRoot({ children }: { children?: ReactNode }) {
+  const isEmpty = usePuck((s) => s.appState.data.content.length === 0)
+  return (
+    <article className="min-h-screen bg-background pt-16 pb-24 text-foreground">
+      {isEmpty ? <EmptyCanvas /> : <InsertStrip index={0} />}
+      {children}
+    </article>
   )
 }
 
@@ -84,9 +111,15 @@ export function buildPuckConfig(schemas: BlockSchema[]): Config {
       fields: toBlockFields(schema.fields),
       defaultProps: defaultProps(schema.fields),
       render: ({ puck: _puck, editMode: _editMode, ...props }) => (
-        <div className="my-16">
-          {Block ? <Block {...props} blockType={schema.slug} disableInnerContainer /> : <Placeholder label={schema.label} />}
-        </div>
+        <CanvasBlock id={props.id}>
+          <div className="my-16">
+            {Block ? (
+              <Block {...props} blockType={schema.slug} disableInnerContainer />
+            ) : (
+              <Placeholder label={schema.label} />
+            )}
+          </div>
+        </CanvasBlock>
       ),
     }
     const group = schema.group ?? 'Blocks'
@@ -103,9 +136,7 @@ export function buildPuckConfig(schemas: BlockSchema[]): Config {
         title: { type: 'text', label: 'Page title' },
         slug: { type: 'text', label: 'URL slug' },
       },
-      render: ({ children }: { children?: ReactNode }) => (
-        <article className="min-h-screen bg-background pt-16 pb-24 text-foreground">{children}</article>
-      ),
+      render: ({ children }: { children?: ReactNode }) => <CanvasRoot>{children}</CanvasRoot>,
     },
     components,
   }
