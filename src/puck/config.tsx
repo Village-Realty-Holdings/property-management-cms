@@ -1,6 +1,6 @@
 'use client'
 
-import type { ComponentConfig, Config } from '@puckeditor/core'
+import type { ComponentConfig, Config, Viewports } from '@puckeditor/core'
 import { usePuckSelector as usePuck } from './usePuck'
 import type { ComponentType, ReactNode } from 'react'
 
@@ -38,7 +38,7 @@ import type { BlockSchema } from './schema'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyBlock = ComponentType<any>
 
-const clientBlocks: Record<string, AnyBlock> = {
+export const clientBlocks: Record<string, AnyBlock> = {
   amenities: AmenitiesBlock,
   areaGuide: AreaGuideBlock,
   bookingSteps: BookingStepsBlock,
@@ -57,11 +57,15 @@ const clientBlocks: Record<string, AnyBlock> = {
   testimonials: TestimonialsBlock,
 }
 
-/** Puck's viewport presets, kept identical to the admin Live Preview breakpoints. */
-export const viewports = [
-  { width: 375, height: 667, label: 'Mobile', icon: 'Smartphone' as const },
-  { width: 768, height: 1024, label: 'Tablet', icon: 'Tablet' as const },
-  { width: 1440, height: 900, label: 'Desktop', icon: 'Monitor' as const },
+/**
+ * Canvas width presets: the admin Live Preview breakpoints, with desktop as
+ * full width. The canvas is not scaled (Puck's drag overlay reads an internal
+ * zoom), so a fixed 1440 would overflow the column instead of shrinking.
+ */
+export const viewports: Viewports = [
+  { width: 375, height: 'auto', label: 'Mobile', icon: 'Smartphone' },
+  { width: 768, height: 'auto', label: 'Tablet', icon: 'Tablet' },
+  { width: '100%', height: 'auto', label: 'Desktop', icon: 'Monitor' },
 ]
 
 /** A block on the canvas with a "+" strip under it, so the next block can be added by clicking. */
@@ -75,7 +79,7 @@ function CanvasBlock({ id, children }: { id: string; children: ReactNode }) {
   )
 }
 
-function Placeholder({ label }: { label: string }) {
+export function Placeholder({ label }: { label: string }) {
   return (
     <div className="container">
       <div className="rounded-lg border border-dashed border-border bg-muted/40 p-8 text-center">

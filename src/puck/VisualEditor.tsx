@@ -8,9 +8,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Page } from '@/payload-types'
 
 import { layoutToPuck, puckToLayout } from './adapters'
-import { BlockPickerDialogSlot, BlockPickerProvider, useBlockPicker } from './BlockPicker'
+import { BlockPickerProvider, useBlockPicker } from './BlockPicker'
+import { CanvasFrame } from './CanvasFrame'
 import type { CanvasStyles } from './canvasStyles'
 import { buildPuckConfig, viewports } from './config'
+import { EditorShell, type Status } from './EditorShell'
 import type { BlockSchema } from './schema'
 
 type Props = {
@@ -23,8 +25,6 @@ type Props = {
   previewHref: string | null
   canvasStyles: CanvasStyles
 }
-
-type Status = { kind: 'idle' | 'saving' | 'saved' | 'error'; message?: string }
 
 const AUTOSAVE_MS = 1500
 
@@ -164,21 +164,12 @@ export function VisualEditor({
         <Puck
           config={config}
           data={initialData}
-          headerPath="/"
-          headerTitle={title}
           iframe={{ syncHostStyles: false }}
           onChange={onChange}
           overrides={{
             // Puck offers every item's `id` as an editable text field; Payload
             // owns row ids, so hide it.
             fieldTypes: { text: ({ children, name }) => (name === 'id' ? null : <>{children}</>) },
-            // The block picker dialog needs Puck's dispatch, so it mounts inside <Puck>.
-            puck: ({ children }) => (
-              <>
-                {children}
-                <BlockPickerDialogSlot schemas={schemas} />
-              </>
-            ),
             actionBar: ({ children, label, parentAction }) => (
               <ActionBar label={label}>
                 {parentAction}
@@ -186,19 +177,25 @@ export function VisualEditor({
                 {children}
               </ActionBar>
             ),
-            headerActions: () => (
-              <HeaderActions
-                formHref={formHref}
-                onPublish={publish}
-                previewHref={previewHref}
-                status={status}
-              />
-            ),
             // Public page CSS goes into the canvas only; the admin document never sees preflight.
             iframe: ({ children }) => <CanvasFrame styles={canvasStyles}>{children}</CanvasFrame>,
           }}
+          ui={{
+            viewports: { current: { width: '100%', height: 'auto' }, options: viewports, controlsVisible: false },
+            rightSideBarVisible: true,
+          }}
           viewports={viewports}
-        />
+        >
+          {/* Children replace Puck's stock layout, so the Blocks and Outline sidebars never mount. */}
+          <EditorShell
+            formHref={formHref}
+            onPublish={publish}
+            previewHref={previewHref}
+            schemas={schemas}
+            status={status}
+            title={title}
+          />
+        </Puck>
       </BlockPickerProvider>
     </div>
   )
@@ -218,89 +215,6 @@ function InsertBelowAction() {
       </ActionBar.Action>
     </ActionBar.Group>
   )
-}
-
-/**
- * Root of the canvas iframe: the public page's stylesheets, and its <html>
- * class (next/font variables) on the iframe's own <html> so font tokens
- * resolve the same way they do on the site.
- */
-function CanvasFrame({ styles, children }: { styles: CanvasStyles; children: React.ReactNode }) {
-  const marker = useRef<HTMLMetaElement>(null)
-  useEffect(() => {
-    const html = marker.current?.ownerDocument.documentElement
-    if (!html) return
-    const classes = styles.htmlClass.split(/\s+/).filter(Boolean)
-    html.classList.add(...classes)
-    return () => html.classList.remove(...classes)
-  }, [styles.htmlClass])
-  return (
-    <>
-      <meta name="canvas-root" ref={marker} />
-      {styles.links.map((href) => (
-        <link href={href} key={href} rel="stylesheet" />
-      ))}
-      {styles.inline.map((css, i) => (
-        <style dangerouslySetInnerHTML={{ __html: css }} key={i} />
-      ))}
-      {children}
-    </>
-  )
-}
-
-function HeaderActions({
-  status,
-  onPublish,
-  formHref,
-  previewHref,
-}: {
-  status: Status
-  onPublish: () => void
-  formHref: string
-  previewHref: string | null
-}) {
-  const label =
-    status.kind === 'saving'
-      ? `${status.message ?? 'Saving'}…`
-      : status.kind === 'saved'
-        ? (status.message ?? 'Draft saved')
-        : status.kind === 'error'
-          ? status.message
-          : 'Edits autosave as a draft'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-      <span style={{ color: status.kind === 'error' ? '#b00020' : 'inherit', maxWidth: 360 }}>
-        {label}
-      </span>
-      <a href={formHref} style={linkStyle}>
-        Form view
-      </a>
-      {previewHref && (
-        <a href={previewHref} rel="noreferrer" style={linkStyle} target="_blank">
-          Preview draft
-        </a>
-      )}
-      <button
-        disabled={status.kind === 'saving'}
-        onClick={onPublish}
-        style={publishStyle}
-        type="button"
-      >
-        Publish
-      </button>
-    </div>
-  )
-}
-
-const linkStyle: React.CSSProperties = { textDecoration: 'underline', color: 'inherit' }
-const publishStyle: React.CSSProperties = {
-  background: '#1f6a78',
-  color: '#fff',
-  border: 0,
-  borderRadius: 4,
-  padding: '6px 14px',
-  fontWeight: 600,
-  cursor: 'pointer',
 }
 
 async function describeError(res: Response): Promise<string> {

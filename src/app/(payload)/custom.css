@@ -125,3 +125,9 @@
 .nav-footer__link:hover {
   color: var(--brand-accent);
 }
+
+/* Visual editor: Puck's root wrapper has no height of its own, and the
+   editor shell inside it sizes itself with 100%. */
+.visual-editor > .Puck {
+  height: 100%;
+}
