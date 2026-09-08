@@ -1,65 +1,139 @@
 'use client'
 
-import { usePuckSelector as usePuck } from './usePuck'
+import { AutoField, type Field, FieldLabel } from '@puckeditor/core'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
+import { defaultProps, newId } from './adapters'
+import { BlockView } from './blocks'
+import type { CanvasStyles } from './canvasStyles'
+import { toPuckFields } from './fields'
+import { PreviewFrame } from './PreviewFrame'
 import type { BlockSchema } from './schema'
+import { usePuckSelector as usePuck } from './usePuck'
 
 /**
  * Click-to-add blocks. A thin "+" strip between blocks on the canvas (and an
- * empty-state card when there are none) opens a dialog listing every block
- * grouped by category; picking one inserts it at that position and selects
- * it so its settings open in the sidebar.
+ * empty-state card when there are none) opens a dialog: pick a block from
+ * the list, tweak its settings, watch it render live in a preview iframe
+ * with the site's CSS, then confirm. Nothing touches the page until "Add to
+ * page", so cancelling leaves no draft and no history entry.
  *
- * The strips live inside the canvas iframe, the dialog in the admin document.
- * Both sit under the same React tree, so a context carries the request out
- * of the iframe. Inserting goes through Puck's own `insert` action, which
- * records history and fires `onChange` like a drag from the drawer would.
+ * The strips live inside the canvas iframe, the dialog in the admin
+ * document. Both sit under the same React tree, so a context carries the
+ * request out of the iframe. The dialog is generic: it takes a list of block
+ * schemas and an `onPick` callback, so the same dialog serves the root zone
+ * and nested block slots.
  */
 
 /** Puck's id for the root drop zone. */
 export const ROOT_ZONE = 'root:default-zone'
 
-type PickerState = { index: number } | null
+export type PickedBlock = { type: string; props: Record<string, unknown> }
 
-type PickerApi = { state: PickerState; open: (index: number) => void; close: () => void }
+export type PickerRequest = {
+  schemas: BlockSchema[]
+  onPick: (block: PickedBlock) => void
+  title?: string
+}
 
-const PickerContext = createContext<PickerApi>({ state: null, open: () => {}, close: () => {} })
+type PickerState = { kind: 'root'; index: number } | { kind: 'custom'; request: PickerRequest } | null
+
+type PickerApi = {
+  state: PickerState
+  /** Open for the root zone; the dialog inserts at `index` itself. */
+  openAtRoot: (index: number) => void
+  /** Open with any block list and handle the pick yourself. */
+  open: (request: PickerRequest) => void
+  close: () => void
+  canvasStyles: CanvasStyles
+}
+
+const noStyles: CanvasStyles = { links: [], inline: [], htmlClass: '' }
+
+const PickerContext = createContext<PickerApi>({
+  state: null,
+  openAtRoot: () => {},
+  open: () => {},
+  close: () => {},
+  canvasStyles: noStyles,
+})
 
 export const useBlockPicker = () => useContext(PickerContext)
 
-/** Wrap the Puck editor; exposes `open(index)` to anything inside. */
-export function BlockPickerProvider({ children }: { children: React.ReactNode }) {
+/** Wrap the Puck editor; exposes `open` and `openAtRoot` to anything inside. */
+export function BlockPickerProvider({
+  canvasStyles,
+  children,
+}: {
+  canvasStyles: CanvasStyles
+  children: React.ReactNode
+}) {
   const [state, setState] = useState<PickerState>(null)
   const api = useMemo<PickerApi>(
-    () => ({ state, open: (index) => setState({ index }), close: () => setState(null) }),
-    [state],
+    () => ({
+      state,
+      openAtRoot: (index) => setState({ kind: 'root', index }),
+      open: (request) => setState({ kind: 'custom', request }),
+      close: () => setState(null),
+      canvasStyles,
+    }),
+    [state, canvasStyles],
   )
   return <PickerContext.Provider value={api}>{children}</PickerContext.Provider>
 }
 
 /**
- * Mount point for the dialog. It needs Puck's `dispatch`, so `VisualEditor`
- * places it inside `<Puck>` through the `puck` override, in the admin
- * document rather than the canvas iframe.
+ * Mount point for the dialog. Root-zone requests need Puck's `dispatch`, so
+ * this renders inside <Puck>, in the admin document rather than the canvas
+ * iframe.
  */
 export function BlockPickerDialogSlot({ schemas }: { schemas: BlockSchema[] }) {
-  const { state, close } = useBlockPicker()
+  const { state, close, canvasStyles } = useBlockPicker()
+  const dispatch = usePuck((s) => s.dispatch)
+
+  const insertAtRoot = useCallback(
+    (index: number, { type, props }: PickedBlock) => {
+      const id = newId()
+      // Puck's insert has no props payload, so insert with a known id, then
+      // replace that item with the configured one and select it.
+      dispatch({ type: 'insert', componentType: type, destinationIndex: index, destinationZone: ROOT_ZONE, id })
+      dispatch({
+        type: 'replace',
+        destinationIndex: index,
+        destinationZone: ROOT_ZONE,
+        data: { type, props: { ...props, id } },
+      })
+      dispatch({ type: 'setUi', ui: { itemSelector: { index, zone: ROOT_ZONE } } })
+    },
+    [dispatch],
+  )
+
   if (!state) return null
-  return <BlockPickerDialog index={state.index} onClose={close} schemas={schemas} />
+  const request: PickerRequest =
+    state.kind === 'root' ? { schemas, onPick: (block) => insertAtRoot(state.index, block) } : state.request
+  return <BlockPickerDialog canvasStyles={canvasStyles} onClose={close} request={request} />
 }
 
-function BlockPickerDialog({
-  index,
-  schemas,
+/* ---------- the dialog ---------- */
+
+type Draft = { schema: BlockSchema; props: Record<string, unknown> } | null
+
+const HIDDEN = new Set(['id', 'blockName'])
+const settingCount = (schema: BlockSchema) => schema.fields.filter((f) => !HIDDEN.has(f.name)).length
+
+export function BlockPickerDialog({
+  request,
+  canvasStyles,
   onClose,
 }: {
-  index: number
-  schemas: BlockSchema[]
+  request: PickerRequest
+  canvasStyles: CanvasStyles
   onClose: () => void
 }) {
-  const dispatch = usePuck((s) => s.dispatch)
+  const { schemas, onPick, title = 'Add a block' } = request
   const [query, setQuery] = useState('')
+  const [draft, setDraft] = useState<Draft>(null)
+  const [width, setWidth] = useState<number | '100%'>('100%')
   const search = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -69,66 +143,160 @@ function BlockPickerDialog({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const insert = useCallback(
-    (componentType: string) => {
-      dispatch({
-        type: 'insert',
-        componentType,
-        destinationIndex: index,
-        destinationZone: ROOT_ZONE,
-      })
-      dispatch({ type: 'setUi', ui: { itemSelector: { index, zone: ROOT_ZONE } } })
+  const confirm = useCallback(
+    (schema: BlockSchema, props: Record<string, unknown>) => {
+      onPick({ type: schema.slug, props })
       onClose()
     },
-    [dispatch, index, onClose],
+    [onPick, onClose],
   )
+
+  const pick = (schema: BlockSchema) => setDraft({ schema, props: defaultProps(schema.fields) })
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase()
     const byGroup = new Map<string, BlockSchema[]>()
     for (const schema of schemas) {
-      if (q && !schema.label.toLowerCase().includes(q) && !schema.slug.toLowerCase().includes(q))
-        continue
+      if (q && !schema.label.toLowerCase().includes(q) && !schema.slug.toLowerCase().includes(q)) continue
       const group = schema.group ?? 'Blocks'
       byGroup.set(group, [...(byGroup.get(group) ?? []), schema])
     }
     return [...byGroup.entries()]
   }, [schemas, query])
 
+  // Payload adds `id` and `blockName` to every block; neither is a setting to configure here.
+  const fields = useMemo(
+    () => (draft ? Object.entries(toPuckFields(draft.schema.fields)).filter(([name]) => !HIDDEN.has(name)) : []),
+    [draft],
+  )
+
   return (
     <div aria-modal="true" onClick={onClose} role="dialog" style={backdrop}>
-      <div onClick={(e) => e.stopPropagation()} style={dialog}>
+      <div onClick={(e) => e.stopPropagation()} style={{ ...dialog, width: draft ? 'min(1280px, 96vw)' : 'min(720px, 92vw)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, flex: 1 }}>Add a block</h2>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, flex: 1 }}>
+            {draft ? `${title}: ${draft.schema.label}` : title}
+          </h2>
           <button aria-label="Close" onClick={onClose} style={closeBtn} type="button">
             ×
           </button>
         </div>
-        <input
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search blocks…"
-          ref={search}
-          style={searchInput}
-          type="search"
-          value={query}
-        />
-        <div style={{ overflowY: 'auto', flex: 1, marginTop: 12 }}>
-          {groups.length === 0 && (
-            <p style={{ fontSize: 13, opacity: 0.7 }}>No blocks match “{query}”.</p>
-          )}
-          {groups.map(([group, blocks]) => (
-            <section key={group} style={{ marginBottom: 16 }}>
-              <h3 style={groupTitle}>{group}</h3>
-              <div style={grid}>
-                {blocks.map((b) => (
-                  <button key={b.slug} onClick={() => insert(b.slug)} style={tile} type="button">
-                    <span style={{ fontWeight: 600 }}>{b.label}</span>
-                    <span style={{ fontSize: 11, opacity: 0.6 }}>{b.fields.length} settings</span>
-                  </button>
-                ))}
+
+        <div style={{ ...columns, gridTemplateColumns: draft ? '220px 320px minmax(0, 1fr)' : '1fr' }}>
+          {/* Column 1: the block list */}
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <input
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search blocks…"
+              ref={search}
+              style={searchInput}
+              type="search"
+              value={query}
+            />
+            <div style={{ overflowY: 'auto', flex: 1, marginTop: 12 }}>
+              {groups.length === 0 && <p style={{ fontSize: 13, opacity: 0.7 }}>No blocks match “{query}”.</p>}
+              {groups.map(([group, blocks]) => (
+                <section key={group} style={{ marginBottom: 16 }}>
+                  <h3 style={groupTitle}>{group}</h3>
+                  <div style={{ ...grid, gridTemplateColumns: draft ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                    {blocks.map((b) => {
+                      const active = draft?.schema.slug === b.slug
+                      return (
+                        <button
+                          aria-pressed={active}
+                          key={b.slug}
+                          onClick={() => pick(b)}
+                          onDoubleClick={() => confirm(b, defaultProps(b.fields))}
+                          style={{ ...tile, borderColor: active ? '#1f6a78' : '#ddd', background: active ? '#eef5f6' : '#fafafa' }}
+                          title="Click to configure, double-click to add with defaults"
+                          type="button"
+                        >
+                          <span style={{ fontWeight: 600 }}>{b.label}</span>
+                          <span style={{ fontSize: 11, opacity: 0.6 }}>{settingCount(b)} settings</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+
+          {draft && (
+            <>
+              {/* Column 2: settings */}
+              <div style={settings}>
+                {fields.map(([name, field]) => {
+                  const input = (
+                    <AutoField
+                      field={field as Field}
+                      id={`picker-${draft.schema.slug}-${name}`}
+                      onChange={(value: unknown) =>
+                        setDraft((d) => (d ? { ...d, props: { ...d.props, [name]: value } } : d))
+                      }
+                      value={draft.props[name]}
+                    />
+                  )
+                  // AutoField renders no label of its own; custom fields draw theirs.
+                  return (
+                    <div key={name} style={{ marginBottom: 12 }}>
+                      {field.type === 'custom' || !field.label ? input : <FieldLabel label={field.label}>{input}</FieldLabel>}
+                    </div>
+                  )
+                })}
+                {fields.length === 0 && <p style={{ fontSize: 13, opacity: 0.7 }}>This block has no settings.</p>}
               </div>
-            </section>
-          ))}
+
+              {/* Column 3: live preview */}
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 2, marginBottom: 8 }}>
+                  {(
+                    [
+                      ['Mobile', 375],
+                      ['Desktop', '100%'],
+                    ] as const
+                  ).map(([label, w]) => (
+                    <button
+                      aria-pressed={width === w}
+                      key={label}
+                      onClick={() => setWidth(w)}
+                      style={{ ...toolButton, background: width === w ? '#e6eef0' : '#fff' }}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div style={previewWell}>
+                  <PreviewFrame styles={canvasStyles} width={width}>
+                    <article className="bg-background py-8 text-foreground">
+                      <BlockView label={draft.schema.label} props={{ ...draft.props, id: 'preview' }} slug={draft.schema.slug} />
+                    </article>
+                  </PreviewFrame>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div style={footer}>
+          {draft ? (
+            <span style={{ fontSize: 12, opacity: 0.7 }}>Nothing is saved until you add the block.</span>
+          ) : (
+            <span style={{ fontSize: 12, opacity: 0.7 }}>Pick a block to configure it, or double-click to add it as is.</span>
+          )}
+          <span style={{ flex: 1 }} />
+          <button onClick={onClose} style={secondaryBtn} type="button">
+            Cancel
+          </button>
+          <button
+            disabled={!draft}
+            onClick={() => draft && confirm(draft.schema, draft.props)}
+            style={{ ...primaryBtn, opacity: draft ? 1 : 0.5 }}
+            type="button"
+          >
+            Add to page
+          </button>
         </div>
       </div>
     </div>
@@ -143,7 +311,7 @@ function BlockPickerDialog({
  * treat it as selecting the block it sits in.
  */
 export function InsertStrip({ index }: { index: number }) {
-  const { open } = useBlockPicker()
+  const { openAtRoot } = useBlockPicker()
   const [hover, setHover] = useState(false)
   return (
     <div
@@ -168,7 +336,7 @@ export function InsertStrip({ index }: { index: number }) {
         onClick={(e) => {
           e.stopPropagation()
           e.preventDefault()
-          open(index)
+          openAtRoot(index)
         }}
         style={{
           ...plus,
@@ -186,10 +354,10 @@ export function InsertStrip({ index }: { index: number }) {
 
 /** Shown by the root render when the page has no blocks. */
 export function EmptyCanvas() {
-  const { open } = useBlockPicker()
+  const { openAtRoot } = useBlockPicker()
   return (
     <div className="container" onPointerDown={(e) => e.stopPropagation()}>
-      <button onClick={() => open(0)} style={emptyCard} type="button">
+      <button onClick={() => openAtRoot(0)} style={emptyCard} type="button">
         <span style={{ fontSize: 32, lineHeight: 1 }}>+</span>
         <span style={{ fontWeight: 600, fontSize: 16 }}>Add your first block</span>
         <span style={{ fontSize: 13, opacity: 0.7 }}>
@@ -222,12 +390,44 @@ const dialog: React.CSSProperties = {
   background: '#fff',
   borderRadius: 8,
   padding: 20,
-  width: 'min(720px, 92vw)',
-  maxHeight: '80vh',
+  height: 'min(760px, 90vh)',
   display: 'flex',
   flexDirection: 'column',
   boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
   fontFamily: 'system-ui, sans-serif',
+  transition: 'width 150ms',
+}
+const columns: React.CSSProperties = {
+  display: 'grid',
+  gap: 16,
+  flex: 1,
+  minHeight: 0,
+}
+const settings: React.CSSProperties = {
+  overflowY: 'auto',
+  minHeight: 0,
+  paddingRight: 8,
+  borderLeft: '1px solid #eee',
+  borderRight: '1px solid #eee',
+  padding: '0 12px',
+}
+const previewWell: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  background: '#e9e9e9',
+  border: '1px solid #ddd',
+  borderRadius: 6,
+  overflow: 'auto',
+  display: 'flex',
+  justifyContent: 'center',
+}
+const footer: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  marginTop: 12,
+  paddingTop: 12,
+  borderTop: '1px solid #eee',
 }
 const closeBtn: React.CSSProperties = {
   border: 0,
@@ -255,7 +455,6 @@ const groupTitle: React.CSSProperties = {
 }
 const grid: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
   gap: 8,
 }
 const tile: React.CSSProperties = {
@@ -269,6 +468,33 @@ const tile: React.CSSProperties = {
   background: '#fafafa',
   padding: '12px 14px',
   fontSize: 13,
+  cursor: 'pointer',
+  color: 'inherit',
+}
+const toolButton: React.CSSProperties = {
+  border: '1px solid #ddd',
+  background: '#fff',
+  borderRadius: 4,
+  padding: '4px 8px',
+  fontSize: 12,
+  cursor: 'pointer',
+  color: 'inherit',
+}
+const primaryBtn: React.CSSProperties = {
+  background: '#1f6a78',
+  color: '#fff',
+  border: 0,
+  borderRadius: 4,
+  padding: '8px 16px',
+  fontWeight: 600,
+  cursor: 'pointer',
+}
+const secondaryBtn: React.CSSProperties = {
+  background: '#fff',
+  color: 'inherit',
+  border: '1px solid #ccc',
+  borderRadius: 4,
+  padding: '8px 16px',
   cursor: 'pointer',
 }
 const plus: React.CSSProperties = {

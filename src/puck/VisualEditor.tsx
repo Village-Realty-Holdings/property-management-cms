@@ -160,7 +160,7 @@ export function VisualEditor({
         color: '#2f2f2f',
       }}
     >
-      <BlockPickerProvider>
+      <BlockPickerProvider canvasStyles={canvasStyles}>
         <Puck
           config={config}
           data={initialData}
@@ -204,11 +204,11 @@ export function VisualEditor({
 /** "Insert below" on the selected block's action bar: opens the picker at the next index. */
 function InsertBelowAction() {
   const selector = usePuck((s) => s.appState.ui.itemSelector)
-  const { open } = useBlockPicker()
+  const { openAtRoot } = useBlockPicker()
   if (!selector || (selector.zone && selector.zone !== 'root:default-zone')) return null
   return (
     <ActionBar.Group>
-      <ActionBar.Action label="Insert block below" onClick={() => open(selector.index + 1)}>
+      <ActionBar.Action label="Insert block below" onClick={() => openAtRoot(selector.index + 1)}>
         <span aria-hidden style={{ fontSize: 18, lineHeight: 1, fontWeight: 600 }}>
           +
         </span>
