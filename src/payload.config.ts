@@ -50,6 +50,11 @@ const isCLI = process.argv.some((value) => {
   )
 })
 const isProduction = process.env.NODE_ENV === 'production'
+// `next build` runs `generateStaticParams`, which initialises Payload to read
+// public documents but never signs a token. Workers Builds has no
+// PAYLOAD_SECRET; the Worker reads its secrets at runtime, where a missing
+// secret still fails loudly.
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
 
 // `wrangler` must never be bundled into the Worker, hence the obfuscated
 // dynamic import. `remoteBindings` is only true in production mode, so
@@ -168,7 +173,7 @@ export default buildConfig({
       collections: { media: true },
     }),
   ],
-  secret: process.env.PAYLOAD_SECRET,
+  secret: process.env.PAYLOAD_SECRET || (isBuild ? 'next-build-placeholder' : ''),
   // No `sharp`: it cannot run in Workers. Images are resized at render time
   // by `next/image` through the Cloudflare Images binding instead.
   typescript: {
