@@ -44,7 +44,9 @@ const isCLI = process.argv.some((value) => {
   if (!resolved) return false
   return (
     resolved.endsWith(path.join('payload', 'bin.js')) ||
-    resolved.endsWith(path.join('next', 'dist', 'bin', 'next'))
+    resolved.endsWith(path.join('next', 'dist', 'bin', 'next')) ||
+    // Project scripts (`npm run seed`) run under plain node, outside the Worker.
+    resolved.startsWith(path.join(dirname, '..', 'scripts') + path.sep)
   )
 })
 const isProduction = process.env.NODE_ENV === 'production'
