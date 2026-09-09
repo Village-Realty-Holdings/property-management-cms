@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  // Custom entry wrapping the generated `.open-next/worker.js` (see worker.ts).
+  "main": "worker.ts",
   "name": "property-management-cms",
   "account_id": "dd8b87f7b0a6209f5191b365d1ba3472",
   "compatibility_date": "2025-08-15",
