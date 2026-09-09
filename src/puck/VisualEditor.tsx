@@ -9,7 +9,7 @@ import type { Page } from '@/payload-types'
 
 import { layoutToPuck, puckToLayout } from './adapters'
 import { BlockPickerProvider } from './pickerContext'
-import { CONTAINER, useAddToContainer } from './containers'
+import { CONTAINER, RejectDeepNesting, useAddToContainer } from './containers'
 import { CanvasFrame } from './CanvasFrame'
 import type { CanvasStyles } from './canvasStyles'
 import { buildPuckConfig, viewports } from './config'
@@ -89,6 +89,8 @@ export function VisualEditor({
   const lastSaved = useRef(stableStringify(puckToDraft(initialData, schemas)))
   const pending = useRef<Draft | null>(null)
   const invalidDraft = useRef(false)
+  // A rejected drop reverts the tree, which reports a change; that one keeps the message.
+  const rejected = useRef(false)
 
   const patch = useCallback(
     async (draft: Draft, publish: boolean) => {
@@ -148,6 +150,11 @@ export function VisualEditor({
         return
       }
       invalidDraft.current = false
+      if (rejected.current) {
+        rejected.current = false
+        pending.current = stableStringify(draft) === lastSaved.current ? null : draft
+        return
+      }
       if (stableStringify(draft) === lastSaved.current) {
         pending.current = null
         setStatus((s) => (s.kind === 'dirty' || s.kind === 'error' ? { kind: 'idle' } : s))
@@ -158,6 +165,11 @@ export function VisualEditor({
     },
     [schemas],
   )
+
+  const onReject = useCallback((message: string) => {
+    rejected.current = true
+    setStatus({ kind: 'error', message })
+  }, [])
 
   // Leaving with unsaved edits asks first; nothing is saved behind the user's back.
   useEffect(() => {
@@ -228,6 +240,7 @@ export function VisualEditor({
             viewports={viewports}
           >
             {/* Children replace Puck's stock layout, so the Blocks and Outline sidebars never mount. */}
+            <RejectDeepNesting onReject={onReject} />
             <EditorShell
               formHref={formHref}
               onPublish={publish}

@@ -77,9 +77,12 @@ export const ContainerBlock: React.FC<Props> = ({
   const image = background === 'image' && backgroundImage && typeof backgroundImage === 'object'
   const outer = cn(
     background === 'muted' && 'bg-muted/60',
-    background === 'surface' && 'surface p-6',
+    // A surface card pads itself; an explicit padding only replaces the vertical part.
+    background === 'surface' && 'surface px-6',
+    background === 'surface' && (padding ?? 'none') === 'none'
+      ? 'py-6'
+      : paddingClass[padding ?? 'none'],
     image && 'relative overflow-hidden text-white',
-    paddingClass[padding ?? 'none'],
     className,
   )
 

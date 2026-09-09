@@ -128,6 +128,20 @@ export function normalizeRelations(
   return out
 }
 
+/** Deepest container nesting in a Puck tree; 0 when it holds no container. */
+export function containerDepth(items: unknown, depth = 0): number {
+  if (!Array.isArray(items)) return depth
+  let max = depth
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue
+    const { type, props } = item as { type?: unknown; props?: Record<string, unknown> }
+    const own = type === 'container' ? depth + 1 : depth
+    for (const value of Object.values(props ?? {}))
+      max = Math.max(max, own, containerDepth(value, own))
+  }
+  return max
+}
+
 /**
  * One Puck item back to a Payload row; slots become blocks rows, empty
  * placeholder is dropped at the root, and a container's slug follows its depth.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { Media } from '@/payload-types'
 import {
+  containerDepth,
   defaultProps,
   layoutToPuck,
   normalizeRelations,
@@ -323,5 +324,18 @@ describe('defaultProps', () => {
       detailPage: null,
     })
     expect(defaultProps(schemas[3].fields)).toEqual({ backgroundImage: null, blocks: [] })
+  })
+})
+
+describe('containerDepth', () => {
+  const nest = (levels: number): { type: string; props: { id: string; blocks: unknown[] } } => ({
+    type: 'container',
+    props: { id: `level-${levels}`, blocks: levels > 1 ? [nest(levels - 1)] : [] },
+  })
+  it('measures the deepest container chain, ignoring other blocks', () => {
+    expect(containerDepth([])).toBe(0)
+    expect(containerDepth([{ type: 'content', props: { id: 'c' } }])).toBe(0)
+    expect(containerDepth([nest(1), nest(3)])).toBe(3)
+    expect(containerDepth([nest(5)])).toBe(5)
   })
 })

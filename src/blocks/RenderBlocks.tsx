@@ -3,6 +3,7 @@ import React from 'react'
 import type { ContainerBlock as ContainerBlockProps, Page } from '@/payload-types'
 
 import { isContainerSlug } from '@/blocks/Container/config'
+import { leadsWithSearch } from '@/blocks/Container/leadsWithSearch'
 
 import { AmenitiesBlock } from '@/blocks/Amenities/Component'
 import { AreaGuideBlock } from '@/blocks/AreaGuide/Component'
@@ -103,7 +104,7 @@ export const RenderBlocks: React.FC<Props> = ({ blocks }) => {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
 
   const opensWithHero = blocks[0]?.blockType === 'hero'
-  const overlapSecond = isFullBleedHero(blocks[0]) && blocks[1]?.blockType === 'availabilitySearch'
+  const overlapSecond = isFullBleedHero(blocks[0]) && leadsWithSearch(blocks[1])
 
   return (
     <div className={cn('flex flex-col gap-16 md:gap-24', !opensWithHero && 'mt-12 md:mt-16')}>

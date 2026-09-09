@@ -1,13 +1,13 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { registerOverlayPortal, type SlotComponent } from '@puckeditor/core'
 
 import { ContainerBlock } from '@/blocks/Container/Component'
 import { isContainerSlug, MAX_CONTAINER_DEPTH } from '@/blocks/Container/config'
 
-import { defaultProps, newId, PLACEHOLDER_ID_PREFIX } from './adapters'
+import { containerDepth, defaultProps, newId, PLACEHOLDER_ID_PREFIX } from './adapters'
 import { type PickedBlock, useBlockPicker } from './pickerContext'
 import type { BlockSchema } from './schema'
 import { usePuckSelector as usePuck } from './usePuck'
@@ -147,6 +147,34 @@ export function ContainerOnCanvas({
       )}
     />
   )
+}
+
+export const TOO_DEEP_MESSAGE = `Containers can only nest ${MAX_CONTAINER_DEPTH} levels deep`
+
+/**
+ * Undoes a drop that nests containers too deep. The drop zone's `disallow`
+ * only knows the dragged item's type, not how deep its own subtree goes, so a
+ * two-level subtree can land in a level-3 container. Rather than leave the
+ * page unsaveable, the tree goes back to the last valid one.
+ */
+export function RejectDeepNesting({ onReject }: { onReject: (message: string) => void }) {
+  const content = usePuck((s) => s.appState.data.content)
+  const dispatch = usePuck((s) => s.dispatch)
+  const lastValid = useRef(content)
+  useEffect(() => {
+    if (containerDepth(content) <= MAX_CONTAINER_DEPTH) {
+      lastValid.current = content
+      return
+    }
+    const content_ = lastValid.current
+    dispatch({
+      type: 'setData',
+      recordHistory: false,
+      data: (previous) => ({ ...previous, content: content_ }),
+    })
+    onReject(TOO_DEEP_MESSAGE)
+  }, [content, dispatch, onReject])
+  return null
 }
 
 /**
