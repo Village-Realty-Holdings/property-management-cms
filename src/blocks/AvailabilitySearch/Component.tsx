@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 
 import type { AvailabilitySearchBlock as Props } from '@/payload-types'
 
@@ -43,14 +43,17 @@ export const AvailabilitySearchBlock: React.FC<Props & { raised?: boolean }> = a
     <div className="container">
       {/* When the form overlaps the hero the heading would sit on the photo, so it is read but not shown. */}
       {heading && <h2 className={raised ? 'sr-only' : 'mb-4 text-subtitle'}>{heading}</h2>}
-      <SearchForm
-        action={action}
-        buttonLabel={buttonLabel || 'Search'}
-        layout={layout ?? 'bar'}
-        nodes={nodes.map((n) => ({ id: n.id, name: n.name, type: n.type, parentId: n.parentId }))}
-        showBedrooms={Boolean(showBedrooms)}
-        showPets={Boolean(showPets)}
-      />
+      {/* Reads the URL's search params, which a static render has to leave to the client. */}
+      <Suspense>
+        <SearchForm
+          action={action}
+          buttonLabel={buttonLabel || 'Search'}
+          layout={layout ?? 'bar'}
+          nodes={nodes.map((n) => ({ id: n.id, name: n.name, type: n.type, parentId: n.parentId }))}
+          showBedrooms={Boolean(showBedrooms)}
+          showPets={Boolean(showPets)}
+        />
+      </Suspense>
     </div>
   )
 }

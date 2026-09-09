@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 
 import type { PropertyListingBlock as Props } from '@/payload-types'
 import type { PropertyQuery, PropertySort, PropertyType } from '@/server/properties/types'
@@ -41,15 +41,18 @@ export const PropertyListingBlock: React.FC<Props & { id?: string | null }> = as
   return (
     <div className="container">
       <SectionHeader heading={heading} intro={intro} />
-      <ListingResults
-        baseQuery={base}
-        initial={initial}
-        followSearchParams={source === 'query' && Boolean(query?.followSearchParams)}
-        view={view ?? 'grid'}
-        columns={columns ?? '3'}
-        detailHref={pagePath(detailPage)}
-        emptyMessage={emptyMessage || 'No rentals match.'}
-      />
+      {/* Reads the URL's search params, which a static render has to leave to the client. */}
+      <Suspense>
+        <ListingResults
+          baseQuery={base}
+          initial={initial}
+          followSearchParams={source === 'query' && Boolean(query?.followSearchParams)}
+          view={view ?? 'grid'}
+          columns={columns ?? '3'}
+          detailHref={pagePath(detailPage)}
+          emptyMessage={emptyMessage || 'No rentals match.'}
+        />
+      </Suspense>
     </div>
   )
 }
