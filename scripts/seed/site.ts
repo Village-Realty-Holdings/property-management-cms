@@ -133,19 +133,31 @@ export async function seedSite(payload: Payload, tenant: TenantId, site: SiteCon
         links: [urlLink('#inquiry', 'Get a free rental projection'), urlLink(logins.owner, 'Owner login', { appearance: 'outline', newTab: true })],
       },
       {
-        blockType: 'section',
-        heading: 'What we take care of',
-        subheading: 'Everything between a booking and a five-star review.',
-        layout: 'threeCards',
+        blockType: 'container',
+        direction: 'column',
+        gap: 'md',
         width: 'container',
         padding: 'none',
         background: 'none',
-        ...Object.fromEntries(
-          (['main', 'secondary', 'third'] as const).map((slot, i) => [
-            slot,
-            [{ blockType: 'content', columns: [{ size: 'full', richText: text(site.management.cards[i]!.title, site.management.cards[i]!.text, 'h3') }] }],
-          ]),
-        ),
+        blocks: [
+          {
+            blockType: 'content',
+            columns: [{ size: 'full', richText: text('What we take care of', 'Everything between a booking and a five-star review.', 'h2') }],
+          },
+          {
+            blockType: 'container2',
+            direction: 'row',
+            gap: 'md',
+            background: 'none',
+            blocks: site.management.cards.map((card) => ({
+              blockType: 'container3',
+              direction: 'column',
+              gap: 'md',
+              background: 'surface',
+              blocks: [{ blockType: 'content', columns: [{ size: 'full', richText: text(card.title, card.text, 'h3') }] }],
+            })),
+          },
+        ],
       },
       {
         blockType: 'bookingSteps',

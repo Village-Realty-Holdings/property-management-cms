@@ -4,16 +4,18 @@ import type { ComponentConfig, Config, Viewports } from '@puckeditor/core'
 import type { ReactNode } from 'react'
 
 import { defaultProps } from './adapters'
-import { EmptyCanvas, InsertStrip, useRootIndex } from './BlockPicker'
 import { BlockView } from './blocks'
+import { CONTAINER, ContainerOnCanvas } from './containers'
 import { toBlockFields } from './fields'
 import type { BlockSchema } from './schema'
-import { usePuckSelector as usePuck } from './usePuck'
 
 /**
  * Builds the Puck config from the block schema the server derived from the
  * Pages `layout` field. Blocks render with the same components the public
  * page uses (see `blocks.tsx`), so the canvas is the site.
+ *
+ * Containers are Puck components with a `blocks` slot, so their children are
+ * real canvas items: selectable, draggable, nestable.
  */
 
 /**
@@ -27,23 +29,10 @@ export const viewports: Viewports = [
   { width: '100%', height: 'auto', label: 'Desktop', icon: 'Monitor' },
 ]
 
-/** A block on the canvas with a "+" strip under it, so the next block can be added by clicking. */
-function CanvasBlock({ id, children }: { id: string; children: ReactNode }) {
-  const index = useRootIndex(id)
-  return (
-    <>
-      {children}
-      {index >= 0 && <InsertStrip index={index + 1} />}
-    </>
-  )
-}
-
-/** The page frame: a "+" strip at the top, or the empty-state card when there are no blocks yet. */
+/** The page frame. Root blocks keep the site's vertical rhythm. */
 function CanvasRoot({ children }: { children?: ReactNode }) {
-  const isEmpty = usePuck((s) => s.appState.data.content.length === 0)
   return (
-    <article className="min-h-screen bg-background pt-16 pb-24 text-foreground">
-      {isEmpty ? <EmptyCanvas /> : <InsertStrip index={0} />}
+    <article className="min-h-screen bg-background pt-16 pb-24 text-foreground [&>[data-puck-dropzone]]:flex [&>[data-puck-dropzone]]:flex-col [&>[data-puck-dropzone]]:gap-16 md:[&>[data-puck-dropzone]]:gap-24">
       {children}
     </article>
   )
@@ -62,13 +51,18 @@ export function buildPuckConfig(schemas: BlockSchema[], layoutSchemaPath = 'page
       label: schema.label,
       fields: toBlockFields(schema.fields, `${layoutSchemaPath}.${schema.slug}`),
       defaultProps: defaultProps(schema.fields),
-      render: ({ puck: _puck, editMode: _editMode, ...props }) => (
-        <CanvasBlock id={props.id}>
-          <div className="my-16">
-            <BlockView label={schema.label} props={props} slug={schema.slug} />
-          </div>
-        </CanvasBlock>
-      ),
+      render: ({ puck: _puck, editMode: _editMode, ...props }) =>
+        schema.slug === CONTAINER ? (
+          <ContainerOnCanvas
+            id={props.id}
+            props={props}
+            schemas={schemas}
+            // Puck hands the slot as a component under the field's name.
+            slot={props.blocks}
+          />
+        ) : (
+          <BlockView label={schema.label} props={props} slug={schema.slug} />
+        ),
     }
     const group = schema.group ?? 'Blocks'
     const key = group.toLowerCase().replace(/\s+/g, '-')

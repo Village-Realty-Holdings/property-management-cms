@@ -3,61 +3,40 @@
 import { AutoField, type Field, FieldLabel } from '@puckeditor/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { defaultProps, newId } from './adapters'
+import { defaultProps, puckToLayout } from './adapters'
 import { BlockView } from './blocks'
 import type { CanvasStyles } from './canvasStyles'
-import { type PickedBlock, type PickerRequest, ROOT_ZONE, useBlockPicker } from './pickerContext'
+import { CONTAINER, containerPresets, type Preset } from './containers'
+import { MAX_CONTAINER_DEPTH } from '@/blocks/Container/config'
+import { type PickerRequest, useBlockPicker } from './pickerContext'
 import { toPuckFields } from './fields'
 import { PreviewFrame } from './PreviewFrame'
 import type { BlockSchema } from './schema'
-import { usePuckSelector as usePuck } from './usePuck'
 
-// Re-exported so existing imports keep working; the context lives in pickerContext.
-export { BlockPickerProvider, ROOT_ZONE, useBlockPicker, type PickedBlock, type PickerRequest } from './pickerContext'
+export {
+  BlockPickerProvider,
+  ROOT_ZONE,
+  useBlockPicker,
+  type PickedBlock,
+  type PickerRequest,
+} from './pickerContext'
 
 /**
- * Click-to-add blocks. A thin "+" strip between blocks on the canvas (and an
- * empty-state card when there are none) opens a dialog: pick a block from
- * the list, tweak its settings, watch it render live in a preview iframe
- * with the site's CSS, then confirm. Nothing touches the page until "Add to
- * page", so cancelling leaves no draft and no history entry.
+ * The add-block dialog: pick a block from the list, tweak its settings, watch
+ * it render live in a preview iframe with the site's CSS, then confirm.
+ * Nothing touches the page until "Add to page", so cancelling leaves no
+ * change and no history entry.
  *
- * The strips live inside the canvas iframe, the dialog in the admin
- * document. Both sit under the same React tree, so a context carries the
- * request out of the iframe. The dialog is generic: it takes a list of block
- * schemas and an `onPick` callback, so the same dialog serves the root zone
- * and nested block slots.
+ * The dialog is generic: it takes a list of block schemas and an `onPick`
+ * callback, so containers open it for their own slot. When the list includes
+ * the container block, the "Structure" group also offers layout presets:
+ * containers pre-filled with nested containers.
  */
 
-/**
- * Mount point for the dialog. Root-zone requests need Puck's `dispatch`, so
- * this renders inside <Puck>, in the admin document rather than the canvas
- * iframe.
- */
-export function BlockPickerDialogSlot({ schemas }: { schemas: BlockSchema[] }) {
-  const { state, close, canvasStyles } = useBlockPicker()
-  const dispatch = usePuck((s) => s.dispatch)
-
-  const insertAtRoot = useCallback(
-    (index: number, { type, props }: PickedBlock) => {
-      const id = newId()
-      // Puck's insert has no props payload, so insert with a known id, then
-      // replace that item with the configured one and select it.
-      dispatch({ type: 'insert', componentType: type, destinationIndex: index, destinationZone: ROOT_ZONE, id })
-      dispatch({
-        type: 'replace',
-        destinationIndex: index,
-        destinationZone: ROOT_ZONE,
-        data: { type, props: { ...props, id } },
-      })
-      dispatch({ type: 'setUi', ui: { itemSelector: { index, zone: ROOT_ZONE } } })
-    },
-    [dispatch],
-  )
-
-  if (!state) return null
-  const request: PickerRequest =
-    state.kind === 'root' ? { schemas, onPick: (block) => insertAtRoot(state.index, block) } : state.request
+/** Mount point for the dialog, in the admin document rather than the canvas iframe. */
+export function BlockPickerDialogSlot() {
+  const { request, close, canvasStyles } = useBlockPicker()
+  if (!request) return null
   return <BlockPickerDialog canvasStyles={canvasStyles} onClose={close} request={request} />
 }
 
@@ -66,7 +45,8 @@ export function BlockPickerDialogSlot({ schemas }: { schemas: BlockSchema[] }) {
 type Draft = { schema: BlockSchema; props: Record<string, unknown> } | null
 
 const HIDDEN = new Set(['id', 'blockName'])
-const settingCount = (schema: BlockSchema) => schema.fields.filter((f) => !HIDDEN.has(f.name)).length
+const settingCount = (schema: BlockSchema) =>
+  schema.fields.filter((f) => !HIDDEN.has(f.name)).length
 
 export function BlockPickerDialog({
   request,
@@ -104,22 +84,45 @@ export function BlockPickerDialog({
     const q = query.trim().toLowerCase()
     const byGroup = new Map<string, BlockSchema[]>()
     for (const schema of schemas) {
-      if (q && !schema.label.toLowerCase().includes(q) && !schema.slug.toLowerCase().includes(q)) continue
+      if (q && !schema.label.toLowerCase().includes(q) && !schema.slug.toLowerCase().includes(q))
+        continue
       const group = schema.group ?? 'Blocks'
       byGroup.set(group, [...(byGroup.get(group) ?? []), schema])
     }
     return [...byGroup.entries()]
   }, [schemas, query])
 
-  // Payload adds `id` and `blockName` to every block; neither is a setting to configure here.
+  // Payload adds `id` and `blockName` to every block; neither is a setting to
+  // configure here. Slots (a container's children) are built on the canvas.
   const fields = useMemo(
-    () => (draft ? Object.entries(toPuckFields(draft.schema.fields)).filter(([name]) => !HIDDEN.has(name)) : []),
+    () =>
+      draft
+        ? Object.entries(toPuckFields(draft.schema.fields)).filter(
+            ([name, field]) => !HIDDEN.has(name) && field.type !== 'slot',
+          )
+        : [],
     [draft],
   )
+  const containerSchema = useMemo(() => schemas.find((s) => s.slug === CONTAINER), [schemas])
+  const pickPreset = (preset: Preset) =>
+    containerSchema && setDraft({ schema: containerSchema, props: preset.build(containerSchema) })
+  // The preview renders Payload rows; a container draft holds its children as Puck items.
+  const previewProps = useMemo(() => {
+    if (!draft) return {}
+    if (draft.schema.slug !== CONTAINER) return { ...draft.props, id: 'preview' }
+    const [row] = puckToLayout(
+      { content: [{ type: CONTAINER, props: { ...draft.props, id: 'preview' } }] },
+      schemas,
+    )
+    return (row ?? { ...draft.props, id: 'preview' }) as unknown as Record<string, unknown>
+  }, [draft, schemas])
 
   return (
     <div aria-modal="true" onClick={onClose} role="dialog" style={backdrop}>
-      <div onClick={(e) => e.stopPropagation()} style={{ ...dialog, width: draft ? 'min(1280px, 96vw)' : 'min(720px, 92vw)' }}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ ...dialog, width: draft ? 'min(1280px, 96vw)' : 'min(720px, 92vw)' }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, flex: 1 }}>
             {draft ? `${title}: ${draft.schema.label}` : title}
@@ -129,7 +132,9 @@ export function BlockPickerDialog({
           </button>
         </div>
 
-        <div style={{ ...columns, gridTemplateColumns: draft ? '220px 320px minmax(0, 1fr)' : '1fr' }}>
+        <div
+          style={{ ...columns, gridTemplateColumns: draft ? '220px 320px minmax(0, 1fr)' : '1fr' }}
+        >
           {/* Column 1: the block list */}
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <input
@@ -141,11 +146,38 @@ export function BlockPickerDialog({
               value={query}
             />
             <div style={{ overflowY: 'auto', flex: 1, marginTop: 12 }}>
-              {groups.length === 0 && <p style={{ fontSize: 13, opacity: 0.7 }}>No blocks match “{query}”.</p>}
+              {groups.length === 0 && (
+                <p style={{ fontSize: 13, opacity: 0.7 }}>No blocks match “{query}”.</p>
+              )}
               {groups.map(([group, blocks]) => (
                 <section key={group} style={{ marginBottom: 16 }}>
                   <h3 style={groupTitle}>{group}</h3>
-                  <div style={{ ...grid, gridTemplateColumns: draft ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                  <div
+                    style={{
+                      ...grid,
+                      gridTemplateColumns: draft ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))',
+                    }}
+                  >
+                    {group === 'Structure' &&
+                      containerSchema &&
+                      (request.containerDepth ?? 1) < MAX_CONTAINER_DEPTH &&
+                      !query.trim() &&
+                      containerPresets.map((preset) => (
+                        <button
+                          key={preset.key}
+                          onClick={() => pickPreset(preset)}
+                          onDoubleClick={() =>
+                            containerSchema &&
+                            confirm(containerSchema, preset.build(containerSchema))
+                          }
+                          style={{ ...tile, background: '#f3f7f8' }}
+                          title={preset.description}
+                          type="button"
+                        >
+                          <span style={{ fontWeight: 600 }}>{preset.label}</span>
+                          <span style={{ fontSize: 11, opacity: 0.6 }}>Layout</span>
+                        </button>
+                      ))}
                     {blocks.map((b) => {
                       const active = draft?.schema.slug === b.slug
                       return (
@@ -154,12 +186,18 @@ export function BlockPickerDialog({
                           key={b.slug}
                           onClick={() => pick(b)}
                           onDoubleClick={() => confirm(b, defaultProps(b.fields))}
-                          style={{ ...tile, borderColor: active ? '#1f6a78' : '#ddd', background: active ? '#eef5f6' : '#fafafa' }}
+                          style={{
+                            ...tile,
+                            borderColor: active ? '#1f6a78' : '#ddd',
+                            background: active ? '#eef5f6' : '#fafafa',
+                          }}
                           title="Click to configure, double-click to add with defaults"
                           type="button"
                         >
                           <span style={{ fontWeight: 600 }}>{b.label}</span>
-                          <span style={{ fontSize: 11, opacity: 0.6 }}>{settingCount(b)} settings</span>
+                          <span style={{ fontSize: 11, opacity: 0.6 }}>
+                            {settingCount(b)} settings
+                          </span>
                         </button>
                       )
                     })}
@@ -187,11 +225,17 @@ export function BlockPickerDialog({
                   // AutoField renders no label of its own; custom fields draw theirs.
                   return (
                     <div key={name} style={{ marginBottom: 12 }}>
-                      {field.type === 'custom' || !field.label ? input : <FieldLabel label={field.label}>{input}</FieldLabel>}
+                      {field.type === 'custom' || !field.label ? (
+                        input
+                      ) : (
+                        <FieldLabel label={field.label}>{input}</FieldLabel>
+                      )}
                     </div>
                   )
                 })}
-                {fields.length === 0 && <p style={{ fontSize: 13, opacity: 0.7 }}>This block has no settings.</p>}
+                {fields.length === 0 && (
+                  <p style={{ fontSize: 13, opacity: 0.7 }}>This block has no settings.</p>
+                )}
               </div>
 
               {/* Column 3: live preview */}
@@ -217,7 +261,11 @@ export function BlockPickerDialog({
                 <div style={previewWell}>
                   <PreviewFrame styles={canvasStyles} width={width}>
                     <article className="bg-background py-8 text-foreground">
-                      <BlockView label={draft.schema.label} props={{ ...draft.props, id: 'preview' }} slug={draft.schema.slug} />
+                      <BlockView
+                        label={draft.schema.label}
+                        props={previewProps}
+                        slug={draft.schema.slug}
+                      />
                     </article>
                   </PreviewFrame>
                 </div>
@@ -228,9 +276,13 @@ export function BlockPickerDialog({
 
         <div style={footer}>
           {draft ? (
-            <span style={{ fontSize: 12, opacity: 0.7 }}>Nothing is saved until you add the block.</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>
+              Nothing is saved until you add the block.
+            </span>
           ) : (
-            <span style={{ fontSize: 12, opacity: 0.7 }}>Pick a block to configure it, or double-click to add it as is.</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>
+              Pick a block to configure it, or double-click to add it as is.
+            </span>
           )}
           <span style={{ flex: 1 }} />
           <button onClick={onClose} style={secondaryBtn} type="button">
@@ -248,76 +300,6 @@ export function BlockPickerDialog({
       </div>
     </div>
   )
-}
-
-/* ---------- canvas affordances (render inside the iframe) ---------- */
-
-/**
- * A "+" strip. Placed under each block by the component render and at the
- * top of the canvas by the root render. Stops the click so Puck does not
- * treat it as selecting the block it sits in.
- */
-export function InsertStrip({ index }: { index: number }) {
-  const { openAtRoot } = useBlockPicker()
-  const [hover, setHover] = useState(false)
-  return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onPointerDown={(e) => e.stopPropagation()}
-      style={{ position: 'relative', height: 0, zIndex: 10 }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: -1,
-          height: 2,
-          background: hover ? '#1f6a78' : 'transparent',
-          transition: 'background 120ms',
-        }}
-      />
-      <button
-        aria-label="Add block here"
-        onClick={(e) => {
-          e.stopPropagation()
-          e.preventDefault()
-          openAtRoot(index)
-        }}
-        style={{
-          ...plus,
-          opacity: hover ? 1 : 0.35,
-          transform: `translate(-50%, -50%) scale(${hover ? 1 : 0.85})`,
-        }}
-        title="Add block here"
-        type="button"
-      >
-        +
-      </button>
-    </div>
-  )
-}
-
-/** Shown by the root render when the page has no blocks. */
-export function EmptyCanvas() {
-  const { openAtRoot } = useBlockPicker()
-  return (
-    <div className="container" onPointerDown={(e) => e.stopPropagation()}>
-      <button onClick={() => openAtRoot(0)} style={emptyCard} type="button">
-        <span style={{ fontSize: 32, lineHeight: 1 }}>+</span>
-        <span style={{ fontWeight: 600, fontSize: 16 }}>Add your first block</span>
-        <span style={{ fontSize: 13, opacity: 0.7 }}>
-          Pick from heroes, content, galleries, listings and more.
-        </span>
-      </button>
-    </div>
-  )
-}
-
-/** Index of the item with this id in the root zone, or -1. */
-export function useRootIndex(id: string): number {
-  return usePuck((s) => s.appState.data.content.findIndex((item) => item.props.id === id))
 }
 
 /* ---------- styles ---------- */
@@ -443,35 +425,4 @@ const secondaryBtn: React.CSSProperties = {
   borderRadius: 4,
   padding: '8px 16px',
   cursor: 'pointer',
-}
-const plus: React.CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  top: 0,
-  width: 28,
-  height: 28,
-  borderRadius: '50%',
-  border: 0,
-  background: '#1f6a78',
-  color: '#fff',
-  fontSize: 20,
-  lineHeight: '28px',
-  cursor: 'pointer',
-  boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-  transition: 'opacity 120ms, transform 120ms',
-  fontFamily: 'system-ui, sans-serif',
-}
-const emptyCard: React.CSSProperties = {
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 8,
-  padding: '64px 24px',
-  border: '2px dashed #bbb',
-  borderRadius: 12,
-  background: 'transparent',
-  color: 'inherit',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
 }

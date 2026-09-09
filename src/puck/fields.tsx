@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react'
 
 import type { FieldSchema, Option } from './schema'
 import { defaultProps } from './adapters'
-import { NestedBlocks } from './NestedBlocks'
 import { richTextExcerpt, useRichTextSheet } from './richTextContext'
+import { isContainerSlug } from '@/blocks/Container/config'
 
 /**
  * Sidebar editors for the visual editor, built from the block schema.
@@ -15,9 +15,9 @@ import { richTextExcerpt, useRichTextSheet } from './richTextContext'
  * Simple fields map onto Puck's own fields. Text and textarea fields are also
  * editable inline on the canvas. Uploads get a media picker and relationships
  * a document picker, both handling `hasMany` and polymorphic `relationTo`.
- * Rich text opens a sheet with Payload's editor; nested blocks get a list
- * that reuses the add-block dialog. Every field is editable here, so the form
- * view is never required.
+ * Rich text opens a sheet with Payload's editor; nested blocks are Puck slots
+ * edited on the canvas. Every field is editable here, so the form view is
+ * never required.
  *
  * `schemaPath` is Payload's schema-map key of the container (block, array or
  * group) that owns the fields; rich text needs it to ask the server for the
@@ -86,7 +86,10 @@ export function toPuckField(field: FieldSchema, schemaPath = ''): Field {
     case 'richText':
       return richTextField(field.label, field.name, schemaPath)
     case 'blocks':
-      return nestedBlocksField(field, schemaPath)
+      // Nested blocks are a Puck slot: children live on the canvas, are
+      // selected and dragged there, and the slot only limits what may go in.
+      // Every container depth is the one `container` component in the editor.
+      return { type: 'slot', allow: [...new Set(field.blocks.map((b) => (isContainerSlug(b.slug) ? 'container' : b.slug)))] }
     case 'group':
       return { type: 'object', label: field.label, objectFields: toPuckFields(field.fields, `${schemaPath}.${field.name}`) }
     case 'array':
@@ -306,17 +309,6 @@ function RichTextSummary({
   )
 }
 
-/** Section slots and any other `blocks` field: a list of child blocks edited in place. */
-const nestedBlocksField = (
-  field: Extract<FieldSchema, { kind: 'blocks' }>,
-  schemaPath: string,
-): CustomField<unknown> => ({
-  type: 'custom',
-  label: field.label,
-  render: ({ field: f, value, onChange, readOnly }) => (
-    <NestedBlocks field={field} label={f.label ?? field.label} onChange={onChange} readOnly={readOnly} schemaPath={schemaPath} value={value} />
-  ),
-})
 
 /** Comma-separated editor for `hasMany` text fields such as amenity ids. */
 const listField = (label: string): CustomField<string[] | null | undefined> => ({

@@ -66,7 +66,33 @@ export interface Config {
     users: UserAuthOperations;
     'payload-mcp-api-keys': PayloadMcpApiKeyAuthOperations;
   };
-  blocks: {};
+  blocks: {
+    container: ContainerBlock;
+    hero: HeroBlock;
+    content: ContentBlock;
+    mediaBlock: MediaBlock;
+    cta: CallToActionBlock;
+    formBlock: FormBlock;
+    gallery: GalleryBlock;
+    amenities: AmenitiesBlock;
+    location: LocationBlock;
+    pricing: PricingBlock;
+    testimonials: TestimonialsBlock;
+    faq: FAQBlock;
+    archive: ArchiveBlock;
+    availabilitySearch: AvailabilitySearchBlock;
+    propertyListing: PropertyListingBlock;
+    propertyDetail: PropertyDetailBlock;
+    reviewsFeed: ReviewsFeedBlock;
+    promos: PromosBlock;
+    bookingSteps: BookingStepsBlock;
+    ownerCta: OwnerCtaBlock;
+    areaGuide: AreaGuideBlock;
+    newsletter: NewsletterBlock;
+    container2: Container2Block;
+    container3: Container3Block;
+    container4: Container4Block;
+  };
   collections: {
     pages: Page;
     posts: Post;
@@ -178,53 +204,91 @@ export interface PayloadMcpApiKeyAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages".
+ * via the `definition` "ContainerBlock".
  */
-export interface Page {
+export interface ContainerBlock {
+  /**
+   * Rows wrap to a column on small screens.
+   */
+  direction?: ('column' | 'row') | null;
+  gap?: ('none' | 'sm' | 'md' | 'lg') | null;
+  align?: ('stretch' | 'start' | 'center' | 'end') | null;
+  justify?: ('start' | 'center' | 'end' | 'between') | null;
+  /**
+   * Only the outermost container needs a width; nested ones fill their parent.
+   */
+  width?: ('container' | 'wide' | 'full') | null;
+  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+  background?: ('none' | 'muted' | 'surface' | 'image') | null;
+  /**
+   * Shown behind the container when Background is set to Image.
+   */
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Content blocks and containers inside this one.
+   */
+  blocks?:
+    | (
+        | Container2Block
+        | ContentBlock
+        | MediaBlock
+        | CallToActionBlock
+        | FormBlock
+        | GalleryBlock
+        | AmenitiesBlock
+        | LocationBlock
+        | PricingBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | ArchiveBlock
+        | AvailabilitySearchBlock
+        | PropertyListingBlock
+        | PropertyDetailBlock
+        | ReviewsFeedBlock
+        | PromosBlock
+        | BookingStepsBlock
+        | OwnerCtaBlock
+        | AreaGuideBlock
+        | NewsletterBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
   id: number;
   tenant?: (number | null) | Tenant;
-  title: string;
-  layout: (
-    | HeroBlock
-    | SectionBlock
-    | ContentBlock
-    | MediaBlock
-    | CallToActionBlock
-    | FormBlock
-    | GalleryBlock
-    | AmenitiesBlock
-    | LocationBlock
-    | PricingBlock
-    | TestimonialsBlock
-    | FAQBlock
-    | ArchiveBlock
-    | AvailabilitySearchBlock
-    | PropertyListingBlock
-    | PropertyDetailBlock
-    | ReviewsFeedBlock
-    | PromosBlock
-    | BookingStepsBlock
-    | OwnerCtaBlock
-    | AreaGuideBlock
-    | NewsletterBlock
-  )[];
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
+  alt?: string | null;
+  caption?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  folder?: (number | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -272,40 +336,6 @@ export interface Tenant {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  tenant?: (number | null) | Tenant;
-  alt?: string | null;
-  caption?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  folder?: (number | null) | FolderInterface;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-folders".
  */
 export interface FolderInterface {
@@ -329,6 +359,273 @@ export interface FolderInterface {
   folderType?: 'media'[] | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Container2Block".
+ */
+export interface Container2Block {
+  /**
+   * Rows wrap to a column on small screens.
+   */
+  direction?: ('column' | 'row') | null;
+  gap?: ('none' | 'sm' | 'md' | 'lg') | null;
+  align?: ('stretch' | 'start' | 'center' | 'end') | null;
+  justify?: ('start' | 'center' | 'end' | 'between') | null;
+  /**
+   * Only the outermost container needs a width; nested ones fill their parent.
+   */
+  width?: ('container' | 'wide' | 'full') | null;
+  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+  background?: ('none' | 'muted' | 'surface' | 'image') | null;
+  /**
+   * Shown behind the container when Background is set to Image.
+   */
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Content blocks and containers inside this one.
+   */
+  blocks?:
+    | (
+        | Container3Block
+        | ContentBlock
+        | MediaBlock
+        | CallToActionBlock
+        | FormBlock
+        | GalleryBlock
+        | AmenitiesBlock
+        | LocationBlock
+        | PricingBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | ArchiveBlock
+        | AvailabilitySearchBlock
+        | PropertyListingBlock
+        | PropertyDetailBlock
+        | ReviewsFeedBlock
+        | PromosBlock
+        | BookingStepsBlock
+        | OwnerCtaBlock
+        | AreaGuideBlock
+        | NewsletterBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container2';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Container3Block".
+ */
+export interface Container3Block {
+  /**
+   * Rows wrap to a column on small screens.
+   */
+  direction?: ('column' | 'row') | null;
+  gap?: ('none' | 'sm' | 'md' | 'lg') | null;
+  align?: ('stretch' | 'start' | 'center' | 'end') | null;
+  justify?: ('start' | 'center' | 'end' | 'between') | null;
+  /**
+   * Only the outermost container needs a width; nested ones fill their parent.
+   */
+  width?: ('container' | 'wide' | 'full') | null;
+  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+  background?: ('none' | 'muted' | 'surface' | 'image') | null;
+  /**
+   * Shown behind the container when Background is set to Image.
+   */
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Content blocks and containers inside this one.
+   */
+  blocks?:
+    | (
+        | Container4Block
+        | ContentBlock
+        | MediaBlock
+        | CallToActionBlock
+        | FormBlock
+        | GalleryBlock
+        | AmenitiesBlock
+        | LocationBlock
+        | PricingBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | ArchiveBlock
+        | AvailabilitySearchBlock
+        | PropertyListingBlock
+        | PropertyDetailBlock
+        | ReviewsFeedBlock
+        | PromosBlock
+        | BookingStepsBlock
+        | OwnerCtaBlock
+        | AreaGuideBlock
+        | NewsletterBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container3';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Container4Block".
+ */
+export interface Container4Block {
+  /**
+   * Rows wrap to a column on small screens.
+   */
+  direction?: ('column' | 'row') | null;
+  gap?: ('none' | 'sm' | 'md' | 'lg') | null;
+  align?: ('stretch' | 'start' | 'center' | 'end') | null;
+  justify?: ('start' | 'center' | 'end' | 'between') | null;
+  /**
+   * Only the outermost container needs a width; nested ones fill their parent.
+   */
+  width?: ('container' | 'wide' | 'full') | null;
+  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+  background?: ('none' | 'muted' | 'surface' | 'image') | null;
+  /**
+   * Shown behind the container when Background is set to Image.
+   */
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Content blocks and containers inside this one.
+   */
+  blocks?:
+    | (
+        | ContentBlock
+        | MediaBlock
+        | CallToActionBlock
+        | FormBlock
+        | GalleryBlock
+        | AmenitiesBlock
+        | LocationBlock
+        | PricingBlock
+        | TestimonialsBlock
+        | FAQBlock
+        | ArchiveBlock
+        | AvailabilitySearchBlock
+        | PropertyListingBlock
+        | PropertyDetailBlock
+        | ReviewsFeedBlock
+        | PromosBlock
+        | BookingStepsBlock
+        | OwnerCtaBlock
+        | AreaGuideBlock
+        | NewsletterBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container4';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContentBlock".
+ */
+export interface ContentBlock {
+  /**
+   * One column for plain body copy. Add more to place text side by side.
+   */
+  columns?:
+    | {
+        /**
+         * Columns wrap onto a new row when their widths add up past full.
+         */
+        size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
+        richText?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        enableLink?: boolean | null;
+        link?: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: number | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: number | Post;
+              } | null);
+          url?: string | null;
+          label: string;
+          /**
+           * Choose how the link should be rendered.
+           */
+          appearance?: ('default' | 'outline') | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'content';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  title: string;
+  layout: (
+    | ContainerBlock
+    | HeroBlock
+    | ContentBlock
+    | MediaBlock
+    | CallToActionBlock
+    | FormBlock
+    | GalleryBlock
+    | AmenitiesBlock
+    | LocationBlock
+    | PricingBlock
+    | TestimonialsBlock
+    | FAQBlock
+    | ArchiveBlock
+    | AvailabilitySearchBlock
+    | PropertyListingBlock
+    | PropertyDetailBlock
+    | ReviewsFeedBlock
+    | PromosBlock
+    | BookingStepsBlock
+    | OwnerCtaBlock
+    | AreaGuideBlock
+    | NewsletterBlock
+  )[];
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -494,111 +791,6 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SectionBlock".
- */
-export interface SectionBlock {
-  /**
-   * Optional title shown above the section content.
-   */
-  heading?: string | null;
-  /**
-   * Optional short intro shown under the heading.
-   */
-  subheading?: string | null;
-  /**
-   * Pick a shape, then fill its slots. Slots that the shape does not use are hidden.
-   */
-  layout?: ('single' | 'twoColumns' | 'mediaLeft' | 'mediaRight' | 'threeCards') | null;
-  /**
-   * How wide the section content can grow.
-   */
-  width?: ('container' | 'wide' | 'full') | null;
-  /**
-   * Vertical space above and below the section.
-   */
-  padding?: ('none' | 'sm' | 'md' | 'lg') | null;
-  /**
-   * Background behind the whole section.
-   */
-  background?: ('none' | 'muted' | 'image') | null;
-  /**
-   * Shown behind the section when Background is set to Image.
-   */
-  backgroundImage?: (number | null) | Media;
-  /**
-   * Primary content. In media layouts this is the text side; in Three cards this is the first card.
-   */
-  main?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
-  /**
-   * Second column. In media layouts this is the media side; in Three cards this is the second card.
-   */
-  secondary?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
-  /**
-   * Third card.
-   */
-  third?: (ContentBlock | MediaBlock | CallToActionBlock | FormBlock)[] | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'section';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentBlock".
- */
-export interface ContentBlock {
-  /**
-   * One column for plain body copy. Add more to place text side by side.
-   */
-  columns?:
-    | {
-        /**
-         * Columns wrap onto a new row when their widths add up past full.
-         */
-        size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
-        richText?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        enableLink?: boolean | null;
-        link?: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: number | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-          /**
-           * Choose how the link should be rendered.
-           */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'content';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2088,32 +2280,7 @@ export interface PayloadMigration {
 export interface PagesSelect<T extends boolean = true> {
   tenant?: T;
   title?: T;
-  layout?:
-    | T
-    | {
-        hero?: T | HeroBlockSelect<T>;
-        section?: T | SectionBlockSelect<T>;
-        content?: T | ContentBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        cta?: T | CallToActionBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-        gallery?: T | GalleryBlockSelect<T>;
-        amenities?: T | AmenitiesBlockSelect<T>;
-        location?: T | LocationBlockSelect<T>;
-        pricing?: T | PricingBlockSelect<T>;
-        testimonials?: T | TestimonialsBlockSelect<T>;
-        faq?: T | FAQBlockSelect<T>;
-        archive?: T | ArchiveBlockSelect<T>;
-        availabilitySearch?: T | AvailabilitySearchBlockSelect<T>;
-        propertyListing?: T | PropertyListingBlockSelect<T>;
-        propertyDetail?: T | PropertyDetailBlockSelect<T>;
-        reviewsFeed?: T | ReviewsFeedBlockSelect<T>;
-        promos?: T | PromosBlockSelect<T>;
-        bookingSteps?: T | BookingStepsBlockSelect<T>;
-        ownerCta?: T | OwnerCtaBlockSelect<T>;
-        areaGuide?: T | AreaGuideBlockSelect<T>;
-        newsletter?: T | NewsletterBlockSelect<T>;
-      };
+  layout?: T | {};
   meta?:
     | T
     | {
@@ -2127,478 +2294,6 @@ export interface PagesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "HeroBlock_select".
- */
-export interface HeroBlockSelect<T extends boolean = true> {
-  type?: T;
-  richText?: T;
-  links?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  media?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SectionBlock_select".
- */
-export interface SectionBlockSelect<T extends boolean = true> {
-  heading?: T;
-  subheading?: T;
-  layout?: T;
-  width?: T;
-  padding?: T;
-  background?: T;
-  backgroundImage?: T;
-  main?:
-    | T
-    | {
-        content?: T | ContentBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        cta?: T | CallToActionBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-      };
-  secondary?:
-    | T
-    | {
-        content?: T | ContentBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        cta?: T | CallToActionBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-      };
-  third?:
-    | T
-    | {
-        content?: T | ContentBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        cta?: T | CallToActionBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentBlock_select".
- */
-export interface ContentBlockSelect<T extends boolean = true> {
-  columns?:
-    | T
-    | {
-        size?: T;
-        richText?: T;
-        enableLink?: T;
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaBlock_select".
- */
-export interface MediaBlockSelect<T extends boolean = true> {
-  media?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock_select".
- */
-export interface CallToActionBlockSelect<T extends boolean = true> {
-  richText?: T;
-  links?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock_select".
- */
-export interface FormBlockSelect<T extends boolean = true> {
-  form?: T;
-  enableIntro?: T;
-  introContent?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "GalleryBlock_select".
- */
-export interface GalleryBlockSelect<T extends boolean = true> {
-  heading?: T;
-  layout?: T;
-  images?:
-    | T
-    | {
-        image?: T;
-        caption?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "AmenitiesBlock_select".
- */
-export interface AmenitiesBlockSelect<T extends boolean = true> {
-  heading?: T;
-  columns?: T;
-  items?:
-    | T
-    | {
-        icon?: T;
-        label?: T;
-        note?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LocationBlock_select".
- */
-export interface LocationBlockSelect<T extends boolean = true> {
-  heading?: T;
-  address?:
-    | T
-    | {
-        street?: T;
-        city?: T;
-        region?: T;
-        postalCode?: T;
-        country?: T;
-      };
-  latitude?: T;
-  longitude?: T;
-  zoom?: T;
-  showMap?: T;
-  nearby?:
-    | T
-    | {
-        name?: T;
-        distance?: T;
-        id?: T;
-      };
-  notes?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PricingBlock_select".
- */
-export interface PricingBlockSelect<T extends boolean = true> {
-  heading?: T;
-  currency?: T;
-  plans?:
-    | T
-    | {
-        name?: T;
-        price?: T;
-        period?: T;
-        description?: T;
-        features?:
-          | T
-          | {
-              text?: T;
-              id?: T;
-            };
-        highlighted?: T;
-        enableLink?: T;
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  footnote?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TestimonialsBlock_select".
- */
-export interface TestimonialsBlockSelect<T extends boolean = true> {
-  heading?: T;
-  layout?: T;
-  items?:
-    | T
-    | {
-        quote?: T;
-        author?: T;
-        role?: T;
-        rating?: T;
-        avatar?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FAQBlock_select".
- */
-export interface FAQBlockSelect<T extends boolean = true> {
-  heading?: T;
-  intro?: T;
-  items?:
-    | T
-    | {
-        question?: T;
-        answer?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock_select".
- */
-export interface ArchiveBlockSelect<T extends boolean = true> {
-  introContent?: T;
-  populateBy?: T;
-  relationTo?: T;
-  categories?: T;
-  limit?: T;
-  selectedDocs?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "AvailabilitySearchBlock_select".
- */
-export interface AvailabilitySearchBlockSelect<T extends boolean = true> {
-  heading?: T;
-  resultsPage?: T;
-  showBedrooms?: T;
-  showNode?: T;
-  showPets?: T;
-  nodeScope?: T;
-  layout?: T;
-  buttonLabel?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PropertyListingBlock_select".
- */
-export interface PropertyListingBlockSelect<T extends boolean = true> {
-  heading?: T;
-  intro?: T;
-  source?: T;
-  codes?:
-    | T
-    | {
-        code?: T;
-        id?: T;
-      };
-  query?:
-    | T
-    | {
-        nodeId?: T;
-        types?: T;
-        bedrooms?: T;
-        guests?: T;
-        pets?: T;
-        featuredOnly?: T;
-        amenityIds?: T;
-        sort?: T;
-        limit?: T;
-        followSearchParams?: T;
-      };
-  view?: T;
-  columns?: T;
-  detailPage?: T;
-  emptyMessage?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PropertyDetailBlock_select".
- */
-export interface PropertyDetailBlockSelect<T extends boolean = true> {
-  source?: T;
-  code?: T;
-  sections?: T;
-  bookLabel?: T;
-  bookUrl?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ReviewsFeedBlock_select".
- */
-export interface ReviewsFeedBlockSelect<T extends boolean = true> {
-  heading?: T;
-  propertyCode?: T;
-  minRating?: T;
-  limit?: T;
-  layout?: T;
-  showUnit?: T;
-  showSummary?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "PromosBlock_select".
- */
-export interface PromosBlockSelect<T extends boolean = true> {
-  heading?: T;
-  nodeId?: T;
-  limit?: T;
-  ctaLabel?: T;
-  ctaPage?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "BookingStepsBlock_select".
- */
-export interface BookingStepsBlockSelect<T extends boolean = true> {
-  heading?: T;
-  intro?: T;
-  steps?:
-    | T
-    | {
-        icon?: T;
-        title?: T;
-        text?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "OwnerCtaBlock_select".
- */
-export interface OwnerCtaBlockSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  text?: T;
-  benefits?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  image?: T;
-  links?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  tone?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "AreaGuideBlock_select".
- */
-export interface AreaGuideBlockSelect<T extends boolean = true> {
-  heading?: T;
-  intro?: T;
-  layout?: T;
-  items?:
-    | T
-    | {
-        title?: T;
-        category?: T;
-        text?: T;
-        image?: T;
-        distance?: T;
-        nodeId?: T;
-        linkUrl?: T;
-        linkLabel?: T;
-        id?: T;
-      };
-  searchPage?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "NewsletterBlock_select".
- */
-export interface NewsletterBlockSelect<T extends boolean = true> {
-  heading?: T;
-  text?: T;
-  form?: T;
-  buttonLabel?: T;
-  successMessage?: T;
-  tone?: T;
-  id?: T;
-  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

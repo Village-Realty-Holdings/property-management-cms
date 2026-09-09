@@ -1,6 +1,8 @@
 import React from 'react'
 
-import type { Page } from '@/payload-types'
+import type { ContainerBlock as ContainerBlockProps, Page } from '@/payload-types'
+
+import { isContainerSlug } from '@/blocks/Container/config'
 
 import { AmenitiesBlock } from '@/blocks/Amenities/Component'
 import { AreaGuideBlock } from '@/blocks/AreaGuide/Component'
@@ -8,6 +10,7 @@ import { AvailabilitySearchBlock } from '@/blocks/AvailabilitySearch/Component'
 import { BookingStepsBlock } from '@/blocks/BookingSteps/Component'
 import { ArchiveBlock } from '@/blocks/ArchiveBlock/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
+import { ContainerBlock } from '@/blocks/Container/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { FAQBlock } from '@/blocks/FAQ/Component'
 import { FormBlock } from '@/blocks/Form/Component'
@@ -22,7 +25,6 @@ import { PromosBlock } from '@/blocks/Promos/Component'
 import { PropertyDetailBlock } from '@/blocks/PropertyDetail/Component'
 import { PropertyListingBlock } from '@/blocks/PropertyListing/Component'
 import { ReviewsFeedBlock } from '@/blocks/ReviewsFeed/Component'
-import { SectionBlock } from '@/blocks/Section/Component'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
 import { cn } from '@/lib/ui'
 
@@ -32,6 +34,7 @@ const blockComponents = {
   areaGuide: AreaGuideBlock,
   availabilitySearch: AvailabilitySearchBlock,
   bookingSteps: BookingStepsBlock,
+  container: ContainerBlock,
   content: ContentBlock,
   cta: CallToActionBlock,
   faq: FAQBlock,
@@ -47,12 +50,46 @@ const blockComponents = {
   propertyDetail: PropertyDetailBlock,
   propertyListing: PropertyListingBlock,
   reviewsFeed: ReviewsFeedBlock,
-  section: SectionBlock,
   testimonials: TestimonialsBlock,
 }
 
 type Props = {
   blocks: Page['layout'][0][]
+}
+
+type AnyBlock = { blockType?: string | null } & Record<string, unknown>
+
+/**
+ * Blocks inside a container. No vertical rhythm of their own: the container
+ * sets the gap. Nested containers fill their parent's width.
+ */
+export const RenderNested: React.FC<{ blocks: AnyBlock[] }> = ({ blocks }) => {
+  if (!Array.isArray(blocks) || blocks.length === 0) return null
+  return (
+    <>
+      {blocks.map((block, index) => {
+        const { blockType } = block
+        if (!blockType) return null
+        const key = (block.id as string) ?? index
+        if (isContainerSlug(blockType)) {
+          return (
+            <ContainerBlock
+              key={key}
+              {...(block as ContainerBlockProps)}
+              nested
+              slot={<RenderNested blocks={(block.blocks as AnyBlock[]) ?? []} />}
+            />
+          )
+        }
+        if (!(blockType in blockComponents)) return null
+        const Block = blockComponents[blockType as keyof typeof blockComponents]
+        return (
+          // @ts-expect-error each block validates its own props
+          <Block key={key} {...block} disableInnerContainer />
+        )
+      })}
+    </>
+  )
 }
 
 /**
@@ -79,8 +116,19 @@ export const RenderBlocks: React.FC<Props> = ({ blocks }) => {
         const raised = overlapSecond && index === 1
         return (
           <div key={index} className={cn(raised && 'relative z-10 -mt-36 md:-mt-48')}>
-            {/* @ts-expect-error there may be some mismatch between the expected types here */}
-            <Block {...block} raised={raised} />
+            {isContainerSlug(blockType) ? (
+              <ContainerBlock
+                {...(block as ContainerBlockProps)}
+                slot={
+                  <RenderNested
+                    blocks={((block as ContainerBlockProps).blocks as AnyBlock[]) ?? []}
+                  />
+                }
+              />
+            ) : (
+              // @ts-expect-error there may be some mismatch between the expected types here
+              <Block {...block} raised={raised} />
+            )}
           </div>
         )
       })}

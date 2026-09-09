@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Media } from '@/payload-types'
-import { defaultProps, layoutToPuck, normalizeRelations, puckToLayout, toRelationId, type LayoutBlock } from '@/puck/adapters'
+import {
+  defaultProps,
+  layoutToPuck,
+  normalizeRelations,
+  puckToLayout,
+  toRelationId,
+  PLACEHOLDER_ID_PREFIX,
+  type LayoutBlock,
+} from '@/puck/adapters'
 import type { BlockSchema } from '@/puck/schema'
 
 /**
@@ -40,7 +48,13 @@ const schemas: BlockSchema[] = [
     slug: 'propertyListing',
     label: 'Property Listing',
     fields: [
-      { kind: 'scalar', name: 'heading', label: 'Heading', type: 'text', defaultValue: 'Featured rentals' },
+      {
+        kind: 'scalar',
+        name: 'heading',
+        label: 'Heading',
+        type: 'text',
+        defaultValue: 'Featured rentals',
+      },
       {
         kind: 'group',
         name: 'query',
@@ -51,23 +65,51 @@ const schemas: BlockSchema[] = [
           { kind: 'scalar', name: 'limit', label: 'Limit', type: 'number', defaultValue: 6 },
         ],
       },
-      { kind: 'relation', name: 'detailPage', label: 'Detail page', type: 'relationship', relationTo: 'pages' },
+      {
+        kind: 'relation',
+        name: 'detailPage',
+        label: 'Detail page',
+        type: 'relationship',
+        relationTo: 'pages',
+      },
     ],
   },
   {
-    slug: 'section',
-    label: 'Section',
+    slug: 'mediaBlock',
+    label: 'Media',
     fields: [
-      { kind: 'relation', name: 'backgroundImage', label: 'Background', type: 'upload', relationTo: 'media' },
+      { kind: 'relation', name: 'media', label: 'Media', type: 'upload', relationTo: 'media' },
+    ],
+  },
+  {
+    slug: 'container',
+    label: 'Container',
+    fields: [
+      {
+        kind: 'relation',
+        name: 'backgroundImage',
+        label: 'Background',
+        type: 'upload',
+        relationTo: 'media',
+      },
       {
         kind: 'blocks',
-        name: 'main',
-        label: 'Main',
+        name: 'blocks',
+        label: 'Blocks',
         blocks: [
+          { slug: 'container', label: 'Container', fields: [] },
           {
             slug: 'mediaBlock',
             label: 'Media',
-            fields: [{ kind: 'relation', name: 'media', label: 'Media', type: 'upload', relationTo: 'media' }],
+            fields: [
+              {
+                kind: 'relation',
+                name: 'media',
+                label: 'Media',
+                type: 'upload',
+                relationTo: 'media',
+              },
+            ],
           },
         ],
       },
@@ -90,7 +132,12 @@ const schemas: BlockSchema[] = [
   },
 ]
 
-const richText = { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Yes' }] }] } }
+const richText = {
+  root: {
+    type: 'root',
+    children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Yes' }] }],
+  },
+}
 
 const layout = [
   {
@@ -111,10 +158,13 @@ const layout = [
     detailPage: { id: 4, title: 'Stay', slug: 'stay' },
   },
   {
-    blockType: 'section',
+    blockType: 'container',
     id: 's1',
     backgroundImage: null,
-    main: [{ blockType: 'mediaBlock', id: 'm1', media }],
+    blocks: [
+      { blockType: 'mediaBlock', id: 'm1', media },
+      { blockType: 'container', id: 'c2', backgroundImage: media, blocks: [] },
+    ],
   },
   {
     blockType: 'faq',
@@ -126,8 +176,17 @@ const layout = [
 describe('layoutToPuck', () => {
   it('maps every block to a Puck item keyed by block slug, keeping its id and fields', () => {
     const data = layoutToPuck(layout)
-    expect(data.content.map((c) => c.type)).toEqual(['gallery', 'propertyListing', 'section', 'faq'])
-    expect(data.content[0].props).toMatchObject({ id: 'g1', blockName: 'Top gallery', heading: 'Photos' })
+    expect(data.content.map((c) => c.type)).toEqual([
+      'gallery',
+      'propertyListing',
+      'container',
+      'faq',
+    ])
+    expect(data.content[0].props).toMatchObject({
+      id: 'g1',
+      blockName: 'Top gallery',
+      heading: 'Photos',
+    })
     expect(data.content[0].props).not.toHaveProperty('blockType')
     expect(data.zones).toEqual({})
   })
@@ -146,9 +205,50 @@ describe('layoutToPuck', () => {
 })
 
 describe('puckToLayout', () => {
+  it('drops only the empty automatic placeholder, retaining preset columns and filled placeholders', () => {
+    const data = {
+      content: [
+        { type: 'container', props: { id: 'intentional', blocks: [] } },
+        { type: 'container', props: { id: `${PLACEHOLDER_ID_PREFIX}empty`, blocks: [] } },
+        {
+          type: 'container',
+          props: {
+            id: `${PLACEHOLDER_ID_PREFIX}filled`,
+            blocks: [{ type: 'container', props: { id: 'column', blocks: [] } }],
+          },
+        },
+      ],
+    }
+    const rows = puckToLayout(data, schemas)
+    expect(rows.map((row) => row.id)).toEqual(['intentional', `${PLACEHOLDER_ID_PREFIX}filled`])
+    expect(rows[1]).toMatchObject({
+      blocks: [{ id: 'column', blockType: 'container2', blocks: [] }],
+    })
+    expect(puckToLayout(layoutToPuck(rows), schemas)).toEqual(rows)
+  })
+
+  it('assigns slugs through four levels and rejects a fifth', () => {
+    const nest = (levels: number): { type: string; props: { id: string; blocks: unknown[] } } => ({
+      type: 'container',
+      props: { id: `level-${levels}`, blocks: levels > 1 ? [nest(levels - 1)] : [] },
+    })
+    const rows = puckToLayout({ content: [nest(4)] }, schemas)
+    expect(rows[0]).toMatchObject({
+      blockType: 'container',
+      blocks: [
+        {
+          blockType: 'container2',
+          blocks: [{ blockType: 'container3', blocks: [{ blockType: 'container4' }] }],
+        },
+      ],
+    })
+    expect(puckToLayout(layoutToPuck(rows), schemas)).toEqual(rows)
+    expect(() => puckToLayout({ content: [nest(5)] }, schemas)).toThrow('4 levels deep')
+  })
+
   it('round-trips the layout, reducing populated relations to ids everywhere the schema says', () => {
     const back = puckToLayout(layoutToPuck(layout), schemas) as unknown as Record<string, unknown>[]
-    expect(back.map((b) => b.blockType)).toEqual(['gallery', 'propertyListing', 'section', 'faq'])
+    expect(back.map((b) => b.blockType)).toEqual(['gallery', 'propertyListing', 'container', 'faq'])
     expect(back[0]).toMatchObject({
       id: 'g1',
       blockName: 'Top gallery',
@@ -157,8 +257,19 @@ describe('puckToLayout', () => {
         { id: 'i2', image: 12, caption: null },
       ],
     })
-    expect(back[1]).toMatchObject({ detailPage: 4, query: { amenityIds: ['pool', 'pets'], pets: true, limit: 3 } })
-    expect(back[2]).toMatchObject({ backgroundImage: null, main: [{ blockType: 'mediaBlock', id: 'm1', media: 7 }] })
+    expect(back[1]).toMatchObject({
+      detailPage: 4,
+      query: { amenityIds: ['pool', 'pets'], pets: true, limit: 3 },
+    })
+    // Intentional empty columns survive, with depth slugs and normalized relations.
+    expect(back[2]).toMatchObject({
+      backgroundImage: null,
+      blocks: [
+        { blockType: 'mediaBlock', id: 'm1', media: 7 },
+        { blockType: 'container2', id: 'c2', backgroundImage: 7, blocks: [] },
+      ],
+    })
+    expect((back[2] as { blocks: unknown[] }).blocks).toHaveLength(2)
     expect(back[3]).toMatchObject({ items: [{ id: 'q1', question: 'Pets?', answer: richText }] })
   })
 
@@ -169,7 +280,9 @@ describe('puckToLayout', () => {
   })
 
   it('rejects a component the schema does not know', () => {
-    expect(() => puckToLayout({ content: [{ type: 'Hero', props: { id: 'x' } }] }, schemas)).toThrow(/Unknown visual editor component "Hero"/)
+    expect(() =>
+      puckToLayout({ content: [{ type: 'Hero', props: { id: 'x' } }] }, schemas),
+    ).toThrow(/Unknown visual editor component "Hero"/)
   })
 })
 
@@ -178,17 +291,26 @@ describe('toRelationId', () => {
     expect(toRelationId(media)).toBe(7)
     expect(toRelationId(12)).toBe(12)
     expect(toRelationId('abc')).toBe('abc')
-    expect(toRelationId({ relationTo: 'posts', value: { id: 9 } })).toEqual({ relationTo: 'posts', value: 9 })
+    expect(toRelationId({ relationTo: 'posts', value: { id: 9 } })).toEqual({
+      relationTo: 'posts',
+      value: 9,
+    })
     expect(toRelationId(null)).toBeNull()
     expect(toRelationId(undefined)).toBeNull()
     expect(toRelationId('')).toBeNull()
   })
 
   it('reduces hasMany relations to an id list', () => {
-    const out = normalizeRelations(
-      { tags: [media, 3, null] },
-      [{ kind: 'relation', name: 'tags', label: 'Tags', type: 'relationship', relationTo: 'media', hasMany: true }],
-    )
+    const out = normalizeRelations({ tags: [media, 3, null] }, [
+      {
+        kind: 'relation',
+        name: 'tags',
+        label: 'Tags',
+        type: 'relationship',
+        relationTo: 'media',
+        hasMany: true,
+      },
+    ])
     expect(out.tags).toEqual([7, 3])
   })
 })
@@ -200,6 +322,6 @@ describe('defaultProps', () => {
       query: { amenityIds: [], pets: false, limit: 6 },
       detailPage: null,
     })
-    expect(defaultProps(schemas[2].fields)).toEqual({ backgroundImage: null, main: [] })
+    expect(defaultProps(schemas[3].fields)).toEqual({ backgroundImage: null, blocks: [] })
   })
 })

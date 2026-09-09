@@ -1,7 +1,16 @@
 'use client'
 
-import { Drawer, Form, useDocumentInfo, useDrawerSlug, useFormFields, useModal, useServerFunctions } from '@payloadcms/ui'
+import {
+  Drawer,
+  Form,
+  useDocumentInfo,
+  useDrawerSlug,
+  useFormFields,
+  useModal,
+  useServerFunctions,
+} from '@payloadcms/ui'
 import type { FormState } from 'payload'
+import { getNearestEditorFromDOMNode } from '@payloadcms/richtext-lexical/lexical'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type RichTextRequest, RichTextSheetContext, type SheetApi } from './richTextContext'
@@ -15,8 +24,8 @@ import { type RichTextRequest, RichTextSheetContext, type SheetApi } from './ric
  * form, and hands the edited value back to Puck on Done. Cancel discards.
  *
  * The visual editor is a Payload document view, so the document, server
- * function and modal providers this needs are already above it. Without a
- * provider (unit tests) `available` is false and the field says so.
+ * function and modal providers this needs are already above it in the
+ * browser. VisualEditorClient skips server prerendering of this editor.
  */
 export { richTextExcerpt, useRichTextSheet } from './richTextContext'
 
@@ -52,7 +61,9 @@ export function RichTextSheetProvider({ children }: { children: React.ReactNode 
         setLoaded({
           request,
           state: field ? state : null,
-          error: field ? null : `Payload did not return an editor for "${request.schemaPath}.${request.name}".`,
+          error: field
+            ? null
+            : `Payload did not return an editor for "${request.schemaPath}.${request.name}".`,
         })
       } catch (e) {
         setLoaded({ request, state: null, error: (e as Error).message })
@@ -75,35 +86,59 @@ export function RichTextSheetProvider({ children }: { children: React.ReactNode 
       {children}
       <Drawer slug={slug} title={loaded ? `Edit ${loaded.request.label}` : 'Edit text'}>
         {loaded && (
-          <Sheet key={loaded.request.schemaPath + loaded.request.name} loaded={loaded} loading={loading} onClose={close} />
+          <Sheet
+            key={loaded.request.schemaPath + loaded.request.name}
+            loaded={loaded}
+            loading={loading}
+            onClose={close}
+          />
         )}
       </Drawer>
     </RichTextSheetContext.Provider>
   )
 }
 
-function Sheet({ loaded, loading, onClose }: { loaded: Loaded; loading: boolean; onClose: () => void }) {
+function Sheet({
+  loaded,
+  loading,
+  onClose,
+}: {
+  loaded: Loaded
+  loading: boolean
+  onClose: () => void
+}) {
   const { request, state, error } = loaded
+  const fieldRoot = useRef<HTMLDivElement>(null)
   const latest = useRef<unknown>(request.value)
   const remember = useCallback((value: unknown) => {
     latest.current = value
   }, [])
 
   if (loading) return <p style={note}>Loading the editor…</p>
-  if (!state) return <p style={{ ...note, color: '#b00020' }}>{error ?? 'The editor could not be loaded.'}</p>
+  if (!state)
+    return <p style={{ ...note, color: '#b00020' }}>{error ?? 'The editor could not be loaded.'}</p>
 
   return (
     <Form disableValidationOnSubmit el="div" initialState={state}>
-      {state[request.name]?.customComponents?.Field}
+      <div ref={fieldRoot}>{state[request.name]?.customComponents?.Field}</div>
       <ValueBridge name={request.name} onValue={remember} />
       <div style={footer}>
-        <button className="btn btn--style-secondary btn--size-medium" onClick={onClose} type="button">
+        <button
+          className="btn btn--style-secondary btn--size-medium"
+          onClick={onClose}
+          type="button"
+        >
           Cancel
         </button>
         <button
           className="btn btn--style-primary btn--size-medium"
           onClick={() => {
-            request.onChange(latest.current)
+            // Payload defers copying Lexical changes into Form state until
+            // idle time. Done must capture the current editor, even when
+            // clicked immediately after typing.
+            const root = fieldRoot.current?.querySelector<HTMLElement>('[data-lexical-editor="true"]')
+            const value = getNearestEditorFromDOMNode(root ?? null)?.getEditorState().toJSON() ?? latest.current
+            request.onChange(value)
             onClose()
           }}
           type="button"

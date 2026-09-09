@@ -184,49 +184,46 @@ Although Next.js includes a robust set of caching strategies out of the box, Pay
 
 To spin up this example locally, follow the [Quick Start](#quick-start). Then [Seed](#seed) the database with a few pages, posts, and projects.
 
-### Working with Postgres
+### Local D1 and migrations
 
-Postgres and other SQL-based databases follow a strict schema for managing your data. In comparison to our MongoDB adapter, this means that there's a few extra steps to working with Postgres.
+Development uses local D1 under `.wrangler/state/v3/d1`, with schema push disabled.
+The migration history starts at `20260908_220302_initial`, which creates the
+current schema, including JSON blocks and nested Containers.
 
-Note that often times when making big schema changes you can run the risk of losing data if you're not manually migrating it.
-
-#### Local development
-
-Ideally we recommend running a local copy of your database so that schema updates are as fast as possible. By default the Postgres adapter has `push: true` for development environments. This will let you add, modify and remove fields and collections without needing to run any data migrations.
-
-If your database is pointed to production you will want to set `push: false` otherwise you will risk losing data or having your migrations out of sync.
-
-#### Migrations
-
-[Migrations](https://payloadcms.com/docs/database/migrations) are essentially SQL code versions that keeps track of your schema. When deploy with Postgres you will need to make sure you create and then run your migrations.
-
-Locally create a migration
+For an empty local database:
 
 ```bash
-npx payload migrate:create
+NODE_ENV=development npm run migrate
+NODE_ENV=development npm run seed
+npm run dev
 ```
 
-This creates the migration files you will need to push alongside with your new configuration.
-
-On the server after building and before running `npm run start` you will want to run your migrations
+To reset a disposable local database from an older migration history, stop the
+dev server first, then run:
 
 ```bash
-npx payload migrate
+rm -rf .wrangler/state/v3/d1
+NODE_ENV=development npm run migrate
+NODE_ENV=development npm run seed
+npm run dev
 ```
 
-This command will check for any migrations that have not yet been run and try to run them and it will keep a record of migrations that have been run in the database.
+This deletes local database content, including users, and rebuilds it from the
+baseline. Local R2 files are retained. Use this local reset instead of Payload's
+`migrate:fresh`, which calls an unsupported `client.execute` method in the
+installed D1 adapter. The new baseline is for an empty database; it is not an
+upgrade migration for the previous schema.
+
+After future schema changes, generate an incremental migration with
+`npm run migrate:create -- descriptive_name`, then apply it with
+`NODE_ENV=development npm run migrate`.
 
 ### Seed
 
-To seed the database with a few pages, posts, and projects you can click the 'seed database' link from the admin panel.
-
-The seed script will also create a demo user for demonstration purposes only:
-
-- Demo Author
-  - Email: `demo-author@payloadcms.com`
-  - Password: `password`
-
-> NOTICE: seeding the database is destructive because it drops your current database to populate a fresh one from the seed template. Only run this command if you are starting a new project or can afford to lose your current data.
+`npm run seed` creates or updates the root admin, Warren Beach and Sun Palace,
+their pages, forms, branding and navigation. It fetches starter images from the
+tenants' sites. The local admin is `root@admin.com`; its password defaults to
+`2026root` and can be set with `SEED_ADMIN_PASSWORD`.
 
 ## Production
 

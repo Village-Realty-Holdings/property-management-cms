@@ -51,26 +51,26 @@ function optionsOf(options: unknown): Option[] {
   )
 }
 
-export function fieldsToSchema(fields: Field[]): FieldSchema[] {
+export function fieldsToSchema(fields: Field[], registry: Block[] = [], stack: string[] = []): FieldSchema[] {
   const out: FieldSchema[] = []
   for (const field of fields) {
     // Layout-only fields contribute their children to the same level.
     if (field.type === 'row' || field.type === 'collapsible') {
-      out.push(...fieldsToSchema(field.fields))
+      out.push(...fieldsToSchema(field.fields, registry, stack))
       continue
     }
     if (field.type === 'tabs') {
       for (const tab of field.tabs as Tab[]) {
         if ('name' in tab && tab.name) {
-          out.push({ kind: 'group', name: tab.name, label: labelOf(tab.label, tab.name), fields: fieldsToSchema(tab.fields) })
+          out.push({ kind: 'group', name: tab.name, label: labelOf(tab.label, tab.name), fields: fieldsToSchema(tab.fields, registry, stack) })
         } else {
-          out.push(...fieldsToSchema(tab.fields))
+          out.push(...fieldsToSchema(tab.fields, registry, stack))
         }
       }
       continue
     }
     if (field.type === 'group' && !('name' in field && field.name)) {
-      out.push(...fieldsToSchema(field.fields))
+      out.push(...fieldsToSchema(field.fields, registry, stack))
       continue
     }
     if (field.type === 'ui' || field.type === 'join') continue
@@ -98,15 +98,15 @@ export function fieldsToSchema(fields: Field[]): FieldSchema[] {
         kind: 'array',
         name,
         label,
-        fields: fieldsToSchema(field.fields),
+        fields: fieldsToSchema(field.fields, registry, stack),
         minRows: field.minRows,
         maxRows: field.maxRows,
         defaultValue: literal(field.defaultValue),
       })
     } else if (field.type === 'group') {
-      out.push({ kind: 'group', name, label, fields: fieldsToSchema(field.fields) })
+      out.push({ kind: 'group', name, label, fields: fieldsToSchema(field.fields, registry, stack) })
     } else if (field.type === 'blocks') {
-      out.push({ kind: 'blocks', name, label, blocks: blocksToSchema(field.blocks as Block[]), defaultValue: literal(field.defaultValue) })
+      out.push({ kind: 'blocks', name, label, blocks: blocksToSchema(resolveBlocks(field, registry), registry, stack), defaultValue: literal(field.defaultValue) })
     } else if ((SCALARS as string[]).includes(field.type)) {
       const scalar: FieldSchema = { kind: 'scalar', name, label, type: field.type as ScalarType, defaultValue: literal(field.defaultValue) }
       if ('hasMany' in field && field.hasMany) scalar.hasMany = true
@@ -123,26 +123,44 @@ export function fieldsToSchema(fields: Field[]): FieldSchema[] {
 /** Only literal defaults survive; function defaults need a request. */
 const literal = (value: unknown) => (typeof value === 'function' ? undefined : value)
 
-export function blocksToSchema(blocks: Block[]): BlockSchema[] {
+/**
+ * Blocks of a blocks field: inline block objects, or slugs resolved against
+ * `config.blocks` when the field uses `blockReferences`. Unknown slugs are
+ * skipped.
+ */
+export function resolveBlocks(field: { blocks?: Block[]; blockReferences?: (Block | string)[] }, registry: Block[] = []): Block[] {
+  const refs = field.blockReferences ?? field.blocks ?? []
+  return refs
+    .map((ref) => (typeof ref === 'string' ? registry.find((b) => b.slug === ref) : ref))
+    .filter((b): b is Block => Boolean(b))
+}
+
+/**
+ * @param registry `config.blocks`, needed to resolve slug references.
+ * @param stack slugs being described further up; a block that contains itself
+ * (a container of containers) is listed by slug only where it recurs, since the
+ * editor only needs the slug to allow it in a slot.
+ */
+export function blocksToSchema(blocks: Block[], registry: Block[] = [], stack: string[] = []): BlockSchema[] {
   return blocks.map((block) => ({
     slug: block.slug,
     label: labelOf(block.labels?.singular, block.slug),
     group: typeof block.admin?.group === 'string' ? block.admin.group : undefined,
-    fields: fieldsToSchema(block.fields),
+    fields: stack.includes(block.slug) ? [] : fieldsToSchema(block.fields, registry, [...stack, block.slug]),
   }))
 }
 
 /** The blocks of the field called `name`, wherever it sits in tabs, rows or groups. */
-export function findBlocksField(fields: Field[], name: string): Block[] | null {
+export function findBlocksField(fields: Field[], name: string, registry: Block[] = []): Block[] | null {
   for (const field of fields) {
-    if (field.type === 'blocks' && field.name === name) return field.blocks as Block[]
+    if (field.type === 'blocks' && field.name === name) return resolveBlocks(field, registry)
     if (field.type === 'tabs') {
       for (const tab of field.tabs as Tab[]) {
-        const found = findBlocksField(tab.fields, name)
+        const found = findBlocksField(tab.fields, name, registry)
         if (found) return found
       }
     } else if ('fields' in field && Array.isArray(field.fields)) {
-      const found = findBlocksField(field.fields as Field[], name)
+      const found = findBlocksField(field.fields as Field[], name, registry)
       if (found) return found
     }
   }

@@ -10,18 +10,13 @@ vi.hoisted(() => {
   }
 })
 
-// NestedBlocks reads the selected canvas block from Puck's store; there is none here.
-vi.mock('@/puck/usePuck', () => ({ usePuckSelector: () => undefined }))
-
 import { toPuckField } from '@/puck/fields'
-import { BlockPickerProvider } from '@/puck/pickerContext'
 import { richTextExcerpt } from '@/puck/richTextContext'
-import type { BlockSchema } from '@/puck/schema'
-import { slotVisible } from '@/puck/sectionSlots'
 
 /**
  * The sidebar fields that used to send people to the form view: date, code,
- * JSON, point, rich text and nested blocks all edit in place now.
+ * JSON and point edit in place; rich text opens a sheet; nested blocks are
+ * canvas slots.
  */
 
 afterEach(cleanup)
@@ -114,50 +109,20 @@ describe('rich text field', () => {
 })
 
 describe('nested blocks field', () => {
-  const content: BlockSchema = {
-    slug: 'content',
-    label: 'Text Columns',
-    fields: [{ kind: 'scalar', name: 'heading', label: 'Heading', type: 'text', defaultValue: 'Untitled' }],
-  }
-  const field = toPuckField(
-    { kind: 'blocks', name: 'main', label: 'Main', blocks: [content], defaultValue: [] },
-    'pages.layout.section',
-  ) as CustomField<unknown>
-  const styles = { links: [], inline: [], htmlClass: '' }
-  const wrap = (el: React.ReactNode) => <BlockPickerProvider canvasStyles={styles}>{el}</BlockPickerProvider>
-
-  it('is a custom field that lists rows with move and remove controls', () => {
-    const rows = [
-      { id: 'a', blockType: 'content', heading: 'First' },
-      { id: 'b', blockType: 'content', heading: 'Second' },
-    ]
-    const { onChange } = renderField(field, rows, wrap)
-    expect(field.type).toBe('custom')
-    expect(screen.getByText('First')).toBeTruthy()
-
-    fireEvent.click(screen.getAllByRole('button', { name: 'Move down' })[0])
-    expect(onChange).toHaveBeenLastCalledWith([rows[1], rows[0]])
-
-    fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[1])
-    expect(onChange).toHaveBeenLastCalledWith([rows[0]])
-  })
-
-  it('edits a row in place and writes the patch back into that row', () => {
-    const rows = [{ id: 'a', blockType: 'content', heading: 'First' }]
-    const { onChange } = renderField(field, rows, wrap)
-    fireEvent.click(screen.getByTitle('Edit'))
-    const input = screen.getByDisplayValue('First') as HTMLInputElement
-    fireEvent.change(input, { target: { value: 'Changed' } })
-    expect(onChange).toHaveBeenLastCalledWith([{ id: 'a', blockType: 'content', heading: 'Changed' }])
-    fireEvent.click(screen.getByRole('button', { name: /Back to Main/ }))
-    expect(screen.getByRole('button', { name: '+ Add block' })).toBeTruthy()
-  })
-
-  it('hides Section slots the layout does not use', () => {
-    expect(slotVisible('secondary', 'single')).toBe(false)
-    expect(slotVisible('secondary', 'twoColumns')).toBe(true)
-    expect(slotVisible('third', 'threeCards')).toBe(true)
-    expect(slotVisible('third', undefined)).toBe(true)
-    expect(slotVisible('heading', 'single')).toBe(true)
+  it('is a Puck slot limited to the blocks the field allows', () => {
+    const field = toPuckField(
+      {
+        kind: 'blocks',
+        name: 'blocks',
+        label: 'Blocks',
+        blocks: [
+          { slug: 'container', label: 'Container', fields: [] },
+          { slug: 'content', label: 'Text Columns', fields: [] },
+        ],
+        defaultValue: [],
+      },
+      'pages.layout.container',
+    )
+    expect(field).toEqual({ type: 'slot', allow: ['container', 'content'] })
   })
 })

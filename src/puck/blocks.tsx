@@ -16,7 +16,8 @@ import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { NewsletterBlock } from '@/blocks/Newsletter/Component'
 import { OwnerCtaBlock } from '@/blocks/OwnerCta/Component'
 import { PricingBlock } from '@/blocks/Pricing/Component'
-import { SectionBlock } from '@/blocks/Section/Component'
+import { ContainerBlock } from '@/blocks/Container/Component'
+import { isContainerSlug } from '@/blocks/Container/config'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
 
 /**
@@ -36,6 +37,7 @@ export const clientBlocks: Record<string, AnyBlock> = {
   areaGuide: AreaGuideBlock,
   bookingSteps: BookingStepsBlock,
   content: ContentBlock,
+  container: ContainerBlock,
   cta: CallToActionBlock,
   faq: FAQBlock,
   formBlock: FormBlock,
@@ -46,7 +48,6 @@ export const clientBlocks: Record<string, AnyBlock> = {
   newsletter: NewsletterBlock,
   ownerCta: OwnerCtaBlock,
   pricing: PricingBlock,
-  section: SectionBlock,
   testimonials: TestimonialsBlock,
 }
 
@@ -64,17 +65,40 @@ export function Placeholder({ label }: { label: string }) {
   )
 }
 
-/** Renders a block by slug with the given props, or the placeholder for server-only blocks. */
+type Row = { blockType: string; id?: string } & Record<string, unknown>
+
+/**
+ * Renders a block by slug with the given props, or the placeholder for
+ * server-only blocks. A container gets its `blocks` rows rendered the same
+ * way, nested; the editor canvas does not use this path for containers (it
+ * renders a Puck slot instead), the add dialog's preview does.
+ */
 export function BlockView({
   slug,
   label,
   props,
+  nested,
 }: {
   slug: string
   label: string
   props: Record<string, unknown>
+  nested?: boolean
 }) {
-  const Block = clientBlocks[slug]
+  const Block = clientBlocks[isContainerSlug(slug) ? 'container' : slug]
   if (!Block) return <Placeholder label={label} />
+  if (isContainerSlug(slug)) {
+    const rows = Array.isArray(props.blocks) ? (props.blocks as Row[]) : []
+    return (
+      <Block
+        {...props}
+        blocks={undefined}
+        blockType={slug}
+        nested={nested}
+        slot={rows.map((row, i) => (
+          <BlockView key={row.id ?? i} label={row.blockType} nested props={row} slug={row.blockType} />
+        ))}
+      />
+    )
+  }
   return <Block {...props} blockType={slug} disableInnerContainer />
 }

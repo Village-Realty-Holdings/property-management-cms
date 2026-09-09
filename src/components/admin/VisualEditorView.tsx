@@ -4,7 +4,7 @@ import type { DocumentViewServerProps } from 'payload'
 import type { Page } from '@/payload-types'
 import { fetchCanvasStyles } from '@/puck/canvasStyles'
 import { blocksToSchema, findBlocksField } from '@/puck/schema'
-import { VisualEditor } from '@/puck/VisualEditor'
+import { VisualEditorClient } from '@/puck/VisualEditorClient'
 import { generatePreviewPath } from '@/seo/generatePreviewPath'
 
 /**
@@ -21,7 +21,7 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
   }
 
   const pages = config.collections.find((c) => c.slug === 'pages')
-  const blocks = pages ? findBlocksField(pages.fields, 'layout') : null
+  const blocks = pages ? findBlocksField(pages.fields, 'layout', config.blocks) : null
   if (!blocks) {
     return <p style={{ padding: 'var(--base)' }}>The pages collection has no layout blocks field.</p>
   }
@@ -51,14 +51,14 @@ export async function VisualEditorView({ initPageResult }: DocumentViewServerPro
   const canvasStyles = await fetchCanvasStyles(origin, [pagePath, '/'], { host: req.headers.get('host') ?? '' })
 
   return (
-    <VisualEditor
+    <VisualEditorClient
       canvasStyles={canvasStyles}
       docId={page.id}
       formHref={`${config.routes.admin}/collections/pages/${page.id}/form`}
       initialLayout={page.layout}
       layoutSchemaPath={layoutSchemaPath}
       previewHref={generatePreviewPath({ collection: 'pages', slug: page.slug ?? '', req, data: page })}
-      schemas={blocksToSchema(blocks)}
+      schemas={blocksToSchema(blocks, config.blocks)}
       slug={page.slug ?? ''}
       title={page.title}
     />

@@ -1,29 +1,9 @@
 import type { CollectionConfig } from 'payload'
 
+import { pageBlockSlugs } from '../../blocks/registry'
+
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
-import { Amenities } from '../../blocks/Amenities/config'
-import { AreaGuide } from '../../blocks/AreaGuide/config'
-import { AvailabilitySearch } from '../../blocks/AvailabilitySearch/config'
-import { BookingSteps } from '../../blocks/BookingSteps/config'
-import { Archive } from '../../blocks/ArchiveBlock/config'
-import { CallToAction } from '../../blocks/CallToAction/config'
-import { Content } from '../../blocks/Content/config'
-import { FAQ } from '../../blocks/FAQ/config'
-import { FormBlock } from '../../blocks/Form/config'
-import { Gallery } from '../../blocks/Gallery/config'
-import { Hero } from '../../blocks/Hero/config'
-import { Location } from '../../blocks/Location/config'
-import { MediaBlock } from '../../blocks/MediaBlock/config'
-import { Newsletter } from '../../blocks/Newsletter/config'
-import { OwnerCta } from '../../blocks/OwnerCta/config'
-import { Pricing } from '../../blocks/Pricing/config'
-import { Promos } from '../../blocks/Promos/config'
-import { PropertyDetail } from '../../blocks/PropertyDetail/config'
-import { PropertyListing } from '../../blocks/PropertyListing/config'
-import { ReviewsFeed } from '../../blocks/ReviewsFeed/config'
-import { Section } from '../../blocks/Section/config'
-import { Testimonials } from '../../blocks/Testimonials/config'
 import { slugField } from 'payload'
 import { populatePublishedAt } from '../hooks/populatePublishedAt'
 import { generatePreviewPath } from '@/seo/generatePreviewPath'
@@ -105,30 +85,10 @@ export const Pages: CollectionConfig<'pages'> = {
               type: 'blocks',
               // A new page opens with a hero; the block's own field defaults fill it in.
               defaultValue: [{ blockType: 'hero' }],
-              blocks: [
-                Hero,
-                Section,
-                Content,
-                MediaBlock,
-                CallToAction,
-                FormBlock,
-                Gallery,
-                Amenities,
-                Location,
-                Pricing,
-                Testimonials,
-                FAQ,
-                Archive,
-                AvailabilitySearch,
-                PropertyListing,
-                PropertyDetail,
-                ReviewsFeed,
-                Promos,
-                BookingSteps,
-                OwnerCta,
-                AreaGuide,
-                Newsletter,
-              ],
+              // Every block is registered in config.blocks and referenced by slug, so a
+              // container can hold containers. See src/blocks/registry.ts.
+              blocks: [],
+              blockReferences: [...pageBlockSlugs],
               required: true,
               admin: {
                 initCollapsed: true,

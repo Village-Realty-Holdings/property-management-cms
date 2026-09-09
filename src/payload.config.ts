@@ -7,6 +7,7 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { allBlocks } from './blocks/registry'
 import { Categories } from './collections/Categories'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
@@ -148,8 +149,13 @@ export default buildConfig({
   editor: defaultLexical,
   // `push: false`: local D1 is built from `src/migrations/` like production
   // (`npm run migrate`). Dev-mode push conflicts with a migrated database.
-  db: sqliteD1Adapter({ binding: cloudflare.env.D1, push: false }),
+  // `blocksAsJSON`: blocks live in one JSON column per blocks field instead of a
+  // table per block. The relational layout cannot express nested containers,
+  // and this keeps D1 to a handful of tables.
+  db: sqliteD1Adapter({ binding: cloudflare.env.D1, push: false, blocksAsJSON: true }),
   collections: [Pages, Posts, Media, Categories, Tenants, Users, Header, Footer, Theme, SiteSettings],
+  // Page blocks live here and are referenced by slug, so containers can nest (see Container/config).
+  blocks: allBlocks,
   cors: [getServerSideURL()].filter(Boolean),
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [

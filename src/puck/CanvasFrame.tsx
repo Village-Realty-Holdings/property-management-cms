@@ -10,24 +10,44 @@ import type { CanvasStyles } from './canvasStyles'
  * resolve the same way they do on the site. Used by the editor canvas and by
  * the add-block dialog's preview.
  */
-export function CanvasFrame({ styles, children }: { styles: CanvasStyles; children: React.ReactNode }) {
-  const marker = useRef<HTMLMetaElement>(null)
+export function CanvasFrame({
+  styles,
+  children,
+}: {
+  styles: CanvasStyles
+  children: React.ReactNode
+}) {
+  const marker = useRef<HTMLSpanElement>(null)
   useEffect(() => {
-    const html = marker.current?.ownerDocument.documentElement
-    if (!html) return
+    const doc = marker.current?.ownerDocument
+    if (!doc) return
+    const html = doc.documentElement
     const classes = styles.htmlClass.split(/\s+/).filter(Boolean)
     html.classList.add(...classes)
-    return () => html.classList.remove(...classes)
-  }, [styles.htmlClass])
+    // React can hoist metadata out of an iframe portal. Attach resources to
+    // the marker's document explicitly so frontend CSS stays in the canvas.
+    const nodes = [
+      ...styles.links.map((href) => {
+        const link = doc.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = href
+        return link
+      }),
+      ...styles.inline.map((css) => {
+        const style = doc.createElement('style')
+        style.textContent = css
+        return style
+      }),
+    ]
+    nodes.forEach((node) => doc.head.appendChild(node))
+    return () => {
+      nodes.forEach((node) => node.remove())
+      html.classList.remove(...classes)
+    }
+  }, [styles.htmlClass, styles.links, styles.inline])
   return (
     <>
-      <meta name="canvas-root" ref={marker} />
-      {styles.links.map((href) => (
-        <link href={href} key={href} rel="stylesheet" />
-      ))}
-      {styles.inline.map((css, i) => (
-        <style dangerouslySetInnerHTML={{ __html: css }} key={i} />
-      ))}
+      <span hidden ref={marker} />
       {children}
     </>
   )

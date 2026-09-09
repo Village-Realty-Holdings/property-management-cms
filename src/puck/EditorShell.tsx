@@ -3,8 +3,8 @@
 import { Puck } from '@puckeditor/core'
 
 import { BlockPickerDialogSlot } from './BlockPicker'
+import { EnsureTrailingContainer } from './containers'
 import { OutlineMenu } from './OutlineMenu'
-import type { BlockSchema } from './schema'
 import { usePuckSelector as usePuck } from './usePuck'
 
 /**
@@ -25,10 +25,9 @@ type Props = {
   onPublish: () => void
   formHref: string
   previewHref: string | null
-  schemas: BlockSchema[]
 }
 
-export function EditorShell({ title, status, onSave, onPublish, formHref, previewHref, schemas }: Props) {
+export function EditorShell({ title, status, onSave, onPublish, formHref, previewHref }: Props) {
   return (
     <div style={shell}>
       <EditorHeader
@@ -41,14 +40,15 @@ export function EditorShell({ title, status, onSave, onPublish, formHref, previe
       />
       <CanvasArea />
       <FieldsPanel />
-      <BlockPickerDialogSlot schemas={schemas} />
+      <BlockPickerDialogSlot />
+      <EnsureTrailingContainer />
     </div>
   )
 }
 
 /* ---------- header ---------- */
 
-function EditorHeader({ title, status, onSave, onPublish, formHref, previewHref }: Omit<Props, 'schemas'>) {
+function EditorHeader({ title, status, onSave, onPublish, formHref, previewHref }: Props) {
   return (
     <header style={header}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>

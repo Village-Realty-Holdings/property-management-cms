@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "property-management-cms",
+  "account_id": "dd8b87f7b0a6209f5191b365d1ba3472",
   "compatibility_date": "2025-08-15",
   "compatibility_flags": [
     // Enable Node.js API
@@ -18,8 +19,8 @@
   "d1_databases": [
     {
       "binding": "D1",
-      "database_name": "property-management-cms-v2",
-      "database_id": "5039d97d-9e17-4bd9-b090-0b6a09a80ec5",
+      "database_name": "property-management-cms",
+      "database_id": "52401523-c8d1-4cf2-8311-d7cde17b528d",
       "remote": true,
     },
   ],
