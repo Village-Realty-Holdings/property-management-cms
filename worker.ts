@@ -15,7 +15,7 @@ import { default as handler } from './.open-next/worker.js'
 const MEDIA_PREFIX = '/api/media/file/'
 
 export default {
-  fetch(request, env, ctx) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const source = url.searchParams.get('url') ?? ''
     if (url.pathname === '/_next/image' && source.startsWith(MEDIA_PREFIX)) {
@@ -28,7 +28,16 @@ export default {
           return res.ok ? new Response(await res.arrayBuffer(), res) : res
         },
       }
-      return handler.fetch(request, { ...env, ASSETS }, ctx)
+      try {
+        return await handler.fetch(request, { ...env, ASSETS }, ctx)
+      } catch (error) {
+        // The Images binding can reject the transform (for example
+        // IMAGES_TRANSFORM_ERROR 9432 on accounts still on legacy Images
+        // billing). Without the binding OpenNext serves the original as is,
+        // so retry that way rather than failing the whole image.
+        console.error('next/image transform failed, serving original', error)
+        return handler.fetch(request, { ...env, ASSETS, IMAGES: undefined }, ctx)
+      }
     }
     return handler.fetch(request, env, ctx)
   },
