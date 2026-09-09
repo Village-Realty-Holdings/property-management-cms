@@ -39,11 +39,5 @@
   // CRON_SECRET) are set with `npx wrangler secret put <NAME>`.
   // Local overrides live in `.env` (gitignored); wrangler loads it when `.dev.vars` is absent.
   "vars": {
-    // Warren Beach is the first tenant; its domains are added to the Worker as
-    // Custom Domains in the dashboard (Workers > Settings > Domains & Routes).
-    "NEXT_PUBLIC_SERVER_URL": "https://warrenbeachrentals.com",
-    // Tenant slug served when no tenant `domains` entry matches the hostname
-    // (e.g. the workers.dev preview URL).
-    "DEFAULT_TENANT": "warren-beach",
   },
 }
