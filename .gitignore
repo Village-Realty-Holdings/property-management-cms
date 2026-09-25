@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules
+.pnpm-store/
 .pnp
 .pnp.*
 .yarn/*
@@ -36,6 +37,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
+.claude/settings.local.json
