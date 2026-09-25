@@ -1,4 +1,5 @@
 import js from "@eslint/js"
+import { plugin as shadcn } from "@shadcn/lint"
 import eslintConfigPrettier from "eslint-config-prettier"
 import onlyWarn from "eslint-plugin-only-warn"
 import turboPlugin from "eslint-plugin-turbo"
@@ -27,6 +28,20 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**", ".next/**", "**/.turbo/**", "**/coverage/**"],
+    // Rules are opt-in; enable them in `rules` as "shadcn/<rule>".
+    plugins: {
+      shadcn,
+    },
+  },
+  {
+    ignores: [
+      "dist/**",
+      "out/**",
+      "build/**",
+      ".next/**",
+      "**/.turbo/**",
+      "**/coverage/**",
+      "**/next-env.d.ts",
+    ],
   },
 ]
