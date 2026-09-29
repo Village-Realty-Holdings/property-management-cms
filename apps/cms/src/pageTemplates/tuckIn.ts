@@ -5,7 +5,7 @@ import { paragraph, richText } from "../lexical"
 type Layout = NonNullable<Page["layout"]>
 
 /**
- * The Tuck-In Page Template (CONTEXT.md): a Former Brand (the Site) joins a
+ * The Tuck-In Page Template (GLOSSARY.md): a Former Brand (the Site) joins a
  * Client. Copy adapted from pclodge-landing, written with Variables so it
  * fits any Site: `{site}` is the Former Brand, `{client}` and `{client-url}`
  * the Client. Editors rewrite it after the Page is created.

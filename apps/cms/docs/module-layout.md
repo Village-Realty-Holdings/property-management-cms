@@ -1,6 +1,8 @@
 # Module layout (plan, not yet implemented)
 
-Vocabulary: see `CONTEXT.md`. The decisions behind this layout are in `docs/adr/`.
+> **Reference only.** apps/cms is the multi-site MVP (tag `archive/mvp-2026-09`). It is kept while its code is ported into apps/site, then removed. New work follows `apps/site/GLOSSARY.md` and `apps/site/docs/adr/` (apps/site ADR-0001).
+
+Vocabulary: see `GLOSSARY.md`. The decisions behind this layout are in `docs/adr/`.
 
 ## Workspace
 

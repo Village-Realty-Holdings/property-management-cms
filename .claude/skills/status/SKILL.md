@@ -14,7 +14,7 @@ bash .claude/skills/status/scripts/status.sh
 
 Then add the one thing the script can't: **how far the active plan has got.**
 
-1. The active plan is the newest file in `docs/plans/` (the script lists them).
+1. The active plan is the newest file in `apps/*/docs/plans/` (the script lists them).
    Its `## Conventions` section names the wave's branch or branches.
 2. Read the plan's numbered steps or tasks. Compare them with the commits on
    that branch since it left `mvp` (`git log mvp..<branch> --oneline`), and

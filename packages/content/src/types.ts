@@ -215,7 +215,7 @@ export type Block = {
   [field: string]: unknown
 }
 
-/** The Page Template a Page was created from (CONTEXT.md "Page Template"). */
+/** The Page Template a Page was created from (apps/cms/GLOSSARY.md "Page Template"). */
 export type PageTemplate = "blank" | "tuckIn"
 
 export type PageDoc = {
@@ -293,14 +293,14 @@ export type Branding = {
   social: { platform: SocialPlatform; url: string }[]
 }
 
-/** The rental company Awayday runs the Site for (CONTEXT.md "Client"). */
+/** The rental company Awayday runs the Site for (apps/cms/GLOSSARY.md "Client"). */
 export type Client = {
   name: string | null
   /** The Client's website, an http(s) URL. */
   url: string | null
 }
 
-/** Per-Site configuration and content (CONTEXT.md "Site Settings"). */
+/** Per-Site configuration and content (apps/cms/GLOSSARY.md "Site Settings"). */
 export type SiteSettings = {
   /** The Site's key; equals the deployment's SITE. */
   slug: string

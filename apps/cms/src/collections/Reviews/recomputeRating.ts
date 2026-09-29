@@ -18,7 +18,7 @@ export type PropertyRating = {
 }
 
 /**
- * The Rating (CONTEXT.md) from the ratings of a Property's shown, Active
+ * The Rating (GLOSSARY.md) from the ratings of a Property's shown, Active
  * Reviews. Reviews without a rating count as Reviews but not in the average.
  */
 export function computeRating(

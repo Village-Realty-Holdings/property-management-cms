@@ -29,7 +29,7 @@ Owns: `fields/sameSite.ts` (new), `fields/rule.ts`, `fields/seo.ts`, `fields/slu
 
 - One fail-closed `sameSite` helper replacing the variants. Today `fields/rule.ts` allows everything when the Site is unknown, while `blocks/sameSite.ts` denies.
 - Filter out withdrawn Amenities and Property Types in the rule pickers.
-- Shared Submission kind options using the `CONTEXT.md` terms.
+- Shared Submission kind options using the `GLOSSARY.md` terms.
 - SEO group: remove the duplicate "SEO" heading and add character counters.
 
 ### 3. `mvp-w5-editorial`

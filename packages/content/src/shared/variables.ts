@@ -1,5 +1,5 @@
 /**
- * Variables (CONTEXT.md, ADR-0017): named values such as `{phone}` that
+ * Variables (apps/cms/GLOSSARY.md, ADR-0017): named values such as `{phone}` that
  * Pages and Guides store as typed and apps/site replaces when it reads
  * content. Pure; apps/cms uses the same names and scanner to validate on
  * save, so both apps agree on what a Variable is.

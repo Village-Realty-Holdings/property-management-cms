@@ -6,7 +6,7 @@ import { lockedField } from "../access"
 import { tuckInLayout, tuckInSeo } from "./tuckIn"
 
 /**
- * Page Templates (CONTEXT.md): a starting layout, a fixed set of Blocks with
+ * Page Templates (GLOSSARY.md): a starting layout, a fixed set of Blocks with
  * sample copy, chosen when a Page is created. The Page remembers it in
  * `template`, and apps/site renders a Tuck-In Page with its own chrome.
  *

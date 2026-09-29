@@ -1,6 +1,6 @@
 # Wave 6: Sections, Variables and the Tuck-In Page Template
 
-Adds per-Site Sections, Variables and the first Page Template (Tuck-In) to the CMS and apps/site, and fixes the cut-off admin header logo. Terms: `CONTEXT.md` (Section, Page Template, Tuck-In, Variable, Former Brand, Client). Decision: `docs/adr/0017-variables-resolved-when-the-site-renders.md`.
+Adds per-Site Sections, Variables and the first Page Template (Tuck-In) to the CMS and apps/site, and fixes the cut-off admin header logo. Terms: `GLOSSARY.md` (Section, Page Template, Tuck-In, Variable, Former Brand, Client). Decision: `docs/adr/0017-variables-resolved-when-the-site-renders.md`.
 
 ## Conventions
 

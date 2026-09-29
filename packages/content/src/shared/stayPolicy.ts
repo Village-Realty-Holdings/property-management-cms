@@ -1,5 +1,5 @@
 /**
- * Stay Policy (CONTEXT.md): the Property Fact `property.stayPolicy` and the
+ * Stay Policy (apps/cms/GLOSSARY.md): the Property Fact `property.stayPolicy` and the
  * Site's default `site.stayPolicyDefaults` share this shape. Pure; ported
  * from apps/cms src/collections/Properties/effectiveStayPolicy.ts.
  */

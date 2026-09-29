@@ -1,7 +1,7 @@
 import type { CollectionSlug } from "payload"
 
 /**
- * Sections (CONTEXT.md): the parts of the CMS a Site can go without. Stored
+ * Sections (GLOSSARY.md): the parts of the CMS a Site can go without. Stored
  * on the Site as `sections.<name>` checkboxes, all on by default. Turning a
  * Section off hides it in the admin only (nav, dashboard work queues, Site
  * Settings); access control and the API don't change. Pages, Media and Site

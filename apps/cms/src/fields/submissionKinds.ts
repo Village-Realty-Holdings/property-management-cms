@@ -1,5 +1,5 @@
 /**
- * The kinds of Submission (CONTEXT.md): an Inquiry from a prospective guest,
+ * The kinds of Submission (GLOSSARY.md): an Inquiry from a prospective guest,
  * an Owner Lead from a property owner, or a general contact message. The
  * values are what `submissions.kind` and a Forwarding Destination's `kind`
  * store, so they never change; only the labels are for Staff Users.

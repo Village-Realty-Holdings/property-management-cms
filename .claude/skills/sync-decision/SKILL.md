@@ -1,14 +1,16 @@
 ---
 name: sync-decision
-description: Bring this repo's design docs back in line after a decision changes — find every ADR, CONTEXT.md term, module-layout section, plan and skill that restates the old decision, record the new one as an ADR, and update the rest so nothing contradicts it. Use whenever the user reverses or replaces an earlier choice ("let's do X instead", "that's wrong", "we took a wrong turn", "scrap the preview keys"), asks to "keep the plan and docs in sync", "update the docs with what we decided", or after a design discussion ends somewhere different from what docs/ says — even if they don't mention ADRs.
+description: Bring this repo's design docs back in line after a decision changes — find every ADR, glossary term, module-layout section, plan and skill that restates the old decision, record the new one as an ADR, and update the rest so nothing contradicts it. Use whenever the user reverses or replaces an earlier choice ("let's do X instead", "that's wrong", "we took a wrong turn", "scrap the preview keys"), asks to "keep the plan and docs in sync", "update the docs with what we decided", or after a design discussion ends somewhere different from what docs/ says — even if they don't mention ADRs.
 ---
 
 # sync-decision
 
-The design lives in several places that repeat each other: ADRs in
-`docs/adr/`, the glossary in `CONTEXT.md`, the module design in
-`docs/module-layout.md`, wave plans in `docs/plans/`, and the project skills
-in `.claude/skills/`. When a decision changes, fixing only the file in front
+The design lives in several places that repeat each other. Each app is its
+own context (see `GLOSSARY-MAP.md`), with ADRs in `apps/<app>/docs/adr/`, the
+glossary in `apps/<app>/GLOSSARY.md`, the module design in
+`apps/<app>/docs/module-layout.md` and plans in `apps/<app>/docs/plans/`.
+Decisions that span apps go in the root `docs/adr/`. The project skills are in
+`.claude/skills/`. When a decision changes, fixing only the file in front
 of you leaves the others quietly contradicting it, and the next session (or
 worker) builds the old design. This skill makes the change everywhere at once.
 
@@ -35,7 +37,8 @@ Search wide, because the same decision is phrased differently in each file:
 - Key terms, env vars, file paths, route paths and collection or field names
   tied to the old design (e.g. `CMS_PREVIEW_KEY`, `draftMode`, `/api/preview`,
   `purpose`).
-- `docs/`, `CONTEXT.md`, `AGENTS.md`, `CLAUDE.md`, `apps/*/AGENTS.md`,
+- `docs/`, `apps/*/docs/`, `GLOSSARY-MAP.md`, `apps/*/GLOSSARY.md`,
+  `AGENTS.md`, `CLAUDE.md`, `apps/*/AGENTS.md`,
   `.claude/skills/*/SKILL.md`, and doc comments in code that cite an ADR.
 
 Use `grep -rniE` over those paths, excluding `node_modules`, `.next` and
@@ -44,15 +47,15 @@ radius.
 
 ## 3. Update each kind of doc the way it's meant to change
 
-- **ADRs are a record.** Don't rewrite an old ADR's decision. Write a new one
+- **ADRs are a record, numbered per context.** Don't rewrite an old ADR's decision. Write a new one
   (next number, same format as the latest: a title that states the decision,
   a paragraph saying what and why, `## Considered Options` including the old
   design and why it lost, `## Consequences`). Then edit the old ADRs only
   where their text would now mislead: a sentence pointing to the new ADR, or
   a corrected consequence.
-- **`CONTEXT.md` is the current language.** Add, change or remove terms, with
+- **The context's `GLOSSARY.md` is the current language.** Add, change or remove terms, with
   `_Avoid_:` lines for words that now mean the wrong thing.
-- **`docs/module-layout.md` is the current design.** Change it to describe the
+- **The context's `docs/module-layout.md` is the current design.** Change it to describe the
   new design as if it had always been the plan, citing the new ADR.
 - **Plans:** rewrite the active, unbuilt plan. Leave plans for waves already
   merged alone. They're history. If the change removes built code, the
@@ -62,7 +65,7 @@ radius.
   instead.
 
 If the `domain-modeling` skill is available, follow its conventions for ADRs
-and `CONTEXT.md`. Match the repo's prose: plain words, short sentences.
+and glossaries. Match the repo's prose: plain words, short sentences.
 
 ## 4. Check nothing still contradicts it
 

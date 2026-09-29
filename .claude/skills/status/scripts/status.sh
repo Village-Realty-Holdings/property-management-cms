@@ -42,7 +42,7 @@ else
 fi
 
 section "Plans (newest first)"
-ls -t docs/plans/*.md 2>/dev/null | head -3 | while read -r f; do
+ls -t apps/*/docs/plans/*.md 2>/dev/null | head -3 | while read -r f; do
   echo "$f: $(head -1 "$f" | sed 's/^# //'), last changed $(git log -1 --format=%ad --date=short -- "$f" 2>/dev/null)"
 done
 

@@ -1,6 +1,6 @@
 # Wave 7: Preview drawn by the CMS
 
-Editors see their Draft drawn as the Site will show it, in a panel next to the edit form, and it refreshes on every save and autosave. They never leave the admin. Publishing still updates only the owning Site. Terms: `CONTEXT.md` (Preview, Draft, Published, Site). Decision: `docs/adr/0018-preview-drawn-by-the-cms.md`. Layout: `docs/module-layout.md` (packages/content, packages/site-views, apps/cms `preview/`).
+Editors see their Draft drawn as the Site will show it, in a panel next to the edit form, and it refreshes on every save and autosave. They never leave the admin. Publishing still updates only the owning Site. Terms: `GLOSSARY.md` (Preview, Draft, Published, Site). Decision: `docs/adr/0018-preview-drawn-by-the-cms.md`. Layout: `docs/module-layout.md` (packages/content, packages/site-views, apps/cms `preview/`).
 
 ## Decisions
 
