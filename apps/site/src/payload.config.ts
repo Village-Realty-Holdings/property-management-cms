@@ -5,6 +5,7 @@ import { postgresAdapter } from "@payloadcms/db-postgres"
 import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import { buildConfig } from "payload"
 
+import { assertNoDevSignInInProduction } from "./auth"
 import { collections } from "./collections"
 import { Users } from "./collections/Users"
 import { pgForRuntime } from "./database"
@@ -27,6 +28,8 @@ export function buildPayloadConfig({
   databaseUrl,
   push,
 }: PayloadConfigOptions) {
+  // Fails startup instead of serving the dev sign-in (apps/site ADR-0003).
+  assertNoDevSignInInProduction()
   return buildConfig({
     // Payload's own admin, kept as a reference while the Admin at /admin is
     // built (apps/site ADR-0002).
@@ -38,6 +41,10 @@ export function buildPayloadConfig({
       },
       meta: {
         titleSuffix: " — Payload admin",
+      },
+      components: {
+        afterLogin: ["/auth/PayloadAdminSignIn#PayloadAdminSignIn"],
+        logout: { Button: "/auth/PayloadAdminSignIn#PayloadAdminSignOut" },
       },
     },
     collections: [...collections],
