@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
   // Media is served by Payload (local disk) or straight from R2. Resizing at
   // delivery comes with the Workers deploy (apps/cms ADR-0008).
   images: { unoptimized: true },
+  // Media uploads from the Admin go through Server Actions.
+  experimental: { serverActions: { bodySizeLimit: "10mb" } },
 }
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })

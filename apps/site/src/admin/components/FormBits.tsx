@@ -1,0 +1,83 @@
+"use client"
+
+import type { ReactNode } from "react"
+
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@workspace/ui/components/field"
+import { cn } from "@workspace/ui/lib/utils"
+
+import type { FormState } from "../formState"
+
+/** A labelled form control with its description and error. */
+export function FormField({
+  id,
+  label,
+  description,
+  error,
+  children,
+}: {
+  id: string
+  label: string
+  description?: string
+  error?: string
+  children: ReactNode
+}) {
+  return (
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      {children}
+      {description && <FieldDescription>{description}</FieldDescription>}
+      {error && <FieldError>{error}</FieldError>}
+    </Field>
+  )
+}
+
+/** The form's overall result, e.g. "Published" or "Some fields need attention". */
+export function FormMessage({ state }: { state: FormState }) {
+  if (!state.message) return null
+  return (
+    <p
+      role={state.ok ? "status" : "alert"}
+      className={cn(
+        "rounded-lg px-3 py-2 text-sm",
+        state.ok
+          ? "bg-emerald-50 text-emerald-900"
+          : "bg-destructive/10 text-destructive"
+      )}
+    >
+      {state.message}
+    </p>
+  )
+}
+
+/** A titled group of fields. */
+export function Section({
+  title,
+  description,
+  children,
+  actions,
+}: {
+  title: string
+  description?: string
+  children: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border bg-background p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-base font-semibold">{title}</h2>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        {actions}
+      </div>
+      {children}
+    </section>
+  )
+}
