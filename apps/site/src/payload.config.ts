@@ -2,13 +2,14 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { postgresAdapter } from "@payloadcms/db-postgres"
-import { lexicalEditor } from "@payloadcms/richtext-lexical"
 import { buildConfig } from "payload"
 
 import { assertNoDevSignInInProduction } from "./auth"
 import { collections } from "./collections"
 import { Users } from "./collections/Users"
 import { pgForRuntime } from "./database"
+import { richTextEditor } from "./fields/richText"
+import { SiteSettings } from "./globals/SiteSettings"
 import { storagePlugins } from "./storage"
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -53,7 +54,8 @@ export function buildPayloadConfig({
       pg: pgForRuntime(),
       ...(push === undefined ? {} : { push }),
     }),
-    editor: lexicalEditor(),
+    editor: richTextEditor,
+    globals: [SiteSettings],
     // Nothing reads over GraphQL: the Site and the Admin use the Local API.
     graphQL: { disable: true },
     secret: process.env.PAYLOAD_SECRET || "",

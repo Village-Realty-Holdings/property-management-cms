@@ -67,6 +67,8 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    pages: Page;
+    media: Media;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -75,6 +77,8 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    pages: PagesSelect<false> | PagesSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -85,8 +89,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -114,6 +122,123 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * URL path on the Site: "/" for Home, "/about". Filled in from the title when left empty.
+   */
+  path: string;
+  layout?: (HeroBlock | RichTextBlock | CallToActionBlock)[] | null;
+  seo?: {
+    /**
+     * Shown in search results and the browser tab. Defaults to the Page title. Up to 60 characters.
+     */
+    title?: string | null;
+    /**
+     * The summary shown under the title in search results. Up to 160 characters.
+     */
+    description?: string | null;
+    /**
+     * Shown when the Page is shared on social media.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  heading: string;
+  subheading?: string | null;
+  image?: (number | null) | Media;
+  cta?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe what the image shows for people who can't see it, in a short sentence. Don't start with "Image of".
+   */
+  alt: string;
+  caption?: string | null;
+  /**
+   * Photographer or source, e.g. © Jane Doe
+   */
+  credit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock".
+ */
+export interface RichTextBlock {
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'richText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock".
+ */
+export interface CallToActionBlock {
+  heading: string;
+  body?: string | null;
+  button?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  style: 'primary' | 'secondary' | 'inverted';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callToAction';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -154,10 +279,19 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'users';
-    value: number | User;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
@@ -199,6 +333,92 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  path?: T;
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  heading?: T;
+  subheading?: T;
+  image?: T;
+  cta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock_select".
+ */
+export interface RichTextBlockSelect<T extends boolean = true> {
+  content?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  heading?: T;
+  body?: T;
+  button?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  style?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  caption?: T;
+  credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -250,6 +470,82 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  name: string;
+  /**
+   * A short line under the Site name, also used in page metadata.
+   */
+  tagline?: string | null;
+  domain?: string | null;
+  contact?: {
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+  };
+  branding: {
+    /**
+     * Shown in the Site's header.
+     */
+    logo?: (number | null) | Media;
+    /**
+     * Header, buttons and links.
+     */
+    primaryColor?: string | null;
+    /**
+     * Highlights.
+     */
+    accentColor?: string | null;
+    fontPairing: 'classic' | 'modern' | 'rustic';
+  };
+  social?:
+    | {
+        platform: 'facebook' | 'instagram' | 'x' | 'youtube' | 'tiktok';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  name?: T;
+  tagline?: T;
+  domain?: T;
+  contact?:
+    | T
+    | {
+        phone?: T;
+        email?: T;
+        address?: T;
+      };
+  branding?:
+    | T
+    | {
+        logo?: T;
+        primaryColor?: T;
+        accentColor?: T;
+        fontPairing?: T;
+      };
+  social?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
