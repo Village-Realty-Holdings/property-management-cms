@@ -1,0 +1,19 @@
+import { withPayload } from "@payloadcms/next/withPayload"
+import type { NextConfig } from "next"
+
+const nextConfig: NextConfig = {
+  // On Workers (apps/cms ADR-0015) pg connects through pg-cloudflare, which
+  // Node's resolution never reaches, so file tracing misses it and OpenNext's
+  // bundle step fails without it.
+  outputFileTracingIncludes: {
+    "/**": [
+      "../../node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/dist/**",
+    ],
+  },
+  transpilePackages: ["@workspace/ui"],
+  // Media is served by Payload (local disk) or straight from R2. Resizing at
+  // delivery comes with the Workers deploy (apps/cms ADR-0008).
+  images: { unoptimized: true },
+}
+
+export default withPayload(nextConfig, { devBundleServerPackages: false })
