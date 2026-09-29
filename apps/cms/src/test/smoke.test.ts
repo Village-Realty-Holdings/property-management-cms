@@ -15,7 +15,13 @@ describe("scaffold smoke test", () => {
   it("creates a user and logs in with the Local API", async () => {
     await t.payload.create({
       collection: "users",
-      data: { email: "smoke@example.com", password: "smoke-password" },
+      data: {
+        email: "smoke@example.com",
+        password: "smoke-password",
+        role: "editor",
+        // Password login is for the break-glass Super Admin only (ADR-0016).
+        superAdmin: true,
+      },
     })
 
     const result = await t.payload.login({

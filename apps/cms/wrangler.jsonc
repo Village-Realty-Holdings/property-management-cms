@@ -1,0 +1,12 @@
+// apps/cms as a Cloudflare Worker (ADR-0015). Used locally for now:
+// `pnpm worker:build && pnpm worker:dev` runs the OpenNext build on workerd
+// with the env from .env. Deploy settings (routes, Hyperdrive for
+// DATABASE_URL, R2) come with the first deploy.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "awayday-cms",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" role="img" aria-label="A headline announcing the news">
+  <rect width="480" height="320" rx="12" fill="#f3f4f6"/>
+  <rect x="40" y="90" width="340" height="30" rx="8" fill="#2f6f5e"/>
+  <rect x="40" y="136" width="260" height="12" rx="6" fill="#9ca3af"/>
+  <rect x="40" y="160" width="200" height="12" rx="6" fill="#9ca3af"/>
+  <text x="240" y="296" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" fill="#4b5563">A headline announcing the news</text>
+</svg>
