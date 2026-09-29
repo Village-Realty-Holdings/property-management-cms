@@ -3,6 +3,7 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./*"],
+      "@payload-config": ["./src/payload.config.ts"],
       "@workspace/ui/*": ["../../packages/ui/src/*"]
     },
     "plugins": [

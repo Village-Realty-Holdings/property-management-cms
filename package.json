@@ -1,5 +1,5 @@
 {
-  "name": "property-management-cms",
+  "name": "property-management",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,7 +8,9 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "turbo test",
+    "generate:types": "turbo generate:types"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

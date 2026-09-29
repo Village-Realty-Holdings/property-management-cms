@@ -1,6 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "PAYLOAD_SECRET",
+    "BREAK_GLASS_EMAIL",
+    "BREAK_GLASS_PASSWORD"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -15,6 +21,12 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "cache": false
+    },
+    "generate:types": {
+      "cache": false
     },
     "dev": {
       "cache": false,
