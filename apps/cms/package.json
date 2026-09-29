@@ -12,7 +12,7 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
