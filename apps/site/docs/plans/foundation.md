@@ -16,6 +16,10 @@ The first slice of the Site Builder. A Staff User signs in to the Admin, creates
 - Media uses the S3 adapter against R2 when `S3_*` is set, and local disk otherwise. Keys are plain filenames.
 - Site Settings is a Payload global. The Site reads it for its name and branding, and branding becomes CSS variables on the Site's root layout.
 - Pages have Drafts, without autosave. The Site reads Published Pages only.
+- The public Site renders at request time (`connection()`), so a publish shows at once. Caching and revalidation come later.
+- Until the Visual Editor, the Admin edits rich text as Markdown and stores it as Lexical, with Payload's own converters (`admin/richText.ts`).
+- `src/proxy.ts` passes the requested Admin path to the render, so signing in from a deep link returns to it.
+- The dev Staff User is `dev@awayday.test` (Payload rejects `localhost` email addresses).
 
 ## Steps
 
@@ -32,6 +36,12 @@ The first slice of the Site Builder. A Staff User signs in to the Admin, creates
 - Branch `site-foundation` off `development`. Commit per step, no push.
 - apps/cms is reference only. Copy code from it, and never edit it.
 - Read `node_modules/next/dist/docs/` before using a Next API (Next 16).
+
+## Status
+
+Built on `site-foundation`: steps 1 to 7. Checked in a browser with `DEV_SIGN_IN=1`: dev sign-in, a Page created with Blocks and published, a Draft edit that leaves the Site unchanged until published, a Media upload, Site Settings branding on the Site, `/p-admin` with the same session, and sign-out.
+
+Not covered yet: Entra sign-in against the real tenant (needs the app registration), and the Workers build (`pnpm worker:build`).
 
 ## Done when
 
