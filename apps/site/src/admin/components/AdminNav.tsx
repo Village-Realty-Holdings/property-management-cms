@@ -2,14 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileTextIcon, ImageIcon, SettingsIcon } from "lucide-react"
+import { FileTextIcon, ImageIcon } from "lucide-react"
 
 import { cn } from "@workspace/ui/lib/utils"
 
 const items = [
   { href: "/admin/pages", label: "Pages", icon: FileTextIcon },
   { href: "/admin/media", label: "Media", icon: ImageIcon },
-  { href: "/admin/settings", label: "Site Settings", icon: SettingsIcon },
 ]
 
 /** The Admin's sidebar navigation. */

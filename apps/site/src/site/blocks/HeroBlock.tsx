@@ -4,7 +4,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { HeroBlock as HeroBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { imageOf } from "../theme"
+import { imageOf } from "../brand"
 import { BlockButton, linkOf } from "./BlockButton"
 import { container, type BlockContext } from "./types"
 

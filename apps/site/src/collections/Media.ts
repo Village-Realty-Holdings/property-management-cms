@@ -3,7 +3,7 @@ import type { CollectionConfig } from "payload"
 import { anyone, signedIn } from "../access"
 
 /**
- * Images uploaded by Staff Users for Pages and Site Settings. No image
+ * Images uploaded by Staff Users for Pages, the Brand and SEO. No image
  * sizes, crop or focal point: sharp isn't available on Workers (apps/cms
  * ADR-0008 and ADR-0015). Files go to R2 or local disk (src/storage.ts).
  */

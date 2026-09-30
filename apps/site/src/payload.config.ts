@@ -9,7 +9,7 @@ import { collections } from "./collections"
 import { Users } from "./collections/Users"
 import { pgForRuntime } from "./database"
 import { richTextEditor } from "./fields/richText"
-import { SiteSettings } from "./globals/SiteSettings"
+import { globals } from "./globals"
 import { storagePlugins } from "./storage"
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -55,7 +55,7 @@ export function buildPayloadConfig({
       ...(push === undefined ? {} : { push }),
     }),
     editor: richTextEditor,
-    globals: [SiteSettings],
+    globals,
     // Nothing reads over GraphQL: the Site and the Admin use the Local API.
     graphQL: { disable: true },
     secret: process.env.PAYLOAD_SECRET || "",
