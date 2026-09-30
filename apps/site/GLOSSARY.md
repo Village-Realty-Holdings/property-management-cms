@@ -11,8 +11,16 @@ The one public website this app serves. There is exactly one, so content never s
 _Avoid_: Tenant, brand, client
 
 **Site Settings**:
-The Site's general details and branding: name, domain, logo, colours, fonts, tagline and contact details.
-_Avoid_: Config, theme, preferences
+The Site's general details: name, domain, logo, tagline and contact details.
+_Avoid_: Config, preferences
+
+**Theme**:
+The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page.
+_Avoid_: Branding, skin, styles, look and feel
+
+**Font**:
+A font family uploaded by staff, as one or more files of different weights and styles, for use in the Theme. Fonts are not Media.
+_Avoid_: Typeface, font file (for the family)
 
 ### Content
 
