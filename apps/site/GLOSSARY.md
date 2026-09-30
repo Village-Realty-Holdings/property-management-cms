@@ -7,12 +7,12 @@ One website that Awayday staff build and edit in one place. Staff compose Pages 
 ### The Site
 
 **Site**:
-The one public website this app serves. There is exactly one, so content never says which Site it belongs to.
+The one public website a deployment serves. Each deployment serves exactly one Site, so content never says which Site it belongs to.
 _Avoid_: Tenant, brand, client
 
-**Site Settings**:
-The Site's general details: name, domain, logo, tagline and contact details.
-_Avoid_: Config, preferences
+**Site Brand**:
+The Site's identity details: name, logo, tagline, contact details and social links.
+_Avoid_: Site Settings, config, preferences
 
 **Theme**:
 The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page.
@@ -28,26 +28,38 @@ _Avoid_: Typeface, font file (for the family)
 A page of the Site at its own path (such as Home, About or Contact), composed from Blocks.
 _Avoid_: Landing page, screen, post
 
+**Layout**:
+The Header and Footer that wrap a Page's content. One Layout is the Site's default, a Layout can be the default for the Pages under a path, and a Page can use another Layout or none.
+_Avoid_: Template, shell, chrome, master page
+
 **Block**:
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action.
 _Avoid_: Component, widget, section, element
 
 **Media**:
-An image uploaded by staff for use on Pages and in Site Settings.
+An image uploaded by staff for use on Pages, Layouts and in the Site Brand.
 _Avoid_: Asset, file, upload (as model names)
 
 **Draft** / **Published**:
-The lifecycle of a Page. Staff edit the Draft, and visitors see only the Published version until the Draft is published.
+The lifecycle of a Page or a Layout. Staff edit the Draft, and visitors see only the Published version until the Draft is published.
 _Avoid_: Staging, live copy, unpublished
+
+**Rental**:
+A vacation property that visitors can book, shown on the Site in Blocks such as Featured rentals.
+_Avoid_: Property, listing, unit
 
 ### Editing
 
 **Admin**:
-The place Staff Users sign in to manage Pages, Media and Site Settings.
-_Avoid_: Dashboard, back office, CMS (for the admin itself)
+The place Staff Users sign in to manage Pages, Layouts, Media, the Site Brand and the Theme.
+_Avoid_: Back office, CMS (for the admin itself)
+
+**Dashboard**:
+The Admin's home page: the Site at a glance and the way into recent work.
+_Avoid_: Home (for the Admin page), overview
 
 **Visual Editor**:
-The part of the Admin where a Staff User edits a Page on the rendered page itself: clicking a Block or its text to change it, and adding or reordering Blocks.
+The part of the Admin where a Staff User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
 _Avoid_: Page builder, live preview, inline editing (as the feature name)
 
 ### People
