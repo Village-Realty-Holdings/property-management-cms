@@ -64,6 +64,17 @@ describe("Blocks read tokens only", () => {
     expect(classes).toContain("bg-accent")
   })
 
+  it.each(["primary", "secondary", "inverted"] as const)(
+    "a Call to action (%s) keeps its text at full strength, so AA holds on every Theme",
+    (style) => {
+      // The Theme derives text colours to reach AA against their surface at
+      // full opacity; fading them (opacity-85) can drop them below 4.5:1.
+      const { container } = render(<Block block={cta({ style })} index={1} />)
+      const body = container.querySelector("p")!
+      expect(body.className).not.toMatch(/opacity-/)
+    }
+  )
+
   it("a Hero's section uses --section-y for its padding", () => {
     const { container } = render(<Block block={hero()} index={0} />)
     expect(classesOf(container)).toMatch(/\(--section-y\)/)
@@ -182,7 +193,8 @@ describe("<BlockButton>", () => {
       "bg-accent text-accent-foreground"
     )
     const two = getByRole("link", { name: "Two" })
-    expect(two.className).toContain("bg-primary text-primary-foreground")
+    // The primary button is the Theme's button: solid or outline, by tokens.
+    expect(two.className).toContain("bg-(--btn-bg) text-(--btn-fg)")
     expect(two.getAttribute("href")).toBe("https://x.test")
   })
 })

@@ -59,7 +59,7 @@ export function CallToActionBlock({
             {heading}
           </h2>
           {body && (
-            <p className="text-base text-pretty whitespace-pre-line opacity-85 sm:text-lg">
+            <p className="text-base text-pretty whitespace-pre-line sm:text-lg">
               {body}
             </p>
           )}

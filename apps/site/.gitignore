@@ -4,3 +4,7 @@
 .wrangler/
 .dev.vars
 .next-dev.log
+
+# Theme acceptance run output that is not part of the review set
+/docs/screenshots/2-theme/admin/
+/docs/screenshots/2-theme/admin-diff/

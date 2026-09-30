@@ -31,6 +31,12 @@ const ADMIN_DEFAULTS: Record<string, string> = {
   "--btn-tracking": "normal",
   "--btn-shadow": "0 0 #0000",
   "--btn-lift": "0px",
+  "--btn-bg": "var(--primary)",
+  "--btn-fg": "var(--primary-foreground)",
+  "--btn-border-color": "transparent",
+  "--btn-border-width": "1px",
+  "--btn-bg-hover": "color-mix(in srgb, var(--primary) 80%, var(--background))",
+  "--btn-fg-hover": "var(--primary-foreground)",
   "--card-radius": "calc(var(--radius) * 1.4)",
   "--card-shadow": "0 0 #0000",
   "--input-radius": "var(--radius)",
@@ -100,6 +106,15 @@ describe("classes that read component tokens", () => {
     ],
     ["shadow-(--btn-shadow)", "--tw-shadow: var(--btn-shadow)"],
     ["hover:-translate-y-(--btn-lift)", "calc(var(--btn-lift) * -1)"],
+    ["bg-(--btn-bg)", "background-color: var(--btn-bg)"],
+    ["text-(--btn-fg)", "color: var(--btn-fg)"],
+    ["border-(--btn-border-color)", "border-color: var(--btn-border-color)"],
+    [
+      "border-(length:--btn-border-width)",
+      "border-width: var(--btn-border-width)",
+    ],
+    ["hover:bg-(--btn-bg-hover)", "background-color: var(--btn-bg-hover)"],
+    ["hover:text-(--btn-fg-hover)", "color: var(--btn-fg-hover)"],
     ["rounded-(--card-radius)", "border-radius: var(--card-radius)"],
     ["shadow-(--card-shadow)", "--tw-shadow: var(--card-shadow)"],
     ["h-(--input-height)", "height: var(--input-height)"],
@@ -123,12 +138,40 @@ describe("hover states", () => {
     const css = await compileUiCss(
       classLiterals(button).flatMap((s) => s.split(/\s+/))
     )
-    expect(css).toContain(
-      "color-mix(in srgb,var(--primary) 80%,var(--background))"
+    // The default variant hovers to --btn-bg-hover, whose Admin default is the
+    // primary colour mixed 20% towards the page.
+    expect(css).toContain("background-color: var(--btn-bg-hover)")
+    expect(rootTokens()["--btn-bg-hover"]).toBe(
+      "color-mix(in srgb, var(--primary) 80%, var(--background))"
     )
     expect(css).toContain(
       "color-mix(in srgb,var(--accent) 80%,var(--background))"
     )
+  })
+})
+
+describe("the default Button variant", () => {
+  // The Theme's "Buttons: Style" control (Solid / Outline) reaches the Site
+  // through these tokens; a variant that reads --primary directly ignores it.
+  const variantClasses = () => {
+    const match = source("button").match(/default: `([^`]*)`/)
+    expect(match).not.toBeNull()
+    return match![1]!.split(/\s+/)
+  }
+
+  it.each([
+    "bg-(--btn-bg)",
+    "text-(--btn-fg)",
+    "border-(--btn-border-color)",
+    "border-(length:--btn-border-width)",
+    "hover:bg-(--btn-bg-hover)",
+    "hover:text-(--btn-fg-hover)",
+  ])("reads %s", (className) => {
+    expect(variantClasses()).toContain(className)
+  })
+
+  it("does not read the primary colour directly", () => {
+    expect(variantClasses().join(" ")).not.toMatch(/(bg|text)-primary/)
   })
 })
 
