@@ -126,7 +126,11 @@ export function FontsScreen({
           open
           onOpenChange={(open) => !open && setDeleting(null)}
           title={`Delete Font “${deleting.family}”?`}
-          description="The Font and its files are removed from the Site. This cannot be undone."
+          description={deleteDescription(deleting)}
+          dependents={deleting.earlierThemeVersions.map((when) => ({
+            kind: "Theme version",
+            name: `saved ${when}`,
+          }))}
           confirmLabel="Delete Font"
           onConfirm={async () => {
             const result = await deleteFont(deleting.id)
@@ -137,6 +141,19 @@ export function FontsScreen({
       )}
     </>
   )
+}
+
+/**
+ * What deleting says besides who uses the Font. The live Theme locks a Font,
+ * so an unlocked one is used only by earlier Theme versions, and restoring one
+ * of those afterwards uses the Classic font instead.
+ */
+function deleteDescription(row: FontRow): string {
+  const base =
+    "The Font and its files are removed from the Site. This cannot be undone."
+  return row.earlierThemeVersions.length === 0
+    ? base
+    : `${base} Restoring one of these earlier Theme versions will use the Classic font instead.`
 }
 
 function FontCard({ row, onDelete }: { row: FontRow; onDelete: () => void }) {

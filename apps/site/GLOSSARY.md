@@ -19,11 +19,13 @@ How the Site and its Pages appear in search results and link previews: the Site'
 _Avoid_: Metadata, meta tags
 
 **Theme**:
-The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page.
+The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
 _Avoid_: Skin, styles, look and feel
 
 **Font**:
 A font family staff have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by staff, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
+A Font with no files is treated as missing: the Site shows the built-in stand-in instead, never a bare family name that would depend on the visitor's machine.
+_Known edge case_: when a stored Font has the same family name as a built-in font, the stored Font wins because a Staff User added it deliberately, and the built-in quick pick of that name is hidden while the stored Font exists.
 _Avoid_: Typeface, font file (for the family)
 
 ### Content

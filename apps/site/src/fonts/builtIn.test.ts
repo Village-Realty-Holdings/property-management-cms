@@ -56,6 +56,7 @@ describe("combineFonts", () => {
       family: "Roboto Slab",
       kind: "slab",
       weights: [400, 700],
+      files: stored.files,
     })
   })
 

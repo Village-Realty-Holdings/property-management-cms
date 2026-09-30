@@ -192,7 +192,11 @@ for (let round = 0; round <= 2; round++) {
   const [code, ux] = await parallel([
     () =>
       agent(
-        `${RULES}\n\nCode review of ${branch} against origin/${BASE} for Phase ${n} "${title}". Run /code-review (Standards + Spec, where Spec is the phase section and its acceptance criteria). Blocking = bugs, spec misses, failing checks, security or data-loss risks, ADR violations. Everything else is non-blocking.`,
+        `${RULES}\n\nCode review of ${branch} against origin/${BASE} for Phase ${n} "${title}". Run /code-review (Standards + Spec, where Spec is the phase section and its acceptance criteria). Blocking = bugs, spec misses, failing checks, security or data-loss risks, ADR violations. Everything else is non-blocking.${
+          round === 0
+            ? ` The browser acceptance suite is outside pnpm check, so run it once before the checkpoint PR: \`pnpm --filter site test:e2e\` with DATABASE_URL pointing at the scratch pm_milestone database (see apps/site/e2e/theme/support/env.ts). A failing acceptance test is blocking. Skip this only when apps/site has no test:e2e script.`
+            : ""
+        }`,
         {
           label: `code review r${round}`,
           phase: "Review",

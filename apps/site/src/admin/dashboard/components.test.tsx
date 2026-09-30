@@ -10,6 +10,8 @@ import {
   WaitingToPublishCard,
   WAITING_SHOWN,
 } from "./cards"
+import { CLASSIC } from "../../theme"
+import { themeSummaryOf } from "./site"
 import { LayoutsTable, usedByLabel } from "./LayoutsTable"
 import { PagesSearch, PagesTable } from "./PagesTable"
 import type { LayoutRow, PageRow } from "./rows"
@@ -167,12 +169,20 @@ describe("Dashboard cards", () => {
     expect(screen.getByText(/Every Published Page has/)).toBeTruthy()
   })
 
-  it("the Theme card shows the default swatches and Edit Theme", () => {
-    render(<ThemeCard />)
+  it("the Theme card shows the default swatches and View Theme (the page is read-only until Phase 5)", () => {
+    render(
+      <ThemeCard
+        summary={themeSummaryOf({
+          source: "default",
+          inputs: CLASSIC.inputs,
+          savedAt: null,
+        })}
+      />
+    )
     expect(screen.getByText("Not customised yet")).toBeTruthy()
-    expect(screen.getByText("#283d6b")).toBeTruthy()
+    expect(screen.getByText(CLASSIC.inputs.primary)).toBeTruthy()
     expect(
-      screen.getByRole("link", { name: "Edit Theme" }).getAttribute("href")
+      screen.getByRole("link", { name: "View Theme" }).getAttribute("href")
     ).toBe("/admin/theme")
   })
 

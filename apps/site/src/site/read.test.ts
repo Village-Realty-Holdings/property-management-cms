@@ -1,10 +1,22 @@
 import type { Payload } from "payload"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest"
 
 import type { Media, User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
+import { truncateTables } from "../test/truncateTables"
 import { resolveBrand } from "./brand"
-import { readBrand, readPublishedPages, readSeo } from "./read"
+import { siteThemeCss } from "./themeStyle"
+import { CLASSIC, HARBOUR } from "../theme"
+import { restoreThemeVersion, saveTheme } from "../theme/record"
+import { readBrand, readPublishedPages, readSeo, readSiteTheme } from "./read"
 import {
   pageMetadata,
   resolveSeo,
@@ -173,5 +185,127 @@ describe("SEO read as a visitor", () => {
     const meta = pageMetadata({ page, brand, seo, baseUrl })
     expect(meta.title).toEqual({ absolute: "Warren Beach — Our rooms" })
     expect(meta.description).toBe("Sea view rooms")
+  })
+})
+
+const WOFF2 = Buffer.from([0x77, 0x4f, 0x46, 0x32, 0x00, 0x01, 0x00, 0x00])
+
+describe("the Theme the Site applies", () => {
+  const staffUser = () => ({ ...staff, collection: "users" as const })
+  const siteCss = async () => siteThemeCss(await readSiteTheme(payload))
+
+  afterEach(async () => {
+    await truncateTables(payload, "theme", "_theme_v")
+    await payload.delete({
+      collection: "fonts",
+      where: { id: { exists: true } },
+    })
+    await payload.delete({
+      collection: "font-files",
+      where: { id: { exists: true } },
+    })
+  })
+
+  it("reads the Theme and the Fonts as a visitor, like every other Site read", async () => {
+    const findGlobal = vi.spyOn(payload, "findGlobal")
+    const find = vi.spyOn(payload, "find")
+    try {
+      await readSiteTheme(payload)
+      expect(findGlobal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "theme",
+          overrideAccess: false,
+          user: null,
+        })
+      )
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          collection: "fonts",
+          overrideAccess: false,
+          user: null,
+        })
+      )
+    } finally {
+      findGlobal.mockRestore()
+      find.mockRestore()
+    }
+  })
+
+  it("is the default preset until a Theme is saved", async () => {
+    const theme = await readSiteTheme(payload)
+    expect(theme.source).toBe("default")
+    expect(theme.savedAt).toBeNull()
+    expect(theme.inputs).toEqual(CLASSIC.inputs)
+    expect(await siteCss()).toContain(`--primary:${CLASSIC.inputs.primary};`)
+  })
+
+  it("shows a saved Theme on the very next read", async () => {
+    await saveTheme(payload, { user: staffUser(), inputs: HARBOUR.inputs })
+    const theme = await readSiteTheme(payload)
+    expect(theme.source).toBe("saved")
+    expect(theme.savedAt).not.toBeNull()
+    const css = siteThemeCss(theme)
+    expect(css).toContain(`--primary:${HARBOUR.inputs.primary};`)
+    expect(css).toContain("--btn-radius:0px;")
+
+    await saveTheme(payload, {
+      user: staffUser(),
+      inputs: { ...HARBOUR.inputs, primary: "#0a7d5a" },
+    })
+    expect(await siteCss()).toContain("--primary:#0a7d5a;")
+  })
+
+  it("shows the restored look after a restore", async () => {
+    await saveTheme(payload, { user: staffUser(), inputs: HARBOUR.inputs })
+    const before = await siteCss()
+    await saveTheme(payload, {
+      user: staffUser(),
+      inputs: { ...HARBOUR.inputs, primary: "#0a7d5a", buttonCorners: "pill" },
+    })
+    expect(await siteCss()).not.toBe(before)
+
+    const versions = await payload.findGlobalVersions({
+      slug: "theme",
+      sort: "id",
+      ...asStaff(),
+    })
+    await restoreThemeVersion(payload, {
+      user: staffUser(),
+      versionId: Number(versions.docs[0]!.id),
+    })
+    expect(await siteCss()).toBe(before)
+  })
+
+  it("serves a stored font's @font-face from the Site itself", async () => {
+    const file = await payload.create({
+      collection: "font-files",
+      data: {},
+      file: {
+        data: WOFF2,
+        mimetype: "font/woff2",
+        name: `slab-${Date.now()}.woff2`,
+        size: WOFF2.length,
+      },
+      ...asStaff(),
+    })
+    const font = await payload.create({
+      collection: "fonts",
+      data: {
+        family: "Test Slab",
+        kind: "slab",
+        files: [{ weight: 400, style: "normal", file: file.id }],
+      },
+      ...asStaff(),
+    })
+    await saveTheme(payload, {
+      user: staffUser(),
+      inputs: { ...CLASSIC.inputs, headingFont: `font:${font.id}` },
+    })
+
+    const css = await siteCss()
+    expect(css).toContain('@font-face{font-family:"Test Slab";')
+    expect(css).toMatch(/url\("\/api\/font-files\/file\/slab-/)
+    expect(css).toContain('--font-display:"Test Slab", serif')
+    expect(css).not.toMatch(/https?:/)
   })
 })

@@ -3,7 +3,13 @@ import { getPayload } from "payload"
 import { cache } from "react"
 
 import type { Brand, Page, Seo } from "../payload-types"
-import { readBrand, readPublishedPages, readSeo } from "./read"
+import {
+  readBrand,
+  readPublishedPages,
+  readSeo,
+  readSiteTheme,
+  type LiveSiteTheme,
+} from "./read"
 import type { SitemapPage } from "./seo"
 
 /**
@@ -33,6 +39,15 @@ export const getPublishedPage = cache(
 /** The Brand global; empty fields until someone has saved it. */
 export const getBrand = cache(async (): Promise<Brand> => {
   return readBrand(await getPayload({ config }))
+})
+
+/**
+ * The live Theme with the fonts it can use: the default preset until one is
+ * saved. Read on every request (cached only within it), so a save or a
+ * restore shows on the next page load.
+ */
+export const getTheme = cache(async (): Promise<LiveSiteTheme> => {
+  return readSiteTheme(await getPayload({ config }))
 })
 
 /** The SEO global; empty fields until someone has saved it. */

@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -6,13 +6,12 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { Brand } from "./brand"
 import { displayFont } from "./display"
-import { fontVars } from "./fonts"
-import { telHref, themeColorVars } from "./theme"
+import { telHref } from "./theme"
 
 /**
- * The Site's colours and fonts as CSS variables (a fixed default until the
- * Theme exists), and its header and footer from the Brand. Needs
- * `fontVariables` on <html>.
+ * The Site's header and footer from the Brand, around the page. Its colours
+ * and fonts come from the Theme's variables, which the layout emits at :root
+ * (see SiteThemeStyle) so portalled content is styled too.
  */
 export function SiteFrame({
   brand,
@@ -21,24 +20,8 @@ export function SiteFrame({
   brand: Brand
   children: ReactNode
 }) {
-  const style = {
-    ...themeColorVars(),
-    ...fontVars(),
-  } as CSSProperties
-
-  // The same variables at :root, so anything portalled out of this wrapper
-  // keeps the Site's colours and fonts. Values are colours and font stacks
-  // built by the theme; strip anything that could end the rule.
-  const rootVars = Object.entries(style)
-    .map(([name, value]) => `${name}:${String(value).replace(/[<>{};]/g, "")}`)
-    .join(";")
-
   return (
-    <div
-      style={style}
-      className="flex min-h-svh flex-col bg-background font-sans text-foreground"
-    >
-      <style>{`:root{${rootVars}}`}</style>
+    <div className="flex min-h-svh flex-col bg-background font-sans text-foreground">
       <header className="border-b border-border bg-background/90">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">

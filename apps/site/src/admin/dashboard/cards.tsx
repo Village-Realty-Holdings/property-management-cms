@@ -12,12 +12,7 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { EmptyState } from "../kit/EmptyState"
 import { DashboardCard } from "./DashboardCard"
 import { NEW_LAYOUT_HREF, type PageRow, type RecentItem } from "./rows"
-import {
-  getThemeSummary,
-  themeStatusLine,
-  type SiteCard,
-  type ThemeSummary,
-} from "./site"
+import { themeStatusLine, type SiteCard, type ThemeSummary } from "./site"
 import { StatusChip } from "./StatusChip"
 import { UpdatedAt } from "./UpdatedAt"
 
@@ -177,31 +172,38 @@ export function SeoHealthCard({ count }: { count: number }) {
   )
 }
 
-/** The Theme: its swatches, when it was last saved, and Edit Theme. */
-export function ThemeCard({
-  summary = getThemeSummary(),
-}: {
-  summary?: ThemeSummary
-}) {
+/** The Theme's colours as a labelled list of swatches with their hex codes. */
+export function ThemeSwatches({ summary }: { summary: ThemeSummary }) {
+  return (
+    <ul className="flex flex-wrap gap-3" aria-label="Theme colours">
+      {summary.swatches.map((swatch) => (
+        <li key={swatch.name} className="flex items-center gap-2 text-sm">
+          <span
+            aria-hidden="true"
+            className="size-6 rounded-full border"
+            style={{ backgroundColor: swatch.hex }}
+          />
+          <span>
+            {swatch.name}{" "}
+            <span className="font-mono text-xs text-muted-foreground">
+              {swatch.hex}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/**
+ * The Theme: its swatches, when it was last saved, and View Theme. The link
+ * opens the read-only Theme page, so it says View. Phase 5 replaces that page
+ * with the editor and renames it Edit Theme.
+ */
+export function ThemeCard({ summary }: { summary: ThemeSummary }) {
   return (
     <DashboardCard id="dash-theme" title="Theme">
-      <ul className="flex flex-wrap gap-3" aria-label="Theme colours">
-        {summary.swatches.map((swatch) => (
-          <li key={swatch.name} className="flex items-center gap-2 text-sm">
-            <span
-              aria-hidden="true"
-              className="size-6 rounded-full border"
-              style={{ backgroundColor: swatch.hex }}
-            />
-            <span>
-              {swatch.name}{" "}
-              <span className="font-mono text-xs text-muted-foreground">
-                {swatch.hex}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <ThemeSwatches summary={summary} />
       <p className="text-sm text-muted-foreground">
         {themeStatusLine(summary)}
       </p>
@@ -210,7 +212,7 @@ export function ThemeCard({
           href="/admin/theme"
           className={buttonVariants({ variant: "outline" })}
         >
-          Edit Theme
+          View Theme
         </Link>
       </div>
     </DashboardCard>

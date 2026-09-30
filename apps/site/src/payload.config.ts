@@ -11,6 +11,7 @@ import { pgForRuntime, siteSchema } from "./database"
 import { richTextEditor } from "./fields/richText"
 import { globals } from "./globals"
 import { storagePlugins } from "./storage"
+import { registerThemeFontUsage } from "./theme/record/fontUsage"
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -37,6 +38,8 @@ export function buildPayloadConfig({
 }: PayloadConfigOptions) {
   // Fails startup instead of serving the dev sign-in (apps/site ADR-0003).
   assertNoDevSignInInProduction()
+  // The Fonts collection refuses to delete a Font the live Theme uses.
+  registerThemeFontUsage()
   return buildConfig({
     // Payload's own admin, kept as a reference while the Admin at /admin is
     // built (apps/site ADR-0002).

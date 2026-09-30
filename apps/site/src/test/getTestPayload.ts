@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto"
 import pg from "pg"
 import { getPayload, type Payload } from "payload"
 
+import { siteSchema } from "../database"
 import { buildPayloadConfig } from "../payload.config"
 
 type TestPayloadOptions = Omit<
@@ -33,6 +34,12 @@ export type TestPayload = {
   payload: Payload
   /** Connection string of the throwaway database. */
   databaseUrl: string
+  /**
+   * The key Payload caches this instance under. Pass it as
+   * `payloadInstanceCacheKey` when calling Payload's `handleEndpoints`, or the
+   * call starts a second instance whose connections nothing closes.
+   */
+  instanceKey: string
   /** Shuts Payload down and drops the throwaway database. */
   teardown: () => Promise<void>
 }
@@ -59,7 +66,9 @@ export async function createTestDatabase(): Promise<TestDatabase> {
 /**
  * Starts Payload against a new, empty Postgres database (`pm_test_<random>`)
  * on the server named by DATABASE_URL, with the schema pushed from the config.
- * Tests run in the `public` schema unless they pass `schemaName`.
+ * The tables go in `schemaName` when a test passes it, otherwise in
+ * `DATABASE_SCHEMA` when that is set (as `pnpm check` does), otherwise in
+ * `public`. Raw SQL must not assume `public`: see `truncateTables`.
  *
  * Call it once per test file and always call `teardown` afterwards:
  *
@@ -74,10 +83,14 @@ export async function getTestPayload(
   const db = database ?? (await createTestDatabase())
   const dropOwnDatabase = database ? async () => {} : db.drop
 
+  // The schema buildPayloadConfig will use: see its default for schemaName.
+  const schema = configOptions.schemaName ?? siteSchema() ?? "public"
+  const instanceKey = `${db.url}#${schema}`
+
   let payload: Payload
   try {
     payload = await getPayload({
-      key: `${db.url}#${configOptions.schemaName ?? "public"}`,
+      key: instanceKey,
       config: buildPayloadConfig({
         ...configOptions,
         databaseUrl: db.url,
@@ -92,21 +105,35 @@ export async function getTestPayload(
   return {
     payload,
     databaseUrl: db.url,
+    instanceKey,
     teardown: async () => {
       try {
         const pool = payload.db.pool
         await payload.destroy()
-        // payload.destroy() leaves the pg pool open, and the Postgres adapter
-        // keeps one client checked out for good, so `pool.end()` never
-        // settles. Close the idle clients without waiting; the forced drop
-        // below terminates the rest, and their errors are expected.
-        pool?.on("error", () => {})
-        void pool?.end()
+        await closeConnections(pool)
       } finally {
         await dropOwnDatabase()
       }
     },
   }
+}
+
+/**
+ * Closes every connection Payload's pool opened, and waits for them, so that
+ * dropping the database afterwards has nothing left to terminate. Terminating
+ * a connection that is still open makes Postgres send it error 57P01, which
+ * nothing listens for on a connection the pool has lent out, so the run
+ * reports an unhandled error long after the test passed.
+ *
+ * `pool.end()` would do it, but it never settles here: the Postgres adapter
+ * checks one client out to watch the connection and never gives it back, and
+ * `end()` waits for every lent client. So end the clients themselves.
+ */
+async function closeConnections(pool: pg.Pool | undefined) {
+  if (!pool) return
+  pool.on("error", () => {})
+  const clients = (pool as unknown as { _clients?: pg.Client[] })._clients ?? []
+  await Promise.allSettled(clients.map((client) => client.end()))
 }
 
 async function dropDatabase(serverUrl: string, dbName: string) {

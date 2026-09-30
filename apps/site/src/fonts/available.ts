@@ -3,13 +3,19 @@ import type { Payload } from "payload"
 import { BUILT_IN_FONTS } from "./builtIn"
 import type { FontKind, FontStyle } from "./types"
 
-/** Every Font staff added, with the public URL of each file. */
+/**
+ * Every Font staff added, with the public URL of each file. Read as a
+ * visitor, like every other Site read (apps/site ADR-0001): Fonts and their
+ * files are public.
+ */
 export async function readStoredFonts(payload: Payload): Promise<StoredFont[]> {
   const { docs } = await payload.find({
     collection: "fonts",
     depth: 1,
     pagination: false,
     sort: "family",
+    overrideAccess: false,
+    user: null,
   })
   return docs.map((font) => ({
     id: font.id,
@@ -50,6 +56,29 @@ export type AvailableFont = {
   weights: number[]
   /** The Font record's id, for stored Fonts only. */
   id?: number
+  /** The files to serve, for stored Fonts only. */
+  files?: StoredFont["files"]
+}
+
+/**
+ * The fonts to offer in a picker. A stored Font wins over a built-in quick
+ * pick of the same family, because staff added it deliberately: the built-in
+ * one is hidden while a stored Font with that family (and files to serve)
+ * exists. A Theme that already names the built-in one keeps working: this
+ * only shortens the list, `combineFonts` still resolves every key.
+ */
+export function pickerFonts(
+  available: readonly AvailableFont[]
+): AvailableFont[] {
+  const family = (font: AvailableFont) => font.family.trim().toLowerCase()
+  const storedFamilies = new Set(
+    available
+      .filter((font) => font.source === "stored" && font.files?.length)
+      .map(family)
+  )
+  return available.filter(
+    (font) => font.source === "stored" || !storedFamilies.has(family(font))
+  )
 }
 
 /** The built-in quick picks, then the stored Fonts. */
@@ -71,6 +100,7 @@ export function combineFonts(stored: readonly StoredFont[]): AvailableFont[] {
         id: font.id,
         family: font.family,
         kind: font.kind,
+        files: font.files.map((file) => ({ ...file })),
         weights: [...new Set(font.files.map((file) => file.weight))].sort(
           (a, b) => a - b
         ),

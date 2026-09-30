@@ -37,9 +37,12 @@ const record = (id: number, family: string, weights = [400, 700]) => ({
 const free = record(1, "Lora")
 const used = record(2, "Roboto Slab")
 
+const earlier = record(3, "Newsreader Slab")
+
 const rows = buildFontRows(
-  [free, used],
-  new Map([[2, ["Used by the Theme (heading font)"]]])
+  [free, used, earlier],
+  new Map([[2, ["Used by the Theme (heading font)"]]]),
+  new Map([[3, ["2026-03-01T10:05:00.000Z", "2026-02-01T09:00:00.000Z"]]])
 )
 
 function renderScreen(
@@ -177,6 +180,23 @@ describe("deleting a Font", () => {
       expect(toast.success).toHaveBeenCalledWith("Deleted Lora.")
     )
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+  })
+
+  it("names the earlier Theme versions that use the Font, and what restoring them will do", async () => {
+    const user = userEvent.setup()
+    renderScreen()
+    await user.click(
+      screen.getByRole("button", { name: "Delete Newsreader Slab" })
+    )
+    const dialog = await screen.findByRole("alertdialog")
+    expect(within(dialog).queryByText("Nothing else uses it.")).toBeNull()
+    expect(within(dialog).getByText("Used by 2 Theme versions.")).toBeTruthy()
+    expect(
+      within(dialog).getByText("Theme version: saved Mar 1, 2026, 10:05 AM UTC")
+    ).toBeTruthy()
+    expect(
+      within(dialog).getByText(/restoring one .* the Classic font instead/i)
+    ).toBeTruthy()
   })
 
   it("keeps the dialog open and shows the server's refusal inline", async () => {

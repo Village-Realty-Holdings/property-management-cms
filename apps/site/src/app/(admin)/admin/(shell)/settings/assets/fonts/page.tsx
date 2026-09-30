@@ -18,7 +18,7 @@ export default async function FontsPage() {
   return (
     <FontsScreen
       rows={rows}
-      builtIn={builtInRows()}
+      builtIn={builtInRows(rows)}
       builtInClassName={fontVariables}
     />
   )

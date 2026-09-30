@@ -56,6 +56,22 @@ describe("buildFontRows", () => {
     )
   })
 
+  it("lists the earlier Theme versions that used a Font, apart from what locks it", () => {
+    const [row, other] = buildFontRows(
+      [slab, { ...slab, id: 8, family: "Karla" }],
+      new Map(),
+      new Map([[7, ["2026-03-01T10:05:00.000Z", "2026-02-01T09:00:00.000Z"]]])
+    )
+    expect(row!.earlierThemeVersions).toEqual([
+      "Mar 1, 2026, 10:05 AM UTC",
+      "Feb 1, 2026, 9:00 AM UTC",
+    ])
+    // They do not lock it: only the live Theme does.
+    expect(row!.locked).toBe(false)
+    expect(row!.deleteBlockedReason).toBeNull()
+    expect(other!.earlierThemeVersions).toEqual([])
+  })
+
   it("gives each Font its own sample family, apart from any built-in name", () => {
     const rows = buildFontRows(
       [slab, { ...slab, id: 8, family: "Karla" }],
@@ -108,6 +124,22 @@ describe("builtInRows", () => {
     expect(rows.map((r) => r.family)).toEqual(
       BUILT_IN_FONTS.map((f) => f.family)
     )
+  })
+
+  it("hides a built-in quick pick while a stored Font has that family", () => {
+    const stored = [
+      { family: "karla", faces: [{ weight: 400 }] },
+      { family: "Lora", faces: [{ weight: 400 }] },
+    ]
+    const families = builtInRows(stored).map((r) => r.family)
+    expect(families).not.toContain("Karla")
+    expect(families).toContain("Zilla Slab")
+    expect(families).toHaveLength(BUILT_IN_FONTS.length - 1)
+  })
+
+  it("keeps the quick pick when the stored Font has no files", () => {
+    const rows = builtInRows([{ family: "Karla", faces: [] }])
+    expect(rows.map((r) => r.family)).toContain("Karla")
   })
 
   it("names their weights", () => {

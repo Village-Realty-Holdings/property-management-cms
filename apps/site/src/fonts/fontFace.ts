@@ -21,7 +21,7 @@ export function fontFaceCss(fonts: readonly StoredFont[]): string {
 }
 
 /** A quoted CSS string, with quotes, backslashes and newlines escaped. */
-function cssString(value: string): string {
+export function cssString(value: string): string {
   return `"${value
     .replaceAll("\\", "\\\\")
     .replaceAll('"', '\\"')
