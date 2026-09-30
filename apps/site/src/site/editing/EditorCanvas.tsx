@@ -16,6 +16,7 @@ import { siteThemeCss } from "../themeStyle"
 import { CanvasSendContext } from "./canvasSend"
 import { CanvasOverlay } from "./overlay"
 import { useCanvasDocument } from "./useCanvasDocument"
+import { useForwardShortcuts } from "./useForwardShortcuts"
 
 /**
  * The Visual Editor's canvas: the Site route in its editing mode. It draws
@@ -37,6 +38,9 @@ import { useCanvasDocument } from "./useCanvasDocument"
  * toolbar and "+" on the Blocks of the regions the document's mode lets the
  * Staff User edit, and sends what they ask for to the Admin.
  *
+ * The editor's keyboard shortcuts work with focus in the canvas: the keys are
+ * forwarded to the Admin (see useForwardShortcuts).
+ *
  * Links do not navigate: the Staff User edits a Page here, and the Admin
  * moves between Pages.
  */
@@ -53,6 +57,8 @@ export function EditorCanvas({
   const send = useCallback((request: CanvasRequest) => {
     postToParent(window.parent, window.location.origin, request)
   }, [])
+
+  useForwardShortcuts(send)
 
   // Nothing is shown until the Admin has sent something to show.
   if (!document) return <div className="min-h-svh" aria-busy="true" />

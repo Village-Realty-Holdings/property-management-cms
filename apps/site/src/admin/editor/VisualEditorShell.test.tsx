@@ -151,6 +151,71 @@ describe("the top bar", () => {
   })
 })
 
+describe("keyboard shortcuts", () => {
+  it("Ctrl-K opens the Page picker", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.keyboard("{Control>}k{/Control}")
+    expect(await screen.findByRole("dialog", { name: /Page/ })).toBeTruthy()
+  })
+
+  it("Ctrl-S saves with the mode's save once there are changes", async () => {
+    const onSave = vi.fn(() => ({ ok: true }) as const)
+    const user = userEvent.setup()
+    mount({ onSave })
+    await user.keyboard("{Control>}s{/Control}")
+    expect(onSave).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: "Make an edit" }))
+    await user.keyboard("{Control>}s{/Control}")
+    expect(onSave).toHaveBeenCalledTimes(1)
+  })
+
+  it("Ctrl-S follows canSave when the mode gives it", async () => {
+    const onSave = vi.fn(() => ({ ok: true }) as const)
+    const user = userEvent.setup()
+    const { unmount } = mount({ onSave, canSave: true })
+    await user.keyboard("{Control>}s{/Control}")
+    expect(onSave).toHaveBeenCalledTimes(1)
+    unmount()
+
+    onSave.mockClear()
+    mount({ onSave, canSave: false })
+    await user.click(screen.getByRole("button", { name: "Make an edit" }))
+    await user.keyboard("{Control>}s{/Control}")
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  it("Ctrl-Z undoes an edit", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(screen.getByRole("button", { name: "Make an edit" }))
+    expect(screen.getByLabelText("title now").textContent).toBe("About")
+    await user.keyboard("{Control>}z{/Control}")
+    expect(screen.getByLabelText("title now").textContent).toBe("Home")
+  })
+
+  it("lists the shortcuts in a help popover in the top bar", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(
+      within(bar()).getByRole("button", { name: "Keyboard shortcuts" })
+    )
+    const popover = await screen.findByRole("dialog", {
+      name: "Keyboard shortcuts",
+    })
+    for (const label of [
+      "Go to a Page",
+      "Save",
+      "Undo",
+      "Redo",
+      "Deselect the Block",
+      "Remove the selected Block",
+    ]) {
+      expect(within(popover).getByText(label)).toBeTruthy()
+    }
+  })
+})
+
 describe("undo, redo and discard", () => {
   it("are off while there is nothing to undo, redo or discard", () => {
     mount()

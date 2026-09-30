@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { ConfirmDialog } from "../kit"
 import { useEditor } from "./EditorProvider"
 import { PagePicker, type PickerPage } from "./PagePicker"
+import { ShortcutsHelp } from "./ShortcutsHelp"
 
 export type EditorMode = "page" | "layout" | "theme"
 
@@ -33,6 +34,8 @@ export function TopBar({
   backHref,
   actions,
   onPickPage,
+  pickerOpen,
+  onPickerOpenChange,
 }: {
   mode: EditorMode
   name: string
@@ -42,6 +45,9 @@ export function TopBar({
   actions?: ReactNode
   /** What choosing a Page in the Ctrl-K picker does; omit to open it. */
   onPickPage?: (page: PickerPage) => void
+  /** Controls whether the Page picker is open (the shell's shortcuts open it). */
+  pickerOpen?: boolean
+  onPickerOpenChange?: (open: boolean) => void
 }) {
   const { undo, redo, discard, canUndo, canRedo, isDirty } = useEditor()
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
@@ -68,9 +74,14 @@ export function TopBar({
         </span>
       )}
 
-      <PagePicker onPick={onPickPage} />
+      <PagePicker
+        onPick={onPickPage}
+        open={pickerOpen}
+        onOpenChange={onPickerOpenChange}
+      />
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
+        <ShortcutsHelp />
         <Button
           variant="ghost"
           size="icon-sm"

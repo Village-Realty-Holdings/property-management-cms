@@ -426,3 +426,38 @@ describe("edit-text", () => {
     })
   })
 })
+
+describe("key (a shortcut pressed in the canvas)", () => {
+  const frame = fakeWindow()
+  const read = (data: Record<string, unknown>) =>
+    readCanvasMessage(
+      {
+        data: { channel: BRIDGE_CHANNEL, type: "key", ...data },
+        origin: ORIGIN,
+        source: frame as MessageEventSource,
+      },
+      { origin: ORIGIN, frame }
+    )
+
+  it("accepts the keys that are shortcuts", () => {
+    expect(read({ key: "Delete", mod: false, shift: false })).toEqual({
+      type: "key",
+      key: "Delete",
+      mod: false,
+      shift: false,
+    })
+    expect(read({ key: "Z", mod: true, shift: true })).toEqual({
+      type: "key",
+      key: "Z",
+      mod: true,
+      shift: true,
+    })
+  })
+
+  it("ignores any other key, and a malformed one", () => {
+    expect(read({ key: "a", mod: false, shift: false })).toBeNull()
+    expect(read({ key: "q", mod: true, shift: false })).toBeNull()
+    expect(read({ key: 4, mod: true, shift: false })).toBeNull()
+    expect(read({ mod: true })).toBeNull()
+  })
+})

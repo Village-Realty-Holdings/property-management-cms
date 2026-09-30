@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 
 import {
   MAIN_CONTENT_ID,
@@ -13,6 +13,7 @@ import { useEditor } from "./EditorProvider"
 import { LeftPanel, type PanelTab } from "./LeftPanel"
 import type { PickerPage } from "./PagePicker"
 import { TopBar, type EditorMode } from "./TopBar"
+import { useEditorShortcuts } from "./useEditorShortcuts"
 
 const BACK_HREF: Record<EditorMode, string> = {
   page: "/admin/pages",
@@ -38,6 +39,11 @@ const NOT_SAVABLE: SaveResult = {
  *  - `onPickPage`: what choosing a Page in the Ctrl-K picker does. By default
  *    the Page opens in the Visual Editor, through the unsaved-changes guard.
  *
+ * The keyboard shortcuts (Ctrl-K, Ctrl-S, Ctrl-Z, Esc, Delete) are mounted
+ * here, and the canvas forwards the same keys when focus is inside it (see
+ * useEditorShortcuts). Ctrl-S runs `onSave` when `canSave` says there is
+ * something to save: by default, when the document has changes.
+ *
  * Leaving while `useEditor().isDirty` asks first (the Phase 1 guard), and
  * closing the tab shows the browser's warning.
  */
@@ -53,6 +59,7 @@ export function VisualEditorShell({
   onTabChange,
   canvasSrc,
   onSave,
+  canSave,
   onPickPage,
 }: {
   mode: EditorMode
@@ -70,6 +77,8 @@ export function VisualEditorShell({
   onTabChange?: (id: string) => void
   canvasSrc: string
   onSave?: () => SaveResult | Promise<SaveResult>
+  /** Whether Ctrl-S saves now. Defaults to whether the document has changes. */
+  canSave?: boolean
   onPickPage?: (page: PickerPage) => void
 }) {
   const { isDirty, discard } = useEditor()
@@ -77,6 +86,14 @@ export function VisualEditorShell({
     dirty: isDirty,
     onSave: onSave ?? (() => NOT_SAVABLE),
     onDiscard: discard,
+  })
+  const [picking, setPicking] = useState(false)
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  useEditorShortcuts({
+    onSave: onSave ?? (() => NOT_SAVABLE),
+    canSave: onSave !== undefined && (canSave ?? isDirty),
+    onPickPage: () => setPicking(true),
+    canvasWindow: () => frameRef.current?.contentWindow ?? null,
   })
   return (
     <div className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
@@ -90,6 +107,8 @@ export function VisualEditorShell({
         onPickPage={
           onPickPage ?? ((page) => router.push(`/admin/pages/${page.id}`))
         }
+        pickerOpen={picking}
+        onPickerOpenChange={setPicking}
       />
       <div className="flex min-h-0 flex-1">
         <LeftPanel tabs={tabs} tab={tab} onTabChange={onTabChange} />
@@ -98,7 +117,11 @@ export function VisualEditorShell({
           aria-label="Canvas"
           className="flex min-h-0 min-w-0 flex-1 flex-col"
         >
-          <CanvasFrame src={canvasSrc} title={`${name} as visitors see it`} />
+          <CanvasFrame
+            frameRef={frameRef}
+            src={canvasSrc}
+            title={`${name} as visitors see it`}
+          />
         </main>
       </div>
       <UnsavedChangesDialog {...dialog} />

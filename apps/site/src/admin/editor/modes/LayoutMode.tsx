@@ -216,6 +216,7 @@ function LayoutModeBody({
         onTabChange={setTab}
         canvasSrc={CANVAS_SRC}
         onSave={save}
+        canSave={isDirty && !saving}
         onPickPage={pickPage}
         actions={
           <>

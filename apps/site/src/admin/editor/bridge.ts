@@ -3,6 +3,7 @@ import { normalizeInputs, type ThemeInputs } from "../../theme/inputs"
 import { FALLBACK_INPUTS } from "../../theme/record/fallback"
 import type { PageBlock } from "../../site/blocks/types"
 import type { FooterBlock, HeaderBlock } from "../../site/regions/types"
+import { shortcutFor } from "./shortcuts"
 import type { EditorDocument, Region } from "./state"
 
 /**
@@ -27,14 +28,15 @@ import type { EditorDocument, Region } from "./state"
  *                                        and its whole new value (a string, or
  *                                        rich text's Lexical JSON), once per
  *                                        input
+ *   canvas -> Admin    `key`             a shortcut key pressed while focus is
+ *                                        in the canvas (see shortcuts.ts)
  *
  * Both windows are on the Site's own origin, and both ends check it: a
  * message is read only when it comes from the expected window on the expected
  * origin, and is posted only to that origin, never to "*". Anything else,
  * including a message of another shape, is ignored. The canvas only asks: the
  * Admin decides whether a request applies (a Block of a locked region is not
- * in its document, so a request for it does nothing). A later slice adds the
- * canvas's `key` message here.
+ * in its document, so a request for it does nothing).
  */
 
 /** Tags our messages, so they are told apart from any other on the window. */
@@ -95,6 +97,12 @@ export type CanvasRequest =
   | { type: "delete"; id: string }
   /** `index` is where the new Block goes in `region` (0 is before the first). */
   | { type: "insert-request"; region: Region; index: number }
+  /**
+   * A key pressed in the canvas that the Admin's shortcuts read: `key` as the
+   * browser names it, `mod` for Ctrl or Cmd. The canvas forwards only what is
+   * a shortcut, and not Delete or Esc while text is being typed.
+   */
+  | { type: "key"; key: string; mod: boolean; shift: boolean }
   /**
    * Text edited in place: the whole new value of the field `fieldPath` of the
    * Block at `index` in `region`. A plain text is a string; rich text is its
@@ -240,6 +248,21 @@ function readAction(data: Record<string, unknown>): CanvasAction | null {
             index: data.index as number,
           }
         : null
+    case "key": {
+      if (typeof data.key !== "string") return null
+      const mod = data.mod === true
+      const shift = data.shift === true
+      const key = data.key
+      return shortcutFor({
+        key,
+        ctrlKey: mod,
+        metaKey: false,
+        shiftKey: shift,
+        altKey: false,
+      })
+        ? { type: "key", key, mod, shift }
+        : null
+    }
     case "edit-text":
       return REGIONS.includes(data.region as Region) &&
         Number.isInteger(data.index) &&

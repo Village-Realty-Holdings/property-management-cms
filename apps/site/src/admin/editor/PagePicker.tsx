@@ -83,25 +83,41 @@ function isPickerShortcut(event: KeyboardEvent): boolean {
  */
 export function PagePicker({
   onPick,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   onPick?: (page: PickerPage) => void
+  /**
+   * Whether the picker is open, when its owner controls that. The Visual
+   * Editor does, so its shortcut hook can open it from the keyboard, and from
+   * a key forwarded by the canvas; the Ctrl-K listener here is then off.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const controlled = controlledOpen !== undefined
+  const [ownOpen, setOwnOpen] = useState(false)
+  const open = controlled ? controlledOpen : ownOpen
+  const setOpen = (next: boolean) => {
+    if (!controlled) setOwnOpen(next)
+    onOpenChange?.(next)
+  }
   const [query, setQuery] = useState("")
   const [highlighted, setHighlighted] = useState("")
   const results = usePageSearch(open, query)
 
   useEffect(() => {
+    if (controlled) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isPickerShortcut(event)) return
       // Not the browser's own Ctrl-K (focus the address bar / search).
       event.preventDefault()
-      setOpen(true)
+      setOwnOpen(true)
     }
     document.addEventListener("keydown", onKeyDown)
     return () => document.removeEventListener("keydown", onKeyDown)
-  }, [])
+  }, [controlled])
 
   const changeOpen = (next: boolean) => {
     setOpen(next)

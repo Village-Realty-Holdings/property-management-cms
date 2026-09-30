@@ -166,6 +166,7 @@ function ThemeModeBody({
       goesLiveOn={publishedPages}
       canvasSrc={editingUrl(preview.path)}
       onSave={save}
+      canSave={isDirty && !saving}
       onPickPage={pickPage}
       actions={
         <>

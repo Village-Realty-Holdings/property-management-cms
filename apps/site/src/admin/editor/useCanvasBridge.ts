@@ -114,6 +114,9 @@ function apply(
       editor.onInsertRequest(action.region, action.index)
       return
     }
+    case "key":
+      // Shortcuts are the shell's (see useEditorShortcuts).
+      return
     case "edit-text": {
       // Only a field the Block has, and only a value of its kind: the canvas
       // asks, and the document decides.

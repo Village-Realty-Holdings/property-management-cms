@@ -169,23 +169,6 @@ function PageModeEditor({
     [markSaved, router]
   )
 
-  // Ctrl-S (Cmd-S) saves the Draft, wherever focus is.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        !event.shiftKey &&
-        !event.altKey &&
-        event.key.toLowerCase() === "s"
-      ) {
-        event.preventDefault()
-        void save("draft")
-      }
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [save])
-
   // The canvas shows the document as it is now, with the Layout around it.
   const around = useMemo(
     () => ({
@@ -213,6 +196,8 @@ function PageModeEditor({
         name={page.title.trim() || "Untitled Page"}
         canvasSrc={canvasSrc}
         onSave={() => save("draft")}
+        // Ctrl-S (Cmd-S) is the Save button: the same save, on the same terms.
+        canSave={busy === null && (pageId === null || isDirty)}
         tab={tab}
         onTabChange={setTab}
         tabs={[
