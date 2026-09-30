@@ -29,6 +29,13 @@
  *               --btn-shadow     box-shadow ("0 0 #0000" for none)
  *               --btn-lift       how far a solid button rises on hover ("0px"
  *                                for none)
+ *               --btn-bg, --btn-fg   fill and text of the default variant
+ *                                (Solid fills with the primary colour;
+ *                                Outline is transparent with a link-coloured
+ *                                label)
+ *               --btn-border-color, --btn-border-width   its edge (Outline
+ *                                draws the primary colour; Solid has none)
+ *               --btn-bg-hover, --btn-fg-hover   its fill and text on hover
  *      Cards    --card-radius    corner radius of cards, dialogs and panels
  *               --card-shadow    box-shadow ("0 0 #0000" for none)
  *      Inputs   --input-radius        corner radius of inputs, textareas, selects
@@ -155,6 +162,12 @@
   --btn-tracking: normal;
   --btn-shadow: 0 0 #0000;
   --btn-lift: 0px;
+  --btn-bg: var(--primary);
+  --btn-fg: var(--primary-foreground);
+  --btn-border-color: transparent;
+  --btn-border-width: 1px;
+  --btn-bg-hover: color-mix(in srgb, var(--primary) 80%, var(--background));
+  --btn-fg-hover: var(--primary-foreground);
   --card-radius: calc(var(--radius) * 1.4);
   --card-shadow: 0 0 #0000;
   --input-radius: var(--radius);

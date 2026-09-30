@@ -189,7 +189,10 @@ describe("spacing", () => {
 })
 
 describe("shadows", () => {
-  it("None removes every shadow", () => {
+  it("None removes every shadow, as a full box-shadow value", () => {
+    // Not the keyword "none": Tailwind lists a component's shadow next to the
+    // focus ring in one box-shadow, and a "none" in that list makes the whole
+    // declaration invalid, which would drop the ring (WCAG 2.4.7).
     const t = tokens({ shadows: "none" })
     for (const name of [
       "--shadow-sm",
@@ -197,19 +200,19 @@ describe("shadows", () => {
       "--card-shadow",
       "--btn-shadow",
     ])
-      expect(t[name]).toBe("none")
+      expect(t[name]).toBe("0 0 #0000")
   })
   it("Subtle is soft and Lifted is deeper", () => {
     const subtle = tokens({ shadows: "subtle" })
     const lifted = tokens({ shadows: "lifted" })
     expect(subtle["--card-shadow"]).toBe("0 1px 8px 0 rgb(0 0 0 / 0.07)")
     expect(lifted["--card-shadow"]).toBe("0 8px 24px -4px rgb(0 0 0 / 0.18)")
-    expect(subtle["--btn-shadow"]).not.toBe("none")
+    expect(subtle["--btn-shadow"]).not.toBe("0 0 #0000")
   })
   it("outline buttons never carry a shadow", () => {
     expect(
       tokens({ shadows: "lifted", buttonStyle: "outline" })["--btn-shadow"]
-    ).toBe("none")
+    ).toBe("0 0 #0000")
   })
 })
 

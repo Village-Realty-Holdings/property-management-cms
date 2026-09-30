@@ -131,8 +131,14 @@ const SPACING = {
   },
 } as const
 
+/** A shadow that is not there, in a form that composes with the focus ring. */
+const NO_SHADOW = "0 0 #0000"
+
 const SHADOW = {
-  none: { sm: "none", md: "none" },
+  // A full box-shadow value, not the keyword "none": Tailwind lists a
+  // component's shadow beside the focus ring in one box-shadow, and a "none"
+  // there makes the whole declaration invalid, dropping the ring.
+  none: { sm: NO_SHADOW, md: NO_SHADOW },
   subtle: {
     sm: "0 1px 8px 0 rgb(0 0 0 / 0.07)",
     md: "0 4px 15px 0 rgb(0 0 0 / 0.1)",
@@ -240,7 +246,7 @@ export function deriveTheme(
     "--btn-weight": BUTTON_WEIGHT[inputs.buttonWeight],
     "--btn-transform": letters.transform,
     "--btn-tracking": letters.tracking,
-    "--btn-shadow": outline ? "none" : shadow.sm,
+    "--btn-shadow": outline ? NO_SHADOW : shadow.sm,
     "--btn-lift": motion.lift,
     "--btn-bg": outline ? "transparent" : inputs.primary,
     "--btn-fg": outline ? p.link : primaryText,

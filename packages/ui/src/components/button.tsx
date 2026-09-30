@@ -4,7 +4,9 @@ import { cn } from "cn"
 
 // Everything about a button's look (corners, height, padding, weight, case,
 // tracking, shadow, lift) is read from the --btn-* tokens in globals.css.
-// Smaller and larger sizes scale from --btn-height and --btn-px.
+// Smaller and larger sizes scale from --btn-height and --btn-px. The default
+// variant's fill, text and edge come from --btn-bg, --btn-fg and
+// --btn-border-* (the Theme's Solid or Outline style).
 const solid =
   "shadow-(--btn-shadow) hover:-translate-y-(--btn-lift) motion-reduce:hover:translate-y-0"
 
@@ -13,7 +15,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: `bg-primary text-primary-foreground hover:bg-[color-mix(in_srgb,var(--primary)_80%,var(--background))] ${solid}`,
+        default: `border-(length:--btn-border-width) border-(--btn-border-color) bg-(--btn-bg) text-(--btn-fg) hover:bg-(--btn-bg-hover) hover:text-(--btn-fg-hover) ${solid}`,
         // The accent colour: the Site's second brand colour (a Theme input).
         accent: `bg-accent text-accent-foreground hover:bg-[color-mix(in_srgb,var(--accent)_80%,var(--background))] ${solid}`,
         outline: `border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 ${solid}`,
