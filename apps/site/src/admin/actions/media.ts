@@ -54,6 +54,10 @@ export async function deleteMedia(id: number): Promise<FormState> {
     })
     await payload.delete({ collection: "media", id, ...as })
     revalidatePath("/admin/media")
+    // The Brand, SEO and Pages that used it now show without it.
+    revalidatePath("/admin/settings/brand")
+    revalidatePath("/admin/settings/seo")
+    revalidatePath("/", "layout")
     return { ok: true, message: `Deleted ${media.filename ?? "the image"}.` }
   } catch (error) {
     if (error instanceof NotFound) {

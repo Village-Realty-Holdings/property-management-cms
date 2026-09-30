@@ -8,6 +8,7 @@ import { MediaDeleteButton } from "@/admin/components/MediaDeleteButton"
 import { UploadForm } from "@/admin/components/UploadForm"
 import { CardSkeleton, EmptyState, PageHeader } from "@/admin/kit"
 import { requireStaff } from "@/admin/session"
+import { loadMediaDependents } from "@/admin/usage"
 
 export const metadata: Metadata = { title: "Media" }
 
@@ -36,13 +37,16 @@ export default function MediaLibrary() {
 
 async function MediaGrid() {
   const { payload, as } = await requireStaff()
-  const { docs } = await payload.find({
-    collection: "media",
-    sort: "-updatedAt",
-    limit: 500,
-    depth: 0,
-    ...as,
-  })
+  const [{ docs }, usedBy] = await Promise.all([
+    payload.find({
+      collection: "media",
+      sort: "-updatedAt",
+      limit: 500,
+      depth: 0,
+      ...as,
+    }),
+    loadMediaDependents(payload, as),
+  ])
 
   if (docs.length === 0) {
     return (
@@ -85,7 +89,11 @@ async function MediaGrid() {
                 {doc.alt}
               </span>
             </div>
-            <MediaDeleteButton id={doc.id} filename={doc.filename ?? "image"} />
+            <MediaDeleteButton
+              id={doc.id}
+              filename={doc.filename ?? "image"}
+              dependents={usedBy.get(doc.id) ?? []}
+            />
           </div>
         </li>
       ))}

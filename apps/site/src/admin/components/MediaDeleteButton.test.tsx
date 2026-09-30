@@ -25,8 +25,12 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-const renderButton = () =>
-  render(<MediaDeleteButton id={7} filename="hero.jpg" />)
+const renderButton = (
+  dependents: Parameters<typeof MediaDeleteButton>[0]["dependents"] = []
+) =>
+  render(
+    <MediaDeleteButton id={7} filename="hero.jpg" dependents={dependents} />
+  )
 
 describe("<MediaDeleteButton>", () => {
   it("asks before deleting and deletes nothing until confirmed", async () => {
@@ -35,13 +39,27 @@ describe("<MediaDeleteButton>", () => {
     await user.click(screen.getByRole("button", { name: "Delete hero.jpg" }))
 
     const dialog = await screen.findByRole("alertdialog")
-    expect(within(dialog).getByText("Delete this image?")).toBeTruthy()
-    expect(
-      within(dialog).getByText("Anything using it will lose it.")
-    ).toBeTruthy()
-    // Who uses it is not looked up yet, so the dialog must not claim to know.
-    expect(within(dialog).queryByText(/Nothing else uses it/)).toBeNull()
+    expect(within(dialog).getByText("Delete image “hero.jpg”?")).toBeTruthy()
+    expect(within(dialog).getByText("Nothing else uses it.")).toBeTruthy()
     expect(actions.deleteMedia).not.toHaveBeenCalled()
+  })
+
+  it("names what uses the image before it goes", async () => {
+    const user = userEvent.setup()
+    renderButton([
+      { kind: "Brand setting", name: "Logo" },
+      { kind: "Page", name: "Home (hero image)" },
+      { kind: "Page", name: "About (SEO image)" },
+    ])
+    await user.click(screen.getByRole("button", { name: "Delete hero.jpg" }))
+
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("Used by 1 Brand setting and 2 Pages.")
+    ).toBeTruthy()
+    expect(within(dialog).getByText("Brand setting: Logo")).toBeTruthy()
+    expect(within(dialog).getByText("Page: Home (hero image)")).toBeTruthy()
+    expect(within(dialog).queryByText(/Nothing else uses it/)).toBeNull()
   })
 
   it("cancelling leaves the image alone", async () => {

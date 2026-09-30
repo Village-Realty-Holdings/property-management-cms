@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   ArrowDownIcon,
@@ -21,7 +21,16 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { savePage } from "../actions/pages"
+import type { PageStatus } from "../dashboard/pageStatus"
 import type { FormState } from "../formState"
+import {
+  InlineError,
+  isDirty,
+  notify,
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+  type Dependent,
+} from "../kit"
 import {
   BLOCK_TYPES,
   emptyBlock,
@@ -29,39 +38,107 @@ import {
   type LinkValues,
   type PageValues,
 } from "../pageForm"
-import { FormField, FormMessage, Section } from "./FormBits"
+import type { PageIntent, PageSaveResult } from "../pageSave"
+import { DeletePageButton } from "./DeletePageButton"
+import { FormField, Section } from "./FormBits"
 import { MediaSelect, type MediaOption } from "./MediaSelect"
 
-export type PageStatus = "new" | "draft" | "published" | "changed"
+export type EditorStatus = "new" | PageStatus
 
-const statusLabels: Record<PageStatus, string> = {
+const statusLabels: Record<EditorStatus, string> = {
   new: "New",
   draft: "Draft",
   published: "Published",
-  changed: "Published, with unpublished changes",
+  changes: "Published, with unpublished changes",
 }
 
 /**
  * The Page form: title, path, Blocks and SEO, saved as a Draft or
  * published. Plain forms for now; the Visual Editor replaces the Blocks
  * part (apps/site ADR-0002).
+ *
+ * Saves go through a Server Action and stay on the page: a toast confirms
+ * them, failures show inline, and what was typed is never lost. Leaving with
+ * unsaved changes asks first (the shared guard from the Admin kit).
  */
 export function PageEditor({
-  id,
+  id: initialId,
   initial,
-  status,
+  status: initialStatus,
   media,
-  initialState = {},
+  dependents,
 }: {
   id: number | null
   initial: PageValues
-  status: PageStatus
+  status: EditorStatus
   media: MediaOption[]
-  initialState?: FormState
+  /** The Pages whose buttons link to this Page, named when deleting it. */
+  dependents: readonly Dependent[]
 }) {
+  const [id, setId] = useState(initialId)
   const [values, setValues] = useState(initial)
-  const [state, action, pending] = useActionState(savePage, initialState)
+  const [saved, setSaved] = useState(initial)
+  const [status, setStatus] = useState(initialStatus)
+  const [state, setState] = useState<FormState>({})
+  const [pending, setPending] = useState(false)
+  // Where to go once this render has settled (see the effect below).
+  const [goTo, setGoTo] = useState<string | null>(null)
+  const [deleted, setDeleted] = useState(false)
   const errors = state.fieldErrors ?? {}
+  const dirty = isDirty(saved, values) && !deleted
+
+  const { dialog, router } = useUnsavedChangesGuard({
+    dirty,
+    onSave: () => submit("draft", { leaving: true }),
+  })
+
+  // Moving on is a step of its own, after the render that made the editor
+  // clean: the guarded router reads `dirty` from the latest render, so a save
+  // (or a delete) that navigated straight away would be asked about.
+  useEffect(() => {
+    if (goTo && !dirty) router.replace(goTo)
+  }, [goTo, dirty, router])
+
+  /**
+   * Saves as `intent`. `leaving` is set when the unsaved-changes dialog
+   * saves: the guard then takes the user on to where they were going.
+   */
+  async function submit(
+    intent: PageIntent,
+    { leaving = false }: { leaving?: boolean } = {}
+  ): Promise<FormState> {
+    if (pending) return { ok: false, message: "Already saving." }
+    const submitted = values
+    setPending(true)
+    let result: PageSaveResult
+    try {
+      result = await savePage({ id, intent, values: submitted })
+    } catch {
+      result = {
+        ok: false,
+        message: "Could not save. Check your connection and try again.",
+      }
+    }
+    setPending(false)
+    setState(result)
+    if (!result.ok) return result
+
+    notify.success(result.message || "Saved")
+    if (result.status) setStatus(result.status)
+    if (result.id != null) setId(result.id)
+    if (result.values) {
+      const stored = result.values
+      setSaved(stored)
+      // Show what was stored (generated path, Block ids), unless typing
+      // carried on meanwhile.
+      setValues((current) => (isDirty(submitted, current) ? current : stored))
+    }
+    // A new Page now has an address of its own.
+    if (id == null && result.id != null && !leaving) {
+      setGoTo(`/admin/pages/${result.id}`)
+    }
+    return result
+  }
 
   const set = <K extends keyof PageValues>(key: K, value: PageValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
@@ -82,189 +159,212 @@ export function PageEditor({
       values.layout.filter((_, i) => i !== index)
     )
 
-  const isPublished = status === "published" || status === "changed"
+  const isPublished = status === "published" || status === "changes"
 
   return (
-    <form action={action} className="flex flex-col gap-6">
-      <input type="hidden" name="id" value={id ?? ""} />
-      <input type="hidden" name="values" value={JSON.stringify(values)} />
+    <div className="flex flex-col gap-10">
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          void submit("draft")
+        }}
+        className="flex flex-col gap-6"
+      >
+        <UnsavedChangesDialog {...dialog} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <Link
-            href="/admin/pages"
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← Pages
-          </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">
-              {values.title || "New Page"}
-            </h1>
-            <Badge variant={isPublished ? "default" : "secondary"}>
-              {statusLabels[status]}
-            </Badge>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <Link
+              href="/admin/pages"
+              className="text-sm text-muted-foreground hover:underline"
+            >
+              ← Pages
+            </Link>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold">
+                {values.title || "New Page"}
+              </h1>
+              <Badge variant={isPublished ? "default" : "secondary"}>
+                {statusLabels[status]}
+              </Badge>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {dirty && (
+              <span role="status" className="text-sm text-muted-foreground">
+                Unsaved changes
+              </span>
+            )}
+            {isPublished && saved.path && (
+              <a
+                href={saved.path}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ variant: "ghost" })}
+              >
+                <ExternalLinkIcon /> View on Site
+              </a>
+            )}
+            {isPublished && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() => void submit("unpublish")}
+              >
+                Unpublish
+              </Button>
+            )}
+            <Button type="submit" variant="outline" disabled={pending}>
+              Save draft
+            </Button>
+            <Button
+              type="button"
+              disabled={pending}
+              onClick={() => void submit("publish")}
+            >
+              Publish
+            </Button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {isPublished && initial.path && (
-            <a
-              href={initial.path}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ variant: "ghost" })}
-            >
-              <ExternalLinkIcon /> View on Site
-            </a>
-          )}
-          {isPublished && (
-            <Button
-              type="submit"
-              name="intent"
-              value="unpublish"
-              variant="outline"
-              disabled={pending}
-            >
-              Unpublish
-            </Button>
-          )}
-          <Button
-            type="submit"
-            name="intent"
-            value="draft"
-            variant="outline"
-            disabled={pending}
-          >
-            Save draft
-          </Button>
-          <Button
-            type="submit"
-            name="intent"
-            value="publish"
-            disabled={pending}
-          >
-            Publish
-          </Button>
-        </div>
-      </div>
 
-      <FormMessage state={state} />
+        {state.ok === false && state.message && (
+          <InlineError>{state.message}</InlineError>
+        )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="flex flex-col gap-6">
-          <Section title="Page">
-            <FormField id="title" label="Title" error={errors.title}>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="flex flex-col gap-6">
+            <Section title="Page">
+              <FormField id="title" label="Title" error={errors.title}>
+                <Input
+                  id="title"
+                  value={values.title}
+                  onChange={(e) => set("title", e.target.value)}
+                  required
+                />
+              </FormField>
+              <FormField
+                id="path"
+                label="Path"
+                description='Where the Page lives on the Site: "/" for Home, "/about". Filled in from the title when left empty.'
+                error={errors.path}
+              >
+                <Input
+                  id="path"
+                  value={values.path}
+                  placeholder="/about"
+                  onChange={(e) => set("path", e.target.value)}
+                />
+              </FormField>
+            </Section>
+
+            <Section
+              title="Blocks"
+              description="The sections of the Page, top to bottom."
+            >
+              {values.layout.length === 0 && (
+                <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  No Blocks yet. Add a Hero to start the Page.
+                </p>
+              )}
+              {values.layout.map((block, index) => (
+                <BlockCard
+                  key={block.id ?? `new-${index}`}
+                  index={index}
+                  count={values.layout.length}
+                  block={block}
+                  media={media}
+                  errors={errors}
+                  onChange={(next) => setBlock(index, next)}
+                  onMove={(by) => moveBlock(index, by)}
+                  onRemove={() => removeBlock(index)}
+                />
+              ))}
+              <div className="flex flex-wrap gap-2">
+                {BLOCK_TYPES.map((type) => (
+                  <Button
+                    key={type.blockType}
+                    type="button"
+                    variant="outline"
+                    title={type.description}
+                    onClick={() =>
+                      set("layout", [
+                        ...values.layout,
+                        emptyBlock(type.blockType),
+                      ])
+                    }
+                  >
+                    <PlusIcon /> {type.label}
+                  </Button>
+                ))}
+              </div>
+            </Section>
+          </div>
+
+          <Section
+            title="SEO"
+            description="How the Page appears in search results and when shared."
+          >
+            <FormField
+              id="seo-title"
+              label="SEO title"
+              description="Defaults to the Page title."
+              error={errors["seo.title"]}
+            >
               <Input
-                id="title"
-                value={values.title}
-                onChange={(e) => set("title", e.target.value)}
-                required
+                id="seo-title"
+                value={values.seo.title}
+                onChange={(e) =>
+                  set("seo", { ...values.seo, title: e.target.value })
+                }
               />
             </FormField>
             <FormField
-              id="path"
-              label="Path"
-              description='Where the Page lives on the Site: "/" for Home, "/about". Filled in from the title when left empty.'
-              error={errors.path}
+              id="seo-description"
+              label="SEO description"
+              error={errors["seo.description"]}
             >
-              <Input
-                id="path"
-                value={values.path}
-                placeholder="/about"
-                onChange={(e) => set("path", e.target.value)}
+              <Textarea
+                id="seo-description"
+                value={values.seo.description}
+                onChange={(e) =>
+                  set("seo", { ...values.seo, description: e.target.value })
+                }
+              />
+            </FormField>
+            <FormField
+              id="seo-image"
+              label="SEO image"
+              error={errors["seo.image"]}
+            >
+              <MediaSelect
+                id="seo-image"
+                value={values.seo.image}
+                options={media}
+                onChange={(image) => set("seo", { ...values.seo, image })}
               />
             </FormField>
           </Section>
-
-          <Section
-            title="Blocks"
-            description="The sections of the Page, top to bottom."
-          >
-            {values.layout.length === 0 && (
-              <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No Blocks yet. Add a Hero to start the Page.
-              </p>
-            )}
-            {values.layout.map((block, index) => (
-              <BlockCard
-                key={block.id ?? `new-${index}`}
-                index={index}
-                count={values.layout.length}
-                block={block}
-                media={media}
-                errors={errors}
-                onChange={(next) => setBlock(index, next)}
-                onMove={(by) => moveBlock(index, by)}
-                onRemove={() => removeBlock(index)}
-              />
-            ))}
-            <div className="flex flex-wrap gap-2">
-              {BLOCK_TYPES.map((type) => (
-                <Button
-                  key={type.blockType}
-                  type="button"
-                  variant="outline"
-                  title={type.description}
-                  onClick={() =>
-                    set("layout", [
-                      ...values.layout,
-                      emptyBlock(type.blockType),
-                    ])
-                  }
-                >
-                  <PlusIcon /> {type.label}
-                </Button>
-              ))}
-            </div>
-          </Section>
         </div>
+      </form>
 
-        <Section
-          title="SEO"
-          description="How the Page appears in search results and when shared."
-        >
-          <FormField
-            id="seo-title"
-            label="SEO title"
-            description="Defaults to the Page title."
-            error={errors["seo.title"]}
-          >
-            <Input
-              id="seo-title"
-              value={values.seo.title}
-              onChange={(e) =>
-                set("seo", { ...values.seo, title: e.target.value })
-              }
-            />
-          </FormField>
-          <FormField
-            id="seo-description"
-            label="SEO description"
-            error={errors["seo.description"]}
-          >
-            <Textarea
-              id="seo-description"
-              value={values.seo.description}
-              onChange={(e) =>
-                set("seo", { ...values.seo, description: e.target.value })
-              }
-            />
-          </FormField>
-          <FormField
-            id="seo-image"
-            label="SEO image"
-            error={errors["seo.image"]}
-          >
-            <MediaSelect
-              id="seo-image"
-              value={values.seo.image}
-              options={media}
-              onChange={(image) => set("seo", { ...values.seo, image })}
-            />
-          </FormField>
-        </Section>
-      </div>
-    </form>
+      {id != null && (
+        <div className="flex justify-end border-t pt-6">
+          <DeletePageButton
+            id={id}
+            title={saved.title}
+            path={saved.path}
+            published={isPublished}
+            dependents={dependents}
+            onDeleted={() => {
+              setDeleted(true)
+              setGoTo("/admin/pages")
+            }}
+          />
+        </div>
+      )}
+    </div>
   )
 }
 

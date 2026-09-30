@@ -1,32 +1,21 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { Button } from "@workspace/ui/components/button"
-
-import { deletePage, type PageIntent } from "@/admin/actions/pages"
-import { PageEditor, type PageStatus } from "@/admin/components/PageEditor"
+import { PageEditor } from "@/admin/components/PageEditor"
+import { derivePageStatus } from "@/admin/dashboard/pageStatus"
 import { mediaOptions } from "@/admin/media"
 import { pageToValues } from "@/admin/pageForm"
 import { toMarkdown } from "@/admin/richText"
 import { requireStaff } from "@/admin/session"
+import { loadPageDependents } from "@/admin/usage"
 
 export const metadata: Metadata = { title: "Edit Page" }
 
-type Props = {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ saved?: string }>
-}
-
-const savedMessages: Record<PageIntent, string> = {
-  draft: "Draft saved.",
-  publish: "Published. The Page is live on the Site.",
-  unpublish: "Unpublished.",
-}
+type Props = { params: Promise<{ id: string }> }
 
 /** Edits a Page's latest Draft. */
-export default async function EditPage({ params, searchParams }: Props) {
+export default async function EditPage({ params }: Props) {
   const { id } = await params
-  const { saved } = await searchParams
   const staff = await requireStaff()
   const { payload, as } = staff
 
@@ -43,34 +32,23 @@ export default async function EditPage({ params, searchParams }: Props) {
     ...as,
   })
 
-  const status: PageStatus =
-    main._status !== "published"
-      ? "draft"
-      : draft.updatedAt !== main.updatedAt
-        ? "changed"
-        : "published"
+  const status = derivePageStatus({
+    published: main._status,
+    latest: draft._status,
+  })
 
   const initial = await pageToValues(draft, (data) => toMarkdown(payload, data))
-  const message =
-    saved && saved in savedMessages
-      ? savedMessages[saved as PageIntent]
-      : undefined
 
   return (
-    <div className="flex flex-col gap-10">
-      <PageEditor
-        id={pageId}
-        initial={initial}
-        status={status}
-        media={await mediaOptions(staff)}
-        initialState={message ? { ok: true, message } : {}}
-      />
-      <form action={deletePage} className="flex justify-end border-t pt-6">
-        <input type="hidden" name="id" value={pageId} />
-        <Button type="submit" variant="destructive">
-          Delete Page
-        </Button>
-      </form>
-    </div>
+    <PageEditor
+      id={pageId}
+      initial={initial}
+      status={status}
+      media={await mediaOptions(staff)}
+      dependents={await loadPageDependents(payload, as, {
+        id: pageId,
+        path: draft.path,
+      })}
+    />
   )
 }

@@ -8,9 +8,6 @@ import {
   FieldError,
   FieldLabel,
 } from "@workspace/ui/components/field"
-import { cn } from "@workspace/ui/lib/utils"
-
-import type { FormState } from "../formState"
 
 /** A labelled form control with its description and error. */
 export function FormField({
@@ -73,24 +70,6 @@ export function describedBy(
     "aria-describedby": ids || undefined,
     "aria-invalid": error ? (true as const) : undefined,
   }
-}
-
-/** The form's overall result, e.g. "Published" or "Some fields need attention". */
-export function FormMessage({ state }: { state: FormState }) {
-  if (!state.message) return null
-  return (
-    <p
-      role={state.ok ? "status" : "alert"}
-      className={cn(
-        "rounded-lg px-3 py-2 text-sm",
-        state.ok
-          ? "bg-emerald-50 text-emerald-900"
-          : "bg-destructive/10 text-destructive"
-      )}
-    >
-      {state.message}
-    </p>
-  )
 }
 
 /** A titled group of fields. */

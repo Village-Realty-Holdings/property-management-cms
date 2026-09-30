@@ -6,19 +6,22 @@ import { Trash2Icon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 
 import { deleteMedia } from "../actions/media"
-import { ConfirmDialog, notify } from "../kit"
+import { ConfirmDialog, notify, type Dependent } from "../kit"
 
 /**
- * The delete button on a Media card. It asks first: deleting an image removes
- * it from anything that uses it. Who uses it is not looked up yet, so the
- * dialog says so generally instead of naming Pages.
+ * The delete button on a Media card. It asks first, and names what uses the
+ * image (the Brand, SEO and Pages; see loadMediaDependents), because deleting
+ * an image empties it everywhere it is used.
  */
 export function MediaDeleteButton({
   id,
   filename,
+  dependents,
 }: {
   id: number
   filename: string
+  /** Everything that shows this image; empty when nothing does. */
+  dependents: readonly Dependent[]
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -35,9 +38,9 @@ export function MediaDeleteButton({
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Delete this image?"
-        description="Anything using it will lose it."
-        showDependents={false}
+        title={`Delete image “${filename}”?`}
+        description="This cannot be undone. Where the image is used, it will be empty."
+        dependents={dependents}
         confirmLabel="Delete image"
         onConfirm={async () => {
           const result = await deleteMedia(id)
