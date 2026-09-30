@@ -110,7 +110,7 @@ export async function importGoogleFont(
   } catch (error) {
     for (const id of stored) {
       await payload
-        .delete({ collection: FONT_FILES_SLUG, id })
+        .delete({ collection: FONT_FILES_SLUG, id, ...access })
         .catch(() => undefined)
     }
     throw error

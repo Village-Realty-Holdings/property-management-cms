@@ -251,6 +251,37 @@ describe("importGoogleFont", () => {
     expect(await count("font-files")).toBe(0)
   })
 
+  it("removes the stored files as the Staff User, never with access overridden", async () => {
+    const { fetch } = googleFetch()
+    const create = payload.create.bind(payload)
+    vi.spyOn(payload, "create").mockImplementation(((args: {
+      collection: string
+    }) =>
+      args.collection === "fonts"
+        ? Promise.reject(new Error("database went away"))
+        : create(args as never)) as never)
+    const remove = vi.spyOn(payload, "delete")
+
+    await expect(
+      importGoogleFont(
+        payload,
+        { family: "Roboto Slab", kind: "slab", weights: [400, 700] },
+        { fetch, as: { overrideAccess: false, user: staff } }
+      )
+    ).rejects.toThrow("database went away")
+
+    expect(remove).toHaveBeenCalledTimes(2)
+    for (const [args] of remove.mock.calls) {
+      expect(args).toMatchObject({
+        collection: "font-files",
+        overrideAccess: false,
+        user: staff,
+      })
+    }
+    vi.restoreAllMocks()
+    expect(await count("font-files")).toBe(0)
+  })
+
   it("refuses a family that is already a Font, before asking Google", async () => {
     const first = googleFetch()
     await importGoogleFont(
