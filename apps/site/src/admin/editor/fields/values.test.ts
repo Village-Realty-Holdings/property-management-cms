@@ -62,6 +62,14 @@ describe("planWrite", () => {
 })
 
 describe("emptyRowFor", () => {
+  it("starts a select that takes many with no choices", () => {
+    expect(
+      emptyRowFor([
+        { name: "shown", type: "select", hasMany: true, options: ["a", "b"] },
+      ])
+    ).toEqual({ shown: [] })
+  })
+
   it("gives every field its default or an empty value", () => {
     expect(
       emptyRowFor([

@@ -17,6 +17,7 @@ import { fieldId, useFields } from "./context"
 import {
   CheckboxControl,
   IconControl,
+  MultiSelectControl,
   NumberControl,
   PageControl,
   RadioControl,
@@ -126,7 +127,11 @@ function FieldItem({
     case "number":
       return <NumberControl field={field} {...leaf} />
     case "select":
-      return <SelectControl field={field} {...leaf} />
+      return field.hasMany ? (
+        <MultiSelectControl field={field} {...leaf} />
+      ) : (
+        <SelectControl field={field} {...leaf} />
+      )
     case "radio":
       return <RadioControl field={field} {...leaf} />
     case "checkbox":

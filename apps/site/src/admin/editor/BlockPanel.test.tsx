@@ -21,6 +21,7 @@ vi.mock("lucide-react/dynamic", () => ({
   ),
 }))
 
+import { Form } from "../../blocks/Form"
 import { Hero } from "../../blocks/Hero"
 import { Navigation } from "../../blocks/region/Navigation"
 import { HeaderActions } from "../../blocks/region/HeaderActions"
@@ -108,6 +109,7 @@ const blocks = [
   HeaderActions,
   Testimonials,
   Features,
+  Form,
   RichText,
 ]
 
@@ -585,6 +587,99 @@ describe("<BlockPanel>", () => {
       await user.click(screen.getByRole("button", { name: "Icon: wifi" }))
       await user.click(await screen.findByRole("option", { name: "No icon" }))
       expect((block().features as { icon: string }[])[0]!.icon).toBe("")
+    })
+  })
+
+  describe("a select that takes many", () => {
+    const form = {
+      blockType: "form",
+      heading: "Get in touch",
+      formFields: ["name", "email", "phone"],
+      submitLabel: "Send",
+      successMessage: "Thanks.",
+    }
+    const chosen = () => block().formFields as string[]
+
+    it("shows every option, ticked when chosen, with the field's description", () => {
+      mount(form)
+      const group = screen.getByRole("group", { name: "Fields" })
+      expect(within(group).getByLabelText("Name")).toHaveProperty(
+        "checked",
+        true
+      )
+      expect(within(group).getByLabelText("Phone")).toHaveProperty(
+        "checked",
+        true
+      )
+      expect(within(group).getByLabelText("Message")).toHaveProperty(
+        "checked",
+        false
+      )
+      expect(
+        within(group).getByText("The fields the form shows, in this order.")
+      ).toBeTruthy()
+    })
+
+    it("shows the default when the Block has none stored", () => {
+      const { formFields: _formFields, ...stored } = form
+      void _formFields
+      mount(stored)
+      const group = screen.getByRole("group", { name: "Fields" })
+      expect(within(group).getByLabelText("Message")).toHaveProperty(
+        "checked",
+        true
+      )
+      expect(within(group).getByLabelText("Phone")).toHaveProperty(
+        "checked",
+        false
+      )
+    })
+
+    it("adds a ticked option to the end and drops an unticked one", async () => {
+      const user = userEvent.setup()
+      mount(form)
+      await user.click(screen.getByLabelText("Message"))
+      expect(chosen()).toEqual(["name", "email", "phone", "message"])
+      await user.click(screen.getByLabelText("Email"))
+      expect(chosen()).toEqual(["name", "phone", "message"])
+    })
+
+    it("reorders the chosen options, which is the order the form shows", async () => {
+      const user = userEvent.setup()
+      mount(form)
+      const order = screen.getByRole("list", { name: "Fields in this order" })
+      expect(
+        within(order)
+          .getAllByRole("listitem")
+          .map((item) => item.textContent?.trim())
+      ).toEqual(["Name", "Email", "Phone"])
+      await user.click(
+        screen.getByRole("button", { name: "Move Phone up in Fields" })
+      )
+      expect(chosen()).toEqual(["name", "phone", "email"])
+      expect(
+        screen.getByRole("button", { name: "Move Name up in Fields" })
+      ).toHaveProperty("disabled", true)
+    })
+
+    it("needs at least one, and says so", async () => {
+      const user = userEvent.setup()
+      mount({ ...form, formFields: ["name"] })
+      await user.click(screen.getByLabelText("Name"))
+      expect(chosen()).toEqual([])
+      expect(
+        within(screen.getByRole("group", { name: "Fields" })).getByRole("alert")
+          .textContent
+      ).toBe("This field is required.")
+    })
+
+    it("has no axe violations", async () => {
+      const { container } = mount(form)
+      const results = await axe.run(container, {
+        rules: { "color-contrast": { enabled: false } },
+        runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+      })
+      expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
     })
   })
 

@@ -79,10 +79,11 @@ function startingValue(field: Field): unknown {
     if (field.defaultValue !== undefined) return field.defaultValue
   }
   switch (field.type) {
+    case "select":
+      return field.hasMany ? [] : ""
     case "text":
     case "textarea":
     case "email":
-    case "select":
     case "radio":
       return ""
     case "checkbox":

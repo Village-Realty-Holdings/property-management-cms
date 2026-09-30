@@ -1,8 +1,11 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import type { Field } from "payload"
 import { optionIsObject } from "payload/shared"
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
+import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import {
   NativeSelect,
@@ -210,6 +213,141 @@ export function SelectControl({
         ))}
       </NativeSelect>
     </FormField>
+  )
+}
+
+const valuesOf = (value: unknown): string[] =>
+  Array.isArray(value) ? value.map(String) : []
+
+/**
+ * A select that takes many: a tick for each option, and, once two or more are
+ * ticked, the chosen ones in a list that can be reordered. The order the
+ * values are stored in is the order the Block uses them in.
+ */
+export function MultiSelectControl({
+  field,
+  path,
+  value,
+  error,
+}: LeafProps<Extract<Field, { type: "select" }>>) {
+  const env = useFields()
+  const { id, change, blur } = useControl(env, path)
+  const description = descriptionOf(field)
+  const options = toOptions(field.options)
+  const chosen = valuesOf(value)
+  const label = labelOf(field)
+  const disabled = isReadOnly(field)
+  const root = useRef<HTMLFieldSetElement>(null)
+  const pendingFocus = useRef<{ value: string; control: string } | null>(null)
+  const [announcement, setAnnouncement] = useState("")
+  const nameOf = (v: string) => options.find((o) => o.value === v)?.label ?? v
+
+  useEffect(() => {
+    const focus = pendingFocus.current
+    if (!focus) return
+    pendingFocus.current = null
+    const row = root.current?.querySelector(`[data-chosen="${focus.value}"]`)
+    // A row moved to the top or bottom has one of its buttons disabled.
+    const target =
+      row?.querySelector<HTMLElement>(
+        `[data-move="${focus.control}"]:not(:disabled)`
+      ) ?? row?.querySelector<HTMLElement>("[data-move]:not(:disabled)")
+    target?.focus()
+  })
+
+  const toggle = (option: string, on: boolean) =>
+    change(on ? [...chosen, option] : chosen.filter((v) => v !== option))
+
+  const move = (index: number, to: number) => {
+    const next = [...chosen]
+    const [moved] = next.splice(index, 1)
+    next.splice(to, 0, moved!)
+    change(next)
+    setAnnouncement(
+      `${nameOf(moved!)} moved to position ${to + 1} of ${chosen.length}.`
+    )
+    pendingFocus.current = {
+      value: moved!,
+      control: to < index ? "up" : "down",
+    }
+  }
+
+  return (
+    <FieldSet
+      ref={root}
+      data-invalid={error ? true : undefined}
+      aria-describedby={
+        describedBy(id, { description, error: error ?? undefined })[
+          "aria-describedby"
+        ]
+      }
+    >
+      <FieldLegend variant="label">{label}</FieldLegend>
+      <div className="grid gap-2">
+        {options.map((option) => (
+          <label key={option.value} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={chosen.includes(option.value)}
+              disabled={disabled}
+              onBlur={blur}
+              onChange={(e) => toggle(option.value, e.target.checked)}
+              className="size-4 accent-primary"
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+      {chosen.length > 1 && (
+        <ol
+          aria-label={`${label} in this order`}
+          className="flex flex-col gap-1 rounded-lg border p-2"
+        >
+          {chosen.map((option, index) => (
+            <li
+              key={option}
+              data-chosen={option}
+              className="flex items-center justify-between gap-2 text-sm"
+            >
+              <span className="px-1">{nameOf(option)}</span>
+              <span className="flex gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  data-move="up"
+                  aria-label={`Move ${nameOf(option)} up in ${label}`}
+                  disabled={disabled || index === 0}
+                  onClick={() => move(index, index - 1)}
+                >
+                  <ArrowUpIcon />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  data-move="down"
+                  aria-label={`Move ${nameOf(option)} down in ${label}`}
+                  disabled={disabled || index === chosen.length - 1}
+                  onClick={() => move(index, index + 1)}
+                >
+                  <ArrowDownIcon />
+                </Button>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {description && (
+        <FieldDescription id={`${id}-description`}>
+          {description}
+        </FieldDescription>
+      )}
+      {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
+      <p className="sr-only" role="status" aria-live="polite">
+        {announcement}
+      </p>
+    </FieldSet>
   )
 }
 
