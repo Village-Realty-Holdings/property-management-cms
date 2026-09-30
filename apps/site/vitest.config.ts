@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
+  // Component tests import .tsx files; tsconfig keeps JSX for Next to compile.
+  oxc: { jsx: { runtime: "automatic" } },
   resolve: {
     alias: {
       "server-only": fileURLToPath(
@@ -15,7 +17,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
     setupFiles: ["./src/test/setup.ts"],
     // Each test file starts Payload and pushes the schema to a new database.
     hookTimeout: 60_000,
