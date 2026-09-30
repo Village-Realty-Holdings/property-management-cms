@@ -185,6 +185,36 @@ describe("<ConfirmDialog>", () => {
     expect(within(dialog).queryByRole("list")).toBeNull()
   })
 
+  it("confirms with a destructive button unless told otherwise", async () => {
+    const { rerender } = render(
+      <ConfirmDialog
+        open
+        onOpenChange={vi.fn()}
+        title="Delete?"
+        confirmLabel="Delete"
+        onConfirm={vi.fn()}
+      />
+    )
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByRole("button", { name: "Delete" }).className
+    ).toContain("text-destructive-text")
+
+    rerender(
+      <ConfirmDialog
+        open
+        onOpenChange={vi.fn()}
+        title="Restore?"
+        confirmLabel="Restore"
+        confirmVariant="default"
+        onConfirm={vi.fn()}
+      />
+    )
+    expect(
+      within(dialog).getByRole("button", { name: "Restore" }).className
+    ).not.toContain("text-destructive-text")
+  })
+
   it("leaves the dependents line out when it can't say who uses the item", async () => {
     render(
       <ConfirmDialog

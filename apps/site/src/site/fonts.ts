@@ -7,15 +7,6 @@ import {
   Zilla_Slab,
 } from "next/font/google"
 
-/** @deprecated Remove with `fontVars` when the site-apply item lands. */
-export type FontPairing = "classic" | "modern" | "rustic"
-
-/**
- * @deprecated The pairing every Site used before the Theme chose fonts. Fonts
- * now resolve by key through ./fontStacks; remove when site-apply lands.
- */
-export const DEFAULT_FONT_PAIRING: FontPairing = "classic"
-
 /**
  * The six built-in fonts, self-hosted by next/font. Each font only defines a
  * CSS variable, on <html> through `fontVariables`; the Theme's stacks
@@ -69,26 +60,3 @@ export const fontVariables = [
 ]
   .map((font) => font.variable)
   .join(" ")
-
-/**
- * @deprecated Fonts now resolve by key: use `themeFontFaces` (./fontStacks)
- * and the Theme's tokens. Kept only until the site-apply item removes its
- * callers (SiteFrame).
- */
-export function fontVars(
-  pairing: FontPairing = DEFAULT_FONT_PAIRING
-): Record<string, string> {
-  return {
-    "--font-sans": `var(--font-${pairing}-body)`,
-    "--font-display": `var(--font-${pairing}-display)`,
-    // Headings per pairing: weight and tracking suit each face.
-    "--display-weight": { classic: "500", modern: "700", rustic: "600" }[
-      pairing
-    ],
-    "--display-tracking": {
-      classic: "-0.015em",
-      modern: "-0.035em",
-      rustic: "-0.01em",
-    }[pairing],
-  }
-}

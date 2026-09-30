@@ -1,6 +1,6 @@
 import { siteSchema } from "../../database"
 import { resolveSiteUrl } from "../../site/seo"
-import { DEFAULT_PALETTE } from "../../site/theme"
+import type { LiveTheme } from "../../theme/record"
 import type { Brand, Image } from "../../site/brand"
 
 type Env = Record<string, string | undefined>
@@ -54,17 +54,19 @@ export type ThemeSummary = {
 }
 
 /**
- * What the Dashboard's Theme card shows. There is no Theme record until
- * Phase 2, so this is the default palette, never saved. Phase 2 replaces this
- * function with a read of the saved Theme; the card does not change.
+ * What the Dashboard's Theme card shows: the live Theme's colours, and when
+ * it was saved. Until one is saved these are the default preset's.
  */
-export function getThemeSummary(): ThemeSummary {
+export function themeSummaryOf(theme: LiveTheme): ThemeSummary {
+  const { primary, accent, third, text } = theme.inputs
   return {
     swatches: [
-      { name: "Primary", hex: DEFAULT_PALETTE.primary },
-      { name: "Accent", hex: DEFAULT_PALETTE.accent },
+      { name: "Primary", hex: primary },
+      { name: "Accent", hex: accent },
+      ...(third ? [{ name: "Third", hex: third }] : []),
+      { name: "Text", hex: text },
     ],
-    savedAt: null,
+    savedAt: theme.source === "saved" ? theme.savedAt : null,
   }
 }
 
