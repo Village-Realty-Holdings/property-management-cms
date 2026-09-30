@@ -1,6 +1,6 @@
 # Staff Users sign in with Entra ID only, and everyone who signs in can do everything
 
-Staff Users sign in with their Awayday Microsoft accounts through Entra ID. Entra decides who may sign in. Inside the Admin there is one role: a signed-in Staff User can manage Pages, Media, Site Settings and other Staff Users. There is no password login. We chose this because one Site and a small, trusted team don't need roles, and a password login is another credential to manage.
+Staff Users sign in with their Awayday Microsoft accounts through Entra ID. Entra decides who may sign in. Inside the Admin there is one role: a signed-in Staff User can manage Pages, Layouts, Media, the Brand, SEO, the Theme and other Staff Users. There is no password login. We chose this because one Site and a small, trusted team don't need roles, and a password login is another credential to manage.
 
 ## Considered Options
 

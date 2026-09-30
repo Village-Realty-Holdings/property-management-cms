@@ -11,5 +11,5 @@ The Admin at `/admin` is our own UI, built with shadcn/ui on Payload's Local API
 
 - The Admin writes through Payload's Local API as the signed-in Staff User, never with access overridden. Validation, Drafts, versions and access rules stay in the Payload config and apply exactly as they did in Payload's admin.
 - Blocks render the same way in the Visual Editor and on the public Site, so the Visual Editor needs no preview copy of the Site's views.
-- `/p-admin` exists only until the Admin covers Pages, Media and Site Settings. Nothing new is built for it.
+- `/p-admin` exists only until the Admin covers Pages, Layouts, Media, the Brand, SEO and the Theme. Nothing new is built for it.
 - The Visual Editor's design (how edits are made, saved and shown) is its own decision, made when it is built.
