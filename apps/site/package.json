@@ -20,7 +20,9 @@
     "migrate:create": "payload migrate:create",
     "migrate": "payload migrate",
     "genericize": "tsx scripts/genericize-migration.ts",
-    "site": "tsx scripts/site.ts"
+    "site": "tsx scripts/site.ts",
+    "seed": "tsx scripts/seed.ts",
+    "sites:worktrees": "tsx scripts/sites-worktrees.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

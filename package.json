@@ -17,7 +17,8 @@
     "migrate:create": "pnpm --filter site migrate:create",
     "site": "pnpm --filter site site",
     "worker:build": "pnpm --filter site worker:build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sites:worktrees": "pnpm --filter site sites:worktrees"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
