@@ -21,7 +21,7 @@ type Props = {
 /**
  * One Block of the catalogue, outside production only (404 in production):
  * the same component a published Page uses, from the Block's sample data, in
- * the Site's layout and Theme. The query sets what it shows:
+ * the Site's Theme, in a <main> like a Page's. The query sets what it shows:
  * `?background=`, `?variant=`, any sample field (`?count=3`), and
  * `?fixtures=<schema>` to read another Site's fixtures instead of this one's.
  */
@@ -38,10 +38,12 @@ export default async function BlockCataloguePage({
     ? query.fixtures[0]
     : query.fixtures
   return (
-    <Block
-      block={sampleWithQuery(entry, query)}
-      index={0}
-      fixtures={fixturesFor(schema ?? siteSchema())}
-    />
+    <main>
+      <Block
+        block={sampleWithQuery(entry, query)}
+        index={0}
+        fixtures={fixturesFor(schema ?? siteSchema())}
+      />
+    </main>
   )
 }

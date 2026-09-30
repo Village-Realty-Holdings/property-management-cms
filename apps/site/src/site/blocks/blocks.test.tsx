@@ -2,12 +2,16 @@
 import { cleanup, render } from "@testing-library/react"
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
+import axe from "axe-core"
 import { afterEach, describe, expect, it } from "vitest"
 
 import type {
   CallToActionBlock as CallToActionData,
   HeroBlock as HeroData,
 } from "../../payload-types"
+import { contrastRatio } from "../../theme/colour"
+import { deriveTheme } from "../../theme/derive"
+import { PRESETS } from "../../theme/presets"
 import { Block } from "."
 import { BlockButton } from "./BlockButton"
 
@@ -64,7 +68,7 @@ describe("Blocks read tokens only", () => {
     expect(classes).toContain("bg-accent")
   })
 
-  it.each(["primary", "secondary", "inverted"] as const)(
+  it.each(["primary", "secondary", "inverted", "dark"] as const)(
     "a Call to action (%s) keeps its text at full strength, so AA holds on every Theme",
     (style) => {
       // The Theme derives text colours to reach AA against their surface at
@@ -116,6 +120,7 @@ describe("Blocks read tokens only", () => {
     ["primary", "bg-primary text-primary-foreground"],
     ["secondary", "bg-secondary text-foreground"],
     ["inverted", "bg-accent text-accent-foreground"],
+    ["dark", "bg-surface-dark text-surface-dark-foreground"],
   ] as const)(
     "the %s Call to action colours come from semantic tokens",
     (style, expected) => {
@@ -262,6 +267,12 @@ describe("focus rings on coloured panels", () => {
       "accent",
       "accent-foreground",
     ],
+    [
+      "a dark Call to action",
+      cta({ style: "dark" }),
+      "surface-dark",
+      "surface-dark-foreground",
+    ],
   ] as const)(
     "the button in %s rings in the panel's text colour, offset by the panel colour",
     (_name, block, panel, foreground) => {
@@ -302,4 +313,60 @@ describe("focus rings on coloured panels", () => {
     )
     expect(focus).not.toContain("focus-visible:border-ring")
   })
+})
+
+describe("a dark Call to action", () => {
+  it("is the dark surface with an accent button, at full strength", () => {
+    const { container, getByRole } = render(
+      <Block block={cta({ style: "dark" })} index={1} />
+    )
+    const classes = classesOf(container)
+    expect(classes).toContain("bg-surface-dark")
+    expect(classes).toContain("text-surface-dark-foreground")
+    const button = getByRole("link", { name: "Book now" }).getAttribute(
+      "class"
+    )!
+    expect(button).toContain("bg-accent")
+    expect(button).toContain("text-accent-foreground")
+  })
+
+  it.each(["default", "muted", "primary", "dark"] as const)(
+    "passes axe on the %s background",
+    async (background) => {
+      const { container } = render(
+        <Block block={cta({ style: "dark", background })} index={1} />
+      )
+      const results = await axe.run(container, {
+        runOnly: {
+          type: "tag",
+          values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+        },
+        // jsdom has no layout: the contrast is checked against the tokens below.
+        rules: { "color-contrast": { enabled: false } },
+      })
+      expect(results.violations.map((v) => v.id)).toEqual([])
+    }
+  )
+
+  it.each(PRESETS.map((preset) => [preset.id, preset] as const))(
+    "reads at AA on every Theme: its text, its button, its focus ring (%s)",
+    (_id, preset) => {
+      const t = deriveTheme(preset.inputs, {
+        heading: "serif",
+        body: "sans-serif",
+      }).schemes.light
+      const ratio = (fg: string, bg: string) => contrastRatio(t[fg]!, t[bg]!)
+      // Text and the focus ring (the panel's own text colour) on the panel.
+      expect(
+        ratio("--surface-dark-foreground", "--surface-dark")
+      ).toBeGreaterThanOrEqual(4.5)
+      // The accent button's label, resting and hovered.
+      expect(ratio("--accent-foreground", "--accent")).toBeGreaterThanOrEqual(
+        4.5
+      )
+      expect(
+        ratio("--accent-hover-foreground", "--accent-hover")
+      ).toBeGreaterThanOrEqual(4.5)
+    }
+  )
 })
