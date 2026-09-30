@@ -25,3 +25,20 @@ if (typeof window !== "undefined" && !window.matchMedia) {
     dispatchEvent: () => false,
   })) as typeof window.matchMedia
 }
+
+// jsdom has no IntersectionObserver or ResizeObserver, which Embla (the
+// carousel Blocks) starts with. Nothing in jsdom has a layout to observe.
+if (typeof window !== "undefined") {
+  class Observer {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return []
+    }
+  }
+  Object.assign(globalThis, {
+    IntersectionObserver: globalThis.IntersectionObserver ?? Observer,
+    ResizeObserver: globalThis.ResizeObserver ?? Observer,
+  })
+}
