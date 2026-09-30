@@ -57,7 +57,7 @@ export const SCREENSHOT_DIR = path.join(
   APP_DIR,
   "docs",
   "screenshots",
-  "6-seed-sites"
+  "6-seed"
 )
 
 export const BRAND_REFS = process.env.E2E_BRAND_REF

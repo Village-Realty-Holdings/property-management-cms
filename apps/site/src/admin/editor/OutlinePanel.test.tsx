@@ -281,6 +281,11 @@ describe("the text hint", () => {
     expect(blockHint(text("x", ""))).toBe("")
   })
 
+  it("copes with a Block whose optional heading is empty (null when stored)", () => {
+    const stored = { ...hero("x", ""), heading: null } as unknown as BlockValues
+    expect(blockHint(stored)).toBe("")
+  })
+
   it("is cut short when long", () => {
     expect(blockHint(hero("x", "a".repeat(100))).length).toBeLessThanOrEqual(60)
   })

@@ -1056,7 +1056,16 @@ export const seed: SeedModule = async (seed) => {
             links: [
               { label: "Home", link: page(home.id) },
               { label: "Vacation Rentals", link: page(search.id) },
+              { label: "Pigeon Forge", link: page(search.id) },
+              { label: "Gatlinburg", link: page(search.id) },
+              { label: "Sevierville", link: page(search.id) },
+              { label: "All Properties", link: page(search.id) },
             ],
+          },
+          {
+            heading: "Guest Support",
+            content: "links",
+            links: [{ label: "FAQ", link: page(owners.id) }],
           },
           {
             heading: "Quicklinks",
@@ -1068,6 +1077,7 @@ export const seed: SeedModule = async (seed) => {
             content: "links",
             links: [
               { label: "Property Management", link: page(owners.id) },
+              { label: "Free Rental Projection", link: page(owners.id) },
               { label: "About Avada", link: page(about.id) },
             ],
           },

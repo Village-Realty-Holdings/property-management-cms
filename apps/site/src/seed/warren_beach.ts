@@ -414,8 +414,16 @@ export const seed: SeedModule = async (seed) => {
               location("Sunnyside Beach"),
             ],
           },
+          { label: "Specials", link: toPage(rentals) },
+          { label: "Snowbird Rentals", link: toPage(rentals) },
+          {
+            label: "About Us",
+            children: [
+              { label: "Property Management", link: toPage(owners) },
+              { label: "Contact Us", link: toPage(contact) },
+            ],
+          },
           { label: "Property Management", link: toPage(owners) },
-          { label: "Contact Us", link: toPage(contact) },
         ],
       },
       // The phone number is the Brand's.

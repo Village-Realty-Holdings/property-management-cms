@@ -524,6 +524,9 @@ describe.each(SITES.map((spec) => [spec.name, spec] as const))(
       it("signs a Staff User in; the Dashboard names the Site and its schema", async () => {
         const site = running(spec)
         const { page } = await adminOf(site)
+        // Signed in, the Admin root is the Dashboard (other tests have since
+        // moved this session on, so open it again).
+        await page.goto(`${site.origin}/admin`, { waitUntil: "networkidle" })
         expect(new URL(page.url()).pathname).toBe("/admin")
         const sidebar = page.getByRole("complementary", { name: "Site" })
         expect(await sidebar.innerText()).toMatch(spec.namePattern)

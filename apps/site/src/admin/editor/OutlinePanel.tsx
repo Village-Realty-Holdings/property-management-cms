@@ -87,7 +87,9 @@ function firstLine(markdown: string): string {
 /** A few words of the Block's own text, to tell two Blocks of a kind apart. */
 export function blockHint(block: BlockValues): string {
   const source =
-    "heading" in block && block.heading.trim() !== ""
+    "heading" in block &&
+    typeof block.heading === "string" &&
+    block.heading.trim() !== ""
       ? block.heading
       : "markdown" in block
         ? firstLine(block.markdown)
