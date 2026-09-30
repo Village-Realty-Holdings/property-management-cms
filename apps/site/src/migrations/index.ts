@@ -5,6 +5,7 @@ import * as migration_20260930_174400_page_layout_field from './20260930_174400_
 import * as migration_20260930_174953_background from './20260930_174953_background';
 import * as migration_20260930_180319_block_schemas_a from './20260930_180319_block_schemas_a';
 import * as migration_20260930_181401_block_schemas_b from './20260930_181401_block_schemas_b';
+import * as migration_20260930_184444_media_attribution from './20260930_184444_media_attribution';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20260930_181401_block_schemas_b.up,
     down: migration_20260930_181401_block_schemas_b.down,
-    name: '20260930_181401_block_schemas_b'
+    name: '20260930_181401_block_schemas_b',
+  },
+  {
+    up: migration_20260930_184444_media_attribution.up,
+    down: migration_20260930_184444_media_attribution.down,
+    name: '20260930_184444_media_attribution'
   },
 ];

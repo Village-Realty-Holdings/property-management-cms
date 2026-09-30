@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
@@ -49,6 +49,7 @@ const publicDir = join(__dirname, "..", "..", "..", "public")
 const sites: [string, SiteFixtures][] = [
   ["warren_beach", warrenBeach],
   ["avada", avada],
+  ["beachside", beachside],
 ]
 
 describe.each(sites)("%s fixtures", (schema, site) => {
@@ -127,6 +128,52 @@ describe("warren_beach fixtures", () => {
       url: "https://warrenbeachrentals.com/property-details/seacrets",
       photo: { src: "/fixtures/warren_beach/rental-seacrets.webp" },
     })
+  })
+})
+
+describe("beachside fixtures", () => {
+  it("has 10 invented Rentals and 3 blog posts", () => {
+    expect(beachside.rentals).toHaveLength(10)
+    expect(beachside.posts).toHaveLength(3)
+  })
+
+  it("links out to the invented brand's own site", () => {
+    for (const { url } of [...beachside.rentals, ...beachside.posts]) {
+      expect(new URL(url).hostname).toBe("beachside.example")
+    }
+  })
+
+  it("has one photo for each Rental and post, none used twice", () => {
+    const sources = [
+      ...beachside.rentals.map((rental) => rental.photo.src),
+      ...beachside.posts.map((post) => post.image.src),
+    ]
+    expect(new Set(sources).size).toBe(13)
+  })
+
+  it("has an attribution for every photo, in seed/beachside/attribution.json", () => {
+    const file = join(__dirname, "..", "..", "..", "seed", "beachside")
+    const attribution = JSON.parse(
+      readFileSync(join(file, "attribution.json"), "utf8")
+    ) as Record<string, Record<string, string>>
+    const sources = [
+      ...beachside.rentals.map((rental) => rental.photo.src),
+      ...beachside.posts.map((post) => post.image.src),
+    ]
+    for (const src of sources) {
+      const entry = attribution[src.replace(/^\//, "")]
+      expect(entry, src).toBeDefined()
+      expect(entry!.author).toBeTruthy()
+      expect(entry!.sourceUrl).toMatch(/^https:\/\/unsplash\.com\/photos\//)
+      expect(entry!.licence).toBe("Unsplash License")
+    }
+  })
+
+  it("has a range of sizes, with groups the Large-group Block can pick out", () => {
+    const sleeps = beachside.rentals.map((rental) => rental.sleeps)
+    expect(Math.min(...sleeps)).toBeLessThan(6)
+    expect(Math.max(...sleeps)).toBeGreaterThanOrEqual(12)
+    expect(beachside.rentals.some((rental) => rental.petFriendly)).toBe(true)
   })
 })
 

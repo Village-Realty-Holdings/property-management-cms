@@ -192,7 +192,17 @@ export const AVADA: ThemePreset = {
   preferredFonts: { heading: "Montserrat", body: "Montserrat" },
 }
 
-/** The invented Beachside Vacations brand (spec Phase 6). */
+/**
+ * The invented Beachside Vacations brand (spec Phase 6). The palette is the
+ * spec's, unchanged: every pair was checked against AA (presets.test.ts) and
+ * none needed nudging. Measured ratios: ink on the page 13.2, ink on sand
+ * 10.8, ink on coral 5.5, white on deep sea 7.4, white on the dark surface
+ * 15.1, sand on the dark surface 12.0, coral on the dark surface 6.1.
+ *
+ * The Theme's heading weights are Regular, Medium, Bold and Black, so the
+ * spec's Fraunces at 600 is Bold (700) here; the seed imports Fraunces at
+ * both 600 and 700, so the weight is served either way.
+ */
 export const BEACHSIDE: ThemePreset = {
   id: "beachside",
   name: "Beachside",

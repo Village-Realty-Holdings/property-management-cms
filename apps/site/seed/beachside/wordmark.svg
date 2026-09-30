@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 64" width="248" height="64" role="img" aria-labelledby="wordmark-title">
+  <title id="wordmark-title">Beachside Vacations</title>
+  <!-- Half-sun rising over a wave line, then the name. Drawn for the
+       Beachside Vacations demo Site. -->
+  <path d="M12 42a20 20 0 0 1 40 0z" fill="#ff7f5c"/>
+  <path d="M32 10v6M13.5 18.5l4.2 4.2M50.5 18.5l-4.2 4.2" stroke="#ff7f5c" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M5 46q6.75-8 13.5 0t13.5 0 13.5 0 13.5 0" stroke="#0e5e6f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M5 55q6.75-8 13.5 0t13.5 0 13.5 0 13.5 0" stroke="#0e5e6f" stroke-opacity=".45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="72" y="38" font-family="Fraunces, Georgia, 'Times New Roman', serif" font-size="30" font-weight="600" fill="#10323a">Beachside</text>
+  <text x="74" y="56" font-family="'Nunito Sans', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="3.4" fill="#0e5e6f">VACATIONS</text>
+</svg>

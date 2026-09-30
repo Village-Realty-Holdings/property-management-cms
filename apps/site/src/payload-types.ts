@@ -251,6 +251,14 @@ export interface Media {
    * Photographer or source, e.g. © Jane Doe
    */
   credit?: string | null;
+  /**
+   * For stock photos: who took it, where it came from.
+   */
+  attribution?: {
+    author?: string | null;
+    sourceUrl?: string | null;
+    licence?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1609,6 +1617,13 @@ export interface MediaSelect<T extends boolean = true> {
   prefix?: T;
   _objectKey?: T;
   credit?: T;
+  attribution?:
+    | T
+    | {
+        author?: T;
+        sourceUrl?: T;
+        licence?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   url?: T;

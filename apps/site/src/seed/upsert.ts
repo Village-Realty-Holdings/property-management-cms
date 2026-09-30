@@ -66,6 +66,8 @@ export type MediaData = {
   alt: string
   caption?: string
   credit?: string
+  /** Author, source URL and licence of a stock photo. */
+  attribution?: Media["attribution"]
 }
 
 export type Seeder = {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { AA_TEXT, contrastRatio } from "./colour"
 import { contrastWarnings, textPairFailures } from "./contrast"
 import { deriveTheme } from "./derive"
 import { normalizeInputs } from "./inputs"
@@ -117,6 +118,48 @@ describe("the brand presets keep the brand's palette", () => {
     const light = deriveTheme(findPreset("beachside")!.inputs, fonts).schemes
       .light
     expect(light["--accent-foreground"]).toBe("#10323a")
+  })
+})
+
+describe("Beachside passes AA", () => {
+  const beachside = findPreset("beachside")!.inputs
+  const light = deriveTheme(beachside, fonts).schemes.light
+
+  // The spec's palette as given: no colour needed nudging, so the preset
+  // keeps the exact values. Each pair is a text colour on the surface it is
+  // drawn on, with the spec's own words for it.
+  const pairs: [string, string, string][] = [
+    ["ink", beachside.text, "#fcfbfa"], // body text on the page
+    ["ink", beachside.text, beachside.third!], // text on the sand band
+    ["ink", beachside.text, beachside.accent], // ink text on coral
+    ["white", "#ffffff", beachside.primary], // button text on deep sea
+    ["white", "#ffffff", beachside.darkSurface!], // text on the dark surface
+    ["sand", beachside.third!, beachside.darkSurface!], // sand text on dark
+    ["coral", beachside.accent, beachside.darkSurface!], // coral on dark
+    ["deep sea", beachside.primary, "#fcfbfa"], // links on the page
+    ["deep sea", beachside.primary, beachside.third!], // links on sand
+  ]
+
+  it.each(pairs)("%s text reads on its surface (%#)", (_, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(AA_TEXT)
+  })
+
+  it("has every derived text pair at AA, including ink on coral and sand", () => {
+    expect(textPairFailures(light)).toEqual([])
+    expect(light["--accent-foreground"]).toBe("#10323a")
+    expect(light["--third-foreground"]).toBe("#10323a")
+    expect(light["--surface-dark-foreground"]).toBe("#ffffff")
+    expect(light["--primary-foreground"]).toBe("#ffffff")
+  })
+
+  it("keeps the spec's colours exactly (nothing was nudged)", () => {
+    expect([
+      beachside.primary,
+      beachside.accent,
+      beachside.third,
+      beachside.text,
+      beachside.darkSurface,
+    ]).toEqual(["#0e5e6f", "#ff7f5c", "#f2e3c9", "#10323a", "#0b2a31"])
   })
 })
 

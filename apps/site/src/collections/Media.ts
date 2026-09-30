@@ -16,6 +16,16 @@ export function mediaStaticDir(schema: string | undefined) {
 
 const staticDir = mediaStaticDir(siteSchema())
 
+function isHttpUrl(value: unknown): boolean {
+  if (typeof value !== "string") return false
+  try {
+    const { protocol } = new URL(value)
+    return protocol === "http:" || protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
 /**
  * Images uploaded by Staff Users for Pages, the Brand and SEO. No image
  * sizes, crop or focal point: sharp isn't available on Workers (apps/cms
@@ -35,8 +45,15 @@ export const Media: CollectionConfig = {
     delete: signedIn,
   },
   upload: {
-    // Photos only: no SVG (it can carry scripts) and no GIF.
-    mimeTypes: ["image/jpeg", "image/png", "image/webp", "image/avif"],
+    // Photos, plus SVG for a Brand's wordmark. Payload inspects every SVG
+    // and refuses one that carries a script. No GIF.
+    mimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/svg+xml",
+    ],
     ...(staticDir ? { staticDir } : {}),
     crop: false,
     focalPoint: false,
@@ -71,6 +88,34 @@ export const Media: CollectionConfig = {
       name: "credit",
       type: "text",
       admin: { description: "Photographer or source, e.g. © Jane Doe" },
+    },
+    {
+      // Where a photo came from and on what terms, for stock photos such as
+      // Unsplash's. Optional: a Site's own photos have none.
+      name: "attribution",
+      type: "group",
+      admin: {
+        description: "For stock photos: who took it, where it came from.",
+      },
+      fields: [
+        { name: "author", label: "Author", type: "text" },
+        {
+          name: "sourceUrl",
+          label: "Source URL",
+          type: "text",
+          admin: { placeholder: "https://unsplash.com/photos/…" },
+          validate: (value: unknown) =>
+            value == null || value === "" || isHttpUrl(value)
+              ? true
+              : "Enter a full web address that starts with https://",
+        },
+        {
+          name: "licence",
+          label: "Licence",
+          type: "text",
+          admin: { placeholder: "Unsplash License" },
+        },
+      ],
     },
   ],
 }
