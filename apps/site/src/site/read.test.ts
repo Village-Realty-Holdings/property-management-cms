@@ -2,6 +2,7 @@ import type { Payload } from "payload"
 import {
   afterAll,
   afterEach,
+  beforeEach,
   beforeAll,
   describe,
   expect,
@@ -16,7 +17,15 @@ import { resolveBrand } from "./brand"
 import { siteThemeCss } from "./themeStyle"
 import { CLASSIC, HARBOUR } from "../theme"
 import { restoreThemeVersion, saveTheme } from "../theme/record"
-import { readBrand, readPublishedPages, readSeo, readSiteTheme } from "./read"
+import {
+  readBrand,
+  readLayoutFor,
+  readLayouts,
+  readPublishedPages,
+  readSeo,
+  readSiteTheme,
+} from "./read"
+import { hrefOf, linksOf } from "./regions/links"
 import {
   pageMetadata,
   resolveSeo,
@@ -307,5 +316,142 @@ describe("the Theme the Site applies", () => {
     expect(css).toMatch(/url\("\/api\/font-files\/file\/slab-/)
     expect(css).toContain('--font-display:"Test Slab", serif')
     expect(css).not.toMatch(/https?:/)
+  })
+})
+
+describe("Layouts read as a visitor", () => {
+  beforeEach(async () => {
+    await truncateTables(payload, "layouts", "_layouts_v", "pages", "_pages_v")
+  })
+
+  const layout = (name: string, data: Record<string, unknown> = {}) =>
+    payload.create({
+      collection: "layouts",
+      data: { name, ...data },
+      ...asStaff(),
+    })
+
+  const page = (path: string, data: Record<string, unknown> = {}) =>
+    payload.create({
+      collection: "pages",
+      data: { title: path, path, _status: "published", ...data },
+      ...asStaff(),
+    })
+
+  it("reads as a visitor, selecting what the Site draws", async () => {
+    await layout("Main")
+    const find = vi.spyOn(payload, "find")
+    try {
+      const layouts = await readLayouts(payload)
+      expect(layouts.map((l) => l.name)).toEqual(["Main"])
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          collection: "layouts",
+          overrideAccess: false,
+          user: null,
+        })
+      )
+      // Who saved it, and the change summary, are for staff.
+      expect(layouts[0]).not.toHaveProperty("updatedBy")
+      expect(layouts[0]).not.toHaveProperty("changeSummary")
+    } finally {
+      find.mockRestore()
+    }
+  })
+
+  it("populates a menu's Page links, so they follow the Page's path", async () => {
+    const about = await page("/about")
+    await layout("Main", {
+      header: [
+        {
+          blockType: "navigation",
+          items: [{ label: "About", link: { type: "page", page: about.id } }],
+        },
+      ],
+    })
+
+    const read = async () => {
+      const [main] = await readLayouts(payload)
+      const nav = main?.header?.[0]
+      if (nav?.blockType !== "navigation") throw new Error("no navigation")
+      return hrefOf(nav.items?.[0]?.link)
+    }
+    expect(await read()).toBe("/about")
+
+    await payload.update({
+      collection: "pages",
+      id: about.id,
+      data: { path: "/about-us", _status: "published" },
+      ...asStaff(),
+    })
+    expect(await read()).toBe("/about-us")
+  })
+
+  it("leaves a link to an unpublished Page without a destination", async () => {
+    const secret = await page("/secret", { _status: "draft" })
+    await layout("Main", {
+      footer: [
+        {
+          blockType: "footerColumns",
+          columns: [
+            {
+              heading: "More",
+              content: "links",
+              links: [
+                { label: "Secret", link: { type: "page", page: secret.id } },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    const [main] = await readLayouts(payload)
+    const columns = main?.footer?.[0]
+    if (columns?.blockType !== "footerColumns") throw new Error("no columns")
+    expect(linksOf(columns.columns?.[0]?.links)).toEqual([])
+  })
+
+  describe("the Layout a Page renders with", () => {
+    it("follows the resolution rules: specific, none, longest path, default", async () => {
+      await layout("Default", { isDefault: true })
+      const stays = await layout("Stays", { paths: [{ path: "/stays" }] })
+      await layout("Lodges", { paths: [{ path: "/stays/lodges" }] })
+      const pinned = await layout("Pinned")
+
+      const name = async (p: Parameters<typeof readLayoutFor>[1]) =>
+        (await readLayoutFor(payload, p))?.name ?? null
+
+      expect(await name({ path: "/about" })).toBe("Default")
+      expect(await name({ path: "/stays/beach" })).toBe("Stays")
+      expect(await name({ path: "/stays/lodges/pine" })).toBe("Lodges")
+      expect(await name({ path: "/staysfoo" })).toBe("Default")
+      expect(
+        await name({ path: "/stays", layout: { mode: "none" } })
+      ).toBeNull()
+      expect(
+        await name({
+          path: "/stays/lodges",
+          layout: { mode: "specific", layout: pinned.id },
+        })
+      ).toBe("Pinned")
+      // A Page read at depth 1 has its picked Layout populated.
+      expect(
+        await name({
+          path: "/about",
+          layout: { mode: "specific", layout: stays },
+        })
+      ).toBe("Stays")
+    })
+
+    it("is the default Layout for an address nothing lives at", async () => {
+      await layout("Default", { isDefault: true })
+      await layout("Stays", { paths: [{ path: "/stays" }] })
+      expect((await readLayoutFor(payload, null))?.name).toBe("Default")
+    })
+
+    it("is none when the Site has no Layouts", async () => {
+      expect(await readLayoutFor(payload, { path: "/" })).toBeNull()
+      expect(await readLayoutFor(payload, null)).toBeNull()
+    })
   })
 })

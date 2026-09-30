@@ -79,7 +79,14 @@ export async function createTestDatabase(): Promise<TestDatabase> {
 export async function getTestPayload(
   options: TestPayloadOptions = {}
 ): Promise<TestPayload> {
-  const { push = true, database, ...configOptions } = options
+  // The default Layout is off unless a test asks for it: most tests count
+  // Layouts, or create the first one to see it become the default.
+  const {
+    push = true,
+    database,
+    seedDefaultLayout = false,
+    ...configOptions
+  } = options
   const db = database ?? (await createTestDatabase())
   const dropOwnDatabase = database ? async () => {} : db.drop
 
@@ -95,6 +102,7 @@ export async function getTestPayload(
         ...configOptions,
         databaseUrl: db.url,
         push,
+        seedDefaultLayout,
       }),
     })
   } catch (error) {

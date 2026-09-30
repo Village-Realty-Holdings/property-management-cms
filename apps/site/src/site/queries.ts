@@ -2,9 +2,10 @@ import config from "@payload-config"
 import { getPayload } from "payload"
 import { cache } from "react"
 
-import type { Brand, Page, Seo } from "../payload-types"
+import type { Brand, Layout, Page, Seo } from "../payload-types"
 import {
   readBrand,
+  readLayoutFor,
   readPublishedPages,
   readSeo,
   readSiteTheme,
@@ -33,6 +34,17 @@ export const getPublishedPage = cache(
       ...asVisitor,
     })
     return docs[0] ?? null
+  }
+)
+
+/**
+ * The Layout the Page at `path` renders with, or null for none. A `path` no
+ * Published Page lives at gets the default Layout (the not-found page).
+ */
+export const getLayoutForPath = cache(
+  async (path: string | null): Promise<Layout | null> => {
+    const page = path === null ? null : await getPublishedPage(path)
+    return readLayoutFor(await getPayload({ config }), page)
   }
 )
 

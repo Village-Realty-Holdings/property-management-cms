@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest"
 
 import { combineFonts } from "../fonts/available"
 import { CLASSIC, HARBOUR } from "../theme"
-import { SiteFrame } from "./SiteFrame"
+import { fixturesFor } from "./fixtures"
+import { LayoutFrame } from "./LayoutFrame"
 import { SiteThemeStyle } from "./SiteThemeStyle"
 
 describe("SiteThemeStyle", () => {
@@ -46,25 +47,71 @@ describe("SiteThemeStyle", () => {
   })
 })
 
-describe("SiteFrame", () => {
+describe("LayoutFrame", () => {
+  const brand = {
+    name: "Warren Beach",
+    tagline: null,
+    logo: null,
+    phone: null,
+    email: null,
+    address: null,
+    social: [],
+  }
+  const layout = {
+    id: 1,
+    name: "Main",
+    header: [{ blockType: "utilityStrip" as const, text: "Hello" }],
+    footer: [{ blockType: "legalBar" as const, text: "© {name}" }],
+    updatedAt: "",
+    createdAt: "",
+  }
+
   it("leaves the variables to the layout: no style element, no inline vars", () => {
     const html = renderToStaticMarkup(
-      <SiteFrame
-        brand={{
-          name: "Warren Beach",
-          tagline: null,
-          logo: null,
-          phone: null,
-          email: null,
-          address: null,
-          social: [],
-        }}
+      <LayoutFrame
+        layout={layout}
+        brand={brand}
+        fixtures={fixturesFor(undefined)}
       >
         <p>Page</p>
-      </SiteFrame>
+      </LayoutFrame>
     )
     expect(html).not.toContain("<style")
     expect(html).not.toContain("style=")
+  })
+
+  it("puts the Page between its Layout's Header and Footer", () => {
+    const html = renderToStaticMarkup(
+      <LayoutFrame
+        layout={layout}
+        brand={brand}
+        fixtures={fixturesFor(undefined)}
+      >
+        <p>Page</p>
+      </LayoutFrame>
+    )
+    const at = (text: string) => html.indexOf(text)
+    expect(at("<header")).toBeGreaterThanOrEqual(0)
+    expect(at("<header")).toBeLessThan(at("<main"))
+    expect(at("<main")).toBeLessThan(at("<footer"))
+    expect(html).toContain("Hello")
+    expect(html).toContain("© Warren Beach")
+  })
+
+  it("renders the Page alone when it has no Layout", () => {
+    const html = renderToStaticMarkup(
+      <LayoutFrame
+        layout={null}
+        brand={brand}
+        fixtures={fixturesFor(undefined)}
+      >
+        <p>Page</p>
+      </LayoutFrame>
+    )
+    expect(html).toContain("<main")
+    expect(html).toContain("<p>Page</p>")
+    expect(html).not.toContain("<header")
+    expect(html).not.toContain("<footer")
   })
 })
 

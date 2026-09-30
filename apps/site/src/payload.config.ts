@@ -10,6 +10,7 @@ import { Users } from "./collections/Users"
 import { pgForRuntime, siteSchema } from "./database"
 import { richTextEditor } from "./fields/richText"
 import { globals } from "./globals"
+import { ensureDefaultLayout } from "./layouts/defaultLayout"
 import { storagePlugins } from "./storage"
 import { registerThemeFontUsage } from "./theme/record/fontUsage"
 
@@ -25,6 +26,11 @@ type PayloadConfigOptions = {
    * Defaults to DATABASE_SCHEMA; unset or "public" means the public schema.
    */
   schemaName?: string
+  /**
+   * Create the default Layout on start when the Site has none (see
+   * ensureDefaultLayout). On by default; tests that count Layouts turn it off.
+   */
+  seedDefaultLayout?: boolean
 }
 
 /**
@@ -35,6 +41,7 @@ export function buildPayloadConfig({
   databaseUrl,
   push,
   schemaName = siteSchema(),
+  seedDefaultLayout = true,
 }: PayloadConfigOptions) {
   // Fails startup instead of serving the dev sign-in (apps/site ADR-0003).
   assertNoDevSignInInProduction()
@@ -67,6 +74,19 @@ export function buildPayloadConfig({
     }),
     editor: richTextEditor,
     globals,
+    onInit: async (payload) => {
+      if (!seedDefaultLayout) return
+      // A Site that only migrated still needs its chrome. Starting must not
+      // depend on it, so a failure is logged and the Site starts without.
+      try {
+        await ensureDefaultLayout(payload)
+      } catch (error) {
+        payload.logger.error({
+          err: error,
+          msg: "Could not create the default Layout",
+        })
+      }
+    },
     // Nothing reads over GraphQL: the Site and the Admin use the Local API.
     graphQL: { disable: true },
     secret: process.env.PAYLOAD_SECRET || "",

@@ -1,7 +1,8 @@
 import type { Payload } from "payload"
 
 import { getAvailableFonts } from "../fonts/available"
-import type { Brand, Seo } from "../payload-types"
+import { resolveLayout, type LayoutChoice } from "../layouts/resolve"
+import type { Brand, Layout, Page, Seo } from "../payload-types"
 import { readLiveTheme, type LiveTheme } from "../theme/record"
 import type { SitemapPage } from "./seo"
 import type { SiteTheme } from "./themeStyle"
@@ -58,4 +59,67 @@ export async function readSiteTheme(payload: Payload): Promise<LiveSiteTheme> {
     getAvailableFonts(payload),
   ])
   return { ...live, fonts }
+}
+
+/**
+ * Every Layout, with the Pages its menus link to populated (depth 1), so a
+ * link follows its Page's current path. A link to a Page a visitor cannot
+ * read (one that is not Published) stays an id, and renders nothing. Only
+ * what the Site draws is selected: the history details are staff-only.
+ * Oldest first, so on a tie between path prefixes the first Layout keeps it.
+ */
+export async function readLayouts(payload: Payload): Promise<Layout[]> {
+  const { docs } = await payload.find({
+    collection: "layouts",
+    depth: 1,
+    pagination: false,
+    sort: "id",
+    select: {
+      name: true,
+      header: true,
+      footer: true,
+      paths: true,
+      isDefault: true,
+    },
+    ...asVisitor,
+  })
+  return docs as Layout[]
+}
+
+const idOf = (value: number | { id: number } | null | undefined) =>
+  typeof value === "object" && value ? value.id : value
+
+/** How a Page picks its Layout, from its `layout` field. */
+function choiceOf(layout: Page["layout"] | undefined): LayoutChoice {
+  if (layout?.mode === "none") return { mode: "none" }
+  if (layout?.mode === "specific") {
+    return { mode: "specific", layoutId: idOf(layout.layout) }
+  }
+  return { mode: "route" }
+}
+
+/**
+ * The Layout a Page renders with (apps/site ADR-0006, src/layouts/resolve.ts),
+ * or null for none. Without a Page (the not-found page) it is the default
+ * Layout: no path or choice applies to an address nothing lives at.
+ */
+export async function readLayoutFor(
+  payload: Payload,
+  page: Pick<Page, "path" | "layout"> | null
+): Promise<Layout | null> {
+  const layouts = await readLayouts(payload)
+  const candidates = layouts.map((layout) => ({
+    id: layout.id,
+    name: layout.name,
+    isDefault: Boolean(layout.isDefault),
+    paths: (layout.paths ?? []).map((row) => row.path),
+    layout,
+  }))
+  if (!page) return candidates.find((c) => c.isDefault)?.layout ?? null
+  const { layout } = resolveLayout({
+    path: page.path,
+    choice: choiceOf(page.layout),
+    layouts: candidates,
+  })
+  return layout?.layout ?? null
 }
