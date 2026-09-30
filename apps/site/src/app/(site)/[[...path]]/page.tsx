@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { siteSchema } from "@/database"
 import { resolveBrand } from "@/site/brand"
 import { Blocks } from "@/site/blocks"
+import { fixturesFor } from "@/site/fixtures"
 import {
   getBrand,
   getPublishedPage,
@@ -35,5 +37,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function SitePage(props: Props) {
   const page = await pageFor(props)
   if (!page) notFound()
-  return <Blocks blocks={page.blocks} />
+  // Blocks render from the Page and the Site's fixtures, nothing fetched.
+  return <Blocks blocks={page.blocks} fixtures={fixturesFor(siteSchema())} />
 }

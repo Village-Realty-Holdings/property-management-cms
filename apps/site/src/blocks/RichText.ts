@@ -1,5 +1,6 @@
 import type { Block } from "payload"
 
+import { backgroundField } from "../fields/background"
 import { richTextEditor } from "../fields/richText"
 
 /** Free-form text with headings, lists and links. */
@@ -14,5 +15,6 @@ export const RichText: Block = {
       required: true,
       editor: richTextEditor,
     },
+    backgroundField,
   ],
 }

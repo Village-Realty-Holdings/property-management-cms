@@ -233,6 +233,7 @@ export interface RichTextBlock {
     };
     [k: string]: unknown;
   };
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'richText';
@@ -252,6 +253,7 @@ export interface CallToActionBlock {
     href?: string | null;
   };
   style: 'primary' | 'secondary' | 'inverted';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'callToAction';
@@ -681,6 +683,7 @@ export interface HeroBlockSelect<T extends boolean = true> {
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
   content?: T;
+  background?: T;
   id?: T;
   blockName?: T;
 }
@@ -698,6 +701,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
         href?: T;
       };
   style?: T;
+  background?: T;
   id?: T;
   blockName?: T;
 }

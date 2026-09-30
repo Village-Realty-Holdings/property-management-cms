@@ -8,7 +8,9 @@ import {
   type BlockButtonTone,
   type BlockSurface,
 } from "./BlockButton"
-import { container, sectionY, type BlockContext } from "./types"
+import { BlockSection } from "./BlockSection"
+import { EditableText } from "./Editable"
+import type { BlockContext } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
@@ -50,7 +52,7 @@ export function CallToActionBlock({
   const style = styles[block.style] ?? styles.primary
   const id = `block-${context.index}-heading`
   return (
-    <section aria-labelledby={id} className={`${container} ${sectionY}`}>
+    <BlockSection background={block.background} labelledBy={id}>
       <div
         className={cn(
           "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
@@ -59,7 +61,10 @@ export function CallToActionBlock({
         )}
       >
         <div className="flex max-w-2xl flex-col gap-3">
-          <h2
+          <EditableText
+            as="h2"
+            field="heading"
+            context={context}
             id={id}
             className={cn(
               displayFont,
@@ -67,11 +72,16 @@ export function CallToActionBlock({
             )}
           >
             {heading}
-          </h2>
+          </EditableText>
           {body && (
-            <p className="text-base text-pretty whitespace-pre-line sm:text-lg">
+            <EditableText
+              as="p"
+              field="body"
+              context={context}
+              className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            >
               {body}
-            </p>
+            </EditableText>
           )}
         </div>
         {button && (
@@ -79,10 +89,11 @@ export function CallToActionBlock({
             link={button}
             tone={style.button}
             surface={style.surface}
+            editable={{ field: "button.label", context }}
             className="self-start md:self-auto"
           />
         )}
       </div>
-    </section>
+    </BlockSection>
   )
 }

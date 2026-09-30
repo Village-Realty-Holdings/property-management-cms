@@ -6,6 +6,7 @@ import type { HeroBlock as HeroBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { imageOf } from "../brand"
 import { BlockButton, linkOf } from "./BlockButton"
+import { EditableText } from "./Editable"
 import { container, type BlockContext } from "./types"
 
 /**
@@ -69,7 +70,10 @@ export function HeroBlock({
             : "pt-[calc(var(--section-y)*1.6)] pb-[calc(var(--section-y)*1.4)] sm:pt-[calc(var(--section-y)*2.4)] sm:pb-[calc(var(--section-y)*2)]"
         )}
       >
-        <Heading
+        <EditableText
+          as={Heading}
+          field="heading"
+          context={context}
           id={id}
           className={cn(
             displayFont,
@@ -79,11 +83,16 @@ export function HeroBlock({
           )}
         >
           {heading}
-        </Heading>
+        </EditableText>
         {subheading && (
-          <p className="max-w-2xl text-xl text-pretty whitespace-pre-line sm:text-2xl">
+          <EditableText
+            as="p"
+            field="subheading"
+            context={context}
+            className="max-w-2xl text-xl text-pretty whitespace-pre-line sm:text-2xl"
+          >
             {subheading}
-          </p>
+          </EditableText>
         )}
         {cta && (
           <div>
@@ -91,6 +100,7 @@ export function HeroBlock({
               link={cta}
               tone="accent"
               surface={image ? "dark" : "primary"}
+              editable={{ field: "cta.label", context }}
             />
           </div>
         )}

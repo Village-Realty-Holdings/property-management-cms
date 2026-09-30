@@ -4,6 +4,8 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { safeHref } from "../RichText"
+import { EditableText } from "./Editable"
+import type { BlockContext } from "./types"
 
 export type BlockLink = { label: string; href: string }
 export type BlockButtonTone = "accent" | "primary" | "onAccent"
@@ -68,12 +70,15 @@ export function BlockButton({
   tone = "accent",
   surface,
   className,
+  editable,
 }: {
   link: BlockLink
   tone?: BlockButtonTone
   /** The coloured panel the button sits on, when it is not the page. */
   surface?: BlockSurface
   className?: string
+  /** Where the label is stored, so the Visual Editor can edit it in place. */
+  editable?: { field: string; context: BlockContext }
 }) {
   // cn drops the base ring and edge classes that the panel's replace.
   const classes = cn(
@@ -81,13 +86,20 @@ export function BlockButton({
     surface && [focusRings[surface], focusEdges[tone]],
     className
   )
+  const label = editable ? (
+    <EditableText field={editable.field} context={editable.context}>
+      {link.label}
+    </EditableText>
+  ) : (
+    link.label
+  )
   return link.href.startsWith("/") ? (
     <Link href={link.href} className={classes}>
-      {link.label}
+      {label}
     </Link>
   ) : (
     <a href={link.href} className={classes}>
-      {link.label}
+      {label}
     </a>
   )
 }

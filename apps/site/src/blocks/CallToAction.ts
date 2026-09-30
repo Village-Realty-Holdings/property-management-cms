@@ -1,5 +1,6 @@
 import type { Block } from "payload"
 
+import { backgroundField } from "../fields/background"
 import { linkGroup } from "../fields/link"
 
 /** A short pitch with one button. */
@@ -22,5 +23,6 @@ export const CallToAction: Block = {
         { label: "Inverted", value: "inverted" },
       ],
     },
+    backgroundField,
   ],
 }
