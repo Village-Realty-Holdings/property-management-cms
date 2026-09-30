@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     pages: Page;
     media: Media;
+    fonts: Font;
+    'font-files': FontFile;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,6 +81,8 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    fonts: FontsSelect<false> | FontsSelect<true>;
+    'font-files': FontFilesSelect<false> | FontFilesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -246,6 +250,48 @@ export interface CallToActionBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fonts".
+ */
+export interface Font {
+  id: number;
+  /**
+   * The name the Theme shows, and the CSS font-family. For a Google Font, its name on Google Fonts.
+   */
+  family: string;
+  kind: 'serif' | 'sans' | 'slab';
+  /**
+   * Where the files came from.
+   */
+  source?: ('uploaded' | 'google') | null;
+  files: {
+    weight: number;
+    style: 'normal' | 'italic';
+    file: number | FontFile;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "font-files".
+ */
+export interface FontFile {
+  id: number;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -291,6 +337,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'fonts';
+        value: number | Font;
+      } | null)
+    | ({
+        relationTo: 'font-files';
+        value: number | FontFile;
       } | null)
     | ({
         relationTo: 'users';
@@ -416,6 +470,42 @@ export interface MediaSelect<T extends boolean = true> {
   prefix?: T;
   _objectKey?: T;
   credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fonts_select".
+ */
+export interface FontsSelect<T extends boolean = true> {
+  family?: T;
+  kind?: T;
+  source?: T;
+  files?:
+    | T
+    | {
+        weight?: T;
+        style?: T;
+        file?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "font-files_select".
+ */
+export interface FontFilesSelect<T extends boolean = true> {
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
