@@ -9,7 +9,7 @@
     "start": "next start",
     "worker:build": "opennextjs-cloudflare build",
     "worker:dev": "wrangler dev --port 8787",
-    "lint": "eslint",
+    "lint": "eslint && tsx scripts/check-migrations.ts",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
@@ -17,7 +17,9 @@
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "migrate:create": "payload migrate:create",
-    "migrate": "payload migrate"
+    "migrate": "payload migrate",
+    "genericize": "tsx scripts/genericize-migration.ts",
+    "site": "tsx scripts/site.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
