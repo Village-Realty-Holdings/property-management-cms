@@ -76,26 +76,48 @@ const layout = (over: Partial<LayoutRow> = {}): LayoutRow => ({
   id: 4,
   name: "Listings",
   paths: ["/stays", "/rentals"],
+  isDefault: false,
   usedByPages: 3,
+  dependents: [],
+  pages: [],
   updatedAt: "2026-03-01T10:00:00.000Z",
   ...over,
 })
 
 describe("<LayoutsTable>", () => {
-  const duplicate = async () => {}
+  const duplicate = async () => ({ ok: true })
+  const remove = async () => ({ ok: true })
 
   it("invites you to create your first Layout when there are none", () => {
-    render(<LayoutsTable rows={[]} duplicate={duplicate} />)
+    render(<LayoutsTable rows={[]} duplicate={duplicate} remove={remove} />)
     expect(screen.getByText("Create your first Layout")).toBeTruthy()
     expect(screen.getByRole("link", { name: /New Layout/ })).toBeTruthy()
   })
 
-  it("shows name, paths, usage, last updated and Duplicate", () => {
-    render(<LayoutsTable rows={[layout()]} duplicate={duplicate} />)
+  it("shows name, paths, usage, last updated, Duplicate and Delete", () => {
+    render(
+      <LayoutsTable rows={[layout()]} duplicate={duplicate} remove={remove} />
+    )
     const r = within(screen.getByRole("row", { name: /Listings/ }))
     expect(r.getByText("/stays, /rentals")).toBeTruthy()
     expect(r.getByText("Used by 3 Pages")).toBeTruthy()
     expect(r.getByRole("button", { name: /Duplicate Listings/ })).toBeTruthy()
+    expect(r.getByRole("button", { name: /Delete Listings/ })).toBeTruthy()
+    expect(r.queryByText("Default")).toBeNull()
+  })
+
+  it("badges the default Layout, outside the row header so its name stays plain", () => {
+    render(
+      <LayoutsTable
+        rows={[layout({ name: "Main", paths: [], isDefault: true })]}
+        duplicate={duplicate}
+        remove={remove}
+      />
+    )
+    const r = within(screen.getByRole("row", { name: /Main/ }))
+    expect(r.getByText("Default")).toBeTruthy()
+    expect(r.getByText("No paths")).toBeTruthy()
+    expect(r.getByRole("rowheader").textContent).toBe("Main")
   })
 
   it.each([

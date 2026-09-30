@@ -1,4 +1,6 @@
+import type { LayoutInfo, LayoutUsage } from "../../layouts/usage"
 import type { Page } from "../../payload-types"
+import type { Dependent } from "../kit/dependents"
 import { derivePageStatus, type PageStatus } from "./pageStatus"
 
 /** One line of the Pages list. */
@@ -12,18 +14,31 @@ export type PageRow = {
   updatedAt: string
 }
 
-/** One line of the Layouts list (the collection arrives in Phase 3). */
+/** One line of the Layouts list. */
 export type LayoutRow = {
   id: number
   name: string
-  /** Path prefixes the Layout is the default for. */
+  /** Path prefixes the Layout covers. */
   paths: string[]
-  /** How many Pages use it. */
+  /** The Site's default Layout: Pages that nothing else covers use it. */
+  isDefault: boolean
+  /** How many Pages use it (by path, by choice or as the default). */
   usedByPages: number
+  /**
+   * The Pages that pick this Layout explicitly, for the Delete confirmation:
+   * deleting it would leave them without. Empty when none do.
+   */
+  dependents: Dependent[]
+  /**
+   * Every Page that resolves to this Layout (by path, by choice or as the
+   * default), so the Delete confirmation names what a live change reaches.
+   * Its length is `usedByPages`.
+   */
+  pages: Dependent[]
   updatedAt: string
 }
 
-/** Something the Continue editing list can offer: a Page or (later) a Layout. */
+/** Something the Continue editing list can offer: a Page or a Layout. */
 export type RecentItem = {
   kind: "page" | "layout"
   id: number
@@ -39,23 +54,28 @@ export const NEW_LAYOUT_HREF = "/admin/layouts/new"
 export const NO_LAYOUT = "No Layout"
 
 /**
- * The Layout a Page uses, as a label. Layouts do not exist yet (Phase 3), so
- * every Page reads "No Layout". Phase 3 replaces this with the resolved
- * Layout ("Listings, via /stays").
+ * The Layout a Page uses, as a label ("Listings, via /stays", "Listings",
+ * "Main (default)"), read from `summarizeLayoutUsage`. "No Layout" when the
+ * Page is not in the usage.
  */
-export function layoutLabelForPage(): string {
-  return NO_LAYOUT
+export function layoutLabelForPage(
+  labels: LayoutUsage["labels"],
+  pageId: number
+): string {
+  return labels.get(pageId) ?? NO_LAYOUT
 }
 
 type PageFacts = Pick<Page, "id" | "title" | "path" | "updatedAt" | "_status">
 
 /**
  * A Pages list row. `latest` is the Page's newest version (the Draft, if
- * any); `publishedStatus` is the status of the copy visitors are served.
+ * any); `publishedStatus` is the status of the copy visitors are served;
+ * `layout` is the label from `layoutLabelForPage`.
  */
 export function toPageRow(
   latest: PageFacts,
-  publishedStatus: Page["_status"]
+  publishedStatus: Page["_status"],
+  layout: string = NO_LAYOUT
 ): PageRow {
   return {
     id: latest.id,
@@ -65,7 +85,7 @@ export function toPageRow(
       published: publishedStatus,
       latest: latest._status,
     }),
-    layout: layoutLabelForPage(),
+    layout,
     updatedAt: latest.updatedAt,
   }
 }
@@ -80,12 +100,44 @@ export function pageToRecentItem(row: PageRow): RecentItem {
   }
 }
 
-/** The Layouts to list. There is no Layouts collection yet, so none. */
-export function getLayoutRows(): LayoutRow[] {
-  return []
+/**
+ * The Layouts to list, by name. `dependents` holds, per Layout id, the Pages
+ * that pick it explicitly.
+ */
+export function getLayoutRows(
+  layouts: readonly LayoutInfo[],
+  usage: Pick<LayoutUsage, "usedBy"> & Partial<Pick<LayoutUsage, "pagesBy">>,
+  dependents: ReadonlyMap<number, Dependent[]> = new Map()
+): LayoutRow[] {
+  return layouts
+    .map((layout) => ({
+      id: layout.id,
+      name: layout.name,
+      paths: [...layout.paths],
+      isDefault: layout.isDefault,
+      usedByPages: usage.usedBy.get(layout.id) ?? 0,
+      dependents: dependents.get(layout.id) ?? [],
+      pages: (usage.pagesBy?.get(layout.id) ?? []).map(
+        (page): Dependent => ({
+          kind: "Page",
+          name: page.title,
+          href: `/admin/pages/${page.id}`,
+        })
+      ),
+      updatedAt: layout.updatedAt,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
-/** Recently edited Layouts for Continue editing; none until Phase 3. */
-export function getRecentLayouts(): RecentItem[] {
-  return []
+/** Layouts for Continue editing; `continueEditing` keeps the newest few. */
+export function getRecentLayouts(
+  layouts: readonly Pick<LayoutInfo, "id" | "name" | "updatedAt">[]
+): RecentItem[] {
+  return layouts.map((layout) => ({
+    kind: "layout",
+    id: layout.id,
+    title: layout.name,
+    href: `/admin/layouts/${layout.id}`,
+    updatedAt: layout.updatedAt,
+  }))
 }

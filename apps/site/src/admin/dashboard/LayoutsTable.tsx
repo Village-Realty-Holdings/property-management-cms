@@ -1,9 +1,12 @@
 import Link from "next/link"
-import { CopyIcon, LayoutTemplateIcon, PlusIcon } from "lucide-react"
+import { LayoutTemplateIcon, PlusIcon } from "lucide-react"
 
-import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { Badge } from "@workspace/ui/components/badge"
+import { buttonVariants } from "@workspace/ui/components/button"
 
+import type { FormState } from "../formState"
 import { EmptyState } from "../kit/EmptyState"
+import { LayoutRowActions } from "./LayoutRowActions"
 import { NEW_LAYOUT_HREF, type LayoutRow } from "./rows"
 import { UpdatedAt } from "./UpdatedAt"
 
@@ -15,15 +18,17 @@ export function usedByLabel(count: number): string {
 
 /**
  * The Layouts list: name, paths, how many Pages use it, last updated, and
- * Duplicate. `duplicate` is a Server Action taking the Layout's `id` in form
- * data; the Layouts collection (Phase 3) provides it.
+ * Duplicate and Delete. `duplicate` and `remove` are Server Actions taking a
+ * Layout's id (see layouts/actions.ts).
  */
 export function LayoutsTable({
   rows,
   duplicate,
+  remove,
 }: {
   rows: LayoutRow[]
-  duplicate: (formData: FormData) => void | Promise<void>
+  duplicate: (id: number) => Promise<FormState>
+  remove: (id: number) => Promise<FormState>
 }) {
   if (rows.length === 0) {
     return (
@@ -64,7 +69,12 @@ export function LayoutsTable({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <LayoutTableRow key={row.id} row={row} duplicate={duplicate} />
+            <LayoutTableRow
+              key={row.id}
+              row={row}
+              duplicate={duplicate}
+              remove={remove}
+            />
           ))}
         </tbody>
       </table>
@@ -75,9 +85,11 @@ export function LayoutsTable({
 export function LayoutTableRow({
   row,
   duplicate,
+  remove,
 }: {
   row: LayoutRow
-  duplicate: (formData: FormData) => void | Promise<void>
+  duplicate: (id: number) => Promise<FormState>
+  remove: (id: number) => Promise<FormState>
 }) {
   return (
     <tr className="border-b last:border-0 hover:bg-muted/50">
@@ -86,12 +98,19 @@ export function LayoutTableRow({
           {row.name}
         </Link>
       </th>
-      <td className="px-4 py-3 font-mono text-xs">
-        {row.paths.length === 0 ? (
-          <span className="font-sans text-muted-foreground">No paths</span>
-        ) : (
-          row.paths.join(", ")
-        )}
+      <td className="px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {row.isDefault && (
+            <Badge variant="secondary" title="Pages nothing else covers use it">
+              Default
+            </Badge>
+          )}
+          {row.paths.length === 0 ? (
+            <span className="text-muted-foreground">No paths</span>
+          ) : (
+            <span className="font-mono text-xs">{row.paths.join(", ")}</span>
+          )}
+        </div>
       </td>
       <td className="px-4 py-3 text-muted-foreground">
         {usedByLabel(row.usedByPages)}
@@ -100,17 +119,7 @@ export function LayoutTableRow({
         <UpdatedAt iso={row.updatedAt} />
       </td>
       <td className="px-4 py-3 text-right">
-        <form action={duplicate}>
-          <input type="hidden" name="id" value={row.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            aria-label={`Duplicate ${row.name}`}
-          >
-            <CopyIcon aria-hidden="true" /> Duplicate
-          </Button>
-        </form>
+        <LayoutRowActions row={row} duplicate={duplicate} remove={remove} />
       </td>
     </tr>
   )

@@ -6,10 +6,12 @@ import { PlusIcon } from "lucide-react"
 import { buttonVariants } from "@workspace/ui/components/button"
 
 import { LayoutsTable } from "@/admin/dashboard/LayoutsTable"
-import { getLayoutRows, NEW_LAYOUT_HREF } from "@/admin/dashboard/rows"
+import { loadLayoutRows } from "@/admin/dashboard/queries"
+import { NEW_LAYOUT_HREF } from "@/admin/dashboard/rows"
 import { PageHeader, TableSkeleton } from "@/admin/kit"
+import { requireStaff } from "@/admin/session"
 
-import { duplicateLayout } from "./actions"
+import { deleteLayout, duplicateLayout } from "./actions"
 
 export const metadata: Metadata = { title: "Layouts" }
 
@@ -36,7 +38,13 @@ export default function LayoutsList() {
 }
 
 async function Rows() {
-  // Phase 3 reads the layouts collection here.
-  const rows = await getLayoutRows()
-  return <LayoutsTable rows={rows} duplicate={duplicateLayout} />
+  const { payload, as } = await requireStaff()
+  const rows = await loadLayoutRows(payload, as)
+  return (
+    <LayoutsTable
+      rows={rows}
+      duplicate={duplicateLayout}
+      remove={deleteLayout}
+    />
+  )
 }

@@ -1,10 +1,21 @@
 import type { Payload, Where } from "payload"
 
-import type { User } from "../../payload-types"
+import { layoutDependents } from "../../collections/Layouts/deleteProtection"
 import {
+  loadLayoutInfos,
+  loadLayoutUsage,
+  summarizeLayoutUsage,
+  type LayoutInfo,
+} from "../../layouts/usage"
+import type { User } from "../../payload-types"
+import type { Dependent } from "../kit/dependents"
+import {
+  getLayoutRows,
   getRecentLayouts,
+  layoutLabelForPage,
   pageToRecentItem,
   toPageRow,
+  type LayoutRow,
   type PageRow,
   type RecentItem,
 } from "./rows"
@@ -34,24 +45,36 @@ function searchWhere(q: string | undefined): Where | undefined {
 /**
  * Every Page as a list row, newest change first. Each row shows the newest
  * version (the Draft, if there is one); its status compares that with the
- * published copy. `q` filters on title or path.
+ * published copy; its Layout is the one its newest version resolves to.
+ * `q` filters on title or path. `layouts` saves a second read when the
+ * caller already has them.
  */
 export async function loadPageRows(
   payload: Payload,
   as: StaffAccess,
-  { q }: { q?: string } = {}
+  { q, layouts }: { q?: string; layouts?: readonly LayoutInfo[] } = {}
 ): Promise<PageRow[]> {
-  const { docs: latest } = await payload.find({
-    collection: "pages",
-    where: searchWhere(q),
-    sort: "-updatedAt",
-    pagination: false,
-    depth: 0,
-    draft: true,
-    select: { title: true, path: true, updatedAt: true, _status: true },
-    ...as,
-  })
+  const [{ docs: latest }, knownLayouts] = await Promise.all([
+    payload.find({
+      collection: "pages",
+      where: searchWhere(q),
+      sort: "-updatedAt",
+      pagination: false,
+      depth: 0,
+      draft: true,
+      select: {
+        title: true,
+        path: true,
+        updatedAt: true,
+        _status: true,
+        layout: true,
+      },
+      ...as,
+    }),
+    layouts ?? loadLayoutInfos(payload, as.user),
+  ])
   if (latest.length === 0) return []
+  const { labels } = summarizeLayoutUsage(latest, knownLayouts)
 
   const { docs: published } = await payload.find({
     collection: "pages",
@@ -63,7 +86,37 @@ export async function loadPageRows(
     ...as,
   })
   const publishedStatus = new Map(published.map((p) => [p.id, p._status]))
-  return latest.map((page) => toPageRow(page, publishedStatus.get(page.id)))
+  return latest.map((page) =>
+    toPageRow(
+      page,
+      publishedStatus.get(page.id),
+      layoutLabelForPage(labels, page.id)
+    )
+  )
+}
+
+/**
+ * Every Layout for the Layouts list: its paths, how many Pages use it (every
+ * Page's newest version, resolved), and the Pages that pick it explicitly,
+ * which the Delete confirmation names. The default Layout can't be deleted,
+ * so its dependents are not looked up.
+ */
+export async function loadLayoutRows(
+  payload: Payload,
+  as: StaffAccess
+): Promise<LayoutRow[]> {
+  const usage = await loadLayoutUsage(payload, as)
+  const picked = await Promise.all(
+    usage.layouts.map(
+      async (layout): Promise<[number, Dependent[]]> => [
+        layout.id,
+        layout.isDefault
+          ? []
+          : await layoutDependents(payload, { id: layout.id, user: as.user }),
+      ]
+    )
+  )
+  return getLayoutRows(usage.layouts, usage, new Map(picked))
 }
 
 export type DashboardData = {
@@ -78,15 +131,15 @@ export async function loadDashboard(
   payload: Payload,
   as: StaffAccess
 ): Promise<DashboardData> {
+  const layouts = await loadLayoutInfos(payload, as.user)
   const [rows, seo] = await Promise.all([
-    loadPageRows(payload, as),
+    loadPageRows(payload, as, { layouts }),
     findPagesNeedingSeoAttention(payload, as),
   ])
   return {
-    // Layouts join here in Phase 3 through getRecentLayouts().
     continueEditing: continueEditing([
       ...rows.map(pageToRecentItem),
-      ...getRecentLayouts(),
+      ...getRecentLayouts(layouts),
     ]),
     waiting: waitingToPublish(rows),
     seoAttentionCount: seo.length,
