@@ -68,6 +68,18 @@ export const INPUT_LABELS: Record<ThemeInputKey, string> = {
   motion: "Motion",
 }
 
+/**
+ * One line of help under a control, where its label alone can mislead. The
+ * editor shows it under the control; the Theme record uses it as the field's
+ * description.
+ */
+export const INPUT_HELP: Partial<Record<ThemeInputKey, string>> = {
+  // Solid / Outline changes the primary button. The accent button is the
+  // emphasised call to action (Meadow's gold works because it stays a fill).
+  buttonStyle:
+    "Style applies to primary buttons. The accent button stays filled.",
+}
+
 const ENUM_KEYS = {
   neutralTint: valuesOf(NEUTRAL_TINTS),
   headingWeight: valuesOf(HEADING_WEIGHTS),

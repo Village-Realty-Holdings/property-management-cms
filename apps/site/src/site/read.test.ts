@@ -1,5 +1,13 @@
 import type { Payload } from "payload"
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest"
 
 import type { Media, User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
@@ -195,6 +203,31 @@ describe("the Theme the Site applies", () => {
       collection: "font-files",
       where: { id: { exists: true } },
     })
+  })
+
+  it("reads the Theme and the Fonts as a visitor, like every other Site read", async () => {
+    const findGlobal = vi.spyOn(payload, "findGlobal")
+    const find = vi.spyOn(payload, "find")
+    try {
+      await readSiteTheme(payload)
+      expect(findGlobal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "theme",
+          overrideAccess: false,
+          user: null,
+        })
+      )
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          collection: "fonts",
+          overrideAccess: false,
+          user: null,
+        })
+      )
+    } finally {
+      findGlobal.mockRestore()
+      find.mockRestore()
+    }
   })
 
   it("is the default preset until a Theme is saved", async () => {

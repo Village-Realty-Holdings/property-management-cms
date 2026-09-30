@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { describeChanges, normalizeInputs, type ThemeInputs } from "./inputs"
+import {
+  describeChanges,
+  INPUT_HELP,
+  normalizeInputs,
+  type ThemeInputs,
+} from "./inputs"
 import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
@@ -134,5 +139,13 @@ describe("describeChanges", () => {
   })
   it("is empty when nothing changed", () => {
     expect(describeChanges(fallback, { ...fallback })).toEqual([])
+  })
+})
+
+describe("control help text", () => {
+  it("says the button Style applies to primary buttons", () => {
+    expect(INPUT_HELP.buttonStyle).toBe(
+      "Style applies to primary buttons. The accent button stays filled."
+    )
   })
 })

@@ -195,7 +195,11 @@ export function ThemeSwatches({ summary }: { summary: ThemeSummary }) {
   )
 }
 
-/** The Theme: its swatches, when it was last saved, and Edit Theme. */
+/**
+ * The Theme: its swatches, when it was last saved, and View Theme. The link
+ * opens the read-only Theme page, so it says View. Phase 5 replaces that page
+ * with the editor and renames it Edit Theme.
+ */
 export function ThemeCard({ summary }: { summary: ThemeSummary }) {
   return (
     <DashboardCard id="dash-theme" title="Theme">
@@ -208,7 +212,7 @@ export function ThemeCard({ summary }: { summary: ThemeSummary }) {
           href="/admin/theme"
           className={buttonVariants({ variant: "outline" })}
         >
-          Edit Theme
+          View Theme
         </Link>
       </div>
     </DashboardCard>

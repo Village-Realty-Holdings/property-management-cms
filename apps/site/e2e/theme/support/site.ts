@@ -27,8 +27,12 @@ import type { ThemeInputs } from "../../../src/theme"
 export type ScratchSite = {
   payload: Payload
   staff: Awaited<ReturnType<typeof findOrCreateStaffUser>>
-  /** Saves `inputs` as the newest Theme version; it is live at once. */
-  saveTheme(inputs: ThemeInputs, note?: string): Promise<void>
+  /**
+   * Saves `inputs` as the newest Theme version; it is live at once. Resolves
+   * to false when the Site already looked like that: a save that changes
+   * nothing makes no version.
+   */
+  saveTheme(inputs: ThemeInputs, note?: string): Promise<boolean>
   /** The Theme the Site is showing, with the fonts its keys can name. */
   liveTheme(): Promise<LiveSiteTheme>
   /** Publishes the sample Page (or updates it) at `SAMPLE_PAGE_PATH`. */
@@ -59,11 +63,12 @@ export async function openScratchSite(): Promise<ScratchSite> {
     payload,
     staff,
     async saveTheme(inputs, note) {
-      await saveTheme(payload, {
+      const saved = await saveTheme(payload, {
         user,
         inputs,
         note: note ?? null,
       })
+      return saved.changed
     },
     async liveTheme() {
       return readSiteTheme(payload)

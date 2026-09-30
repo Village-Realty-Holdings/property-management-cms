@@ -79,14 +79,21 @@ describe("restoring a Theme version", () => {
 
   it("saves Theme A and photographs the Site", async () => {
     savedA = { ...HARBOUR.inputs }
-    await site.saveTheme(savedA, A_NOTE)
+    // An earlier spec may have left the Site on Harbour, and a save that
+    // changes nothing makes no version (so there would be no A to restore).
+    await site.saveTheme(MEADOW.inputs, "Acceptance: start elsewhere")
+    expect(await site.saveTheme(savedA, A_NOTE)).toBe(true)
     shots.a = await photograph(visitor.page)
     for (const view of VIEWS)
       saveScreenshot(`${view.name}-a.png`, shots.a[view.name]!, "restore")
   })
 
   it("saves Theme B, and the Site changes", async () => {
-    await site.saveTheme({ ...TERRACOTTA.inputs, motion: "none" }, B_NOTE)
+    const saved = await site.saveTheme(
+      { ...TERRACOTTA.inputs, motion: "none" },
+      B_NOTE
+    )
+    expect(saved).toBe(true)
     shots.b = await photograph(visitor.page)
     for (const view of VIEWS) {
       saveScreenshot(`${view.name}-b.png`, shots.b[view.name]!, "restore")
@@ -136,9 +143,13 @@ describe("restoring a Theme version", () => {
 
   it("does the same when the restored version differs in every control", async () => {
     // A third, very different Theme, then back to Meadow's controls.
-    await site.saveTheme(MEADOW.inputs, "Acceptance: theme C")
+    expect(await site.saveTheme(MEADOW.inputs, "Acceptance: theme C")).toBe(
+      true
+    )
     const c = await photograph(visitor.page)
-    await site.saveTheme(HARBOUR.inputs, "Acceptance: theme D")
+    expect(await site.saveTheme(HARBOUR.inputs, "Acceptance: theme D")).toBe(
+      true
+    )
 
     const { page } = admin
     await page.goto(`${ORIGIN}/admin/theme`)

@@ -110,6 +110,22 @@ describe("builtInRows", () => {
     )
   })
 
+  it("hides a built-in quick pick while a stored Font has that family", () => {
+    const stored = [
+      { family: "karla", faces: [{ weight: 400 }] },
+      { family: "Lora", faces: [{ weight: 400 }] },
+    ]
+    const families = builtInRows(stored).map((r) => r.family)
+    expect(families).not.toContain("Karla")
+    expect(families).toContain("Zilla Slab")
+    expect(families).toHaveLength(BUILT_IN_FONTS.length - 1)
+  })
+
+  it("keeps the quick pick when the stored Font has no files", () => {
+    const rows = builtInRows([{ family: "Karla", faces: [] }])
+    expect(rows.map((r) => r.family)).toContain("Karla")
+  })
+
   it("names their weights", () => {
     const zilla = builtInRows().find((r) => r.family === "Zilla Slab")!
     expect(zilla.summary).toBe("3 weights (500, 600, 700)")

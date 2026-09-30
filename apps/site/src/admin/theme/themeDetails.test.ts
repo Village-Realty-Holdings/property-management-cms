@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { combineFonts } from "../../fonts/available"
 import { CLASSIC, HARBOUR } from "../../theme"
-import { formatSavedAt, themeDetails } from "./themeDetails"
+import { themeDetails } from "./themeDetails"
 
 const stored = combineFonts([
   {
@@ -47,10 +47,23 @@ describe("themeDetails", () => {
   })
 })
 
-describe("formatSavedAt", () => {
-  it("is a readable UTC date and time", () => {
-    expect(formatSavedAt("2026-03-01T10:05:00.000Z")).toMatch(
-      /^Mar 1, 2026, 10:05\sAM UTC$/
+describe("a stored Font with no files", () => {
+  const fileless = combineFonts([
+    { id: 8, family: "Montserrat", kind: "sans", files: [] },
+  ])
+
+  it("is named, with the built-in font the Site uses instead", () => {
+    const rows = themeDetails(
+      { ...CLASSIC.inputs, headingFont: "font:8", bodyFont: "font:8" },
+      fileless
+    )
+    const value = (label: string) => rows.find((r) => r.label === label)?.value
+    // Montserrat is Avada's brand font: the Site uses Avada's stand-in.
+    expect(value("Heading font")).toBe(
+      "Montserrat has no files (Bricolage Grotesque is used instead)"
+    )
+    expect(value("Body font")).toBe(
+      "Montserrat has no files (Instrument Sans is used instead)"
     )
   })
 })

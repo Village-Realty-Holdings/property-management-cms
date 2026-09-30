@@ -1,7 +1,13 @@
 import type { Payload, TypedUser } from "payload"
 
 import type { Theme as ThemeDoc } from "../../payload-types"
-import { normalizeInputs, INPUT_LABELS, type ThemeInputs } from "../inputs"
+import { normalizeHex } from "../colour"
+import {
+  describeChanges,
+  normalizeInputs,
+  INPUT_LABELS,
+  type ThemeInputs,
+} from "../inputs"
 import { FALLBACK_INPUTS } from "./fallback"
 import { parseFontKey, storedFontIds } from "./fontKeys"
 import { restoreSummary } from "./summary"
@@ -22,6 +28,12 @@ export type LiveTheme = {
   savedAt: string | null
 }
 
+/** The Theme after a save or a restore, and whether that made a new version. */
+export type SaveResult = LiveTheme & {
+  /** False when the inputs matched the live Theme, so nothing was saved. */
+  changed: boolean
+}
+
 export type ThemeVersion = {
   id: number
   /** ISO time. */
@@ -39,9 +51,18 @@ type Staff = TypedUser
 
 const FONT_KEYS = ["headingFont", "bodyFont"] as const
 
-/** The live Theme, or the Classic preset when none is saved. */
+/**
+ * The live Theme, or the default preset (Classic) when none is saved. Read as
+ * a visitor, like every other Site read (apps/site ADR-0001): the Theme is
+ * public, so this is the same for a Staff User.
+ */
 export async function readLiveTheme(payload: Payload): Promise<LiveTheme> {
-  const doc = await payload.findGlobal({ slug: "theme", depth: 0 })
+  const doc = await payload.findGlobal({
+    slug: "theme",
+    depth: 0,
+    overrideAccess: false,
+    user: null,
+  })
   if (!doc.id)
     return { source: "default", inputs: FALLBACK_INPUTS, savedAt: null }
   return {
@@ -53,12 +74,19 @@ export async function readLiveTheme(payload: Payload): Promise<LiveTheme> {
 
 /**
  * Saves `inputs` as a new version, live at once. `note` replaces the
- * automatic change summary. Throws when a value is invalid.
+ * automatic change summary. A save that changes nothing is skipped: no
+ * version is made and the live Theme comes back with `changed: false`, so the
+ * history lists real changes only. Throws when a value is invalid, even when
+ * the rest matches.
  */
 export async function saveTheme(
   payload: Payload,
   options: { user: Staff; inputs: ThemeInputs; note?: string | null }
-): Promise<LiveTheme> {
+): Promise<SaveResult> {
+  const live = await readLiveTheme(payload)
+  if (live.source === "saved" && matches(live.inputs, options.inputs)) {
+    return { ...live, changed: false }
+  }
   await payload.updateGlobal({
     slug: "theme",
     data: { ...options.inputs, note: options.note?.trim() || null },
@@ -66,7 +94,25 @@ export async function saveTheme(
     overrideAccess: false,
     user: options.user,
   })
-  return readLiveTheme(payload)
+  return { ...(await readLiveTheme(payload)), changed: true }
+}
+
+/**
+ * Whether `submitted` would save exactly `live`. Colours are compared as the
+ * record stores them (`#rrggbb`), and a value the record would refuse never
+ * matches, so it still reaches validation.
+ */
+function matches(live: ThemeInputs, submitted: ThemeInputs): boolean {
+  const canonical: ThemeInputs = { ...submitted }
+  for (const key of ["primary", "accent", "text"] as const) {
+    canonical[key] = normalizeHex(submitted[key]) ?? submitted[key]
+  }
+  for (const key of ["third", "darkSurface"] as const) {
+    const value = submitted[key]
+    canonical[key] =
+      value == null || value === "" ? null : (normalizeHex(value) ?? value)
+  }
+  return describeChanges(live, canonical).length === 0
 }
 
 /** Every version, newest first (the first is live). Staff only. */
@@ -109,12 +155,13 @@ export async function listThemeHistory(
 /**
  * Puts an old version live again by saving it as a new version, so the
  * history only grows. A stored Font the old version used and that was deleted
- * since is replaced by the Classic font, and the summary says so.
+ * since is replaced by the Classic font, and the summary says so. When the
+ * version matches what is live already, nothing is saved (`changed: false`).
  */
 export async function restoreThemeVersion(
   payload: Payload,
   options: { user: Staff; versionId: number }
-): Promise<LiveTheme> {
+): Promise<SaveResult> {
   const found = await payload
     .findGlobalVersionByID({
       slug: "theme",
@@ -139,7 +186,10 @@ export async function restoreThemeVersion(
   return saveTheme(payload, {
     user: options.user,
     inputs,
-    note: restoreSummary(live.inputs, inputs, missing),
+    note: restoreSummary(live.inputs, inputs, {
+      from: String(found.createdAt),
+      deletedFonts: missing,
+    }),
   })
 }
 

@@ -149,6 +149,16 @@ const SHADOW = {
   },
 } as const
 
+/**
+ * A sheet slides in over the page, one layer above a card: it is flat with
+ * None, and follows Subtle and Lifted like the rest.
+ */
+const SHEET_SHADOW = {
+  none: NO_SHADOW,
+  subtle: SHADOW.subtle.md,
+  lifted: "0 16px 40px -8px rgb(0 0 0 / 0.24)",
+} as const
+
 const MOTION = {
   none: { duration: "0ms", lift: "0px" },
   subtle: { duration: "180ms", lift: "-1px" },
@@ -263,6 +273,7 @@ export function deriveTheme(
     "--card-radius": CARD_RADIUS[inputs.cardCorners],
     // Subtle keeps cards flat and soft; Lifted lets them float.
     "--card-shadow": inputs.shadows === "lifted" ? shadow.md : shadow.sm,
+    "--sheet-shadow": SHEET_SHADOW[inputs.shadows],
     "--input-height": spacing.height,
     "--input-px": spacing.inputPx,
     "--input-radius": BASE_RADIUS[inputs.cardCorners],

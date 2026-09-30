@@ -61,6 +61,12 @@ export function siteEnv(): NodeJS.ProcessEnv {
     PAYLOAD_SECRET,
     DEV_SIGN_IN: "1",
     SITE_URL: ORIGIN,
+    // Sign in with Microsoft is off, so the screens look the same on every
+    // machine whether or not its .env has an Entra app (the baselines have
+    // only the dev sign-in button).
+    ENTRA_TENANT_ID: "",
+    ENTRA_CLIENT_ID: "",
+    ENTRA_CLIENT_SECRET: "",
     PORT: String(PORT),
     NEXT_TELEMETRY_DISABLED: "1",
   }

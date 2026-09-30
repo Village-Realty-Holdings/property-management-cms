@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { combineFonts, type StoredFont } from "../fonts/available"
+import { DEFAULT_INPUTS } from "../theme/presets"
 import {
   DEFAULT_BODY_FONT_KEY,
   DEFAULT_HEADING_FONT_KEY,
@@ -105,11 +106,39 @@ describe("resolveFontStack", () => {
     expect(stack).toBe('"A\\";}body{x:y", serif')
   })
 
-  it("uses the generic family alone for a stored Font with no files", () => {
+  it("treats a stored Font with no files as missing: the default font for the role", () => {
     const empty: StoredFont = { ...uploaded, id: 6, files: [] }
-    const resolved = resolveFontStack("font:6", combineFonts([empty]))
+    const heading = resolveFontStack("font:6", combineFonts([empty]), "heading")
+    expect(heading.key).toBe(DEFAULT_HEADING_FONT_KEY)
+    expect(heading.css).toBe("")
+    expect(heading.stack).toBe("var(--font-classic-display), serif")
+    const body = resolveFontStack("font:6", combineFonts([empty]), "body")
+    expect(body.key).toBe(DEFAULT_BODY_FONT_KEY)
+  })
+
+  it("uses the stand-in of the brand preset that names a file-less Font's family", () => {
+    const montserrat: StoredFont = {
+      id: 8,
+      family: "Montserrat",
+      kind: "sans",
+      files: [],
+    }
+    const resolved = resolveFontStack(
+      "font:8",
+      combineFonts([montserrat]),
+      "heading"
+    )
+    // Avada's stand-in for Montserrat.
+    expect(resolved.key).toBe("built-in:Bricolage Grotesque")
+    expect(resolved.stack).toBe(
+      "var(--font-modern-display), system-ui, sans-serif"
+    )
     expect(resolved.css).toBe("")
-    expect(resolved.stack).toBe('"Fraunces", serif')
+  })
+
+  it("takes the default fonts from the default preset, not a second pairing", () => {
+    expect(DEFAULT_HEADING_FONT_KEY).toBe(DEFAULT_INPUTS.headingFont)
+    expect(DEFAULT_BODY_FONT_KEY).toBe(DEFAULT_INPUTS.bodyFont)
   })
 
   it.each([

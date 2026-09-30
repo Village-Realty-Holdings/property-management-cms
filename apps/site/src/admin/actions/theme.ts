@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 
 import type { FormState } from "../formState"
 import { requireStaff } from "../session"
-import { restoreThemeAs } from "../theme/themeScreen"
+import type { ThemeInputs } from "../../theme"
+import { restoreThemeAs, saveThemeAs } from "../theme/themeScreen"
 
 /**
  * The Theme screen's Server Actions. Each runs as the Staff User (apps/site
@@ -19,6 +20,25 @@ import { restoreThemeAs } from "../theme/themeScreen"
 export async function restoreTheme(versionId: number): Promise<FormState> {
   const { payload, as } = await requireStaff()
   const result = await restoreThemeAs(payload, as, versionId)
+  if (result.ok) {
+    revalidatePath("/admin/theme")
+    revalidatePath("/admin")
+    revalidatePath("/", "layout")
+  }
+  return result
+}
+
+/**
+ * Saves the Theme: it is live on the Site on the next request. A save that
+ * changes nothing makes no version (the message says so). The inputs come from
+ * the browser, so the Theme record validates every value again.
+ */
+export async function saveTheme(
+  inputs: ThemeInputs,
+  note?: string | null
+): Promise<FormState> {
+  const { payload, as } = await requireStaff()
+  const result = await saveThemeAs(payload, as, inputs, note)
   if (result.ok) {
     revalidatePath("/admin/theme")
     revalidatePath("/admin")

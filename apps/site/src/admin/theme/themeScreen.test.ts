@@ -5,7 +5,13 @@ import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { CLASSIC, HARBOUR } from "../../theme"
 import { listThemeHistory, readLiveTheme, saveTheme } from "../../theme/record"
-import { loadThemeScreen, restoreThemeAs } from "./themeScreen"
+import {
+  loadThemeScreen,
+  NO_CHANGES_MESSAGE,
+  restoreThemeAs,
+  saveThemeAs,
+  substituteFamily,
+} from "./themeScreen"
 
 // The Theme screen's read and its Restore action, against a real Payload on a
 // throwaway database, as a Staff User (apps/site ADR-0002).
@@ -80,7 +86,28 @@ describe("restoreThemeAs", () => {
     const screen = await loadThemeScreen(payload, access())
     expect(screen.history).toHaveLength(3)
     expect(screen.history[0]?.isLive).toBe(true)
-    expect(screen.history[0]?.summary).toMatch(/^Restored an earlier version/)
+    expect(screen.history[0]?.summary).toMatch(
+      /^Restored the version from .* UTC: /
+    )
+  })
+
+  it("adds no version, and says so, when the version already looks like the live one", async () => {
+    await saveTheme(payload, { user: ada, inputs: CLASSIC.inputs })
+    await saveTheme(payload, { user: ada, inputs: HARBOUR.inputs })
+    await saveTheme(payload, { user: ada, inputs: CLASSIC.inputs })
+    const history = await listThemeHistory(payload, { user: ada })
+    const oldest = history.at(-1)!
+    expect(oldest.isLive).toBe(false)
+
+    const result = await restoreThemeAs(payload, access(), oldest.id)
+
+    expect(result).toEqual({
+      ok: true,
+      message: "Your Site already looks like that version. Nothing to restore.",
+    })
+    expect(
+      await listThemeHistory(payload, { user: ada }).then((h) => h.length)
+    ).toBe(3)
   })
 
   it("refuses the version that is already live", async () => {
@@ -107,5 +134,42 @@ describe("restoreThemeAs", () => {
       ok: false,
       message: "That version no longer exists.",
     })
+  })
+})
+
+describe("saveThemeAs", () => {
+  it("saves the Theme and says it is live", async () => {
+    const result = await saveThemeAs(payload, access(), HARBOUR.inputs)
+    expect(result).toEqual({
+      ok: true,
+      message: "Theme saved. It is live on your Site.",
+    })
+    expect((await readLiveTheme(payload)).inputs).toEqual(HARBOUR.inputs)
+  })
+
+  it("says there is nothing to save, and makes no version, when nothing changed", async () => {
+    await saveThemeAs(payload, access(), HARBOUR.inputs)
+    const result = await saveThemeAs(payload, access(), HARBOUR.inputs)
+    expect(result).toEqual({ ok: true, message: "No changes to save" })
+    expect(NO_CHANGES_MESSAGE).toBe("No changes to save")
+    expect(
+      await listThemeHistory(payload, { user: ada }).then((h) => h.length)
+    ).toBe(1)
+  })
+
+  it("shows the field errors when a value is refused", async () => {
+    const result = await saveThemeAs(payload, access(), {
+      ...HARBOUR.inputs,
+      primary: "teal",
+    })
+    expect(result.ok).toBe(false)
+    expect(result.fieldErrors).toHaveProperty("primary")
+  })
+})
+
+describe("substituteFamily", () => {
+  it("is the Classic font of the slot a restore replaces", () => {
+    expect(substituteFamily("Heading font")).toBe("Newsreader")
+    expect(substituteFamily("Body font")).toBe("Public Sans")
   })
 })

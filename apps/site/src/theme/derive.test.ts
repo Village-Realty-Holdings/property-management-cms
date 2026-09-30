@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { contrastRatio } from "./colour"
 import { deriveTheme, type FontStacks, type TokenMap } from "./derive"
 import type { ThemeInputs } from "./inputs"
-import { HARBOUR } from "./presets"
+import { DEFAULT_INPUTS, HARBOUR } from "./presets"
 
 const fonts: FontStacks = {
   heading: '"Fraunces", Georgia, serif',
@@ -198,9 +198,17 @@ describe("shadows", () => {
       "--shadow-sm",
       "--shadow-md",
       "--card-shadow",
+      "--sheet-shadow",
       "--btn-shadow",
     ])
       expect(t[name]).toBe("0 0 #0000")
+  })
+  it("a sheet floats above the page, so it follows the Shadows control", () => {
+    const subtle = tokens({ shadows: "subtle" })["--sheet-shadow"]
+    const lifted = tokens({ shadows: "lifted" })["--sheet-shadow"]
+    expect(subtle).toBe("0 4px 15px 0 rgb(0 0 0 / 0.1)")
+    expect(lifted).toBe("0 16px 40px -8px rgb(0 0 0 / 0.24)")
+    expect(subtle).not.toBe(lifted)
   })
   it("Subtle is soft and Lifted is deeper", () => {
     const subtle = tokens({ shadows: "subtle" })
@@ -374,6 +382,7 @@ describe("structure", () => {
       "--btn-lift",
       "--card-radius",
       "--card-shadow",
+      "--sheet-shadow",
       "--input-height",
       "--input-px",
       "--input-radius",
@@ -391,8 +400,8 @@ describe("structure", () => {
   it("never throws on bad input, and falls back to the default colours", () => {
     const bad = { ...HARBOUR.inputs, primary: "nope", text: "" } as ThemeInputs
     const t = deriveTheme(bad, fonts).schemes.light
-    expect(t["--primary"]).toBe(HARBOUR.inputs.primary)
-    expect(t["--foreground"]).toBe(HARBOUR.inputs.text)
+    expect(t["--primary"]).toBe(DEFAULT_INPUTS.primary)
+    expect(t["--foreground"]).toBe(DEFAULT_INPUTS.text)
   })
 
   it("is deterministic", () => {

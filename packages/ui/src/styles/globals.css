@@ -15,6 +15,9 @@
  *                                   (fall back to --secondary)
  *      --font-sans, --font-display  body and heading faces (--font-display
  *                                   falls back to --font-sans)
+ *      --display-weight             heading font weight
+ *      --display-transform          heading case (none | uppercase)
+ *      --display-tracking           heading letter-spacing
  *
  * 2. Component tokens, listed here so the Theme emitter and the Site apply
  *    step match them. Each has an Admin default in :root below that
@@ -38,6 +41,9 @@
  *               --btn-bg-hover, --btn-fg-hover   its fill and text on hover
  *      Cards    --card-radius    corner radius of cards, dialogs and panels
  *               --card-shadow    box-shadow ("0 0 #0000" for none)
+ *      Sheets   --sheet-shadow   box-shadow of a sheet that slides in over the
+ *                                page; the Admin's default is Tailwind's
+ *                                shadow-lg
  *      Inputs   --input-radius        corner radius of inputs, textareas, selects
  *               --input-height        height of a single-line control
  *               --input-px            horizontal padding
@@ -170,6 +176,8 @@
   --btn-fg-hover: var(--primary-foreground);
   --card-radius: calc(var(--radius) * 1.4);
   --card-shadow: 0 0 #0000;
+  --sheet-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --input-radius: var(--radius);
   --input-height: 2rem;
   --input-px: 0.625rem;

@@ -169,7 +169,7 @@ describe("Dashboard cards", () => {
     expect(screen.getByText(/Every Published Page has/)).toBeTruthy()
   })
 
-  it("the Theme card shows the default swatches and Edit Theme", () => {
+  it("the Theme card shows the default swatches and View Theme (the page is read-only until Phase 5)", () => {
     render(
       <ThemeCard
         summary={themeSummaryOf({
@@ -182,7 +182,7 @@ describe("Dashboard cards", () => {
     expect(screen.getByText("Not customised yet")).toBeTruthy()
     expect(screen.getByText(CLASSIC.inputs.primary)).toBeTruthy()
     expect(
-      screen.getByRole("link", { name: "Edit Theme" }).getAttribute("href")
+      screen.getByRole("link", { name: "View Theme" }).getAttribute("href")
     ).toBe("/admin/theme")
   })
 

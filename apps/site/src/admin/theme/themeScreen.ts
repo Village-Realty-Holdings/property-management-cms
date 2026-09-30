@@ -2,20 +2,26 @@ import type { Payload } from "payload"
 
 import { getAvailableFonts } from "../../fonts/available"
 import type { User } from "../../payload-types"
+import { INPUT_LABELS, type ThemeInputs } from "../../theme"
 import {
+  FALLBACK_INPUTS,
   listThemeHistory,
   readLiveTheme,
   restoreThemeVersion,
+  saveTheme,
 } from "../../theme/record"
+import { formatSavedAt } from "../../theme/record/summary"
 import { themeSummaryOf, type ThemeSummary } from "../dashboard/site"
 import { formStateFromError, type FormState } from "../formState"
-import { formatSavedAt, themeDetails, type DetailRow } from "./themeDetails"
+import { themeDetails, type DetailRow } from "./themeDetails"
 
 /**
  * What the Theme screen reads and does, through the Local API as the Staff
  * User (apps/site ADR-0002): the Server Actions pass the user's `as`. Kept
  * apart from the actions so it runs in tests without Next.
  */
+
+const FONT_INPUTS = ["headingFont", "bodyFont"] as const
 
 /** The Local API options of a signed-in Staff User (see StaffContext). */
 export type StaffAccess = {
@@ -38,6 +44,11 @@ export type HistoryRow = {
   isLive: boolean
   /** Labels of Font controls whose Font was deleted since. */
   missingFonts: string[]
+  /**
+   * What restoring puts in those slots: the Classic font's family, named in
+   * the confirm dialog before the save.
+   */
+  substitutions: { label: string; family: string }[]
 }
 
 export type ThemeScreen = {
@@ -49,6 +60,36 @@ export type ThemeScreen = {
 }
 
 const GONE = "That version no longer exists."
+
+/** The family a restore uses in the Font control called `label`. */
+export function substituteFamily(label: string): string {
+  const key = FONT_INPUTS.find((input) => INPUT_LABELS[input] === label)
+  const fallback = key ? FALLBACK_INPUTS[key] : FALLBACK_INPUTS.bodyFont
+  return fallback.slice(fallback.indexOf(":") + 1)
+}
+
+/** What the toast says when a save would change nothing. */
+export const NO_CHANGES_MESSAGE = "No changes to save"
+
+/**
+ * Saves the Theme as the Staff User: it is live on the Site at once. A save
+ * that changes nothing makes no version and says so.
+ */
+export async function saveThemeAs(
+  payload: Payload,
+  access: StaffAccess,
+  inputs: ThemeInputs,
+  note?: string | null
+): Promise<FormState> {
+  try {
+    const saved = await saveTheme(payload, { user: access.user, inputs, note })
+    return saved.changed
+      ? { ok: true, message: "Theme saved. It is live on your Site." }
+      : { ok: true, message: NO_CHANGES_MESSAGE }
+  } catch (error) {
+    return formStateFromError(error)
+  }
+}
 
 export async function loadThemeScreen(
   payload: Payload,
@@ -71,6 +112,10 @@ export async function loadThemeScreen(
       summary: version.summary,
       isLive: version.isLive,
       missingFonts: version.missingFonts,
+      substitutions: version.missingFonts.map((label) => ({
+        label,
+        family: substituteFamily(label),
+      })),
     })),
   }
 }
@@ -95,7 +140,17 @@ export async function restoreThemeAs(
     if (version.isLive) {
       return { ok: false, message: "That version is already live." }
     }
-    await restoreThemeVersion(payload, { user: access.user, versionId })
+    const restored = await restoreThemeVersion(payload, {
+      user: access.user,
+      versionId,
+    })
+    if (!restored.changed) {
+      return {
+        ok: true,
+        message:
+          "Your Site already looks like that version. Nothing to restore.",
+      }
+    }
     return {
       ok: true,
       message: `Restored the version from ${formatSavedAt(version.savedAt)}. It is live on your Site.`,

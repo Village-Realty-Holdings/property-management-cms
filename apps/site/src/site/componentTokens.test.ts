@@ -39,6 +39,9 @@ const ADMIN_DEFAULTS: Record<string, string> = {
   "--btn-fg-hover": "var(--primary-foreground)",
   "--card-radius": "calc(var(--radius) * 1.4)",
   "--card-shadow": "0 0 #0000",
+  // Tailwind's shadow-lg, which the Sheet hardcoded before it read a token.
+  "--sheet-shadow":
+    "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
   "--input-radius": "var(--radius)",
   "--input-height": "2rem",
   "--input-px": "0.625rem",
@@ -58,6 +61,19 @@ describe("component tokens in globals.css", () => {
   it("documents every component token in the comment at the top", () => {
     const header = globalsCss.slice(0, globalsCss.indexOf("@import"))
     for (const name of Object.keys(ADMIN_DEFAULTS)) {
+      expect(header, name).toContain(name)
+    }
+  })
+})
+
+describe("heading style tokens", () => {
+  it("are documented at the top of globals.css and read by the display face", () => {
+    const header = globalsCss.slice(0, globalsCss.indexOf("@import"))
+    for (const name of [
+      "--display-weight",
+      "--display-transform",
+      "--display-tracking",
+    ]) {
       expect(header, name).toContain(name)
     }
   })
@@ -117,6 +133,7 @@ describe("classes that read component tokens", () => {
     ["hover:text-(--btn-fg-hover)", "color: var(--btn-fg-hover)"],
     ["rounded-(--card-radius)", "border-radius: var(--card-radius)"],
     ["shadow-(--card-shadow)", "--tw-shadow: var(--card-shadow)"],
+    ["shadow-(--sheet-shadow)", "--tw-shadow: var(--sheet-shadow)"],
     ["h-(--input-height)", "height: var(--input-height)"],
     ["rounded-(--input-radius)", "border-radius: var(--input-radius)"],
     ["px-(--input-px)", "padding-inline: var(--input-px)"],
@@ -212,6 +229,12 @@ describe("packages/ui components hold no hardcoded look", () => {
     }
   })
 
+  it("has a Sheet whose shadow follows the Shadows control, not a fixed shadow-lg", () => {
+    const sheet = classLiterals(source("sheet")).join(" ")
+    expect(sheet).toContain("shadow-(--sheet-shadow)")
+    expect(sheet).not.toMatch(/(?<![\w-])shadow-(sm|md|lg|xs|xl)(?![\w-])/)
+  })
+
   it("has no component in the package hardcoding a card corner or shadow", () => {
     const dialog = classLiterals(source("alert-dialog")).join(" ")
     expect(dialog).not.toMatch(/(?<![\w-])rounded(-b)?-xl/)
@@ -234,6 +257,7 @@ describe("every token class in the components and Blocks is valid Tailwind", () 
       "native-select",
       "card",
       "alert-dialog",
+      "sheet",
     ].map((name) => join(uiComponents, `${name}.tsx`)),
     ...["CallToActionBlock.tsx", "HeroBlock.tsx", "types.ts"].map((name) =>
       join(blocks, name)
@@ -244,7 +268,7 @@ describe("every token class in the components and Blocks is valid Tailwind", () 
     const classes = classLiterals(readFileSync(file, "utf8"))
       .flatMap((literal) => literal.split(/\s+/))
       .filter((c) =>
-        /--(btn|card|input|section-y)|surface-dark|(bg|text)-(accent|link|third)/.test(
+        /--(btn|card|input|sheet|section-y)|surface-dark|(bg|text)-(accent|link|third)/.test(
           c
         )
       )

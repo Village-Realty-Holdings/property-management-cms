@@ -5,11 +5,14 @@ import { deriveTheme } from "./derive"
 import { normalizeInputs } from "./inputs"
 import {
   BRAND_PRESETS,
+  CLASSIC,
   DEFAULT_INPUTS,
+  DEFAULT_PRESET,
   GENERAL_PRESETS,
   PRESETS,
   findPreset,
   presetInputs,
+  standInFor,
 } from "./presets"
 
 const fonts = { heading: "serif", body: "sans-serif" }
@@ -41,8 +44,9 @@ describe("the preset list", () => {
     expect(findPreset("nope")).toBeUndefined()
   })
 
-  it("starts a new Theme from Harbour", () => {
-    expect(DEFAULT_INPUTS).toBe(findPreset("harbour")!.inputs)
+  it("starts a new Theme from Classic, the look the Site had before the Theme", () => {
+    expect(DEFAULT_PRESET).toBe(CLASSIC)
+    expect(DEFAULT_INPUTS).toBe(findPreset("classic")!.inputs)
   })
 })
 
@@ -116,6 +120,49 @@ describe("the brand presets keep the brand's palette", () => {
   })
 })
 
+describe("brand presets and their fonts", () => {
+  it.each(BRAND_PRESETS.map((p) => [p.name, p] as const))(
+    "%s names the brand's real fonts and carries built-in stand-ins",
+    (_, preset) => {
+      expect(preset.preferredFonts?.heading).toBeTruthy()
+      expect(preset.preferredFonts?.body).toBeTruthy()
+      expect(preset.inputs.headingFont).toMatch(/^built-in:/)
+      expect(preset.inputs.bodyFont).toMatch(/^built-in:/)
+    }
+  )
+
+  it("names the real families the research measured", () => {
+    expect(findPreset("warren-beach")!.preferredFonts).toEqual({
+      heading: "Source Sans 3",
+      body: "Source Sans 3",
+    })
+    expect(findPreset("avada")!.preferredFonts).toEqual({
+      heading: "Montserrat",
+      body: "Montserrat",
+    })
+    expect(findPreset("beachside")!.preferredFonts).toEqual({
+      heading: "Fraunces",
+      body: "Nunito Sans",
+    })
+  })
+})
+
+describe("standInFor", () => {
+  it("gives the built-in stand-in of the preset that names the family", () => {
+    expect(standInFor("Montserrat", "heading")).toBe(
+      findPreset("avada")!.inputs.headingFont
+    )
+    expect(standInFor("nunito sans", "body")).toBe(
+      findPreset("beachside")!.inputs.bodyFont
+    )
+  })
+
+  it("is undefined for a family no preset names, or the wrong role", () => {
+    expect(standInFor("Comic Neue", "body")).toBeUndefined()
+    expect(standInFor("Fraunces", "body")).toBeUndefined()
+  })
+})
+
 describe("presetInputs", () => {
   const avada = findPreset("avada")!
 
@@ -139,6 +186,20 @@ describe("presetInputs", () => {
     ])
     expect(inputs.headingFont).toBe(beachside.inputs.headingFont)
     expect(inputs.bodyFont).toBe("font:2")
+  })
+
+  it("does not pick a stored Font that has no files", () => {
+    const inputs = presetInputs(avada, [
+      { key: "font:7", family: "Montserrat", files: [] },
+    ])
+    expect(inputs).toEqual(avada.inputs)
+  })
+
+  it("picks a stored Font that has files", () => {
+    const inputs = presetInputs(avada, [
+      { key: "font:7", family: "Montserrat", files: [{}] },
+    ])
+    expect(inputs.headingFont).toBe("font:7")
   })
 
   it("leaves a general preset's fonts alone", () => {

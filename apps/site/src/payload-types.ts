@@ -663,6 +663,9 @@ export interface Theme {
   cardCorners: 'square' | 'soft' | 'rounded';
   spacing: 'compact' | 'comfortable' | 'spacious';
   shadows: 'none' | 'subtle' | 'lifted';
+  /**
+   * Style applies to primary buttons. The accent button stays filled.
+   */
   buttonStyle: 'solid' | 'outline';
   buttonLetters: 'normal' | 'uppercase' | 'title';
   buttonWeight: 'regular' | 'medium' | 'bold';

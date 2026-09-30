@@ -189,9 +189,11 @@ describe("<BlockButton>", () => {
         />
       </>
     )
-    expect(getByRole("link", { name: "One" }).className).toContain(
-      "bg-accent text-accent-foreground"
-    )
+    const one = getByRole("link", { name: "One" })
+    expect(one.className).toContain("bg-accent text-accent-foreground")
+    // The accent button is the emphasised CTA: it stays a fill whatever the
+    // Buttons style is, because the Style control applies to primary buttons.
+    expect(one.className).not.toMatch(/--btn-(bg|fg|border)/)
     const two = getByRole("link", { name: "Two" })
     // The primary button is the Theme's button: solid or outline, by tokens.
     expect(two.className).toContain("bg-(--btn-bg) text-(--btn-fg)")

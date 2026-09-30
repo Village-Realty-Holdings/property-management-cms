@@ -1,8 +1,5 @@
 import type { AvailableFont } from "../../fonts/available"
-import {
-  DEFAULT_BODY_FONT_KEY,
-  DEFAULT_HEADING_FONT_KEY,
-} from "../../site/fontStacks"
+import { resolveFontStack, type FontRole } from "../../site/fontStacks"
 import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
@@ -46,12 +43,17 @@ const familyOf = (key: string) => key.slice(key.indexOf(":") + 1)
 
 function fontLabel(
   key: string,
-  fallbackKey: string,
+  role: FontRole,
   available: readonly AvailableFont[]
 ): string {
   const found = available.find((font) => font.key === key)
-  if (found) return found.family
-  return `A deleted Font (${familyOf(fallbackKey)} is used instead)`
+  const unusable = found?.source === "stored" && !found.files?.length
+  if (found && !unusable) return found.family
+  // What the Site shows in its place (see resolveFontStack).
+  const usedInstead = familyOf(resolveFontStack(key, available, role).key)
+  return found
+    ? `${found.family} has no files (${usedInstead} is used instead)`
+    : `A deleted Font (${usedInstead} is used instead)`
 }
 
 /** The fonts, then every other pick-from-a-list control, labelled. */
@@ -62,11 +64,11 @@ export function themeDetails(
   return [
     {
       label: INPUT_LABELS.headingFont,
-      value: fontLabel(inputs.headingFont, DEFAULT_HEADING_FONT_KEY, available),
+      value: fontLabel(inputs.headingFont, "heading", available),
     },
     {
       label: INPUT_LABELS.bodyFont,
-      value: fontLabel(inputs.bodyFont, DEFAULT_BODY_FONT_KEY, available),
+      value: fontLabel(inputs.bodyFont, "body", available),
     },
     ...CHOICES.map(([key, choices]) => ({
       label: INPUT_LABELS[key],
@@ -75,15 +77,4 @@ export function themeDetails(
         String(inputs[key]),
     })),
   ]
-}
-
-const savedFormat = new Intl.DateTimeFormat("en", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-})
-
-/** "Mar 1, 2026, 10:05 AM UTC". */
-export function formatSavedAt(iso: string): string {
-  return `${savedFormat.format(new Date(iso))} UTC`
 }

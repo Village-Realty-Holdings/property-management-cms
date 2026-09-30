@@ -5,7 +5,11 @@ import type { ThemeInputs } from "./inputs"
  * is an ordinary edit of every control. The four general presets use only the
  * built-in fonts. A brand preset names the families the real brand uses
  * (`preferredFonts`); those are Google Fonts or uploaded Fonts, so the
- * preset also carries built-in stand-ins for a Site that has not added them.
+ * preset also carries built-in stand-ins (its `inputs.headingFont` and
+ * `bodyFont`) that apply only while the Site has no stored Font of that
+ * family, as the brand research's `fontFallbackIfNotUploaded` says. Once a
+ * Site stores the Font (Phase 6 seeds import them), applying the preset picks
+ * it with no code change (`presetInputs`).
  */
 export type ThemePreset = {
   id: string
@@ -235,27 +239,60 @@ export const PRESETS: readonly ThemePreset[] = [
   ...BRAND_PRESETS,
 ]
 
-/** Where a new Site's Theme starts. */
-export const DEFAULT_PRESET = HARBOUR
+/**
+ * Where a Theme starts, and what the Site shows before one is saved: Classic,
+ * the look the Site had before the Theme existed. The one answer for the
+ * unsaved fallback, the field defaults and the default fonts.
+ */
+export const DEFAULT_PRESET = CLASSIC
 export const DEFAULT_INPUTS: ThemeInputs = DEFAULT_PRESET.inputs
 
 export function findPreset(id: string): ThemePreset | undefined {
   return PRESETS.find((preset) => preset.id === id)
 }
 
+const sameFamily = (a: string, b: string) =>
+  a.trim().toLowerCase() === b.trim().toLowerCase()
+
+/**
+ * The built-in font to show in a slot whose stored Font can't be served: the
+ * stand-in of the brand preset that names `family` for that role. Undefined
+ * when no preset names it, so the caller uses the default preset's font.
+ */
+export function standInFor(
+  family: string,
+  role: "heading" | "body"
+): string | undefined {
+  const preset = PRESETS.find((candidate) => {
+    const named = candidate.preferredFonts?.[role]
+    return named !== undefined && sameFamily(named, family)
+  })
+  return preset
+    ? preset.inputs[role === "heading" ? "headingFont" : "bodyFont"]
+    : undefined
+}
+
 /**
  * The inputs a Staff User gets by picking `preset`: its preferred fonts where
  * the Site has them (matched by family name, case-insensitively), otherwise
- * the preset's built-in stand-ins.
+ * the preset's built-in stand-ins. A stored Font with no files (`files` is
+ * empty) can't be served, so it does not count as the Site having the font.
  */
 export function presetInputs(
   preset: ThemePreset,
-  fonts: readonly { key: string; family: string }[]
+  fonts: readonly {
+    key: string
+    family: string
+    files?: readonly unknown[]
+  }[]
 ): ThemeInputs {
   const pick = (family: string | undefined, standIn: string) => {
-    const wanted = family?.trim().toLowerCase()
-    const found = wanted
-      ? fonts.find((font) => font.family.trim().toLowerCase() === wanted)
+    const found = family
+      ? fonts.find(
+          (font) =>
+            sameFamily(font.family, family) &&
+            (font.files === undefined || font.files.length > 0)
+        )
       : undefined
     return found?.key ?? standIn
   }

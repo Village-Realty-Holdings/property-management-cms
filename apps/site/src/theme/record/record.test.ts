@@ -14,6 +14,7 @@ import type { FetchLike } from "../../fonts/googleFonts"
 import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { CLASSIC, HARBOUR, type ThemeInputs } from "../index"
+import { formatSavedAt } from "./summary"
 import {
   listThemeHistory,
   readLiveTheme,
@@ -211,11 +212,53 @@ describe("Theme history", () => {
     expect(first!.summary).toBe("Started from the Classic preset")
   })
 
-  it("says nothing changed when a save changes nothing", async () => {
-    await saveTheme(payload, { user: ada, inputs: HARBOUR.inputs })
-    await saveTheme(payload, { user: ada, inputs: HARBOUR.inputs })
+  it("skips a save that changes nothing: no version, and the current Theme comes back", async () => {
+    const first = await saveTheme(payload, {
+      user: ada,
+      inputs: HARBOUR.inputs,
+    })
+    expect(first.changed).toBe(true)
+
+    const again = await saveTheme(payload, {
+      user: grace,
+      inputs: HARBOUR.inputs,
+    })
+
+    expect(again.changed).toBe(false)
+    expect(again.source).toBe("saved")
+    expect(again.inputs).toEqual(HARBOUR.inputs)
+    expect(again.savedAt).toBe(first.savedAt)
     const history = await listThemeHistory(payload, { user: ada })
-    expect(history[0]!.summary).toBe("No changes")
+    expect(history).toHaveLength(1)
+    expect(history.map((v) => v.summary)).not.toContain("No changes")
+  })
+
+  it("counts a colour typed differently as no change, and ignores a note on a skipped save", async () => {
+    await saveTheme(payload, {
+      user: ada,
+      inputs: change({ primary: "#0a7d5a" }),
+    })
+    const again = await saveTheme(payload, {
+      user: ada,
+      inputs: change({ primary: "#0A7D5A" }),
+      note: "Just checking",
+    })
+    expect(again.changed).toBe(false)
+    expect(await listThemeHistory(payload, { user: ada })).toHaveLength(1)
+  })
+
+  it("still refuses an invalid value when the rest matches the live Theme", async () => {
+    await saveTheme(payload, { user: ada, inputs: CLASSIC_INPUTS })
+    await expect(
+      saveTheme(payload, { user: ada, inputs: change({ primary: "teal" }) })
+    ).rejects.toThrow()
+    await expect(
+      saveTheme(payload, {
+        user: ada,
+        inputs: change({ bodyFont: "font:99999" }),
+      })
+    ).rejects.toThrow()
+    expect(await listThemeHistory(payload, { user: ada })).toHaveLength(1)
   })
 
   it("lets staff replace the automatic summary with a note, and the note is not carried to the next save", async () => {
@@ -295,17 +338,34 @@ describe("restoring a Theme version", () => {
     expect(after[0]!.id).not.toBe(oldest.id)
     expect(after[0]!.isLive).toBe(true)
     expect(after[0]!.author?.name).toBe("Grace")
-    expect(after[0]!.summary).toMatch(/^Restored an earlier version: /)
+    expect(after[0]!.summary).toMatch(
+      /^Restored the version from .* UTC: Primary colour/
+    )
+    expect(after[0]!.summary).toContain(formatSavedAt(oldest.savedAt))
     expect(after[0]!.summary).toContain("Primary colour")
     expect(after[0]!.summary).toContain("Third colour")
   })
 
-  it("can restore the live version, which changes nothing but is recorded", async () => {
+  it("adds no version when the restored one matches what is live", async () => {
     const before = await threeVersions()
-    await restoreThemeVersion(payload, { user: ada, versionId: before[0]!.id })
-    const after = await listThemeHistory(payload, { user: ada })
-    expect(after).toHaveLength(before.length + 1)
-    expect(after[0]!.inputs).toEqual(before[0]!.inputs)
+    const result = await restoreThemeVersion(payload, {
+      user: ada,
+      versionId: before[0]!.id,
+    })
+    expect(result.changed).toBe(false)
+    expect(result.inputs).toEqual(before[0]!.inputs)
+    expect(await listThemeHistory(payload, { user: ada })).toHaveLength(
+      before.length
+    )
+  })
+
+  it("reports that a restore changed the Theme", async () => {
+    const before = await threeVersions()
+    const result = await restoreThemeVersion(payload, {
+      user: ada,
+      versionId: before.at(-1)!.id,
+    })
+    expect(result.changed).toBe(true)
   })
 
   it("refuses a version that does not exist", async () => {

@@ -112,8 +112,22 @@ export function sampleCss(rows: readonly FontRow[]): string {
   )
 }
 
-export function builtInRows(): BuiltInRow[] {
-  return BUILT_IN_FONTS.map((font) => {
+/**
+ * The built-in quick picks. A stored Font wins over a built-in one of the
+ * same family, because staff added it deliberately, so the built-in one is
+ * hidden while a stored Font with that family (and files to serve) exists.
+ */
+export function builtInRows(
+  stored: readonly { family: string; faces: readonly unknown[] }[] = []
+): BuiltInRow[] {
+  const storedFamilies = new Set(
+    stored
+      .filter((font) => font.faces.length > 0)
+      .map((font) => font.family.trim().toLowerCase())
+  )
+  return BUILT_IN_FONTS.filter(
+    (font) => !storedFamilies.has(font.family.toLowerCase())
+  ).map((font) => {
     const faces = font.weights.map((weight) => ({
       weight,
       style: "normal" as const,

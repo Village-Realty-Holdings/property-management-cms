@@ -2,6 +2,7 @@ import type { AvailableFont } from "../fonts/available"
 import { BUILT_IN_FONTS } from "../fonts/builtIn"
 import { cssString, fontFaceCss } from "../fonts/fontFace"
 import type { FontKind } from "../fonts/types"
+import { DEFAULT_INPUTS, standInFor } from "../theme/presets"
 
 /**
  * Turns the font keys a Theme stores (`built-in:<family>` or `font:<id>`)
@@ -15,9 +16,12 @@ import type { FontKind } from "../fonts/types"
  * dropped, so a visitor's browser never contacts Google or any other host.
  */
 
-/** What a Theme uses until it chooses (the old "classic" pairing). */
-export const DEFAULT_HEADING_FONT_KEY = "built-in:Newsreader"
-export const DEFAULT_BODY_FONT_KEY = "built-in:Public Sans"
+/**
+ * What a Theme uses until it chooses, and where a missing font falls back:
+ * the default preset's fonts (Classic), so one place owns the pairing.
+ */
+export const DEFAULT_HEADING_FONT_KEY = DEFAULT_INPUTS.headingFont
+export const DEFAULT_BODY_FONT_KEY = DEFAULT_INPUTS.bodyFont
 
 export type FontRole = "heading" | "body"
 
@@ -48,7 +52,10 @@ const DEFAULT_KEY: Record<FontRole, string> = {
 /**
  * The CSS font-family stack, and `@font-face` rules, for one font key. A key
  * that is missing, or points at a Font that was deleted, resolves to the
- * default built-in font for `role`. Never throws.
+ * default built-in font for `role`. So does a stored Font with no files: the
+ * Site promises self-hosted fonts, and a family name with nothing to serve
+ * would depend on the visitor's machine. When a brand preset names that
+ * family, its built-in stand-in is used instead. Never throws.
  */
 export function resolveFontStack(
   key: string | null | undefined,
@@ -58,6 +65,15 @@ export function resolveFontStack(
   const found = key ? available.find((font) => font.key === key) : undefined
   const resolved = found ? resolve(found) : undefined
   if (found && resolved) return { key: found.key, ...resolved }
+
+  const standIn = found ? standInFor(found.family, role) : undefined
+  const standInFont = standIn
+    ? available.find((font) => font.key === standIn)
+    : undefined
+  const standInResolved = standInFont ? resolve(standInFont) : undefined
+  if (standIn && standInResolved) {
+    return { key: standIn, ...standInResolved }
+  }
 
   const fallbackKey = DEFAULT_KEY[role]
   const fallback = available.find((font) => font.key === fallbackKey)
@@ -78,6 +94,8 @@ function resolve(
     if (!builtIn) return undefined
     return { stack: `var(${builtIn.cssVariable}), ${generic}`, css: "" }
   }
+  // A stored Font with no files has nothing to serve: missing, not resolved.
+  if (!font.files?.length) return undefined
   return {
     stack: `${cssString(font.family)}, ${generic}`,
     css: fontFaceCss([
@@ -85,7 +103,7 @@ function resolve(
         id: font.id ?? 0,
         family: font.family,
         kind: font.kind,
-        files: font.files ?? [],
+        files: font.files,
       },
     ]),
   }

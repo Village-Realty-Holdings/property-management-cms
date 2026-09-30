@@ -25,6 +25,7 @@ import {
   SPACINGS,
 } from "../theme/options"
 import {
+  INPUT_HELP,
   INPUT_LABELS,
   normalizeInputs,
   type ThemeInputs,
@@ -74,6 +75,7 @@ const selectField = (
   required: true,
   defaultValue: FALLBACK_INPUTS[name] as string,
   options: list.map(({ value, label }) => ({ value, label })),
+  ...(INPUT_HELP[name] ? { admin: { description: INPUT_HELP[name] } } : {}),
 })
 
 const fontField = (name: "headingFont" | "bodyFont"): Field => ({
