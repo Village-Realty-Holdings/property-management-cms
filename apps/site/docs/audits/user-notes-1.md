@@ -8,3 +8,4 @@ Observations from trying the three seeded Sites before Audit 1. Each one becomes
 4. **A picked image doesn't render live.** Selecting an image for the Hero did not update the canvas until later. The spec's "instant preview" rule applies to image fields too.
 5. **Expected pattern for 2–4:** a conventional media field that shows the current image as a thumbnail and opens a dialog with a grid of Media files (search, thumbnails) plus an Upload action; choosing one updates the canvas immediately.
 6. **The "Add a Block" dialog is too small.** The picker should be larger, with bigger thumbnails and grouping, so a Block can be recognised and chosen at a glance.
+7. **The Visual Editor scrolls past its end into a white screen.** Scrolling down in the editor goes beyond the canvas and shell into blank white. The editor shell should fill the viewport and own its scrolling (the canvas iframe scrolls; the page around it does not).
