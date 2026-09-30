@@ -5,6 +5,7 @@ import { displayFont } from "../display"
 import { BlockSection } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { IconBadge } from "./IconList"
+import { featureColumns } from "./mosaic"
 import type { BlockContext } from "./types"
 
 /**
@@ -61,7 +62,10 @@ export function FeaturesBlock({
       {features.length > 0 && (
         <ul
           role="list"
-          className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
+          className={cn(
+            "grid gap-x-8 gap-y-10",
+            featureColumns(features.length)
+          )}
         >
           {features.map((feature) => (
             <li key={feature.index} className="flex flex-col items-start gap-4">

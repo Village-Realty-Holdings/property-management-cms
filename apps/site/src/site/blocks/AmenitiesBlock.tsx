@@ -9,6 +9,7 @@ import { BlockSection } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { IconList } from "./IconList"
+import { mosaicTiles } from "./mosaic"
 import type { BlockContext } from "./types"
 
 type Item = { index: number; label: string } & Pick<
@@ -17,24 +18,19 @@ type Item = { index: number; label: string } & Pick<
 >
 
 /**
- * The mosaic's tiles: the first of every five is large from the tablet up,
- * so the photos make an uneven, magazine-style grid that fills its rows.
- */
-const tileSizes = ["md:col-span-2 md:row-span-2", "", "", "", ""]
-
-/**
- * A photo tile: the photo, filling the tile, with its label at the bottom
+ * A photo tile (`className` places it in the mosaic, which `mosaicTiles`
+ * lays out so its rows are always full): the photo, filling the tile, with its label at the bottom
  * over a scrim. The scrim is the Theme's dark surface, strong where the
  * label sits (and solid beneath it), so the label reads against any photo at
  * AA. A tile with no photo is the dark surface itself, with its icon.
  */
 function Tile({
   item,
-  position,
+  className,
   context,
 }: {
   item: Item
-  position: number
+  className: string
   context: BlockContext
 }) {
   const image = imageOf(item.image)
@@ -42,7 +38,7 @@ function Tile({
     <li
       className={cn(
         "relative isolate overflow-hidden rounded-(--card-radius) bg-surface-dark text-surface-dark-foreground shadow-(--card-shadow)",
-        tileSizes[position % tileSizes.length]
+        className
       )}
     >
       {image ? (
@@ -94,6 +90,7 @@ export function AmenitiesBlock({
       image: item.image,
     }))
     .filter((item) => item.label)
+  const tiles = mosaicTiles(items.length)
   const id = `block-${context.index}-heading`
   return (
     <BlockSection
@@ -143,7 +140,7 @@ export function AmenitiesBlock({
               <Tile
                 key={item.index}
                 item={item}
-                position={position}
+                className={tiles[position]?.className ?? ""}
                 context={context}
               />
             ))}

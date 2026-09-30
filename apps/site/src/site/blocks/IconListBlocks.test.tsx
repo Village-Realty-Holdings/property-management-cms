@@ -121,6 +121,14 @@ describe("Features", () => {
     expect(container.querySelector(".grid")).not.toBeNull()
   })
 
+  it("lays four features out two by two, not three and one", () => {
+    const block = features({ features: features().features.slice(0, 4) })
+    const { container } = render(<Block block={block} index={1} />)
+    const grid = container.querySelector("ul")!
+    expect(grid.className).toContain("sm:grid-cols-2")
+    expect(grid.className).not.toContain("lg:grid-cols-3")
+  })
+
   it("keeps a feature whose icon name is unknown, without the icon", async () => {
     const block = features({
       features: [
@@ -200,6 +208,16 @@ describe("Amenities", () => {
     expect(scrim!.className).toContain("text-surface-dark-foreground")
     // The mosaic draws the photos, not the icon list's icons.
     expect(icons(container)).toHaveLength(0)
+  })
+
+  it("as a mosaic: the last tiles stretch across their row, so the mosaic has no hole", () => {
+    const block = amenities({
+      variant: "mosaic",
+      items: [{ label: "Sauna" }, { label: "Garden" }],
+    })
+    const { container } = render(<Block block={block} index={1} />)
+    const tiles = within(container).getAllByRole("listitem")
+    expect(tiles.every((t) => t.className.includes("md:col-span-2"))).toBe(true)
   })
 
   it("as a mosaic: a tile without a photo is the dark surface with its icon and label", async () => {
