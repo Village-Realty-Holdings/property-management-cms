@@ -185,6 +185,27 @@ describe("<ConfirmDialog>", () => {
     expect(within(dialog).queryByRole("list")).toBeNull()
   })
 
+  it("leaves the dependents line out when it can't say who uses the item", async () => {
+    render(
+      <ConfirmDialog
+        open
+        onOpenChange={vi.fn()}
+        title="Delete this image?"
+        description="Anything using it will lose it."
+        showDependents={false}
+        confirmLabel="Delete image"
+        onConfirm={vi.fn()}
+      />
+    )
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("Anything using it will lose it.")
+    ).toBeTruthy()
+    expect(
+      within(dialog).queryByText(/Nothing else uses it|Used by/)
+    ).toBeNull()
+  })
+
   it("caps a long list and says how many more there are", async () => {
     const many = Array.from({ length: 14 }, (_, i) => ({
       kind: "Page",

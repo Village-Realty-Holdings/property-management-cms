@@ -9,7 +9,7 @@
     "start": "next start",
     "worker:build": "opennextjs-cloudflare build",
     "worker:dev": "wrangler dev --port 8787",
-    "lint": "eslint && tsx scripts/check-migrations.ts",
+    "lint": "eslint --max-warnings 0 && tsx scripts/check-migrations.ts",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",

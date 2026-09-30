@@ -204,6 +204,21 @@ describe.skipIf(!hasDatabase)("three Sites migrating from zero", () => {
     expect(await titlesSeenBy("beachside")).toEqual(["Beachside home"])
   })
 
+  it("allows the same path in every Site, since each schema has its own constraints", async () => {
+    for (const schema of ALL_SCHEMAS) {
+      const { rows } = await sql.query<{ n: string }>(
+        `SELECT count(*) AS n FROM "${schema}"."pages" WHERE path = '/'`
+      )
+      expect(Number(rows[0]!.n)).toBe(1)
+    }
+  })
+
+  it("reports the schema each Payload runs in", () => {
+    for (const [site, schema] of Object.entries(SITES)) {
+      expect(payloadOf(site as keyof typeof SITES).db.schemaName).toBe(schema)
+    }
+  })
+
   it("keeps a Site's globals to that Site too", async () => {
     await payloadOf("avada").updateGlobal({
       slug: "brand",

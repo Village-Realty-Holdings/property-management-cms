@@ -44,6 +44,7 @@ export function ConfirmDialog({
   title,
   description,
   dependents = [],
+  showDependents = true,
   confirmLabel,
   cancelLabel = "Cancel",
   onConfirm,
@@ -54,6 +55,11 @@ export function ConfirmDialog({
   description?: string
   /** Everything that depends on the item; empty when nothing does. */
   dependents?: readonly Dependent[]
+  /**
+   * Whether to say who uses the item. Pass false when the screen cannot look
+   * that up (yet): an empty list would then wrongly read "Nothing else uses it".
+   */
+  showDependents?: boolean
   /** Names the action, e.g. "Delete Layout", not "OK". */
   confirmLabel: string
   cancelLabel?: string
@@ -107,8 +113,10 @@ export function ConfirmDialog({
           )}
         </AlertDialogHeader>
         <div className="text-sm">
-          <p className="font-medium">{summarizeDependents(dependents)}</p>
-          {listed.length > 0 && (
+          {showDependents && (
+            <p className="font-medium">{summarizeDependents(dependents)}</p>
+          )}
+          {showDependents && listed.length > 0 && (
             <ul className="mt-2 flex max-h-48 list-disc flex-col gap-1 overflow-y-auto pl-5 text-muted-foreground">
               {listed.map((d, i) => (
                 <li key={`${d.kind}-${d.name}-${i}`}>

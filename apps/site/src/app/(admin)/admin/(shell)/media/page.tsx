@@ -1,10 +1,10 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import { ImageIcon, Trash2Icon, UploadIcon } from "lucide-react"
+import { ImageIcon, UploadIcon } from "lucide-react"
 
-import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { buttonVariants } from "@workspace/ui/components/button"
 
-import { deleteMedia } from "@/admin/actions/media"
+import { MediaDeleteButton } from "@/admin/components/MediaDeleteButton"
 import { UploadForm } from "@/admin/components/UploadForm"
 import { CardSkeleton, EmptyState, PageHeader } from "@/admin/kit"
 import { requireStaff } from "@/admin/session"
@@ -85,17 +85,7 @@ async function MediaGrid() {
                 {doc.alt}
               </span>
             </div>
-            <form action={deleteMedia}>
-              <input type="hidden" name="id" value={doc.id} />
-              <Button
-                type="submit"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Delete ${doc.filename}`}
-              >
-                <Trash2Icon />
-              </Button>
-            </form>
+            <MediaDeleteButton id={doc.id} filename={doc.filename ?? "image"} />
           </div>
         </li>
       ))}

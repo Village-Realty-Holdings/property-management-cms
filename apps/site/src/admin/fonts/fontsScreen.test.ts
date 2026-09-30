@@ -1,5 +1,13 @@
-import type { Payload } from "payload"
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
+import { ValidationError, type Payload } from "payload"
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest"
 
 import type { FetchLike } from "../../fonts/googleFonts"
 import { registerFontUsage } from "../../fonts/fontUsage"
@@ -283,6 +291,50 @@ describe("uploadFontAs", () => {
     ])
     const result = await uploadFontAs(payload, as, data)
     expect(result.ok).toBe(false)
+    expect(await count("font-files")).toBe(0)
+    expect(await count("fonts")).toBe(0)
+  })
+
+  it("says a stored file that Payload refuses is not a font, and logs the detail", async () => {
+    // Payload's own refusal ("The following field is invalid: file" with the
+    // sniffed type inside) must not reach the person as it is.
+    const refusing = new Proxy(payload, {
+      get(target, prop) {
+        if (prop === "create") {
+          return (args: { collection: string }) =>
+            args.collection === "font-files"
+              ? Promise.reject(
+                  new ValidationError({
+                    errors: [
+                      {
+                        message: "Invalid MIME type: application/pdf.",
+                        path: "file",
+                      },
+                    ],
+                  })
+                )
+              : target.create(args as never)
+        }
+        const value = Reflect.get(target, prop)
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+    const warn = vi.spyOn(payload.logger, "warn").mockImplementation(() => {})
+
+    const result = await uploadFontAs(refusing, as, upload())
+
+    expect(result.ok).toBe(false)
+    expect(result.message).toBe(
+      "acme-regular.woff2: That file is not a WOFF2, WOFF, TTF or OTF font."
+    )
+    expect(result.fieldErrors).toEqual({
+      "files.0.file": "That file is not a WOFF2, WOFF, TTF or OTF font.",
+    })
+    expect(JSON.stringify(result)).not.toMatch(/following field|MIME/)
+    expect(JSON.stringify(warn.mock.calls)).toContain(
+      "Invalid MIME type: application/pdf."
+    )
+    warn.mockRestore()
     expect(await count("font-files")).toBe(0)
     expect(await count("fonts")).toBe(0)
   })

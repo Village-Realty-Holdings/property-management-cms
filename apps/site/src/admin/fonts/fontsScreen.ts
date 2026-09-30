@@ -1,4 +1,4 @@
-import { NotFound, type Payload } from "payload"
+import { NotFound, ValidationError, type Payload } from "payload"
 
 import { GoogleFontError, type FetchLike } from "../../fonts/googleFonts"
 import { getFontUsages } from "../../fonts/fontUsage"
@@ -23,6 +23,28 @@ import { buildFontRows, type FontRow, type StoredFontRecord } from "./rows"
  */
 
 const INVALID = "Some fields need attention."
+
+/** What the person reads when Payload refuses a file's type or contents. */
+export const NOT_A_FONT = "That file is not a WOFF2, WOFF, TTF or OTF font."
+
+/**
+ * The reason a stored font file failed, in words for the Fonts screen. Payload
+ * refuses the wrong kind of file with "The following field is invalid: file"
+ * and, inside, a technical detail ("Invalid MIME type: application/pdf."):
+ * the person gets NOT_A_FONT and the detail goes to the log.
+ */
+function storeFailure(payload: Payload, fileName: string, error: unknown) {
+  if (error instanceof ValidationError) {
+    const onFile = error.data.errors.filter((e) => e.path === "file")
+    if (onFile.length > 0) {
+      payload.logger.warn(
+        `Font file ${fileName} refused: ${onFile.map((e) => e.message).join("; ")}`
+      )
+      return NOT_A_FONT
+    }
+  }
+  return formStateFromError(error).message ?? "Couldn't be stored."
+}
 
 /** Every stored Font as a list row, with what uses it. */
 export async function loadFontRows(
@@ -185,8 +207,7 @@ export async function uploadFontAs(
         stored.push(doc.id)
         rows.push({ weight, style, file: doc.id })
       } catch (error) {
-        const reason =
-          formStateFromError(error).message ?? "Couldn't be stored."
+        const reason = storeFailure(payload, file.name, error)
         refused = {
           ok: false,
           message: `${file.name}: ${reason}`,
