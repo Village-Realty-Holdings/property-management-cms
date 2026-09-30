@@ -15,6 +15,7 @@
     "generate": "pnpm --filter site generate:types && pnpm --filter site generate:importmap",
     "migrate": "pnpm --filter site migrate",
     "migrate:create": "pnpm --filter site migrate:create",
+    "site": "pnpm --filter site site",
     "worker:build": "pnpm --filter site worker:build",
     "prepare": "husky"
   },

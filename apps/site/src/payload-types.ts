@@ -183,6 +183,8 @@ export interface Media {
    */
   alt: string;
   caption?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   /**
    * Photographer or source, e.g. © Jane Doe
    */
@@ -409,6 +411,8 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  prefix?: T;
+  _objectKey?: T;
   credit?: T;
   updatedAt?: T;
   createdAt?: T;
