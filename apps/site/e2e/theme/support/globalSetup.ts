@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars -- E2E_* switches of the acceptance tests, which are not turbo tasks */
 import { execFile, spawn, type ChildProcess } from "node:child_process"
 import { appendFileSync, rmSync } from "node:fs"
 import path from "node:path"

@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars -- E2E_* switches of the acceptance tests, which are not turbo tasks */
 import { fileURLToPath } from "node:url"
 
 import { config } from "dotenv"

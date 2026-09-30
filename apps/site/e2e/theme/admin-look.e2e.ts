@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars -- E2E_* switches of the acceptance tests, which are not turbo tasks */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
@@ -57,7 +58,10 @@ const SCREENS: Screen[] = [
     path: "/admin/settings/assets/fonts",
     signedIn: true,
     prepare: async (page) => {
-      await page.getByRole("button", { name: /Add Google Font/ }).click()
+      await page
+        .getByRole("button", { name: "Add Google Font" })
+        .first()
+        .click()
       await page.getByRole("dialog").waitFor()
     },
   },

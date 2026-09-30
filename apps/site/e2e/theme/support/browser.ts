@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars -- E2E_* switches of the acceptance tests, which are not turbo tasks */
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { homedir } from "node:os"
