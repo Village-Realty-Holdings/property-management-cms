@@ -333,3 +333,202 @@ describe("<PageEditor> deleting", () => {
     expect(screen.queryByText(/Unsaved changes/)).toBeNull()
   })
 })
+
+describe("<PageEditor> field errors and descriptions", () => {
+  const describedByIds = (el: HTMLElement) =>
+    (el.getAttribute("aria-describedby") ?? "").split(" ").filter(Boolean)
+
+  it("links each failed field to its message for screen readers", async () => {
+    actions.savePage.mockResolvedValue({
+      ok: false,
+      message: "Some fields need attention.",
+      fieldErrors: {
+        title: "This field is required.",
+        "layout.0.heading": "This field is required.",
+        "layout.0.cta.href": "Enter a path or a URL.",
+        "seo.title": "Too long.",
+        "seo.description": "Too long.",
+      },
+    })
+    const user = userEvent.setup()
+    renderEditor()
+    await user.click(screen.getByRole("button", { name: "Save draft" }))
+    await screen.findByText("Some fields need attention.")
+
+    const title = screen.getByLabelText("Title")
+    expect(title.getAttribute("aria-invalid")).toBe("true")
+    expect(describedByIds(title)).toEqual(["title-error"])
+
+    const heading = document.getElementById("block-0-heading")!
+    expect(heading.getAttribute("aria-invalid")).toBe("true")
+    expect(describedByIds(heading)).toEqual(["block-0-heading-error"])
+
+    // A description and an error together: both are read.
+    const href = document.getElementById("block-0-cta-href")!
+    expect(href.getAttribute("aria-invalid")).toBe("true")
+    expect(describedByIds(href)).toEqual([
+      "block-0-cta-href-description",
+      "block-0-cta-href-error",
+    ])
+
+    const seoTitle = screen.getByLabelText("SEO title")
+    expect(seoTitle.getAttribute("aria-invalid")).toBe("true")
+    expect(describedByIds(seoTitle)).toEqual([
+      "seo-title-description",
+      "seo-title-error",
+    ])
+    expect(
+      screen.getByLabelText("SEO description").getAttribute("aria-invalid")
+    ).toBe("true")
+
+    // Every id a field points at is on the page.
+    for (const input of document.querySelectorAll("[aria-describedby]")) {
+      for (const id of describedByIds(input as HTMLElement)) {
+        expect(document.getElementById(id), id).toBeTruthy()
+      }
+    }
+  })
+
+  it("marks nothing invalid before a save fails, but still ties descriptions", () => {
+    renderEditor()
+    expect(document.querySelector("[aria-invalid]")).toBeNull()
+    expect(describedByIds(screen.getByLabelText("Path"))).toEqual([
+      "path-description",
+    ])
+    expect(describedByIds(screen.getByLabelText("SEO title"))).toEqual([
+      "seo-title-description",
+    ])
+  })
+
+  it("links the Block selects, and the SEO image, too", async () => {
+    actions.savePage.mockResolvedValue({
+      ok: false,
+      message: "Some fields need attention.",
+      fieldErrors: { "seo.image": "Pick an image.", "layout.0.style": "Bad." },
+    })
+    const user = userEvent.setup()
+    renderEditor({
+      initial: { ...about, layout: [emptyBlock("callToAction")] },
+    })
+    await user.click(screen.getByRole("button", { name: "Save draft" }))
+    await screen.findByText("Some fields need attention.")
+
+    expect(
+      document.getElementById("seo-image")!.getAttribute("aria-describedby")
+    ).toBe("seo-image-error")
+    expect(
+      document.getElementById("block-0-style")!.getAttribute("aria-invalid")
+    ).toBe("true")
+  })
+})
+
+describe("<PageEditor> Blocks by keyboard", () => {
+  const three: PageValues = {
+    ...about,
+    layout: [
+      { ...(emptyBlock("hero") as HeroValues), id: "b1", heading: "One" },
+      { ...emptyBlock("richText"), id: "b2" },
+      { ...emptyBlock("callToAction"), id: "b3" },
+    ],
+  }
+  const button = (block: number, name: string) =>
+    within(
+      screen.getByRole("group", { name: new RegExp(`^${block}\\.`) })
+    ).getByRole("button", { name })
+  const card = (block: number) =>
+    screen.getByRole("group", { name: new RegExp(`^${block}\\.`) })
+  const press = async (
+    user: ReturnType<typeof userEvent.setup>,
+    el: HTMLElement
+  ) => {
+    el.focus()
+    await user.keyboard("{Enter}")
+  }
+
+  it("keeps focus on Move down of the Block that moved", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: three })
+    await press(user, button(1, "Move down"))
+
+    // The Hero is now second: focus stays with its Move down.
+    expect(card(2).getAttribute("aria-label")).toMatch(/Hero/)
+    await waitFor(() =>
+      expect(document.activeElement).toBe(button(2, "Move down"))
+    )
+    expect(
+      screen.getByRole("status", { name: "Block changes" }).textContent
+    ).toBe("Moved Hero to position 2 of 3.")
+  })
+
+  it("keeps focus on Move up of the Block that moved", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: three })
+    await press(user, button(3, "Move up"))
+    await waitFor(() =>
+      expect(document.activeElement).toBe(button(2, "Move up"))
+    )
+    expect(
+      screen.getByRole("status", { name: "Block changes" }).textContent
+    ).toBe("Moved Call to action to position 2 of 3.")
+  })
+
+  it("moves focus to the other arrow when the Block reaches an end", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: three })
+    await press(user, button(2, "Move up"))
+    // Now first: Move up is disabled, so focus takes Move down.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(button(1, "Move down"))
+    )
+  })
+
+  it("keeps the same fields for Blocks that are not saved yet when they move", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: { ...about, layout: [] } })
+    await user.click(screen.getByRole("button", { name: /Hero/ }))
+    await user.click(screen.getByRole("button", { name: /Call to action/ }))
+    const first = within(card(1)).getByLabelText("Heading")
+    await user.type(first, "Typed")
+
+    await press(user, button(1, "Move down"))
+    expect(within(card(2)).getByLabelText("Heading")).toBe(first)
+    expect((first as HTMLInputElement).value).toBe("Typed")
+    await waitFor(() =>
+      expect(document.activeElement).toBe(button(2, "Move up"))
+    )
+  })
+
+  it("moves focus to the previous Block when one is removed", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: three })
+    await press(user, button(2, "Remove Block"))
+
+    expect(screen.getAllByRole("group", { name: /^\d\./ })).toHaveLength(2)
+    await waitFor(() => expect(document.activeElement).toBe(card(1)))
+    expect(
+      screen.getByRole("status", { name: "Block changes" }).textContent
+    ).toBe("Removed Rich text. 2 Blocks left.")
+  })
+
+  it("moves focus to the next Block when the first is removed", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: three })
+    await press(user, button(1, "Remove Block"))
+    await waitFor(() => expect(document.activeElement).toBe(card(1)))
+    expect(card(1).getAttribute("aria-label")).toMatch(/Rich text/)
+  })
+
+  it("moves focus to Add Block when the last Block is removed", async () => {
+    const user = userEvent.setup()
+    renderEditor({ initial: { ...about, layout: [three.layout[0]!] } })
+    await press(user, button(1, "Remove Block"))
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: /Hero/ })
+      )
+    )
+    expect(
+      screen.getByRole("status", { name: "Block changes" }).textContent
+    ).toBe("Removed Hero. No Blocks left.")
+  })
+})

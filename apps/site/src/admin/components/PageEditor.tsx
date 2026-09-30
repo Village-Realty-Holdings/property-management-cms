@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   ArrowDownIcon,
@@ -40,8 +40,21 @@ import {
 } from "../pageForm"
 import type { PageIntent, PageSaveResult } from "../pageSave"
 import { DeletePageButton } from "./DeletePageButton"
-import { FormField, Section } from "./FormBits"
+import { describedBy, FormField, Section } from "./FormBits"
 import { MediaSelect, type MediaOption } from "./MediaSelect"
+
+/**
+ * A React key for a Block that stays with it as Blocks move, saved or not.
+ * Never rendered into the page, so the server and the browser need not agree.
+ */
+let blockKeySeq = 0
+const newBlockKey = () => `block-${++blockKeySeq}`
+
+/** Where keyboard focus goes once a Block move or removal has rendered. */
+type FocusTarget =
+  | { kind: "move"; key: string; by: -1 | 1 }
+  | { kind: "block"; key: string }
+  | { kind: "add" }
 
 export type EditorStatus = "new" | PageStatus
 
@@ -84,6 +97,11 @@ export function PageEditor({
   // Where to go once this render has settled (see the effect below).
   const [goTo, setGoTo] = useState<string | null>(null)
   const [deleted, setDeleted] = useState(false)
+  // One key per Block, in step with `values.layout`.
+  const [keys, setKeys] = useState(() => initial.layout.map(newBlockKey))
+  const [announcement, setAnnouncement] = useState("")
+  const formRef = useRef<HTMLFormElement>(null)
+  const pendingFocus = useRef<FocusTarget | null>(null)
   const errors = state.fieldErrors ?? {}
   const dirty = isDirty(saved, values) && !deleted
 
@@ -147,23 +165,79 @@ export function PageEditor({
       "layout",
       values.layout.map((b, i) => (i === index ? block : b))
     )
+  const blockLabel = (block: BlockValues) =>
+    BLOCK_TYPES.find((t) => t.blockType === block.blockType)?.label ?? "Block"
+  const addBlock = (blockType: BlockValues["blockType"]) => {
+    set("layout", [...values.layout, emptyBlock(blockType)])
+    setKeys((current) => [...current, newBlockKey()])
+  }
   const moveBlock = (index: number, by: -1 | 1) => {
     const layout = [...values.layout]
     const [block] = layout.splice(index, 1)
     layout.splice(index + by, 0, block!)
-    set("layout", layout)
-  }
-  const removeBlock = (index: number) =>
-    set(
-      "layout",
-      values.layout.filter((_, i) => i !== index)
+    const moved = [...keys]
+    const [key] = moved.splice(index, 1)
+    moved.splice(index + by, 0, key!)
+    pendingFocus.current = { kind: "move", key: key!, by }
+    setAnnouncement(
+      `Moved ${blockLabel(block!)} to position ${index + by + 1} of ${layout.length}.`
     )
+    set("layout", layout)
+    setKeys(moved)
+  }
+  const removeBlock = (index: number) => {
+    const layout = values.layout.filter((_, i) => i !== index)
+    const remaining = keys.filter((_, i) => i !== index)
+    // The Block before the one removed, else the one that took its place.
+    const next = remaining[Math.max(index - 1, 0)]
+    pendingFocus.current = next ? { kind: "block", key: next } : { kind: "add" }
+    const removed = blockLabel(values.layout[index]!)
+    setAnnouncement(
+      layout.length === 0
+        ? `Removed ${removed}. No Blocks left.`
+        : `Removed ${removed}. ${layout.length} ${layout.length === 1 ? "Block" : "Blocks"} left.`
+    )
+    set("layout", layout)
+    setKeys(remaining)
+  }
+
+  // A moved or removed Block's controls are new DOM nodes, so keyboard focus
+  // would fall to the page: put it back once the change has rendered.
+  useEffect(() => {
+    const target = pendingFocus.current
+    pendingFocus.current = null
+    const form = formRef.current
+    if (!target || !form) return
+    if (target.kind === "add") {
+      form.querySelector<HTMLElement>("[data-add-block]")?.focus()
+      return
+    }
+    const card =
+      form.querySelectorAll<HTMLElement>("[data-block-card]")[
+        keys.indexOf(target.key)
+      ]
+    if (!card) return
+    if (target.kind === "block") {
+      card.focus()
+      return
+    }
+    // The control that was pressed, or the other arrow if the Block is now
+    // first or last and that one is disabled.
+    const first = card.querySelector<HTMLButtonElement>(
+      `[data-move="${target.by}"]`
+    )
+    const other = card.querySelector<HTMLButtonElement>(
+      `[data-move="${-target.by}"]`
+    )
+    ;(first?.disabled ? other : first)?.focus()
+  }, [keys])
 
   const isPublished = status === "published" || status === "changes"
 
   return (
     <div className="flex flex-col gap-10">
       <form
+        ref={formRef}
         noValidate
         onSubmit={(event) => {
           event.preventDefault()
@@ -232,6 +306,9 @@ export function PageEditor({
         {state.ok === false && state.message && (
           <InlineError>{state.message}</InlineError>
         )}
+        <p role="status" aria-label="Block changes" className="sr-only">
+          {announcement}
+        </p>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="flex flex-col gap-6">
@@ -242,6 +319,7 @@ export function PageEditor({
                   value={values.title}
                   onChange={(e) => set("title", e.target.value)}
                   required
+                  {...describedBy("title", { error: errors.title })}
                 />
               </FormField>
               <FormField
@@ -255,6 +333,10 @@ export function PageEditor({
                   value={values.path}
                   placeholder="/about"
                   onChange={(e) => set("path", e.target.value)}
+                  {...describedBy("path", {
+                    description: true,
+                    error: errors.path,
+                  })}
                 />
               </FormField>
             </Section>
@@ -270,7 +352,7 @@ export function PageEditor({
               )}
               {values.layout.map((block, index) => (
                 <BlockCard
-                  key={block.id ?? `new-${index}`}
+                  key={keys[index]}
                   index={index}
                   count={values.layout.length}
                   block={block}
@@ -288,12 +370,8 @@ export function PageEditor({
                     type="button"
                     variant="outline"
                     title={type.description}
-                    onClick={() =>
-                      set("layout", [
-                        ...values.layout,
-                        emptyBlock(type.blockType),
-                      ])
-                    }
+                    data-add-block={type.blockType === "hero" ? "" : undefined}
+                    onClick={() => addBlock(type.blockType)}
                   >
                     <PlusIcon /> {type.label}
                   </Button>
@@ -318,6 +396,10 @@ export function PageEditor({
                 onChange={(e) =>
                   set("seo", { ...values.seo, title: e.target.value })
                 }
+                {...describedBy("seo-title", {
+                  description: true,
+                  error: errors["seo.title"],
+                })}
               />
             </FormField>
             <FormField
@@ -331,6 +413,9 @@ export function PageEditor({
                 onChange={(e) =>
                   set("seo", { ...values.seo, description: e.target.value })
                 }
+                {...describedBy("seo-description", {
+                  error: errors["seo.description"],
+                })}
               />
             </FormField>
             <FormField
@@ -343,6 +428,7 @@ export function PageEditor({
                 value={values.seo.image}
                 options={media}
                 onChange={(image) => set("seo", { ...values.seo, image })}
+                {...describedBy("seo-image", { error: errors["seo.image"] })}
               />
             </FormField>
           </Section>
@@ -390,14 +476,24 @@ function BlockCard({
   const label = BLOCK_TYPES.find((t) => t.blockType === block.blockType)?.label
   const at = (field: string) => `layout.${index}.${field}`
   const id = (field: string) => `block-${index}-${field}`
+  /** Ties a control to its FormField's description and error. */
+  const aria = (
+    field: string,
+    error: string | undefined,
+    description = false
+  ) => describedBy(id(field), { description, error })
   const hasError = Object.keys(errors).some((path) =>
     path.startsWith(`layout.${index}.`)
   )
 
   return (
     <div
+      role="group"
+      aria-label={`${index + 1}. ${label}`}
+      tabIndex={-1}
+      data-block-card
       className={cn(
-        "flex flex-col gap-4 rounded-lg border p-4",
+        "flex flex-col gap-4 rounded-lg border p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         hasError && "border-destructive/50"
       )}
     >
@@ -411,6 +507,7 @@ function BlockCard({
             variant="ghost"
             size="icon-sm"
             aria-label="Move up"
+            data-move="-1"
             disabled={index === 0}
             onClick={() => onMove(-1)}
           >
@@ -421,6 +518,7 @@ function BlockCard({
             variant="ghost"
             size="icon-sm"
             aria-label="Move down"
+            data-move="1"
             disabled={index === count - 1}
             onClick={() => onMove(1)}
           >
@@ -449,6 +547,7 @@ function BlockCard({
               id={id("heading")}
               value={block.heading}
               onChange={(e) => onChange({ ...block, heading: e.target.value })}
+              {...aria("heading", errors[at("heading")])}
             />
           </FormField>
           <FormField
@@ -462,6 +561,7 @@ function BlockCard({
               onChange={(e) =>
                 onChange({ ...block, subheading: e.target.value })
               }
+              {...aria("subheading", errors[at("subheading")])}
             />
           </FormField>
           <FormField id={id("image")} label="Image" error={errors[at("image")]}>
@@ -470,6 +570,7 @@ function BlockCard({
               value={block.image}
               options={media}
               onChange={(image) => onChange({ ...block, image })}
+              {...aria("image", errors[at("image")])}
             />
           </FormField>
           <LinkFields
@@ -495,6 +596,7 @@ function BlockCard({
             className="font-mono text-sm"
             value={block.markdown}
             onChange={(e) => onChange({ ...block, markdown: e.target.value })}
+            {...aria("markdown", errors[at("content")], true)}
           />
         </FormField>
       )}
@@ -510,6 +612,7 @@ function BlockCard({
               id={id("heading")}
               value={block.heading}
               onChange={(e) => onChange({ ...block, heading: e.target.value })}
+              {...aria("heading", errors[at("heading")])}
             />
           </FormField>
           <FormField id={id("body")} label="Text" error={errors[at("body")]}>
@@ -517,6 +620,7 @@ function BlockCard({
               id={id("body")}
               value={block.body}
               onChange={(e) => onChange({ ...block, body: e.target.value })}
+              {...aria("body", errors[at("body")])}
             />
           </FormField>
           <LinkFields
@@ -530,6 +634,7 @@ function BlockCard({
             <NativeSelect
               id={id("style")}
               value={block.style}
+              {...aria("style", errors[at("style")])}
               onChange={(e) =>
                 onChange({
                   ...block,
@@ -584,6 +689,7 @@ function LinkFields({
           id={`${idPrefix}-href`}
           value={value.href}
           onChange={(e) => onChange({ ...value, href: e.target.value })}
+          {...describedBy(`${idPrefix}-href`, { description: true, error })}
         />
       </FormField>
     </div>
