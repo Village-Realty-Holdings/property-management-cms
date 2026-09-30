@@ -108,6 +108,8 @@ describe("restoring a Theme version", () => {
       .totalDocs
     const { page } = admin
     await page.goto(`${ORIGIN}/admin/theme`)
+    // Theme mode (Phase 5) keeps the History in its own tab.
+    await page.getByRole("tab", { name: "History" }).click()
 
     const row = page.getByRole("listitem").filter({ hasText: A_NOTE })
     await row.getByRole("button", { name: /Restore the version saved/ }).click()
@@ -153,6 +155,8 @@ describe("restoring a Theme version", () => {
 
     const { page } = admin
     await page.goto(`${ORIGIN}/admin/theme`)
+    // Theme mode (Phase 5) keeps the History in its own tab.
+    await page.getByRole("tab", { name: "History" }).click()
     const row = page
       .getByRole("listitem")
       .filter({ hasText: "Acceptance: theme C" })

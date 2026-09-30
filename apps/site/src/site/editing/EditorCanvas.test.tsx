@@ -183,6 +183,18 @@ describe("EditorCanvas", () => {
     expect(container.querySelector("[inert]")).toBeNull()
   })
 
+  it("marks Blocks editable, except in Theme mode where Block editing is off", () => {
+    const { container } = render(
+      <EditorCanvas brand={brand} fixtures={fixtures} fonts={[]} />
+    )
+    deliver(documentOf())
+    expect(container.querySelector("[data-editable-field]")).not.toBeNull()
+
+    deliver(documentOf({ mode: "theme", theme: HARBOUR.inputs }))
+    expect(screen.getByRole("heading", { name: "First heading" })).toBeTruthy()
+    expect(container.querySelector("[data-editable-field]")).toBeNull()
+  })
+
   it("does not navigate when a link is clicked", () => {
     const { container } = render(
       <EditorCanvas brand={brand} fixtures={fixtures} fonts={[]} />

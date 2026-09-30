@@ -39,6 +39,9 @@ export function EditorCanvas({
   // Nothing is shown until the Admin has sent something to show.
   if (!document) return <div className="min-h-svh" aria-busy="true" />
 
+  // Theme mode shows Pages to see the Theme on: Block editing is off.
+  const editing = document.mode !== "theme"
+
   return (
     <div onClickCapture={stopNavigation}>
       {document.theme && (
@@ -54,7 +57,7 @@ export function EditorCanvas({
         layout={{ header: document.header, footer: document.footer }}
         brand={brand}
         fixtures={fixtures}
-        editing
+        editing={editing}
         locked={
           document.mode === "page"
             ? "layout"
@@ -63,7 +66,7 @@ export function EditorCanvas({
               : undefined
         }
       >
-        <Blocks blocks={document.page} fixtures={fixtures} editing />
+        <Blocks blocks={document.page} fixtures={fixtures} editing={editing} />
       </LayoutFrame>
     </div>
   )
