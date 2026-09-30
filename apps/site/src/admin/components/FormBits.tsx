@@ -30,10 +30,49 @@ export function FormField({
     <Field data-invalid={error ? true : undefined}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       {children}
-      {description && <FieldDescription>{description}</FieldDescription>}
-      {error && <FieldError>{error}</FieldError>}
+      {description && (
+        <FieldDescription id={`${id}-description`}>
+          {description}
+        </FieldDescription>
+      )}
+      {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
     </Field>
   )
+}
+
+/**
+ * The attributes that tie a control to its FormField's description and
+ * error, so screen readers announce them with the control:
+ *
+ *   <FormField id="name" label="Name" error={e} description={d}>
+ *     <Input id="name" {...describedBy("name", { description: d, error: e })} />
+ *   </FormField>
+ */
+export function describedBy(
+  id: string,
+  {
+    description,
+    error,
+    also = [],
+  }: {
+    /** Whether the FormField shows a description (its text is not needed). */
+    description?: string | boolean
+    error?: string
+    /** Ids of other elements that describe the control (a live hint). */
+    also?: string[]
+  }
+) {
+  const ids = [
+    description && `${id}-description`,
+    ...also,
+    error && `${id}-error`,
+  ]
+    .filter(Boolean)
+    .join(" ")
+  return {
+    "aria-describedby": ids || undefined,
+    "aria-invalid": error ? (true as const) : undefined,
+  }
 }
 
 /** The form's overall result, e.g. "Published" or "Some fields need attention". */
