@@ -1,15 +1,13 @@
-import { cn } from "@workspace/ui/lib/utils"
-
 import type { SearchHeroBlock as SearchHeroBlockData } from "../../payload-types"
-import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
-import { EditableText } from "./Editable"
+import { imageOf } from "../brand"
+import { HeroShell } from "./HeroShell"
+import { SearchHeroForm } from "./SearchHeroForm"
 import type { BlockContext } from "./types"
 
 /**
- * Search Hero: a Hero with a visual-only booking search.
- *
- * A stub: its heading only, until its render slice builds the real one.
+ * Search Hero: a Hero with a visual-only booking search (dates, guests and
+ * location). Everything but the form is server-safe; the form is a client
+ * island, and submitting it shows a toast and does nothing else.
  */
 export function SearchHeroBlock({
   block,
@@ -20,18 +18,25 @@ export function SearchHeroBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const locations = (block.locations ?? []).flatMap((location) => {
+    const name = location.name?.trim()
+    return name ? [name] : []
+  })
+
   return (
-    <BlockSection labelledBy={id}>
-      <EditableText
-        as={context.index === 0 ? "h1" : "h2"}
-        field="heading"
-        context={context}
-        id={id}
-        className={cn(displayFont, "text-4xl text-balance sm:text-5xl")}
-      >
-        {heading}
-      </EditableText>
-    </BlockSection>
+    <HeroShell
+      eyebrow={block.eyebrow}
+      heading={heading}
+      accentWord={block.accentWord}
+      subheading={block.subheading}
+      image={imageOf(block.image)}
+      context={context}
+    >
+      <SearchHeroForm
+        searchLabel={block.searchLabel?.trim() || "Search"}
+        locations={locations}
+        context={{ index: context.index, editing: context.editing }}
+      />
+    </HeroShell>
   )
 }

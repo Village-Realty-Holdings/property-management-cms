@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType } from "react"
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react"
 
 import type { BlockContext } from "./types"
 
@@ -15,7 +15,11 @@ type Props = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
    */
   field: string
   context: Pick<BlockContext, "index" | "editing">
-  children: string
+  /**
+   * The text, which may carry inline markup that leaves its `textContent`
+   * whole (a Hero's styled accent word), so the canvas still reads the field.
+   */
+  children: ReactNode
 }
 
 /**

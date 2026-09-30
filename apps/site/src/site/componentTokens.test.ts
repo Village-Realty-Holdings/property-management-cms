@@ -340,9 +340,12 @@ describe("every token class in the components and Blocks is valid Tailwind", () 
       "switch",
       "breadcrumb",
     ].map((name) => join(uiComponents, `${name}.tsx`)),
-    ...["CallToActionBlock.tsx", "HeroBlock.tsx", "types.ts"].map((name) =>
-      join(blocks, name)
-    ),
+    ...[
+      "CallToActionBlock.tsx",
+      "HeroShell.tsx",
+      "SearchHeroForm.tsx",
+      "types.ts",
+    ].map((name) => join(blocks, name)),
   ]
 
   it.each(files)("%s", async (file) => {

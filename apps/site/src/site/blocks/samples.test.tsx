@@ -83,7 +83,7 @@ describe("the Block catalogue's samples", () => {
   )
 
   it.each([
-    ["hero", ["heading", "subheading", "cta.label"]],
+    ["hero", ["eyebrow", "heading", "subheading", "cta.label"]],
     ["callToAction", ["heading", "body", "button.label"]],
   ] as const)(
     "%s marks its headings, short text and button label as editable",
