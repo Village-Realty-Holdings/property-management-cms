@@ -7,14 +7,16 @@ import {
   Zilla_Slab,
 } from "next/font/google"
 
-import type { FontPairing } from "./theme"
+export type FontPairing = "classic" | "modern" | "rustic"
+
+/** The pairing every Site uses until the Theme chooses fonts. */
+export const DEFAULT_FONT_PAIRING: FontPairing = "classic"
 
 /**
- * The three font pairings a Site can choose (Site Settings `branding.fontPairing`).
- * Each font only defines a CSS variable; the layout points `--font-sans`
- * (body) and `--font-display` (headings) at the Site's pair, so the browser
- * downloads only the two faces the Site uses. Not preloaded: the layout
- * reads the pair from Site Settings at request time.
+ * The six built-in fonts, in three pairings. Each font only defines a CSS
+ * variable; the layout points `--font-sans` (body) and `--font-display`
+ * (headings) at the chosen pair, so the browser downloads only the two faces
+ * in use. Not preloaded: the pairing is chosen at request time.
  */
 
 const newsreader = Newsreader({
@@ -63,7 +65,9 @@ export const fontVariables = [
   .join(" ")
 
 /** CSS custom properties selecting the Site's pair. */
-export function fontVars(pairing: FontPairing): Record<string, string> {
+export function fontVars(
+  pairing: FontPairing = DEFAULT_FONT_PAIRING
+): Record<string, string> {
   return {
     "--font-sans": `var(--font-${pairing}-body)`,
     "--font-display": `var(--font-${pairing}-display)`,

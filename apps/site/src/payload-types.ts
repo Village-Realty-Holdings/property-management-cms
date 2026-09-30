@@ -90,10 +90,12 @@ export interface Config {
   };
   fallbackLocale: null;
   globals: {
-    'site-settings': SiteSetting;
+    brand: Brand;
+    seo: Seo;
   };
   globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    brand: BrandSelect<false> | BrandSelect<true>;
+    seo: SeoSelect<false> | SeoSelect<true>;
   };
   locale: null;
   widgets: {
@@ -477,35 +479,23 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
+ * via the `definition` "brand".
  */
-export interface SiteSetting {
+export interface Brand {
   id: number;
   name: string;
   /**
-   * A short line under the Site name, also used in page metadata.
+   * A short line under the Site name.
    */
   tagline?: string | null;
-  domain?: string | null;
+  /**
+   * Shown in the Site's header.
+   */
+  logo?: (number | null) | Media;
   contact?: {
     phone?: string | null;
     email?: string | null;
     address?: string | null;
-  };
-  branding: {
-    /**
-     * Shown in the Site's header.
-     */
-    logo?: (number | null) | Media;
-    /**
-     * Header, buttons and links.
-     */
-    primaryColor?: string | null;
-    /**
-     * Highlights.
-     */
-    accentColor?: string | null;
-    fontPairing: 'classic' | 'modern' | 'rustic';
   };
   social?:
     | {
@@ -519,26 +509,47 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
+ * via the `definition` "seo".
  */
-export interface SiteSettingsSelect<T extends boolean = true> {
+export interface Seo {
+  id: number;
+  /**
+   * How Page titles read in search results and the browser tab. %s is the Page title and {name} is the Site name.
+   */
+  titlePattern?: string | null;
+  /**
+   * Used for Pages that have no SEO description of their own.
+   */
+  description?: string | null;
+  /**
+   * Shown when a Page without its own SEO image is shared on social media.
+   */
+  image?: (number | null) | Media;
+  /**
+   * The icon in browser tabs. A square PNG works best.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Off adds noindex to every page and makes robots.txt disallow everything.
+   */
+  allowIndexing?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand_select".
+ */
+export interface BrandSelect<T extends boolean = true> {
   name?: T;
   tagline?: T;
-  domain?: T;
+  logo?: T;
   contact?:
     | T
     | {
         phone?: T;
         email?: T;
         address?: T;
-      };
-  branding?:
-    | T
-    | {
-        logo?: T;
-        primaryColor?: T;
-        accentColor?: T;
-        fontPairing?: T;
       };
   social?:
     | T
@@ -547,6 +558,20 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo_select".
+ */
+export interface SeoSelect<T extends boolean = true> {
+  titlePattern?: T;
+  description?: T;
+  image?: T;
+  favicon?: T;
+  allowIndexing?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

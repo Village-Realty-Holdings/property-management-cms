@@ -152,24 +152,28 @@ describe("access", () => {
     ).rejects.toThrow()
     await expect(
       payload.updateGlobal({
-        slug: "site-settings",
+        slug: "brand",
         data: { name: "Hacked" },
         ...asVisitor,
       })
     ).rejects.toThrow()
+    await expect(
+      payload.updateGlobal({
+        slug: "seo",
+        data: { allowIndexing: false },
+        ...asVisitor,
+      })
+    ).rejects.toThrow()
 
-    const settings = await payload.updateGlobal({
-      slug: "site-settings",
-      data: { name: "Awayday", branding: { primaryColor: "#1f4d3a" } },
+    const brand = await payload.updateGlobal({
+      slug: "brand",
+      data: { name: "Awayday" },
       overrideAccess: false,
       user: staffUser(),
     })
-    expect(settings.name).toBe("Awayday")
-    const read = await payload.findGlobal({
-      slug: "site-settings",
-      ...asVisitor,
-    })
-    expect(read.branding?.primaryColor).toBe("#1f4d3a")
+    expect(brand.name).toBe("Awayday")
+    const read = await payload.findGlobal({ slug: "brand", ...asVisitor })
+    expect(read.name).toBe("Awayday")
   })
 
   it("never lets anyone create a Staff User or change its Entra identity", async () => {
@@ -200,11 +204,11 @@ describe("access", () => {
     ).rejects.toThrow()
   })
 
-  it("rejects colours that aren't hex", async () => {
+  it("rejects a title pattern without %s", async () => {
     await expect(
       payload.updateGlobal({
-        slug: "site-settings",
-        data: { name: "Awayday", branding: { primaryColor: "green" } },
+        slug: "seo",
+        data: { titlePattern: "Just the name" },
         overrideAccess: false,
         user: staffUser(),
       })

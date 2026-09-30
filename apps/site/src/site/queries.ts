@@ -2,7 +2,9 @@ import config from "@payload-config"
 import { getPayload } from "payload"
 import { cache } from "react"
 
-import type { Page, SiteSetting } from "../payload-types"
+import type { Brand, Page, Seo } from "../payload-types"
+import { readBrand, readPublishedPages, readSeo } from "./read"
+import type { SitemapPage } from "./seo"
 
 /**
  * What the public Site reads, through the Local API as a visitor: access
@@ -28,15 +30,19 @@ export const getPublishedPage = cache(
   }
 )
 
-/** Site Settings, or null before anyone has saved them. */
-export const getSiteSettings = cache(async (): Promise<SiteSetting | null> => {
-  const payload = await getPayload({ config })
-  const settings = await payload.findGlobal({
-    slug: "site-settings",
-    depth: 1,
-    ...asVisitor,
-  })
-  return settings?.name ? settings : null
+/** The Brand global; empty fields until someone has saved it. */
+export const getBrand = cache(async (): Promise<Brand> => {
+  return readBrand(await getPayload({ config }))
+})
+
+/** The SEO global; empty fields until someone has saved it. */
+export const getSeo = cache(async (): Promise<Seo> => {
+  return readSeo(await getPayload({ config }))
+})
+
+/** Every Published Page's path and last change, for the sitemap. */
+export const getPublishedPages = cache(async (): Promise<SitemapPage[]> => {
+  return readPublishedPages(await getPayload({ config }))
 })
 
 /** The Page path for the catch-all route's segments: [] is "/". */

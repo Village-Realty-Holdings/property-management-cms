@@ -1,31 +1,15 @@
-import type { Media, SiteSetting } from "../payload-types"
-
 /**
- * The Site's branding (Site Settings), resolved into what the layout
- * renders: colours, a font pairing, logo and contact details. Missing
- * colours fall back to a default palette.
+ * The Site's colours as CSS variables. The Theme (a later phase) will supply
+ * the palette; until it exists the Site uses one fixed default.
  */
 
-export type FontPairing = "classic" | "modern" | "rustic"
+export type Palette = { primary: string; accent: string }
 
-export type Brand = {
-  name: string
-  tagline: string | null
-  logo: { url: string; alt: string } | null
-  primary: string
-  accent: string
-  fontPairing: FontPairing
-  phone: string | null
-  email: string | null
-  address: string | null
-  social: { platform: string; url: string }[]
+/** The palette every Site uses until the Theme exists. */
+export const DEFAULT_PALETTE: Palette = {
+  primary: "#283d6b",
+  accent: "#f2a65a",
 }
-
-const DEFAULT_PRIMARY = "#283d6b"
-const DEFAULT_ACCENT = "#f2a65a"
-const DEFAULT_NAME = "Awayday"
-
-const pairings: FontPairing[] = ["classic", "modern", "rustic"]
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
 
@@ -62,60 +46,30 @@ export function readableOn(hex: string): string {
     : DARK_TEXT
 }
 
-const text = (value: string | null | undefined) => value?.trim() || null
-
-/** A Media upload's URL and alt text, or null when it isn't populated. */
-export function imageOf(
-  value: number | Media | null | undefined
-): { url: string; alt: string } | null {
-  if (!value || typeof value !== "object" || !value.url) return null
-  return { url: value.url, alt: value.alt ?? "" }
-}
-
-export function resolveBrand(settings: SiteSetting | null): Brand {
-  const branding = settings?.branding
-  const contact = settings?.contact
-  const fontPairing = pairings.includes(branding?.fontPairing as FontPairing)
-    ? (branding!.fontPairing as FontPairing)
-    : "classic"
+/** CSS custom properties for a palette. */
+export function themeColorVars(
+  palette: Palette = DEFAULT_PALETTE
+): Record<string, string> {
+  const primaryText = readableOn(palette.primary)
   return {
-    name: text(settings?.name) ?? DEFAULT_NAME,
-    tagline: text(settings?.tagline),
-    logo: imageOf(branding?.logo),
-    primary: normalizeHex(branding?.primaryColor) ?? DEFAULT_PRIMARY,
-    accent: normalizeHex(branding?.accentColor) ?? DEFAULT_ACCENT,
-    fontPairing,
-    phone: text(contact?.phone),
-    email: text(contact?.email),
-    address: text(contact?.address),
-    social: (settings?.social ?? []).filter((link) =>
-      /^https?:\/\//.test(link.url)
-    ),
-  }
-}
-
-/** CSS custom properties for the Site's colours. */
-export function brandColorVars(brand: Brand): Record<string, string> {
-  const primaryText = readableOn(brand.primary)
-  return {
-    "--brand-primary": brand.primary,
+    "--brand-primary": palette.primary,
     "--brand-primary-foreground": primaryText,
-    "--brand-accent": brand.accent,
-    "--brand-accent-foreground": readableOn(brand.accent),
-    // shadcn tokens, tinted by the brand so the Site has its own paper.
-    "--primary": brand.primary,
+    "--brand-accent": palette.accent,
+    "--brand-accent-foreground": readableOn(palette.accent),
+    // shadcn tokens, tinted by the palette so the Site has its own paper.
+    "--primary": palette.primary,
     "--primary-foreground": primaryText,
-    "--ring": brand.primary,
-    "--background": `color-mix(in oklab, ${brand.primary} 3%, white)`,
-    "--foreground": `color-mix(in oklab, ${brand.primary} 22%, #151515)`,
+    "--ring": palette.primary,
+    "--background": `color-mix(in oklab, ${palette.primary} 3%, white)`,
+    "--foreground": `color-mix(in oklab, ${palette.primary} 22%, #151515)`,
     "--card": "#ffffff",
-    "--card-foreground": `color-mix(in oklab, ${brand.primary} 22%, #151515)`,
-    "--muted": `color-mix(in oklab, ${brand.primary} 7%, white)`,
-    "--muted-foreground": `color-mix(in oklab, ${brand.primary} 35%, #5b5b5b)`,
-    "--secondary": `color-mix(in oklab, ${brand.primary} 9%, white)`,
-    "--secondary-foreground": brand.primary,
-    "--border": `color-mix(in oklab, ${brand.primary} 15%, white)`,
-    "--input": `color-mix(in oklab, ${brand.primary} 18%, white)`,
+    "--card-foreground": `color-mix(in oklab, ${palette.primary} 22%, #151515)`,
+    "--muted": `color-mix(in oklab, ${palette.primary} 7%, white)`,
+    "--muted-foreground": `color-mix(in oklab, ${palette.primary} 35%, #5b5b5b)`,
+    "--secondary": `color-mix(in oklab, ${palette.primary} 9%, white)`,
+    "--secondary-foreground": palette.primary,
+    "--border": `color-mix(in oklab, ${palette.primary} 15%, white)`,
+    "--input": `color-mix(in oklab, ${palette.primary} 18%, white)`,
   }
 }
 
