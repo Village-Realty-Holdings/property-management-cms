@@ -1,19 +1,22 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { PageEditor } from "@/admin/components/PageEditor"
 import { derivePageStatus } from "@/admin/dashboard/pageStatus"
-import { mediaOptions } from "@/admin/media"
-import { pageToValues } from "@/admin/pageForm"
-import { toMarkdown } from "@/admin/richText"
+import { pageDocumentFromPage } from "@/admin/editor/modes/pageDocument"
+import {
+  loadPickers,
+  resolvePageLayout,
+} from "@/admin/editor/modes/loadPageMode"
+import { PageMode } from "@/admin/editor/modes/PageMode"
 import { requireStaff } from "@/admin/session"
 import { loadPageDependents } from "@/admin/usage"
+import { editingUrl } from "@/site/editing/flag"
 
 export const metadata: Metadata = { title: "Edit Page" }
 
 type Props = { params: Promise<{ id: string }> }
 
-/** Edits a Page's latest Draft. */
+/** A Page's latest Draft, in the Visual Editor's Page mode. */
 export default async function EditPage({ params }: Props) {
   const { id } = await params
   const staff = await requireStaff()
@@ -25,30 +28,32 @@ export default async function EditPage({ params }: Props) {
     .findByID({ collection: "pages", id: pageId, draft: true, depth: 0, ...as })
     .catch(() => null)
   if (!draft) notFound()
-  const main = await payload.findByID({
+  const published = await payload.findByID({
     collection: "pages",
     id: pageId,
     depth: 0,
     ...as,
   })
 
-  const status = derivePageStatus({
-    published: main._status,
-    latest: draft._status,
-  })
-
-  const initial = await pageToValues(draft, (data) => toMarkdown(payload, data))
+  const [layout, pickers, dependents] = await Promise.all([
+    resolvePageLayout(payload, draft),
+    loadPickers(staff),
+    loadPageDependents(payload, as, { id: pageId, path: draft.path }),
+  ])
 
   return (
-    <PageEditor
+    <PageMode
+      key={pageId}
       id={pageId}
-      initial={initial}
-      status={status}
-      media={await mediaOptions(staff)}
-      dependents={await loadPageDependents(payload, as, {
-        id: pageId,
-        path: draft.path,
+      initial={pageDocumentFromPage(draft)}
+      status={derivePageStatus({
+        published: published._status,
+        latest: draft._status,
       })}
+      layout={layout}
+      dependents={dependents}
+      canvasSrc={editingUrl(draft.path)}
+      {...pickers}
     />
   )
 }

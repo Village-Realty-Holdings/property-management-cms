@@ -1,15 +1,9 @@
-import type {
-  CallToActionBlock,
-  HeroBlock,
-  Media,
-  Page,
-  RichTextBlock,
-} from "../payload-types"
+import type { CallToActionBlock, Media } from "../payload-types"
 
 /**
- * A Page as the Admin's form edits it: uploads as Media ids, and rich text
- * as Markdown (see richText.ts). Plain data, so it crosses the
- * server/client boundary as is.
+ * The Blocks the Visual Editor starts a Page with, and the catalogue labels
+ * the Outline shows, as plain data. The Page being edited is held as a
+ * document (see editor/modes/pageDocument.ts), with every Block as stored.
  */
 export type LinkValues = { label: string; href: string }
 
@@ -91,134 +85,5 @@ export function emptyBlock(blockType: BlockValues["blockType"]): BlockValues {
   }
 }
 
-export const emptyPage: PageValues = {
-  title: "",
-  path: "",
-  blocks: [],
-  seo: { title: "", description: "", image: null },
-}
-
 export const mediaId = (value: number | Media | null | undefined) =>
   value == null ? null : typeof value === "object" ? value.id : value
-
-const link = (
-  value: { label?: string | null; href?: string | null } | null | undefined
-): LinkValues => ({
-  label: value?.label ?? "",
-  href: value?.href ?? "",
-})
-
-type FormBlockType = BlockValues["blockType"]
-
-/**
- * The Blocks this form can edit. The form is replaced by the Visual Editor
- * (Phase 5), which edits every Block, so the Blocks added in Phase 4 are not
- * modelled here: a Page that holds one opens in the form without it.
- */
-const isFormBlock = (
-  block: NonNullable<Page["blocks"]>[number]
-): block is Extract<
-  NonNullable<Page["blocks"]>[number],
-  { blockType: FormBlockType }
-> => BLOCK_TYPES.some((type) => type.blockType === block.blockType)
-
-/** A stored Page as form values; rich text goes through `toMarkdown`. */
-export async function pageToValues(
-  page: Page,
-  toMarkdown: (data: unknown) => Promise<string>
-): Promise<PageValues> {
-  const blocks = await Promise.all(
-    (page.blocks ?? [])
-      .filter(isFormBlock)
-      .map(async (block): Promise<BlockValues> => {
-        switch (block.blockType) {
-          case "hero":
-            return {
-              id: block.id ?? undefined,
-              blockType: "hero",
-              heading: block.heading ?? "",
-              subheading: block.subheading ?? "",
-              image: mediaId(block.image),
-              cta: link(block.cta),
-            }
-          case "richText":
-            return {
-              id: block.id ?? undefined,
-              blockType: "richText",
-              markdown: await toMarkdown(block.content),
-            }
-          case "callToAction":
-            return {
-              id: block.id ?? undefined,
-              blockType: "callToAction",
-              heading: block.heading ?? "",
-              body: block.body ?? "",
-              button: link(block.button),
-              style: block.style ?? "primary",
-            }
-        }
-      })
-  )
-  return {
-    title: page.title ?? "",
-    path: page.path ?? "",
-    blocks,
-    seo: {
-      title: page.seo?.title ?? "",
-      description: page.seo?.description ?? "",
-      image: mediaId(page.seo?.image),
-    },
-  }
-}
-
-type StoredBlock = NonNullable<Page["blocks"]>[number]
-
-/** Form values as Page data; rich text goes through `fromMarkdown`. */
-export async function valuesToPageData(
-  values: PageValues,
-  fromMarkdown: (markdown: string) => Promise<unknown>
-) {
-  const blocks = await Promise.all(
-    values.blocks.map(async (block): Promise<StoredBlock> => {
-      const id = block.id ? { id: block.id } : {}
-      switch (block.blockType) {
-        case "hero":
-          return {
-            ...id,
-            blockType: "hero",
-            heading: block.heading,
-            subheading: block.subheading || null,
-            image: block.image,
-            cta: block.cta,
-          } satisfies HeroBlock
-        case "richText":
-          return {
-            ...id,
-            blockType: "richText",
-            content: (await fromMarkdown(
-              block.markdown
-            )) as RichTextBlock["content"],
-          }
-        case "callToAction":
-          return {
-            ...id,
-            blockType: "callToAction",
-            heading: block.heading,
-            body: block.body || null,
-            button: block.button,
-            style: block.style,
-          } satisfies CallToActionBlock
-      }
-    })
-  )
-  return {
-    title: values.title,
-    path: values.path,
-    blocks,
-    seo: {
-      title: values.seo.title || null,
-      description: values.seo.description || null,
-      image: values.seo.image,
-    },
-  }
-}

@@ -2,13 +2,21 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
-import {
-  emptyBlock,
-  emptyPage,
-  type HeroValues,
-  type PageValues,
-} from "./pageForm"
+import { pageDocumentFromPage } from "./editor/modes/pageDocument"
+import type { PageDocument } from "./editor/state"
+import { emptyBlock, type HeroValues } from "./pageForm"
 import { deletePageAs, savePageAs } from "./pageSave"
+
+/** A Page document with nothing in it but what a test names. */
+const pageDoc = (over: Partial<PageDocument> = {}): PageDocument => ({
+  kind: "page",
+  title: "",
+  path: "",
+  layout: { mode: "default" },
+  blocks: [],
+  seo: { title: "", description: "", image: null },
+  ...over,
+})
 
 let t: TestPayload
 let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
@@ -27,12 +35,11 @@ afterAll(async () => {
   await t?.teardown()
 })
 
-const about: PageValues = {
-  ...emptyPage,
+const about = pageDoc({
   title: "About",
   path: "/about",
   blocks: [{ ...(emptyBlock("hero") as HeroValues), heading: "About us" }],
-}
+})
 
 const publicPage = (path: string) =>
   t.payload.find({
@@ -42,7 +49,7 @@ const publicPage = (path: string) =>
   })
 
 describe("saving a Page keeps its Layout choice", () => {
-  it("does not reset the Layout the form does not edit", async () => {
+  it("stores the Layout the document carries, in every intent", async () => {
     const layout = await t.payload.create({
       collection: "layouts",
       data: { name: "Kept Layout" },
@@ -61,7 +68,12 @@ describe("saving a Page keeps its Layout choice", () => {
       const result = await savePageAs(t.payload, asStaff, {
         id: page.id,
         intent,
-        values: { ...about, title: "Keeper", path: "/keeper" },
+        document: {
+          ...about,
+          title: "Keeper",
+          path: "/keeper",
+          layout: { mode: "layout", layoutId: layout.id },
+        },
       })
       expect(result.ok).toBe(true)
       const latest = await t.payload.findByID({
@@ -86,7 +98,7 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id: null,
       intent: "draft",
-      values: about,
+      document: about,
     })
     expect(result).toMatchObject({
       ok: true,
@@ -95,8 +107,8 @@ describe("saving a Page from the Admin form", () => {
     })
     expect(result.id).toBeGreaterThan(0)
     // The values as stored: Blocks now carry their ids.
-    expect(result.values?.title).toBe("About")
-    expect(result.values?.blocks[0]?.id).toBeTruthy()
+    expect(result.document?.title).toBe("About")
+    expect(result.document?.blocks[0]?.id).toBeTruthy()
     id = result.id!
     expect((await publicPage("/about")).docs).toHaveLength(0)
   })
@@ -105,7 +117,7 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id,
       intent: "publish",
-      values: about,
+      document: about,
     })
     expect(result).toMatchObject({
       ok: true,
@@ -119,10 +131,10 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id,
       intent: "draft",
-      values: { ...about, title: "About v2" },
+      document: { ...about, title: "About v2" },
     })
     expect(result).toMatchObject({ ok: true, status: "changes" })
-    expect(result.values?.title).toBe("About v2")
+    expect(result.document?.title).toBe("About v2")
     expect((await publicPage("/about")).docs[0]?.title).toBe("About")
   })
 
@@ -130,7 +142,7 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id,
       intent: "unpublish",
-      values: about,
+      document: about,
     })
     expect(result).toMatchObject({
       ok: true,
@@ -144,17 +156,17 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id: null,
       intent: "draft",
-      values: { ...emptyPage, title: "Our Rooms" },
+      document: pageDoc({ title: "Our Rooms" }),
     })
     expect(result.ok).toBe(true)
-    expect(result.values?.path).toBe("/our-rooms")
+    expect(result.document?.path).toBe("/our-rooms")
   })
 
   it("returns field errors, and no id, when the Page is invalid", async () => {
     const result = await savePageAs(t.payload, asStaff, {
       id: null,
       intent: "draft",
-      values: { ...emptyPage, title: "Bad path", path: "no-slash" },
+      document: pageDoc({ title: "Bad path", path: "no-slash" }),
     })
     expect(result.ok).toBe(false)
     expect(result.message).toBe("Some fields need attention.")
@@ -166,7 +178,7 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asStaff, {
       id,
       intent: "explode" as never,
-      values: about,
+      document: about,
     })
     expect(result.ok).toBe(false)
   })
@@ -175,10 +187,92 @@ describe("saving a Page from the Admin form", () => {
     const result = await savePageAs(t.payload, asVisitor, {
       id: null,
       intent: "draft",
-      values: { ...emptyPage, title: "Sneaky" },
+      document: pageDoc({ title: "Sneaky" }),
     })
     expect(result.ok).toBe(false)
     expect(result.message).toBeTruthy()
+  })
+})
+
+describe("saving Blocks from the Visual Editor", () => {
+  it("keeps Blocks of every kind as they are, and gives new Blocks real ids", async () => {
+    const richText = {
+      root: {
+        type: "root",
+        version: 1,
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        children: [
+          {
+            type: "paragraph",
+            version: 1,
+            direction: "ltr",
+            format: "",
+            indent: 0,
+            textFormat: 0,
+            textStyle: "",
+            children: [
+              {
+                type: "text",
+                version: 1,
+                text: "Plain words",
+                format: 0,
+                detail: 0,
+                mode: "normal",
+                style: "",
+              },
+            ],
+          },
+        ],
+      },
+    }
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Mixed",
+        path: "/mixed",
+        blocks: [
+          { id: "new-1", blockType: "richText", content: richText } as never,
+          {
+            id: "new-2",
+            blockType: "faq",
+            heading: "Questions",
+            items: [{ question: "Why?", answer: "Because." }],
+          } as never,
+        ],
+      }),
+    })
+    expect(result.ok, result.message).toBe(true)
+    const blocks = result.document!.blocks
+    expect(blocks.map((b) => b.blockType)).toEqual(["richText", "faq"])
+    expect(blocks.every((b) => b.id && !/^new-/.test(b.id))).toBe(true)
+    expect(blocks[1]).toMatchObject({ heading: "Questions" })
+    const stored = await t.payload.findByID({
+      collection: "pages",
+      id: result.id!,
+      draft: true,
+      depth: 0,
+      ...asStaff,
+    })
+    expect(JSON.stringify(stored.blocks)).toContain("Plain words")
+  })
+
+  it("loads back as the document it saved", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({ title: "Round trip", path: "/round-trip" }),
+    })
+    const stored = await t.payload.findByID({
+      collection: "pages",
+      id: result.id!,
+      draft: true,
+      depth: 0,
+      ...asStaff,
+    })
+    expect(pageDocumentFromPage(stored)).toEqual(result.document)
   })
 })
 
@@ -187,7 +281,7 @@ describe("deleting a Page", () => {
     const saved = await savePageAs(t.payload, asStaff, {
       id: null,
       intent: "publish",
-      values: { ...emptyPage, title: "Old news", path: "/old-news" },
+      document: pageDoc({ title: "Old news", path: "/old-news" }),
     })
     const result = await deletePageAs(t.payload, asStaff, saved.id!)
     expect(result).toEqual({ ok: true, message: "Deleted Page “Old news”." })
@@ -206,7 +300,7 @@ describe("deleting a Page", () => {
     const saved = await savePageAs(t.payload, asStaff, {
       id: null,
       intent: "draft",
-      values: { ...emptyPage, title: "Keep me", path: "/keep-me" },
+      document: pageDoc({ title: "Keep me", path: "/keep-me" }),
     })
     const result = await deletePageAs(t.payload, asVisitor, saved.id!)
     expect(result.ok).toBe(false)

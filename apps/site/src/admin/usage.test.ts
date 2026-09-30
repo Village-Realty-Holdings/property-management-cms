@@ -2,8 +2,20 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { Brand, Page, Seo } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
-import { emptyBlock, emptyPage } from "./pageForm"
+import type { PageDocument } from "./editor/state"
+import { emptyBlock } from "./pageForm"
 import { savePageAs } from "./pageSave"
+
+/** A Page document with nothing in it but what a test names. */
+const pageDoc = (over: Partial<PageDocument> = {}): PageDocument => ({
+  kind: "page",
+  title: "",
+  path: "",
+  layout: { mode: "default" },
+  blocks: [],
+  seo: { title: "", description: "", image: null },
+  ...over,
+})
 import {
   loadMediaDependents,
   loadPageDependents,
@@ -184,14 +196,14 @@ describe("looking things up in the database", () => {
     const saved = await savePageAs(t.payload, access, {
       id: null,
       intent: "publish",
-      values: { ...emptyPage, title: "Home", path: "/", blocks: [hero] },
+      document: pageDoc({ title: "Home", path: "/", blocks: [hero] }),
     })
     await savePageAs(t.payload, access, {
       id: saved.id!,
       intent: "draft",
-      values: {
-        ...saved.values!,
-        blocks: [{ ...saved.values!.blocks[0]!, image: null } as never],
+      document: {
+        ...saved.document!,
+        blocks: [{ ...saved.document!.blocks[0]!, image: null } as never],
       },
     })
 
@@ -206,8 +218,7 @@ describe("looking things up in the database", () => {
     await savePageAs(t.payload, access, {
       id: null,
       intent: "draft",
-      values: {
-        ...emptyPage,
+      document: pageDoc({
         title: "Stays",
         path: "/stays",
         blocks: [
@@ -217,12 +228,12 @@ describe("looking things up in the database", () => {
             button: { label: "Rooms", href: "/rooms" },
           } as never,
         ],
-      },
+      }),
     })
     const rooms = await savePageAs(t.payload, access, {
       id: null,
       intent: "draft",
-      values: { ...emptyPage, title: "Rooms", path: "/rooms" },
+      document: pageDoc({ title: "Rooms", path: "/rooms" }),
     })
     const dependents = await loadPageDependents(t.payload, access, {
       id: rooms.id!,
@@ -235,7 +246,7 @@ describe("looking things up in the database", () => {
     const team = await savePageAs(t.payload, access, {
       id: null,
       intent: "publish",
-      values: { ...emptyPage, title: "Team", path: "/team" },
+      document: pageDoc({ title: "Team", path: "/team" }),
     })
     const layout = await t.payload.create({
       collection: "layouts",

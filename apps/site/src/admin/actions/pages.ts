@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import type { FormState } from "../formState"
-import type { PageValues } from "../pageForm"
+import type { PageDocument } from "../editor/state"
 import {
   deletePageAs,
   savePageAs,
@@ -13,7 +13,7 @@ import {
 import { requireStaff } from "../session"
 
 /**
- * Saves a Page from the Admin's editor as the Staff User: as a Draft,
+ * Saves a Page from the Visual Editor as the Staff User: as a Draft,
  * published, or taken off the Site. `id` is null for a new Page. The editor
  * shows the toast and the new status from the result. Nothing here redirects:
  * the editor stays where it is, so what was typed is never lost.
@@ -21,7 +21,7 @@ import { requireStaff } from "../session"
 export async function savePage(input: {
   id: number | null
   intent: PageIntent
-  values: PageValues
+  document: PageDocument
 }): Promise<PageSaveResult> {
   const { payload, as } = await requireStaff()
   const result = await savePageAs(payload, as, input)
@@ -34,7 +34,7 @@ export async function savePage(input: {
   return result
 }
 
-/** Deletes a Page. The editor asks first (<DeletePageButton>). */
+/** Deletes a Page. The Page tab asks first (<DeletePageButton>). */
 export async function deletePage(id: number): Promise<FormState> {
   const { payload, as } = await requireStaff()
   const result = await deletePageAs(payload, as, id)

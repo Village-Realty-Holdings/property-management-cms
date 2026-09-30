@@ -107,6 +107,8 @@ async function outlineOrder(): Promise<string> {
 
 /** Selects a Block by its item in the Outline and opens the Block tab. */
 async function selectInOutline(name: string, nth = 0) {
+  // The Block tab is open after the last selection: go back to the Outline.
+  await openTab(page, "Outline")
   await outlineItems(page, name).nth(nth).click()
   await expect
     .poll(() => panelTab(page, "Block").getAttribute("aria-selected"), {

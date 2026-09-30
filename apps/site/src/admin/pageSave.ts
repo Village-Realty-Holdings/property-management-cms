@@ -1,13 +1,16 @@
 import { NotFound, type Payload } from "payload"
 
 import { derivePageStatus, type PageStatus } from "./dashboard/pageStatus"
+import {
+  pageDataFromDocument,
+  pageDocumentFromPage,
+} from "./editor/modes/pageDocument"
+import type { PageDocument } from "./editor/state"
 import { formStateFromError, type FormState } from "./formState"
-import { pageToValues, valuesToPageData, type PageValues } from "./pageForm"
-import { fromMarkdown, toMarkdown } from "./richText"
 import type { Access } from "./settingsSave"
 
 /**
- * Saving and deleting a Page for the Admin's Page editor, through the Local
+ * Saving and deleting a Page for the Visual Editor's Page mode, through the Local
  * API with the caller's access (apps/site ADR-0002). Kept apart from the
  * Server Actions so it runs in tests without Next.
  */
@@ -27,8 +30,8 @@ export type PageSaveResult = FormState & {
   /** The saved Page's id (a new Page gets one on its first save). */
   id?: number
   status?: PageStatus
-  /** The Page as stored: trimmed text, generated path, Block ids. */
-  values?: PageValues
+  /** The Page as stored: generated path, Block ids. */
+  document?: PageDocument
 }
 
 /**
@@ -41,16 +44,14 @@ export async function savePageAs(
   {
     id,
     intent,
-    values,
-  }: { id: number | null; intent: PageIntent; values: PageValues }
+    document,
+  }: { id: number | null; intent: PageIntent; document: PageDocument }
 ): Promise<PageSaveResult> {
   if (!INTENTS.includes(intent)) {
     return { ok: false, message: "Choose Save draft, Publish or Unpublish." }
   }
   try {
-    const data = await valuesToPageData(values, (markdown) =>
-      fromMarkdown(payload, markdown)
-    )
+    const data = pageDataFromDocument(document)
     const _status = intent === "publish" ? "published" : "draft"
     const draft = intent === "draft"
     const saved = id
@@ -84,9 +85,7 @@ export async function savePageAs(
         published: published._status,
         latest: saved._status,
       }),
-      values: await pageToValues(saved, (content) =>
-        toMarkdown(payload, content)
-      ),
+      document: pageDocumentFromPage(saved),
     }
   } catch (error) {
     return formStateFromError(error)
