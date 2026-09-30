@@ -3,14 +3,14 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { CallToActionBlock as CallToActionBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { BlockButton, linkOf, type BlockButtonTone } from "./BlockButton"
-import { container, type BlockContext } from "./types"
+import { container, sectionY, type BlockContext } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
 const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
   // The Site's primary colour, accent button.
   primary: {
-    panel: "bg-(--brand-primary) text-(--brand-primary-foreground)",
+    panel: "bg-primary text-primary-foreground",
     button: "accent",
   },
   // Quiet: tinted paper with a hairline, primary button.
@@ -20,7 +20,7 @@ const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
   },
   // The accent colour, primary button.
   inverted: {
-    panel: "bg-(--brand-accent) text-(--brand-accent-foreground)",
+    panel: "bg-accent text-accent-foreground",
     button: "primary",
   },
 }
@@ -40,10 +40,11 @@ export function CallToActionBlock({
   const style = styles[block.style] ?? styles.primary
   const id = `block-${context.index}-heading`
   return (
-    <section aria-labelledby={id} className={`${container} py-10 sm:py-14`}>
+    <section aria-labelledby={id} className={`${container} ${sectionY}`}>
       <div
         className={cn(
-          "relative flex flex-col gap-6 overflow-hidden rounded-2xl px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
+          "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
+          "shadow-(--card-shadow)",
           style.panel
         )}
       >

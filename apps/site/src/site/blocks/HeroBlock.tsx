@@ -35,8 +35,8 @@ export function HeroBlock({
       className={cn(
         "relative isolate overflow-hidden",
         image
-          ? "bg-neutral-900 text-white"
-          : "bg-(--brand-primary) text-(--brand-primary-foreground)"
+          ? "bg-surface-dark text-surface-dark-foreground"
+          : "bg-primary text-primary-foreground"
       )}
     >
       {image ? (
@@ -51,13 +51,13 @@ export function HeroBlock({
           />
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-linear-to-t from-black/80 via-black/45 to-black/10"
+            className="absolute inset-0 -z-10 bg-linear-to-t from-surface-dark/80 via-surface-dark/45 to-surface-dark/10"
           />
         </>
       ) : (
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -bottom-40 -z-10 size-[28rem] rounded-full bg-(--brand-accent) opacity-20 blur-3xl sm:size-[40rem]"
+          className="pointer-events-none absolute -right-24 -bottom-40 -z-10 size-[28rem] rounded-full bg-accent opacity-20 blur-3xl sm:size-[40rem]"
         />
       )}
       <div
@@ -65,8 +65,8 @@ export function HeroBlock({
           container,
           "flex flex-col gap-8",
           image
-            ? "min-h-[34rem] justify-end pt-32 pb-14 sm:min-h-[40rem] sm:pb-20"
-            : "pt-16 pb-14 sm:pt-24 sm:pb-20"
+            ? "min-h-[34rem] justify-end pt-[calc(var(--section-y)*3.2)] pb-[calc(var(--section-y)*1.4)] sm:min-h-[40rem] sm:pb-[calc(var(--section-y)*2)]"
+            : "pt-[calc(var(--section-y)*1.6)] pb-[calc(var(--section-y)*1.4)] sm:pt-[calc(var(--section-y)*2.4)] sm:pb-[calc(var(--section-y)*2)]"
         )}
       >
         <Heading
