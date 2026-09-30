@@ -61,6 +61,7 @@ These are local merges. Pushing `mvp` later marks the PRs merged on GitHub, so
 don't also merge them with `gh`.
 
 Expected conflicts:
+
 - **Registry lines** (collections index, `tenancy.ts`, `payload.config.ts`
   arrays, a collection's `hooks` line). Several workers each added an entry, so
   keep all of them.
@@ -96,6 +97,7 @@ time, a missing registry entry) are the whole point of this step. Keep fixes
 minimal and in scope. If a fix would change a unit's design, ask first.
 
 When the wave touches runtime behaviour, also do a smoke run:
+
 1. `pnpm seed`.
 2. `bash .claude/skills/dev-up/scripts/dev-up.sh`.
 3. Hit the pages the wave added on both demo Sites. Check each returns 200, and
@@ -121,6 +123,7 @@ gh pr list --base mvp --state open   # the wave's PRs should now be gone
 ### 7. Stop
 
 Don't start the next wave. The user reviews each checkpoint first. Report:
+
 - N and the merged PRs (numbers and titles).
 - What conflicted and how each was resolved.
 - The migration file, or "no schema change".
