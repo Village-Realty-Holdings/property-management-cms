@@ -15,7 +15,8 @@ import {
 
 // Two Sites in one database (apps/site ADR-0005). The schemas are made by
 // running the one migration on an empty database; the database is dropped
-// with them in afterAll.
+// with them in afterAll. Each `payload migrate` is a child process (5 to
+// 20 s when the whole suite runs at once), so those tests get 120 s.
 const A = "ms_1_per_site_schema_a"
 const B = "ms_1_per_site_schema_b"
 
@@ -91,14 +92,14 @@ describe("migrating a Site from zero", () => {
     )
     expect(await tablesIn("public")).toEqual([])
     expect(await schemaExists(B)).toBe(false)
-  })
+  }, 120_000)
 
   it("gives a second Site the same tables in its own schema", async () => {
     await migrate(B)
 
     expect(await tablesIn(B)).toEqual(await tablesIn(A))
     expect(await tablesIn("public")).toEqual([])
-  })
+  }, 120_000)
 
   it("records each Site's migrations in its own schema", async () => {
     for (const schema of [A, B]) {
