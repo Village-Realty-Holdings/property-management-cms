@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+import { cn } from "@workspace/ui/lib/utils"
+
 import type { Layout } from "../payload-types"
 import type { Brand } from "./brand"
 import type { SiteFixtures } from "./fixtures"
@@ -16,31 +18,51 @@ export function LayoutFrame({
   layout,
   brand,
   fixtures,
+  editing = false,
+  locked,
   children,
 }: {
-  layout: Layout | null
+  layout: Pick<Layout, "header" | "footer"> | null
   brand: Brand
   fixtures: SiteFixtures
+  /** The Visual Editor's canvas is drawing this (see `EditableText`). */
+  editing?: boolean
+  /**
+   * In the Visual Editor, the part that cannot be edited now: the Layout's
+   * Header and Footer beside a Page, or the Page (dimmed) beside a Layout.
+   * It is inert, so neither the pointer nor the keyboard reaches it.
+   */
+  locked?: "layout" | "page"
   children: ReactNode
 }) {
-  const context = { brand, fixtures, editing: false }
+  const context = { brand, fixtures, editing }
+  const lockLayout = editing && locked === "layout"
+  const region = (node: ReactNode) =>
+    lockLayout ? <div inert>{node}</div> : node
   return (
     <div className="flex min-h-svh flex-col">
-      {layout && (
-        <RegionBlocks
-          region="header"
-          blocks={layout.header}
-          context={context}
-        />
-      )}
-      <main className="flex-1">{children}</main>
-      {layout && (
-        <RegionBlocks
-          region="footer"
-          blocks={layout.footer}
-          context={context}
-        />
-      )}
+      {layout &&
+        region(
+          <RegionBlocks
+            region="header"
+            blocks={layout.header}
+            context={context}
+          />
+        )}
+      <main
+        className={cn("flex-1", editing && locked === "page" && "opacity-40")}
+        inert={editing && locked === "page" ? true : undefined}
+      >
+        {children}
+      </main>
+      {layout &&
+        region(
+          <RegionBlocks
+            region="footer"
+            blocks={layout.footer}
+            context={context}
+          />
+        )}
     </div>
   )
 }
