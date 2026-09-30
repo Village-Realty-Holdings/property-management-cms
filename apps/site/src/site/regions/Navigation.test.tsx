@@ -309,6 +309,34 @@ describe("a mega menu", () => {
     expect(getByRole("link", { name: "Cycling" })).toBeTruthy()
   })
 
+  it("flows a long list of links with no heading into columns of at most four", async () => {
+    const user = userEvent.setup()
+    const names = ["Skye", "Mull", "Islay", "Harris", "Lewis", "Arran"]
+    show(
+      block([
+        {
+          label: "Destinations",
+          display: "mega",
+          children: names.map((label) => ({
+            label,
+            link: { type: "url", url: `/${label.toLowerCase()}` },
+          })),
+        },
+      ])
+    )
+    await user.click(desktopButton("Destinations"))
+    const panel = document.getElementById(
+      desktopButton("Destinations").getAttribute("aria-controls")!
+    )!
+    const columns = within(panel).getAllByRole("list")
+    expect(columns.map((c) => within(c).getAllByRole("link").length)).toEqual([
+      3, 3,
+    ])
+    expect(columns.flatMap((c) => within(c).getAllByRole("link"))).toHaveLength(
+      names.length
+    )
+  })
+
   it("closes on Escape and returns focus to its button", async () => {
     const user = userEvent.setup()
     show()

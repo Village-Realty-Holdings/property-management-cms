@@ -261,8 +261,10 @@ describe("Featured rentals", () => {
 
         await previous.focus()
         await page.keyboard.press("Enter")
-        await settle(page)
-        expect(await leftEdges(articles)).toEqual(start)
+        // The carousel eases to its slide and takes a moment to come to rest.
+        await expect
+          .poll(() => leftEdges(articles), { timeout: 5_000 })
+          .toEqual(start)
         expect(await axeViolations(page)).toEqual([])
       }
     )

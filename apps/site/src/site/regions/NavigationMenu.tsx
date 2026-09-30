@@ -225,6 +225,27 @@ function LinkList({
   )
 }
 
+/** The most links a column of a mega menu without headings holds. */
+const COLUMN_LINKS = 4
+
+/**
+ * A mega menu's links with no heading would share one column, which a
+ * plain dropdown already is: flow a long one into evenly filled columns of
+ * at most four links, so the menu is columns even when staff give none a
+ * heading. A group with a heading stays one column.
+ */
+function columnsOf(groups: MenuGroup[]): MenuGroup[] {
+  return groups.flatMap((group) => {
+    const count = group.links.length
+    if (group.heading || count <= COLUMN_LINKS) return [group]
+    const size = Math.ceil(count / Math.ceil(count / COLUMN_LINKS))
+    return Array.from({ length: Math.ceil(count / size) }, (_, column) => ({
+      heading: null,
+      links: group.links.slice(column * size, (column + 1) * size),
+    }))
+  })
+}
+
 /** Columns with a heading each; links with no heading share the first. */
 function MegaColumns({
   groups,
@@ -237,10 +258,10 @@ function MegaColumns({
 }) {
   return (
     <div className="grid auto-cols-[minmax(10rem,14rem)] grid-flow-col gap-x-8">
-      {groups.map((group, index) => {
+      {columnsOf(groups).map((group, index) => {
         const headingId = `${idBase}-col-${index}`
         return (
-          <div key={group.heading ?? "none"} className="flex flex-col gap-1">
+          <div key={index} className="flex flex-col gap-1">
             {group.heading && (
               <p
                 id={headingId}

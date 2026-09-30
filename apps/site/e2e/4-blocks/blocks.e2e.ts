@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import {
   launchBrowser,
   openSession,
+  settleAnimations,
   visit,
   type Session,
 } from "../theme/support/browser"
@@ -483,6 +484,8 @@ describe("FAQ", () => {
       const panelId = await first.getAttribute("aria-controls")
       expect(panelId).toBeTruthy()
       const panel = page.locator(`[id="${panelId}"]`)
+      // The panel grows open, so it is visible once its animation has run.
+      await settleAnimations(page)
       expect(await panel.isVisible()).toBe(true)
       expect((await panel.innerText()).trim().length).toBeGreaterThan(0)
 

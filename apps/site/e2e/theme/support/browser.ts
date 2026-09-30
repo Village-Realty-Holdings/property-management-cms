@@ -229,8 +229,24 @@ export type AxeViolation = {
   nodes: { target: string; summary: string }[]
 }
 
+/**
+ * Waits for the page's running CSS animations and transitions to finish (an
+ * accordion opening, a sheet fading in), so a check sees the settled page and
+ * not a frame of the motion. Endless animations are not waited for.
+ */
+export function settleAnimations(page: Page): Promise<void> {
+  return page.evaluate(async () => {
+    const finite = document
+      .getAnimations()
+      .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+    await Promise.all(finite.map((a) => a.finished.catch(() => undefined)))
+  })
+}
+
 /** WCAG 2.2 AA violations on the page as it stands (axe-core). */
 export async function axeViolations(page: Page): Promise<AxeViolation[]> {
+  // Contrast is judged on the colours as drawn, so not mid-fade.
+  await settleAnimations(page)
   await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") })
   return page.evaluate(async () => {
     const axe = (

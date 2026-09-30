@@ -65,11 +65,8 @@ const SCREENS: Screen[] = [
       await page.getByRole("dialog").waitFor()
     },
   },
-  {
-    name: "page-new",
-    path: "/admin/pages/new",
-    signedIn: true,
-  },
+  // No "page-new": New Page opens the Visual Editor (spec, Pages list), which
+  // replaced the screen this baseline photographed.
 ]
 
 let browser: Browser
