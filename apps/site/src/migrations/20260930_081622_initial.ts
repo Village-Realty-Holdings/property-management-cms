@@ -9,8 +9,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "enum_pages_status" AS ENUM('draft', 'published');
   CREATE TYPE "enum__pages_v_blocks_call_to_action_style" AS ENUM('primary', 'secondary', 'inverted');
   CREATE TYPE "enum__pages_v_version_status" AS ENUM('draft', 'published');
-  CREATE TYPE "enum_site_settings_social_platform" AS ENUM('facebook', 'instagram', 'x', 'youtube', 'tiktok');
-  CREATE TYPE "enum_site_settings_branding_font_pairing" AS ENUM('classic', 'modern', 'rustic');
+  CREATE TYPE "enum_fonts_files_style" AS ENUM('normal', 'italic');
+  CREATE TYPE "enum_fonts_kind" AS ENUM('serif', 'sans', 'slab');
+  CREATE TYPE "enum_fonts_source" AS ENUM('uploaded', 'google');
+  CREATE TYPE "enum_brand_social_platform" AS ENUM('facebook', 'instagram', 'x', 'youtube', 'tiktok');
   CREATE TABLE "pages_blocks_hero" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
@@ -116,7 +118,42 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"id" serial PRIMARY KEY NOT NULL,
   	"alt" varchar NOT NULL,
   	"caption" varchar,
+  	"prefix" varchar,
+  	"_objectkey" varchar,
   	"credit" varchar,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"url" varchar,
+  	"thumbnail_u_r_l" varchar,
+  	"filename" varchar,
+  	"mime_type" varchar,
+  	"filesize" numeric,
+  	"width" numeric,
+  	"height" numeric
+  );
+  
+  CREATE TABLE "fonts_files" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"weight" numeric DEFAULT 400 NOT NULL,
+  	"style" "enum_fonts_files_style" DEFAULT 'normal' NOT NULL,
+  	"file_id" integer NOT NULL
+  );
+  
+  CREATE TABLE "fonts" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"family" varchar NOT NULL,
+  	"kind" "enum_fonts_kind" NOT NULL,
+  	"source" "enum_fonts_source" DEFAULT 'uploaded',
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE "font_files" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"prefix" varchar,
+  	"_objectkey" varchar,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"url" varchar,
@@ -157,6 +194,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"path" varchar NOT NULL,
   	"pages_id" integer,
   	"media_id" integer,
+  	"fonts_id" integer,
+  	"font_files_id" integer,
   	"users_id" integer
   );
   
@@ -184,26 +223,33 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
   
-  CREATE TABLE "site_settings_social" (
+  CREATE TABLE "brand_social" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
-  	"platform" "enum_site_settings_social_platform" NOT NULL,
+  	"platform" "enum_brand_social_platform" NOT NULL,
   	"url" varchar NOT NULL
   );
   
-  CREATE TABLE "site_settings" (
+  CREATE TABLE "brand" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"name" varchar NOT NULL,
   	"tagline" varchar,
-  	"domain" varchar,
+  	"logo_id" integer,
   	"contact_phone" varchar,
   	"contact_email" varchar,
   	"contact_address" varchar,
-  	"branding_logo_id" integer,
-  	"branding_primary_color" varchar,
-  	"branding_accent_color" varchar,
-  	"branding_font_pairing" "enum_site_settings_branding_font_pairing" DEFAULT 'classic' NOT NULL,
+  	"updated_at" timestamp(3) with time zone,
+  	"created_at" timestamp(3) with time zone
+  );
+  
+  CREATE TABLE "seo" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"title_pattern" varchar DEFAULT '%s · {name}',
+  	"description" varchar,
+  	"image_id" integer,
+  	"favicon_id" integer,
+  	"allow_indexing" boolean DEFAULT true,
   	"updated_at" timestamp(3) with time zone,
   	"created_at" timestamp(3) with time zone
   );
@@ -219,14 +265,20 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_pages_v_blocks_call_to_action" ADD CONSTRAINT "_pages_v_blocks_call_to_action_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "_pages_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_pages_v" ADD CONSTRAINT "_pages_v_parent_id_pages_id_fk" FOREIGN KEY ("parent_id") REFERENCES "pages"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "_pages_v" ADD CONSTRAINT "_pages_v_version_seo_image_id_media_id_fk" FOREIGN KEY ("version_seo_image_id") REFERENCES "media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "fonts_files" ADD CONSTRAINT "fonts_files_file_id_font_files_id_fk" FOREIGN KEY ("file_id") REFERENCES "font_files"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "fonts_files" ADD CONSTRAINT "fonts_files_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "fonts"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "media"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_fonts_fk" FOREIGN KEY ("fonts_id") REFERENCES "fonts"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_font_files_fk" FOREIGN KEY ("font_files_id") REFERENCES "font_files"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "users"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_preferences_rels" ADD CONSTRAINT "payload_preferences_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "payload_preferences"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_preferences_rels" ADD CONSTRAINT "payload_preferences_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "users"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "site_settings_social" ADD CONSTRAINT "site_settings_social_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "site_settings"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "site_settings" ADD CONSTRAINT "site_settings_branding_logo_id_media_id_fk" FOREIGN KEY ("branding_logo_id") REFERENCES "media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "brand_social" ADD CONSTRAINT "brand_social_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "brand"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "brand" ADD CONSTRAINT "brand_logo_id_media_id_fk" FOREIGN KEY ("logo_id") REFERENCES "media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "seo" ADD CONSTRAINT "seo_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "seo" ADD CONSTRAINT "seo_favicon_id_media_id_fk" FOREIGN KEY ("favicon_id") REFERENCES "media"("id") ON DELETE set null ON UPDATE no action;
   CREATE INDEX "pages_blocks_hero_order_idx" ON "pages_blocks_hero" USING btree ("_order");
   CREATE INDEX "pages_blocks_hero_parent_id_idx" ON "pages_blocks_hero" USING btree ("_parent_id");
   CREATE INDEX "pages_blocks_hero_path_idx" ON "pages_blocks_hero" USING btree ("_path");
@@ -264,6 +316,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "media_updated_at_idx" ON "media" USING btree ("updated_at");
   CREATE INDEX "media_created_at_idx" ON "media" USING btree ("created_at");
   CREATE UNIQUE INDEX "media_filename_idx" ON "media" USING btree ("filename");
+  CREATE INDEX "fonts_files_order_idx" ON "fonts_files" USING btree ("_order");
+  CREATE INDEX "fonts_files_parent_id_idx" ON "fonts_files" USING btree ("_parent_id");
+  CREATE INDEX "fonts_files_file_idx" ON "fonts_files" USING btree ("file_id");
+  CREATE UNIQUE INDEX "fonts_family_idx" ON "fonts" USING btree ("family");
+  CREATE INDEX "fonts_updated_at_idx" ON "fonts" USING btree ("updated_at");
+  CREATE INDEX "fonts_created_at_idx" ON "fonts" USING btree ("created_at");
+  CREATE INDEX "font_files_updated_at_idx" ON "font_files" USING btree ("updated_at");
+  CREATE INDEX "font_files_created_at_idx" ON "font_files" USING btree ("created_at");
+  CREATE UNIQUE INDEX "font_files_filename_idx" ON "font_files" USING btree ("filename");
   CREATE UNIQUE INDEX "users_email_idx" ON "users" USING btree ("email");
   CREATE UNIQUE INDEX "users_entra_oid_idx" ON "users" USING btree ("entra_oid");
   CREATE INDEX "users_updated_at_idx" ON "users" USING btree ("updated_at");
@@ -277,6 +338,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_path_idx" ON "payload_locked_documents_rels" USING btree ("path");
   CREATE INDEX "payload_locked_documents_rels_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("pages_id");
   CREATE INDEX "payload_locked_documents_rels_media_id_idx" ON "payload_locked_documents_rels" USING btree ("media_id");
+  CREATE INDEX "payload_locked_documents_rels_fonts_id_idx" ON "payload_locked_documents_rels" USING btree ("fonts_id");
+  CREATE INDEX "payload_locked_documents_rels_font_files_id_idx" ON "payload_locked_documents_rels" USING btree ("font_files_id");
   CREATE INDEX "payload_locked_documents_rels_users_id_idx" ON "payload_locked_documents_rels" USING btree ("users_id");
   CREATE INDEX "payload_preferences_key_idx" ON "payload_preferences" USING btree ("key");
   CREATE INDEX "payload_preferences_updated_at_idx" ON "payload_preferences" USING btree ("updated_at");
@@ -287,9 +350,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_preferences_rels_users_id_idx" ON "payload_preferences_rels" USING btree ("users_id");
   CREATE INDEX "payload_migrations_updated_at_idx" ON "payload_migrations" USING btree ("updated_at");
   CREATE INDEX "payload_migrations_created_at_idx" ON "payload_migrations" USING btree ("created_at");
-  CREATE INDEX "site_settings_social_order_idx" ON "site_settings_social" USING btree ("_order");
-  CREATE INDEX "site_settings_social_parent_id_idx" ON "site_settings_social" USING btree ("_parent_id");
-  CREATE INDEX "site_settings_branding_branding_logo_idx" ON "site_settings" USING btree ("branding_logo_id");`)
+  CREATE INDEX "brand_social_order_idx" ON "brand_social" USING btree ("_order");
+  CREATE INDEX "brand_social_parent_id_idx" ON "brand_social" USING btree ("_parent_id");
+  CREATE INDEX "brand_logo_idx" ON "brand" USING btree ("logo_id");
+  CREATE INDEX "seo_image_idx" ON "seo" USING btree ("image_id");
+  CREATE INDEX "seo_favicon_idx" ON "seo" USING btree ("favicon_id");`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
@@ -304,6 +369,9 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "_pages_v_blocks_call_to_action" CASCADE;
   DROP TABLE "_pages_v" CASCADE;
   DROP TABLE "media" CASCADE;
+  DROP TABLE "fonts_files" CASCADE;
+  DROP TABLE "fonts" CASCADE;
+  DROP TABLE "font_files" CASCADE;
   DROP TABLE "users" CASCADE;
   DROP TABLE "payload_kv" CASCADE;
   DROP TABLE "payload_locked_documents" CASCADE;
@@ -311,12 +379,15 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "payload_preferences" CASCADE;
   DROP TABLE "payload_preferences_rels" CASCADE;
   DROP TABLE "payload_migrations" CASCADE;
-  DROP TABLE "site_settings_social" CASCADE;
-  DROP TABLE "site_settings" CASCADE;
+  DROP TABLE "brand_social" CASCADE;
+  DROP TABLE "brand" CASCADE;
+  DROP TABLE "seo" CASCADE;
   DROP TYPE "enum_pages_blocks_call_to_action_style";
   DROP TYPE "enum_pages_status";
   DROP TYPE "enum__pages_v_blocks_call_to_action_style";
   DROP TYPE "enum__pages_v_version_status";
-  DROP TYPE "enum_site_settings_social_platform";
-  DROP TYPE "enum_site_settings_branding_font_pairing";`)
+  DROP TYPE "enum_fonts_files_style";
+  DROP TYPE "enum_fonts_kind";
+  DROP TYPE "enum_fonts_source";
+  DROP TYPE "enum_brand_social_platform";`)
 }

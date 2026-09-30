@@ -5,6 +5,7 @@ import { promisify } from "node:util"
 import pg from "pg"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { migrations } from "./migrations"
 import {
   createTestDatabase,
   getTestPayload,
@@ -104,7 +105,7 @@ describe("migrating a Site from zero", () => {
       const { rows } = await sql.query<{ name: string }>(
         `SELECT name FROM "${schema}"."payload_migrations" ORDER BY name`
       )
-      expect(rows.map((r) => r.name)).toEqual(["20260929_230545_initial"])
+      expect(rows.map((r) => r.name)).toEqual(migrations.map((m) => m.name))
     }
   })
 })

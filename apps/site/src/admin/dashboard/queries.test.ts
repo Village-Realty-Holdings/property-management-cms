@@ -3,11 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
-import {
-  getPagesNeedingSeoAttention,
-  loadDashboard,
-  loadPageRows,
-} from "./queries"
+import { loadDashboard, loadPageRows } from "./queries"
 
 let t: TestPayload
 let payload: Payload
@@ -104,13 +100,6 @@ describe("loadPageRows", () => {
 
   it("finds nothing for text no Page has", async () => {
     expect(await loadPageRows(payload, as, { q: "zzz" })).toEqual([])
-  })
-})
-
-describe("getPagesNeedingSeoAttention", () => {
-  it("counts Published Pages only, missing a title or a description", async () => {
-    const pages = await getPagesNeedingSeoAttention(payload, as)
-    expect(pages.map((p) => p.path)).toEqual(["/stays"])
   })
 })
 

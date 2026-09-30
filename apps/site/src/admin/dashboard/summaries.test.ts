@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { PageRow, RecentItem } from "./rows"
-import {
-  continueEditing,
-  needsSeoAttention,
-  waitingToPublish,
-} from "./summaries"
+import { continueEditing, waitingToPublish } from "./summaries"
 
 const recent = (
   id: number,
@@ -80,20 +76,5 @@ describe("waitingToPublish", () => {
 
   it("is empty when everything is published", () => {
     expect(waitingToPublish([row(1, "published")])).toEqual([])
-  })
-})
-
-describe("needsSeoAttention", () => {
-  it.each([
-    [{ title: "T", description: "D" }, false],
-    [{ title: "", description: "D" }, true],
-    [{ title: "T", description: "" }, true],
-    [{ title: "  ", description: "D" }, true],
-    [{ title: "T", description: null }, true],
-    [{}, true],
-    [undefined, true],
-    [null, true],
-  ])("seo %j needs attention: %s", (seo, expected) => {
-    expect(needsSeoAttention(seo)).toBe(expected)
   })
 })

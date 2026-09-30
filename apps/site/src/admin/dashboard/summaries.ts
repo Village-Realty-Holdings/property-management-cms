@@ -17,10 +17,3 @@ export function continueEditing(
 export function waitingToPublish(rows: readonly PageRow[]): PageRow[] {
   return rows.filter((row) => row.status !== "published")
 }
-
-/** True when a Page's SEO lacks a title or a description. */
-export function needsSeoAttention(
-  seo: { title?: string | null; description?: string | null } | null | undefined
-): boolean {
-  return !seo?.title?.trim() || !seo.description?.trim()
-}

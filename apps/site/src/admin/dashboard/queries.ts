@@ -8,11 +8,8 @@ import {
   type PageRow,
   type RecentItem,
 } from "./rows"
-import {
-  continueEditing,
-  needsSeoAttention,
-  waitingToPublish,
-} from "./summaries"
+import { findPagesNeedingSeoAttention } from "../seoHealth"
+import { continueEditing, waitingToPublish } from "./summaries"
 
 /**
  * What the Admin's Dashboard and lists read, through the Local API as the
@@ -69,46 +66,6 @@ export async function loadPageRows(
   return latest.map((page) => toPageRow(page, publishedStatus.get(page.id)))
 }
 
-/** A Published Page whose SEO lacks a title or a description. */
-export type PageNeedingSeoAttention = {
-  id: number
-  title: string
-  path: string
-  missingTitle: boolean
-  missingDescription: boolean
-}
-
-/**
- * The Published Pages missing an SEO title or description, judged on the
- * published copy (a Draft's SEO is not what search engines see). A Page not
- * yet published is not counted. The SEO screen's "Pages needing attention"
- * table can adopt this.
- */
-export async function getPagesNeedingSeoAttention(
-  payload: Payload,
-  as: StaffAccess
-): Promise<PageNeedingSeoAttention[]> {
-  const { docs } = await payload.find({
-    collection: "pages",
-    where: { _status: { equals: "published" } },
-    sort: "path",
-    pagination: false,
-    depth: 0,
-    draft: false,
-    select: { title: true, path: true, seo: true },
-    ...as,
-  })
-  return docs
-    .filter((page) => needsSeoAttention(page.seo))
-    .map((page) => ({
-      id: page.id,
-      title: page.title,
-      path: page.path,
-      missingTitle: !page.seo?.title?.trim(),
-      missingDescription: !page.seo?.description?.trim(),
-    }))
-}
-
 export type DashboardData = {
   continueEditing: RecentItem[]
   waiting: PageRow[]
@@ -123,7 +80,7 @@ export async function loadDashboard(
 ): Promise<DashboardData> {
   const [rows, seo] = await Promise.all([
     loadPageRows(payload, as),
-    getPagesNeedingSeoAttention(payload, as),
+    findPagesNeedingSeoAttention(payload, as),
   ])
   return {
     // Layouts join here in Phase 3 through getRecentLayouts().

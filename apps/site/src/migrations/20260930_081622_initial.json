@@ -1271,6 +1271,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "credit": {
           "name": "credit",
           "type": "varchar",
@@ -1367,6 +1379,364 @@
         },
         "media_filename_idx": {
           "name": "media_filename_idx",
+          "columns": [
+            {
+              "expression": "filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fonts_files": {
+      "name": "fonts_files",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "weight": {
+          "name": "weight",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 400
+        },
+        "style": {
+          "name": "style",
+          "type": "enum_fonts_files_style",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "file_id": {
+          "name": "file_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "fonts_files_order_idx": {
+          "name": "fonts_files_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fonts_files_parent_id_idx": {
+          "name": "fonts_files_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fonts_files_file_idx": {
+          "name": "fonts_files_file_idx",
+          "columns": [
+            {
+              "expression": "file_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fonts_files_file_id_font_files_id_fk": {
+          "name": "fonts_files_file_id_font_files_id_fk",
+          "tableFrom": "fonts_files",
+          "tableTo": "font_files",
+          "columnsFrom": [
+            "file_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "fonts_files_parent_id_fk": {
+          "name": "fonts_files_parent_id_fk",
+          "tableFrom": "fonts_files",
+          "tableTo": "fonts",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fonts": {
+      "name": "fonts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "family": {
+          "name": "family",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "enum_fonts_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "enum_fonts_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'uploaded'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "fonts_family_idx": {
+          "name": "fonts_family_idx",
+          "columns": [
+            {
+              "expression": "family",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fonts_updated_at_idx": {
+          "name": "fonts_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fonts_created_at_idx": {
+          "name": "fonts_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.font_files": {
+      "name": "font_files",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "prefix": {
+          "name": "prefix",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "_objectkey": {
+          "name": "_objectkey",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "thumbnail_u_r_l": {
+          "name": "thumbnail_u_r_l",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filesize": {
+          "name": "filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "width": {
+          "name": "width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "font_files_updated_at_idx": {
+          "name": "font_files_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "font_files_created_at_idx": {
+          "name": "font_files_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "font_files_filename_idx": {
+          "name": "font_files_filename_idx",
           "columns": [
             {
               "expression": "filename",
@@ -1672,6 +2042,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "fonts_id": {
+          "name": "fonts_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "font_files_id": {
+          "name": "font_files_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "users_id": {
           "name": "users_id",
           "type": "integer",
@@ -1755,6 +2137,36 @@
           "method": "btree",
           "with": {}
         },
+        "payload_locked_documents_rels_fonts_id_idx": {
+          "name": "payload_locked_documents_rels_fonts_id_idx",
+          "columns": [
+            {
+              "expression": "fonts_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_font_files_id_idx": {
+          "name": "payload_locked_documents_rels_font_files_id_idx",
+          "columns": [
+            {
+              "expression": "font_files_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "payload_locked_documents_rels_users_id_idx": {
           "name": "payload_locked_documents_rels_users_id_idx",
           "columns": [
@@ -1804,6 +2216,32 @@
           "tableTo": "media",
           "columnsFrom": [
             "media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_fonts_fk": {
+          "name": "payload_locked_documents_rels_fonts_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "fonts",
+          "columnsFrom": [
+            "fonts_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_font_files_fk": {
+          "name": "payload_locked_documents_rels_font_files_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "font_files",
+          "columnsFrom": [
+            "font_files_id"
           ],
           "columnsTo": [
             "id"
@@ -2129,8 +2567,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.site_settings_social": {
-      "name": "site_settings_social",
+    "public.brand_social": {
+      "name": "brand_social",
       "schema": "",
       "columns": {
         "_order": {
@@ -2153,7 +2591,7 @@
         },
         "platform": {
           "name": "platform",
-          "type": "enum_site_settings_social_platform",
+          "type": "enum_brand_social_platform",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -2166,8 +2604,8 @@
         }
       },
       "indexes": {
-        "site_settings_social_order_idx": {
-          "name": "site_settings_social_order_idx",
+        "brand_social_order_idx": {
+          "name": "brand_social_order_idx",
           "columns": [
             {
               "expression": "_order",
@@ -2181,8 +2619,8 @@
           "method": "btree",
           "with": {}
         },
-        "site_settings_social_parent_id_idx": {
-          "name": "site_settings_social_parent_id_idx",
+        "brand_social_parent_id_idx": {
+          "name": "brand_social_parent_id_idx",
           "columns": [
             {
               "expression": "_parent_id",
@@ -2198,10 +2636,10 @@
         }
       },
       "foreignKeys": {
-        "site_settings_social_parent_id_fk": {
-          "name": "site_settings_social_parent_id_fk",
-          "tableFrom": "site_settings_social",
-          "tableTo": "site_settings",
+        "brand_social_parent_id_fk": {
+          "name": "brand_social_parent_id_fk",
+          "tableFrom": "brand_social",
+          "tableTo": "brand",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -2218,8 +2656,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.site_settings": {
-      "name": "site_settings",
+    "public.brand": {
+      "name": "brand",
       "schema": "",
       "columns": {
         "id": {
@@ -2240,9 +2678,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "domain": {
-          "name": "domain",
-          "type": "varchar",
+        "logo_id": {
+          "name": "logo_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -2264,31 +2702,98 @@
           "primaryKey": false,
           "notNull": false
         },
-        "branding_logo_id": {
-          "name": "branding_logo_id",
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "brand_logo_idx": {
+          "name": "brand_logo_idx",
+          "columns": [
+            {
+              "expression": "logo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "brand_logo_id_media_id_fk": {
+          "name": "brand_logo_id_media_id_fk",
+          "tableFrom": "brand",
+          "tableTo": "media",
+          "columnsFrom": [
+            "logo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.seo": {
+      "name": "seo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title_pattern": {
+          "name": "title_pattern",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'%s · {name}'"
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_id": {
+          "name": "image_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "branding_primary_color": {
-          "name": "branding_primary_color",
-          "type": "varchar",
+        "favicon_id": {
+          "name": "favicon_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "branding_accent_color": {
-          "name": "branding_accent_color",
-          "type": "varchar",
+        "allow_indexing": {
+          "name": "allow_indexing",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": false
-        },
-        "branding_font_pairing": {
-          "name": "branding_font_pairing",
-          "type": "enum_site_settings_branding_font_pairing",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'classic'"
+          "notNull": false,
+          "default": true
         },
         "updated_at": {
           "name": "updated_at",
@@ -2304,11 +2809,26 @@
         }
       },
       "indexes": {
-        "site_settings_branding_branding_logo_idx": {
-          "name": "site_settings_branding_branding_logo_idx",
+        "seo_image_idx": {
+          "name": "seo_image_idx",
           "columns": [
             {
-              "expression": "branding_logo_id",
+              "expression": "image_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "seo_favicon_idx": {
+          "name": "seo_favicon_idx",
+          "columns": [
+            {
+              "expression": "favicon_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2321,12 +2841,25 @@
         }
       },
       "foreignKeys": {
-        "site_settings_branding_logo_id_media_id_fk": {
-          "name": "site_settings_branding_logo_id_media_id_fk",
-          "tableFrom": "site_settings",
+        "seo_image_id_media_id_fk": {
+          "name": "seo_image_id_media_id_fk",
+          "tableFrom": "seo",
           "tableTo": "media",
           "columnsFrom": [
-            "branding_logo_id"
+            "image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "seo_favicon_id_media_id_fk": {
+          "name": "seo_favicon_id_media_id_fk",
+          "tableFrom": "seo",
+          "tableTo": "media",
+          "columnsFrom": [
+            "favicon_id"
           ],
           "columnsTo": [
             "id"
@@ -2377,8 +2910,33 @@
         "published"
       ]
     },
-    "public.enum_site_settings_social_platform": {
-      "name": "enum_site_settings_social_platform",
+    "public.enum_fonts_files_style": {
+      "name": "enum_fonts_files_style",
+      "schema": "public",
+      "values": [
+        "normal",
+        "italic"
+      ]
+    },
+    "public.enum_fonts_kind": {
+      "name": "enum_fonts_kind",
+      "schema": "public",
+      "values": [
+        "serif",
+        "sans",
+        "slab"
+      ]
+    },
+    "public.enum_fonts_source": {
+      "name": "enum_fonts_source",
+      "schema": "public",
+      "values": [
+        "uploaded",
+        "google"
+      ]
+    },
+    "public.enum_brand_social_platform": {
+      "name": "enum_brand_social_platform",
       "schema": "public",
       "values": [
         "facebook",
@@ -2386,15 +2944,6 @@
         "x",
         "youtube",
         "tiktok"
-      ]
-    },
-    "public.enum_site_settings_branding_font_pairing": {
-      "name": "enum_site_settings_branding_font_pairing",
-      "schema": "public",
-      "values": [
-        "classic",
-        "modern",
-        "rustic"
       ]
     }
   },
@@ -2408,6 +2957,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "4de8cf04-b04d-4b25-89d4-99a195c3a67b",
+  "id": "3a9fc7b3-d135-413a-a3bb-0f784ef976e6",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
