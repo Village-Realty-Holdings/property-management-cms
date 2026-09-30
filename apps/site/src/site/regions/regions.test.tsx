@@ -224,6 +224,16 @@ describe("the Header", () => {
     )
   })
 
+  it("does not lazy-load the logo image: it is at the top of every page", () => {
+    const withLogo = {
+      ...brand,
+      logo: { url: "/api/media/file/logo.png", alt: "Warren Beach logo" },
+    }
+    const { container } = header([logo()], context({ brand: withLogo }))
+    const img = container.querySelector("img")!
+    expect(img.getAttribute("loading")).not.toBe("lazy")
+  })
+
   it("shows the Brand's tagline only when asked", () => {
     expect(header([logo()]).queryByText("Holidays by the sea")).toBeNull()
     cleanup()

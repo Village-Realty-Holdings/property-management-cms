@@ -39,6 +39,8 @@ export function Logo({
           <Image
             src={brand.logo.url}
             alt={brand.logo.alt || brand.name}
+            // At the top of every page: the likeliest largest paint.
+            preload
             width={160}
             height={48}
             className={cn(size.image, "w-auto object-contain")}
