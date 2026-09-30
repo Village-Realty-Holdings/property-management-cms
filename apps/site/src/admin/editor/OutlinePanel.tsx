@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -11,7 +12,8 @@ import {
 import {
   closestCenter,
   DndContext,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type Announcements,
@@ -23,7 +25,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, ChevronUp, Lock, Plus } from "lucide-react"
+import { ChevronDown, ChevronUp, GripVertical, Lock, Plus } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
@@ -143,7 +145,11 @@ export function OutlinePanel({
 
   const sensors = useSensors(
     // A few pixels of movement start a drag, so a plain click still selects.
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    // On touch a short hold starts it, so a swipe still scrolls the panel.
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 6 },
+    })
   )
 
   useLayoutEffect(() => {
@@ -160,6 +166,16 @@ export function OutlinePanel({
     const other = button(target.direction === "up" ? "down" : "up")
     ;(wanted && !wanted.disabled ? wanted : other)?.focus()
   }, [doc])
+
+  // A Block selected in the canvas may be off screen in a long tree.
+  useEffect(() => {
+    if (selectedId === null) return
+    const row = [
+      ...(tree.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ??
+        []),
+    ].find((el) => el.dataset.blockId === selectedId)
+    row?.scrollIntoView?.({ block: "nearest" })
+  }, [selectedId])
 
   if (doc.kind === "theme") {
     return (
@@ -469,6 +485,7 @@ function SortableRow({
       aria-selected={selected}
       aria-label={label}
       aria-describedby={blockHint(block) ? hintId : undefined}
+      data-block-id={id}
       tabIndex={tabbable ? 0 : -1}
       {...listeners}
       onClick={() => onSelect(id)}
@@ -487,6 +504,10 @@ function SortableRow({
         isDragging && "relative z-10 opacity-80 shadow-md"
       )}
     >
+      <GripVertical
+        aria-hidden
+        className="size-4 shrink-0 text-muted-foreground"
+      />
       <RowText block={block} hintId={hintId} />
       <span className="flex shrink-0">
         {button("up", isFirst, <ChevronUp aria-hidden />)}

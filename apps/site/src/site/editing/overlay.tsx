@@ -221,6 +221,22 @@ export function CanvasOverlay({
     }
   }, [root, editableKey, send])
 
+  // A Block selected from the Outline may be off screen: bring it into view,
+  // moving the canvas only as far as it takes (a Block already in view stays).
+  useEffect(() => {
+    if (selectedId === null) return
+    const regions = editableKey === "" ? [] : editableKey.split(",")
+    const el = document.querySelector<HTMLElement>(
+      `[data-block-id="${CSS.escape(selectedId)}"]`
+    )
+    if (!el || !regions.includes(el.dataset.blockRegion ?? "")) return
+    const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    el.scrollIntoView?.({
+      block: "nearest",
+      behavior: calm ? "auto" : "smooth",
+    })
+  }, [selectedId, editableKey])
+
   const blocks = useMemo(
     () => geometry.blocks.filter((b) => editable.includes(b.region)),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `editableKey` is `editable`'s content

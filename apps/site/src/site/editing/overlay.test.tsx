@@ -233,6 +233,48 @@ describe("CanvasOverlay selecting", () => {
   })
 })
 
+describe("CanvasOverlay scrolling to the selection", () => {
+  const scrolls = () => {
+    const spy = vi.fn()
+    Element.prototype.scrollIntoView = spy
+    return spy
+  }
+  afterEach(() => {
+    // @ts-expect-error -- jsdom has none; each test installs its own.
+    delete Element.prototype.scrollIntoView
+  })
+
+  it("brings a Block that becomes selected into view, as little as it takes", () => {
+    const spy = scrolls()
+    const { select, container } = setup()
+    expect(spy).not.toHaveBeenCalled()
+    select("b3")
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy.mock.contexts[0]).toBe(
+      container.querySelector("[data-block-id=b3]")
+    )
+    expect(spy.mock.calls[0]![0]).toMatchObject({ block: "nearest" })
+  })
+
+  it("scrolls when the selection moves to another Block, and not when it is cleared", () => {
+    const spy = scrolls()
+    const { select } = setup({ selectedId: "b1" })
+    expect(spy).toHaveBeenCalledTimes(1)
+    select("b2")
+    expect(spy).toHaveBeenCalledTimes(2)
+    select(null)
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it("does not scroll to a Block of a locked region or one that is gone", () => {
+    const spy = scrolls()
+    const { select } = setup()
+    select("h1")
+    select("nope")
+    expect(spy).not.toHaveBeenCalled()
+  })
+})
+
 describe("CanvasOverlay Block toolbar", () => {
   it("shows a toolbar of named buttons on the selected Block only", () => {
     const { select } = setup()

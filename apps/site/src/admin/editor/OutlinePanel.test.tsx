@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { act, cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import axe from "axe-core"
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
@@ -146,6 +146,29 @@ describe("selecting", () => {
         .getByRole("treeitem", { name: "Rich text" })
         .getAttribute("aria-selected")
     ).toBe("true")
+  })
+
+  it("scrolls the selected row into view when the Block is selected elsewhere", () => {
+    const scroll = vi.fn()
+    Element.prototype.scrollIntoView = scroll
+    function Pick() {
+      const { select } = useEditor()
+      return <button onClick={() => select("b3")}>pick b3</button>
+    }
+    render(
+      <EditorProvider initial={pageDoc()}>
+        <OutlinePanel />
+        <Pick />
+      </EditorProvider>
+    )
+    expect(scroll).not.toHaveBeenCalled()
+    act(() => screen.getByText("pick b3").click())
+    expect(scroll).toHaveBeenCalledTimes(1)
+    expect(scroll.mock.contexts[0]).toBe(
+      screen.getByRole("treeitem", { name: "Call to action" })
+    )
+    // @ts-expect-error -- jsdom has none.
+    delete Element.prototype.scrollIntoView
   })
 
   it("selects with Enter and moves between rows with the arrow keys", async () => {
