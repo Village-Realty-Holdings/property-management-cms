@@ -8,15 +8,19 @@ One website that Awayday staff build and edit in one place. Staff compose Pages 
 
 **Site**:
 The one public website a deployment serves. Each deployment serves exactly one Site, so content never says which Site it belongs to.
-_Avoid_: Tenant, brand, client
+_Avoid_: Tenant, client
 
-**Site Brand**:
+**Brand**:
 The Site's identity details: name, logo, tagline, contact details and social links.
-_Avoid_: Site Settings, config, preferences
+_Avoid_: Site Brand, Site Settings, branding, config
+
+**SEO**:
+How the Site and its Pages appear in search results and link previews: the Site's defaults, and each Page's own title, description and image.
+_Avoid_: Metadata, meta tags
 
 **Theme**:
 The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page.
-_Avoid_: Branding, skin, styles, look and feel
+_Avoid_: Skin, styles, look and feel
 
 **Font**:
 A font family uploaded by staff, as one or more files of different weights and styles, for use in the Theme. Fonts are not Media.
@@ -37,11 +41,11 @@ A reusable, configurable section of a Page, such as a hero, a rich text section 
 _Avoid_: Component, widget, section, element
 
 **Media**:
-An image uploaded by staff for use on Pages, Layouts and in the Site Brand.
+An image uploaded by staff for use on Pages, Layouts, the Brand and SEO.
 _Avoid_: Asset, file, upload (as model names)
 
 **Draft** / **Published**:
-The lifecycle of a Page or a Layout. Staff edit the Draft, and visitors see only the Published version until the Draft is published.
+The lifecycle of a Page. Staff edit the Draft, and visitors see only the Published version until the Draft is published.
 _Avoid_: Staging, live copy, unpublished
 
 **Rental**:
@@ -51,7 +55,7 @@ _Avoid_: Property, listing, unit
 ### Editing
 
 **Admin**:
-The place Staff Users sign in to manage Pages, Layouts, Media, the Site Brand and the Theme.
+The place Staff Users sign in to manage Pages, Layouts, Media, the Brand, SEO and the Theme.
 _Avoid_: Back office, CMS (for the admin itself)
 
 **Dashboard**:
