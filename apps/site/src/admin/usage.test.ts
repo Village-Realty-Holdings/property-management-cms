@@ -230,4 +230,68 @@ describe("looking things up in the database", () => {
     })
     expect(dependents.map((d) => d.name)).toEqual(["Stays"])
   })
+
+  it("finds the Layouts whose menus link to a Page", async () => {
+    const team = await savePageAs(t.payload, access, {
+      id: null,
+      intent: "publish",
+      values: { ...emptyPage, title: "Team", path: "/team" },
+    })
+    const layout = await t.payload.create({
+      collection: "layouts",
+      data: {
+        name: "Usage menu",
+        header: [
+          {
+            blockType: "navigation",
+            items: [
+              {
+                label: "More",
+                children: [
+                  { label: "Team", link: { type: "page", page: team.id! } },
+                ],
+              },
+            ],
+          },
+        ],
+        footer: [
+          {
+            blockType: "footerColumns",
+            columns: [
+              {
+                heading: "Company",
+                content: "links",
+                links: [
+                  { label: "Team", link: { type: "page", page: team.id! } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      ...access,
+    })
+    const dependents = await loadPageDependents(t.payload, access, {
+      id: team.id!,
+      path: "/team",
+    })
+    expect(dependents).toEqual([
+      {
+        kind: "Layout",
+        name: "Usage menu (Navigation)",
+        href: `/admin/layouts/${layout.id}`,
+      },
+      {
+        kind: "Layout",
+        name: 'Usage menu (Footer columns "Company")',
+        href: `/admin/layouts/${layout.id}`,
+      },
+    ])
+    await t.payload.update({
+      collection: "layouts",
+      id: layout.id,
+      data: { header: [], footer: [] },
+      ...access,
+    })
+  })
 })

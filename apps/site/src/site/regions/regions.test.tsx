@@ -290,7 +290,7 @@ describe("the Header", () => {
     expect(hrefOf(getByRole("link", { name: "Help" }))).toBe("/help")
   })
 
-  it("renders the Navigation stub as a flat list of top-level links", () => {
+  it("renders the Navigation's top-level links, with a dropdown's links closed", () => {
     const { getByRole, queryByRole } = header([navigation()])
     const nav = getByRole("navigation")
     expect(hrefOf(within(nav).getByRole("link", { name: "Stays" }))).toBe(
@@ -299,7 +299,7 @@ describe("the Header", () => {
     expect(hrefOf(within(nav).getByRole("link", { name: "Owners" }))).toBe(
       "https://example.com/owners"
     )
-    // A dropdown has no link of its own; the stub does not open it.
+    // A dropdown has no link of its own, and its links stay hidden until it opens.
     expect(queryByRole("link", { name: "Explore" })).toBeNull()
     expect(queryByRole("link", { name: "Beaches" })).toBeNull()
   })

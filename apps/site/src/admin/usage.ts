@@ -1,13 +1,14 @@
 import type { Payload } from "payload"
 
 import type { Brand, Page, Seo } from "../payload-types"
+import { loadMenusLinkingTo } from "../collections/Pages/navigationGuard"
 import type { Dependent } from "./kit"
 import { mediaId } from "./pageForm"
 import type { Access } from "./settingsSave"
 
 /**
  * What uses an item, for the confirmation before deleting it: which places
- * show a Media image, and which Pages link to a Page. Phase 3 adds Layouts.
+ * show a Media image, and which Pages and Layouts (by the menu) link to a Page.
  */
 
 const BRAND_HREF = "/admin/settings/brand"
@@ -154,12 +155,28 @@ export async function loadMediaDependents(
   return mediaDependents({ brand, seo, pages })
 }
 
-/** The Pages that link to this Page, for its delete confirmation. */
+/**
+ * What links to this Page, for its delete confirmation: the Pages with a
+ * button to its path, and the Layouts whose menus link to it (each menu named,
+ * as the delete error names them).
+ */
 export async function loadPageDependents(
   payload: Payload,
   access: Access,
   { id, path }: { id: number; path: string }
 ): Promise<Dependent[]> {
-  const pages = await loadAllPageVersions(payload, access)
-  return pagesLinkingTo(path, id, pages)
+  const [pages, menus] = await Promise.all([
+    loadAllPageVersions(payload, access),
+    loadMenusLinkingTo(payload, id, access),
+  ])
+  return [
+    ...pagesLinkingTo(path, id, pages),
+    ...menus.map(
+      (menu): Dependent => ({
+        kind: "Layout",
+        name: `${menu.layoutName} (${menu.menu})`,
+        href: `/admin/layouts/${menu.layoutId}`,
+      })
+    ),
+  ]
 }
