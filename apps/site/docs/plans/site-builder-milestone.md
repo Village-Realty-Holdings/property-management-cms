@@ -9,8 +9,8 @@ This spec comes from the wayfinder map **"Wayfinder: Site Builder milestone"** (
   - `node_modules/next/dist/docs/`, because this Next.js version has breaking changes
 - **Branches:**
   - integration branch: `milestone/site-builder`
-  - checkpoints: `checkpoint/<n>-<name>`
-- **How it runs:** the two workflows in `.claude/workflows/`. The runbook is at the end of this file.
+  - slices: `wip/<tag>-<slice>`, landed straight onto the integration branch (Phases 1 and 2 used `checkpoint/<n>-<name>` PRs)
+- **How it runs:** the workflow `.claude/workflows/site-builder.js`. The runbook is at the end of this file.
 
 ## Reference material
 
@@ -31,7 +31,7 @@ Prototype code is a reference, not a base. Rewrite it properly: add tests, handl
 - **Admin:** it writes only through the Local API as the Staff User (ADR-0002). Blocks render the same way in the Visual Editor and on the Site.
 - **Styling:** it comes from the Theme's tokens. There are no per-brand Block variants and no `brand-*` component variants.
 - **Accessibility:** WCAG 2.2 AA across the Admin and the public Site.
-- **Decisions the spec doesn't cover:** ask a Fable advisor (see the runbook), follow its answer, and record it in the PR body under "Decisions made during the build".
+- **Decisions the spec doesn't cover:** make the most conservative choice consistent with this spec and the ADRs, and report it. The slice reviewer rules on it, and it is recorded in the final PR body under "Decisions made during the build".
 
 ---
 
@@ -414,8 +414,8 @@ It writes `apps/site/docs/audits/audit-<n>.md` with findings ranked by impact, a
 Each iteration:
 
 1. takes the latest audit's top 10–15 findings
-2. builds them through the same code, UX and fix gates as a phase
-3. merges its checkpoint
+2. builds them as slices, through the same gates as the phases (see the runbook)
+3. brings `pnpm check` and the acceptance suite back to green
 4. ends with a fresh audit (`audit-<n+1>.md`), which seeds the next iteration
 
 ---
@@ -434,24 +434,30 @@ Each iteration:
 
 The goal is complete when **all** of the following hold:
 
-1. Phases 1–7 each landed as a merged checkpoint PR into `milestone/site-builder`. Every acceptance item above is met, or is logged on its PR as carried into an iteration.
-2. **Three improvement iterations** each landed as a merged checkpoint PR, and each has its audit report (`audit-1.md` to `audit-4.md`).
+1. Phases 1–2 landed as merged checkpoint PRs, and Phases 3–6 landed slice by slice on `milestone/site-builder`. Every acceptance item above is covered by a passing acceptance test, or is listed in the final PR as carried forward.
+2. **Three improvement iterations** each landed, and each has its audit report (`audit-1.md` to `audit-4.md`).
 3. `pnpm check` is green on `milestone/site-builder`. The Playwright smoke test passes for all three Sites.
 4. Warren Beach, Avada and Beachside Vacations run locally from their own worktrees and schemas, seeded idempotently. Warren Beach and Avada pass the side-by-side "recognisable" check, and Beachside matches its brand.
 5. Every editor has the unsaved-changes guard: Page, Layout, Theme, Brand, SEO.
-6. A final PR from `milestone/site-builder` into `development` is open for the user to merge. Its body links every checkpoint PR and audit, and lists every "Decisions made during the build".
+6. A final PR from `milestone/site-builder` into `development` is open for the user to merge. Its body links the checkpoint PRs and every audit, and lists every "Decisions made during the build".
 
 ---
 
 ## Runbook (how the goal runs)
 
-- **Workflows:** there are two, in `.claude/workflows/`.
-  - `site-builder-phase.js`: args `{ n, slug, title }`. It plans the phase from this spec, then:
-    1. parallel Sonnet 5.5 coders, each in its own worktree
-    2. integration onto `checkpoint/<n>-<slug>`
-    3. Opus code review and Fable UX review, run in parallel
-    4. up to 2 fix rounds
-    5. a PR into `milestone/site-builder`, which it merges
-  - `site-builder-iteration.js`: args `{ n, audit }`. It turns an audit's top findings into work items and runs them through the same build and gates. It ends with the next audit.
-- **Order:** phases 1–6 run through `site-builder-phase`. Phase 7's audit and iterations 1–3 run through `site-builder-iteration`: iteration 1 starts from `audit-1`. The driver session launches the next run when the previous one finishes, and each run is resumable.
-- **Never stop early.** Blockers go to a Fable 5.1 advisor, whose answer is followed and recorded. Leftover blocking findings after 2 fix rounds are logged on the PR and carried forward.
+One workflow, `.claude/workflows/site-builder.js`, runs Phases 3–7 and the iterations end to end. Args, all optional: `{ phases: [3, 4, 5, 6], iterations: 3 }`. Phases 1 and 2 were built with an earlier per-phase workflow (PRs #48 and #49).
+
+1. **Plan and acceptance, side by side.**
+   - An Opus lead cuts the remaining phases into 25–40 small slices (one screen, one Block, one behaviour). Each slice lists the slices it must come `after`.
+   - One Opus agent per phase writes that phase's browser acceptance suite from this spec, under `apps/site/e2e/<n>-<slug>/`. The suite is red until the slices land, and it sits outside `pnpm check`.
+2. **Build, as a dependency graph.** A slice starts as soon as the slices it comes after have landed. There are no waves and no phase gates. Each slice goes through:
+   1. a Sonnet 5.5 coder in its own worktree, test-first, who makes the acceptance tests it covers pass
+   2. an Opus review of the diff only, which also rules on the coder's open decisions
+   3. a land step that fixes blocking findings, rebases and pushes onto `milestone/site-builder`
+3. **Stabilise.** `pnpm check` and the whole acceptance suite must be green on the branch. Up to 3 fix rounds.
+4. **Audit and iterate.** Audit 1 is Phase 7. Each iteration turns the latest audit's top findings into slices, builds them the same way, stabilises, and audits again.
+5. **Ship.** The final PR into `development` is opened and left for the user.
+
+- **The gates** are the acceptance tests and the audits. There is no per-phase UX review: the audit is the first full look at the running Sites.
+- **Never stop early.** A slice that fails to land is logged and carried into iteration 1. Anything still red after stabilising is listed in the final PR.
+- **Resumable:** relaunch with the run's id and finished agents are not repeated.
