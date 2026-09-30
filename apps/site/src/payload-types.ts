@@ -96,10 +96,12 @@ export interface Config {
   globals: {
     brand: Brand;
     seo: Seo;
+    theme: Theme;
   };
   globalsSelect: {
     brand: BrandSelect<false> | BrandSelect<true>;
     seo: SeoSelect<false> | SeoSelect<true>;
+    theme: ThemeSelect<false> | ThemeSelect<true>;
   };
   locale: null;
   widgets: {
@@ -628,6 +630,54 @@ export interface Seo {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme".
+ */
+export interface Theme {
+  id: number;
+  primary: string;
+  accent: string;
+  /**
+   * Optional. Leave empty for a two-colour Theme.
+   */
+  third?: string | null;
+  /**
+   * The ink: body and heading text.
+   */
+  text: string;
+  /**
+   * Dark bands. Leave empty to derive it from the text colour.
+   */
+  darkSurface?: string | null;
+  neutralTint: 'neutral' | 'warm' | 'cool' | 'brand';
+  /**
+   * A built-in font (built-in:<family>) or a stored Font (font:<id>). The Theme editor picks it from a list.
+   */
+  headingFont: string;
+  /**
+   * A built-in font (built-in:<family>) or a stored Font (font:<id>). The Theme editor picks it from a list.
+   */
+  bodyFont: string;
+  headingWeight: 'regular' | 'medium' | 'bold' | 'black';
+  headingCase: 'normal' | 'uppercase';
+  buttonCorners: 'square' | 'soft' | 'rounded' | 'pill';
+  cardCorners: 'square' | 'soft' | 'rounded';
+  spacing: 'compact' | 'comfortable' | 'spacious';
+  shadows: 'none' | 'subtle' | 'lifted';
+  buttonStyle: 'solid' | 'outline';
+  buttonLetters: 'normal' | 'uppercase' | 'title';
+  buttonWeight: 'regular' | 'medium' | 'bold';
+  motion: 'none' | 'subtle' | 'lively';
+  /**
+   * Optional. Replaces the automatic summary of this save in the history.
+   */
+  note?: string | null;
+  changeSummary?: string | null;
+  updatedBy?: (number | null) | User;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brand_select".
  */
 export interface BrandSelect<T extends boolean = true> {
@@ -662,6 +712,36 @@ export interface SeoSelect<T extends boolean = true> {
   image?: T;
   favicon?: T;
   allowIndexing?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "theme_select".
+ */
+export interface ThemeSelect<T extends boolean = true> {
+  primary?: T;
+  accent?: T;
+  third?: T;
+  text?: T;
+  darkSurface?: T;
+  neutralTint?: T;
+  headingFont?: T;
+  bodyFont?: T;
+  headingWeight?: T;
+  headingCase?: T;
+  buttonCorners?: T;
+  cardCorners?: T;
+  spacing?: T;
+  shadows?: T;
+  buttonStyle?: T;
+  buttonLetters?: T;
+  buttonWeight?: T;
+  motion?: T;
+  note?: T;
+  changeSummary?: T;
+  updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
