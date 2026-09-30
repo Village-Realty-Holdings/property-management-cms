@@ -211,6 +211,48 @@ describe("choosing a Page", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
+  it("Enter before the search has answered waits for it, and never picks a stale Page", async () => {
+    let resolveSearch: (pages: PickerPage[]) => void = () => {}
+    const pending = new Promise<PickerPage[]>((resolve) => {
+      resolveSearch = resolve
+    })
+    searchPages.mockImplementation((q: string) =>
+      q === "harbour" ? pending : fakeSearch(q)
+    )
+    const onPick = vi.fn()
+    const user = userEvent.setup()
+    render(<PagePicker onPick={onPick} />)
+    await user.keyboard(ctrlK)
+    await screen.findAllByRole("option")
+    await user.type(searchBox(), "harbour{Enter}")
+    // The list still shows the answer to the empty search: Home is first.
+    expect(onPick).not.toHaveBeenCalled()
+    expect(screen.getByRole("dialog")).toBeTruthy()
+    resolveSearch([PAGES[1]!])
+    await waitFor(() => expect(onPick).toHaveBeenCalledTimes(1))
+    expect(onPick).toHaveBeenCalledWith(PAGES[1])
+  })
+
+  it("an Enter that is waiting is dropped when the picker closes", async () => {
+    let resolveSearch: (pages: PickerPage[]) => void = () => {}
+    const pending = new Promise<PickerPage[]>((resolve) => {
+      resolveSearch = resolve
+    })
+    searchPages.mockImplementation((q: string) =>
+      q === "harbour" ? pending : fakeSearch(q)
+    )
+    const onPick = vi.fn()
+    const user = userEvent.setup()
+    render(<PagePicker onPick={onPick} />)
+    await user.keyboard(ctrlK)
+    await screen.findAllByRole("option")
+    await user.type(searchBox(), "harbour{Enter}{Escape}")
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    resolveSearch([PAGES[1]!])
+    await new Promise((r) => setTimeout(r, 20))
+    expect(onPick).not.toHaveBeenCalled()
+  })
+
   it("clicking a Page picks it too", async () => {
     const onPick = vi.fn()
     const user = userEvent.setup()
