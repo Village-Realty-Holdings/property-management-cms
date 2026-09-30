@@ -229,3 +229,77 @@ describe("<BlockButton>", () => {
     }
   )
 })
+
+describe("focus rings on coloured panels", () => {
+  // The Theme's --ring is the primary colour, so the default ring (--ring at
+  // 50%) cannot be seen on a primary panel. A button on a coloured panel
+  // draws its ring in the panel's own text colour, set off from the button by
+  // a gap in the panel colour. Those pairs are derived to pass AA, so the
+  // ring reaches 3:1 against the panel on every Theme.
+  const ringOf = (className: string) =>
+    className.split(/\s+/).filter((c) => c.startsWith("focus-visible:"))
+
+  it.each([
+    ["a Hero with no image", hero(), "primary", "primary-foreground"],
+    [
+      "a Hero with an image",
+      hero({
+        image: {
+          id: 1,
+          url: "/media/hero.jpg",
+          alt: "Sea",
+          updatedAt: "",
+          createdAt: "",
+        },
+      }),
+      "surface-dark",
+      "surface-dark-foreground",
+    ],
+    ["a primary Call to action", cta(), "primary", "primary-foreground"],
+    [
+      "an inverted Call to action",
+      cta({ style: "inverted" }),
+      "accent",
+      "accent-foreground",
+    ],
+  ] as const)(
+    "the button in %s rings in the panel's text colour, offset by the panel colour",
+    (_name, block, panel, foreground) => {
+      const { getByRole } = render(<Block block={block} index={0} />)
+      const focus = ringOf(
+        getByRole("link", { name: /Book/ }).getAttribute("class")!
+      )
+      expect(focus).toContain(`focus-visible:ring-${foreground}`)
+      expect(focus).toContain(`focus-visible:ring-offset-${panel}`)
+      expect(focus).toContain("focus-visible:ring-offset-2")
+      // The default ring (--ring at 50%) is gone, not merely outranked.
+      expect(focus).not.toContain("focus-visible:ring-ring/50")
+    }
+  )
+
+  it("a button on the page keeps the default ring", () => {
+    const { getByRole } = render(
+      <Block block={cta({ style: "secondary" })} index={0} />
+    )
+    const focus = ringOf(
+      getByRole("link", { name: "Book now" }).getAttribute("class")!
+    )
+    expect(focus).toContain("focus-visible:ring-ring/50")
+    expect(focus.some((c) => c.startsWith("focus-visible:ring-offset"))).toBe(
+      false
+    )
+  })
+
+  it("the onAccent button keeps its own edge when focused", () => {
+    const { getByRole } = render(
+      <Block block={cta({ style: "inverted" })} index={0} />
+    )
+    const focus = ringOf(
+      getByRole("link", { name: "Book now" }).getAttribute("class")!
+    )
+    expect(focus).toContain(
+      "focus-visible:border-(--btn-on-accent-border-color)"
+    )
+    expect(focus).not.toContain("focus-visible:border-ring")
+  })
+})

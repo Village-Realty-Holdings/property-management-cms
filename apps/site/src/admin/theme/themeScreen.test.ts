@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 
 import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
+import { truncateTables } from "../../test/truncateTables"
 import { CLASSIC, HARBOUR } from "../../theme"
 import { listThemeHistory, readLiveTheme, saveTheme } from "../../theme/record"
 import {
@@ -33,7 +34,7 @@ beforeAll(async () => {
 })
 
 afterEach(async () => {
-  await payload.db.pool.query('TRUNCATE "theme", "_theme_v" CASCADE')
+  await truncateTables(payload, "theme", "_theme_v")
 })
 
 afterAll(async () => {

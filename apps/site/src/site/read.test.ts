@@ -11,6 +11,7 @@ import {
 
 import type { Media, User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
+import { truncateTables } from "../test/truncateTables"
 import { resolveBrand } from "./brand"
 import { siteThemeCss } from "./themeStyle"
 import { CLASSIC, HARBOUR } from "../theme"
@@ -194,7 +195,7 @@ describe("the Theme the Site applies", () => {
   const siteCss = async () => siteThemeCss(await readSiteTheme(payload))
 
   afterEach(async () => {
-    await payload.db.pool.query('TRUNCATE "theme", "_theme_v" CASCADE')
+    await truncateTables(payload, "theme", "_theme_v")
     await payload.delete({
       collection: "fonts",
       where: { id: { exists: true } },

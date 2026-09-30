@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto"
 import pg from "pg"
 import { getPayload, type Payload } from "payload"
 
+import { siteSchema } from "../database"
 import { buildPayloadConfig } from "../payload.config"
 
 type TestPayloadOptions = Omit<
@@ -33,6 +34,12 @@ export type TestPayload = {
   payload: Payload
   /** Connection string of the throwaway database. */
   databaseUrl: string
+  /**
+   * The key Payload caches this instance under. Pass it as
+   * `payloadInstanceCacheKey` when calling Payload's `handleEndpoints`, or the
+   * call starts a second instance whose connections nothing closes.
+   */
+  instanceKey: string
   /** Shuts Payload down and drops the throwaway database. */
   teardown: () => Promise<void>
 }
@@ -59,7 +66,9 @@ export async function createTestDatabase(): Promise<TestDatabase> {
 /**
  * Starts Payload against a new, empty Postgres database (`pm_test_<random>`)
  * on the server named by DATABASE_URL, with the schema pushed from the config.
- * Tests run in the `public` schema unless they pass `schemaName`.
+ * The tables go in `schemaName` when a test passes it, otherwise in
+ * `DATABASE_SCHEMA` when that is set (as `pnpm check` does), otherwise in
+ * `public`. Raw SQL must not assume `public`: see `truncateTables`.
  *
  * Call it once per test file and always call `teardown` afterwards:
  *
@@ -74,10 +83,14 @@ export async function getTestPayload(
   const db = database ?? (await createTestDatabase())
   const dropOwnDatabase = database ? async () => {} : db.drop
 
+  // The schema buildPayloadConfig will use: see its default for schemaName.
+  const schema = configOptions.schemaName ?? siteSchema() ?? "public"
+  const instanceKey = `${db.url}#${schema}`
+
   let payload: Payload
   try {
     payload = await getPayload({
-      key: `${db.url}#${configOptions.schemaName ?? "public"}`,
+      key: instanceKey,
       config: buildPayloadConfig({
         ...configOptions,
         databaseUrl: db.url,
@@ -92,6 +105,7 @@ export async function getTestPayload(
   return {
     payload,
     databaseUrl: db.url,
+    instanceKey,
     teardown: async () => {
       try {
         const pool = payload.db.pool

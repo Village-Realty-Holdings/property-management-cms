@@ -87,7 +87,11 @@ export function HeroBlock({
         )}
         {cta && (
           <div>
-            <BlockButton link={cta} tone="accent" />
+            <BlockButton
+              link={cta}
+              tone="accent"
+              surface={image ? "dark" : "primary"}
+            />
           </div>
         )}
       </div>

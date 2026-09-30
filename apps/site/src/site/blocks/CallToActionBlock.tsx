@@ -2,16 +2,25 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { CallToActionBlock as CallToActionBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockButton, linkOf, type BlockButtonTone } from "./BlockButton"
+import {
+  BlockButton,
+  linkOf,
+  type BlockButtonTone,
+  type BlockSurface,
+} from "./BlockButton"
 import { container, sectionY, type BlockContext } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
-const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
+const styles: Record<
+  Style,
+  { panel: string; button: BlockButtonTone; surface?: BlockSurface }
+> = {
   // The Site's primary colour, accent button.
   primary: {
     panel: "bg-primary text-primary-foreground",
     button: "accent",
+    surface: "primary",
   },
   // Quiet: tinted paper with a hairline, primary button.
   secondary: {
@@ -22,6 +31,7 @@ const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
   inverted: {
     panel: "bg-accent text-accent-foreground",
     button: "onAccent",
+    surface: "accent",
   },
 }
 
@@ -68,6 +78,7 @@ export function CallToActionBlock({
           <BlockButton
             link={button}
             tone={style.button}
+            surface={style.surface}
             className="self-start md:self-auto"
           />
         )}

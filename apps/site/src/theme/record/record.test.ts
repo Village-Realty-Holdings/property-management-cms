@@ -13,6 +13,7 @@ import { importGoogleFont } from "../../fonts/importGoogleFont"
 import type { FetchLike } from "../../fonts/googleFonts"
 import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
+import { truncateTables } from "../../test/truncateTables"
 import { CLASSIC, HARBOUR, type ThemeInputs } from "../index"
 import { formatSavedAt } from "./summary"
 import {
@@ -70,7 +71,7 @@ beforeAll(async () => {
 afterEach(async () => {
   vi.restoreAllMocks()
   // The Theme is a singleton: empty it (and its versions) between tests.
-  await payload.db.pool.query('TRUNCATE "theme", "_theme_v" CASCADE')
+  await truncateTables(payload, "theme", "_theme_v")
   await payload.delete({ collection: "fonts", where: { id: { exists: true } } })
   await payload.delete({
     collection: "font-files",

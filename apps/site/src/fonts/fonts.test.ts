@@ -173,7 +173,7 @@ describe("importGoogleFont", () => {
     const response = await handleEndpoints({
       config: payload.config,
       request: new Request(new URL(font!.files[0]!.url, "https://site.test")),
-      payloadInstanceCacheKey: `${t.databaseUrl}#${siteSchema() ?? "public"}`,
+      payloadInstanceCacheKey: t.instanceKey,
     })
 
     expect(response.status).toBe(200)
