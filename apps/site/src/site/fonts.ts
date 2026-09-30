@@ -7,16 +7,22 @@ import {
   Zilla_Slab,
 } from "next/font/google"
 
+/** @deprecated Remove with `fontVars` when the site-apply item lands. */
 export type FontPairing = "classic" | "modern" | "rustic"
 
-/** The pairing every Site uses until the Theme chooses fonts. */
+/**
+ * @deprecated The pairing every Site used before the Theme chose fonts. Fonts
+ * now resolve by key through ./fontStacks; remove when site-apply lands.
+ */
 export const DEFAULT_FONT_PAIRING: FontPairing = "classic"
 
 /**
- * The six built-in fonts, in three pairings. Each font only defines a CSS
- * variable; the layout points `--font-sans` (body) and `--font-display`
- * (headings) at the chosen pair, so the browser downloads only the two faces
- * in use. Not preloaded: the pairing is chosen at request time.
+ * The six built-in fonts, self-hosted by next/font. Each font only defines a
+ * CSS variable, on <html> through `fontVariables`; the Theme's stacks
+ * (`resolveFontStack`, ./fontStacks) point `--font-sans` and `--font-display`
+ * at them, so the browser downloads only the faces in use. Not preloaded:
+ * the fonts are chosen at request time. Uploaded and Google-imported Fonts
+ * are stored Fonts, served through @font-face (see ./fontStacks).
  */
 
 const newsreader = Newsreader({
@@ -52,7 +58,7 @@ const karla = Karla({
   preload: false,
 })
 
-/** Classes that define every pairing's font variables. */
+/** Classes that define every built-in font's variable. */
 export const fontVariables = [
   newsreader,
   publicSans,
@@ -64,7 +70,11 @@ export const fontVariables = [
   .map((font) => font.variable)
   .join(" ")
 
-/** CSS custom properties selecting the Site's pair. */
+/**
+ * @deprecated Fonts now resolve by key: use `themeFontFaces` (./fontStacks)
+ * and the Theme's tokens. Kept only until the site-apply item removes its
+ * callers (SiteFrame).
+ */
 export function fontVars(
   pairing: FontPairing = DEFAULT_FONT_PAIRING
 ): Record<string, string> {

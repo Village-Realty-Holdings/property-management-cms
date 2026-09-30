@@ -50,6 +50,8 @@ export type AvailableFont = {
   weights: number[]
   /** The Font record's id, for stored Fonts only. */
   id?: number
+  /** The files to serve, for stored Fonts only. */
+  files?: StoredFont["files"]
 }
 
 /** The built-in quick picks, then the stored Fonts. */
@@ -71,6 +73,7 @@ export function combineFonts(stored: readonly StoredFont[]): AvailableFont[] {
         id: font.id,
         family: font.family,
         kind: font.kind,
+        files: font.files.map((file) => ({ ...file })),
         weights: [...new Set(font.files.map((file) => file.weight))].sort(
           (a, b) => a - b
         ),
