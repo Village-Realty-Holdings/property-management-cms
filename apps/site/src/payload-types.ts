@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
+    layouts: Layout;
     media: Media;
     fonts: Font;
     'font-files': FontFile;
@@ -80,6 +81,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
+    layouts: LayoutsSelect<false> | LayoutsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     fonts: FontsSelect<false> | FontsSelect<true>;
     'font-files': FontFilesSelect<false> | FontFilesSelect<true>;
@@ -252,6 +254,245 @@ export interface CallToActionBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "layouts".
+ */
+export interface Layout {
+  id: number;
+  name: string;
+  header?: (LogoBlock | NavigationBlock | HeaderActionsBlock | UtilityStripBlock)[] | null;
+  footer?: (FooterColumnsBlock | LegalBarBlock | NewsletterBlock | CallToActionBlock)[] | null;
+  /**
+   * Pages at or under these paths use this Layout, like "/stays". The longest match wins. A path belongs to one Layout.
+   */
+  paths?:
+    | {
+        path: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Pages that no path or choice covers use the default. There is always exactly one: making another Layout the default clears this one.
+   */
+  isDefault?: boolean | null;
+  /**
+   * Optional. Replaces the automatic summary of this save in the history.
+   */
+  note?: string | null;
+  changeSummary?: string | null;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBlock".
+ */
+export interface LogoBlock {
+  size: 'small' | 'medium' | 'large';
+  showTagline?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logo';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NavigationBlock".
+ */
+export interface NavigationBlock {
+  items?:
+    | {
+        label: string;
+        link?: {
+          type?: ('page' | 'url') | null;
+          page?: (number | null) | Page;
+          /**
+           * A Site path like "/about", or a full URL.
+           */
+          url?: string | null;
+        };
+        display?: ('dropdown' | 'mega') | null;
+        /**
+         * Add links to make this item a dropdown. A dropdown holds links only.
+         */
+        children?:
+          | {
+              label: string;
+              link?: {
+                type?: ('page' | 'url') | null;
+                page?: (number | null) | Page;
+                /**
+                 * A Site path like "/about", or a full URL.
+                 */
+                url?: string | null;
+              };
+              /**
+               * Mega-menu only: links with the same heading share a column.
+               */
+              column?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'navigation';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeaderActionsBlock".
+ */
+export interface HeaderActionsBlock {
+  showPhone?: boolean | null;
+  /**
+   * Leave empty to show the Brand's phone number.
+   */
+  phone?: string | null;
+  button?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  login?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'headerActions';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UtilityStripBlock".
+ */
+export interface UtilityStripBlock {
+  /**
+   * A short line, such as an offer or a notice.
+   */
+  text: string;
+  links?:
+    | {
+        label: string;
+        link?: {
+          type?: ('page' | 'url') | null;
+          page?: (number | null) | Page;
+          /**
+           * A Site path like "/about", or a full URL.
+           */
+          url?: string | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'utilityStrip';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FooterColumnsBlock".
+ */
+export interface FooterColumnsBlock {
+  columns?:
+    | {
+        heading: string;
+        /**
+         * The address and social links come from the Brand unless you override the address here.
+         */
+        content: 'links' | 'address' | 'hours' | 'social';
+        links?:
+          | {
+              label: string;
+              link?: {
+                type?: ('page' | 'url') | null;
+                page?: (number | null) | Page;
+                /**
+                 * A Site path like "/about", or a full URL.
+                 */
+                url?: string | null;
+              };
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Leave empty to show the Brand's address.
+         */
+        address?: string | null;
+        /**
+         * One line per day or range, such as Mon–Fri 9:00–17:00.
+         */
+        hours?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'footerColumns';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LegalBarBlock".
+ */
+export interface LegalBarBlock {
+  /**
+   * {year} becomes the current year and {name} the Brand's name.
+   */
+  text: string;
+  links?:
+    | {
+        label: string;
+        link?: {
+          type?: ('page' | 'url') | null;
+          page?: (number | null) | Page;
+          /**
+           * A Site path like "/about", or a full URL.
+           */
+          url?: string | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'legalBar';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock".
+ */
+export interface NewsletterBlock {
+  heading: string;
+  text?: string | null;
+  emailPlaceholder?: string | null;
+  buttonLabel: string;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'newsletter';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * From Entra ID.
+   */
+  email: string;
+  name?: string | null;
+  entraOid: string;
+  updatedAt: string;
+  createdAt: string;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "fonts".
  */
 export interface Font {
@@ -294,22 +535,6 @@ export interface FontFile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  /**
-   * From Entra ID.
-   */
-  email: string;
-  name?: string | null;
-  entraOid: string;
-  updatedAt: string;
-  createdAt: string;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -335,6 +560,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'layouts';
+        value: number | Layout;
       } | null)
     | ({
         relationTo: 'media';
@@ -459,6 +688,195 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
         href?: T;
       };
   style?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "layouts_select".
+ */
+export interface LayoutsSelect<T extends boolean = true> {
+  name?: T;
+  header?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        utilityStrip?: T | UtilityStripBlockSelect<T>;
+      };
+  footer?:
+    | T
+    | {
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+      };
+  paths?:
+    | T
+    | {
+        path?: T;
+        id?: T;
+      };
+  isDefault?: T;
+  note?: T;
+  changeSummary?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoBlock_select".
+ */
+export interface LogoBlockSelect<T extends boolean = true> {
+  size?: T;
+  showTagline?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NavigationBlock_select".
+ */
+export interface NavigationBlockSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        label?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              page?: T;
+              url?: T;
+            };
+        display?: T;
+        children?:
+          | T
+          | {
+              label?: T;
+              link?:
+                | T
+                | {
+                    type?: T;
+                    page?: T;
+                    url?: T;
+                  };
+              column?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeaderActionsBlock_select".
+ */
+export interface HeaderActionsBlockSelect<T extends boolean = true> {
+  showPhone?: T;
+  phone?: T;
+  button?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  login?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "UtilityStripBlock_select".
+ */
+export interface UtilityStripBlockSelect<T extends boolean = true> {
+  text?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              page?: T;
+              url?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FooterColumnsBlock_select".
+ */
+export interface FooterColumnsBlockSelect<T extends boolean = true> {
+  columns?:
+    | T
+    | {
+        heading?: T;
+        content?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              link?:
+                | T
+                | {
+                    type?: T;
+                    page?: T;
+                    url?: T;
+                  };
+              id?: T;
+            };
+        address?: T;
+        hours?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LegalBarBlock_select".
+ */
+export interface LegalBarBlockSelect<T extends boolean = true> {
+  text?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              page?: T;
+              url?: T;
+            };
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock_select".
+ */
+export interface NewsletterBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  emailPlaceholder?: T;
+  buttonLabel?: T;
   id?: T;
   blockName?: T;
 }
