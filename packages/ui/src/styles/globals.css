@@ -1,3 +1,50 @@
+/*
+ * Shared styles for the Admin and the Site (ADR-0004).
+ *
+ * Tokens come in three tiers. Components read only the second and third, so a
+ * Theme restyles everything by setting variables at :root and never by
+ * editing a component.
+ *
+ * 1. Semantic tokens: the shadcn set (--background, --foreground, --primary,
+ *    --accent, --ring, ...) plus --radius. Optional ones have a fallback in
+ *    the @theme block below, so the Admin needs no value for them:
+ *      --link                       links (falls back to --primary)
+ *      --surface-dark               dark sections (falls back to --foreground)
+ *      --surface-dark-foreground    text on them (falls back to --background)
+ *      --third, --third-foreground  the optional third brand colour
+ *                                   (fall back to --secondary)
+ *      --font-sans, --font-display  body and heading faces (--font-display
+ *                                   falls back to --font-sans)
+ *
+ * 2. Component tokens, listed here so the Theme emitter and the Site apply
+ *    step match them. Each has an Admin default in :root below that
+ *    reproduces the look the components had before they read tokens.
+ *      Buttons  --btn-radius     corner radius
+ *               --btn-height     height of the default size (xs, sm, lg and
+ *                                the icon sizes scale from it)
+ *               --btn-px         horizontal padding of the default size
+ *               --btn-weight     font weight
+ *               --btn-transform  text-transform (none | uppercase | capitalize)
+ *               --btn-tracking   letter-spacing
+ *               --btn-shadow     box-shadow ("0 0 #0000" for none)
+ *               --btn-lift       how far a solid button rises on hover ("0px"
+ *                                for none)
+ *      Cards    --card-radius    corner radius of cards, dialogs and panels
+ *               --card-shadow    box-shadow ("0 0 #0000" for none)
+ *      Inputs   --input-radius        corner radius of inputs, textareas, selects
+ *               --input-height        height of a single-line control
+ *               --input-px            horizontal padding
+ *               --input-border-width  border width
+ *               --input-shadow        box-shadow ("0 0 #0000" for none)
+ *      Layout   --section-y      vertical padding of a Site section
+ *
+ * Shadows are written as a full box-shadow value. "None" is "0 0 #0000", not
+ * the keyword "none", because Tailwind composes it with the focus ring.
+ *
+ * A Theme sets these variables together, at :root. Defaults that refer to
+ * another variable (var(--radius)) resolve where they are declared, so a Theme
+ * that only sets --radius on a wrapper must set the component tokens too.
+ */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -9,7 +56,18 @@
 @source "../**/*.{ts,tsx}";
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display, var(--font-sans));
+  --color-link: var(--link, var(--primary));
+  --color-surface-dark: var(--surface-dark, var(--foreground));
+  --color-surface-dark-foreground: var(
+    --surface-dark-foreground,
+    var(--background)
+  );
+  --color-third: var(--third, var(--secondary));
+  --color-third-foreground: var(
+    --third-foreground,
+    var(--secondary-foreground)
+  );
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -87,6 +145,24 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Component tokens: the Admin's defaults. See the comment at the top. */
+  --btn-radius: var(--radius);
+  --btn-height: 2rem;
+  --btn-px: 0.625rem;
+  --btn-weight: 500;
+  --btn-transform: none;
+  --btn-tracking: normal;
+  --btn-shadow: 0 0 #0000;
+  --btn-lift: 0px;
+  --card-radius: calc(var(--radius) * 1.4);
+  --card-shadow: 0 0 #0000;
+  --input-radius: var(--radius);
+  --input-height: 2rem;
+  --input-px: 0.625rem;
+  --input-border-width: 1px;
+  --input-shadow: 0 0 #0000;
+  --section-y: 2.5rem;
 }
 
 .dark {
