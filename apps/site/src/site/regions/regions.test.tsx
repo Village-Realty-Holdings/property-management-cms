@@ -449,7 +449,12 @@ describe("in the Visual Editor", () => {
   ])("the %s is the Site's markup plus its field names", (_name, draw) => {
     const siteHtml = draw(false).container.innerHTML
     cleanup()
-    const editingHtml = draw(true).container.innerHTML
+    const editing = draw(true).container
+    // Each Block sits in a frame that adds no markup of its own.
+    const frames = [...editing.querySelectorAll("[data-block-region]")]
+    expect(frames.length).toBeGreaterThan(0)
+    for (const frame of frames) frame.replaceWith(...frame.childNodes)
+    const editingHtml = editing.innerHTML
     expect(editingHtml).toContain("data-editable-field")
     expect(editingHtml.replace(editable, "").replace(/ {2,}/g, " ")).toBe(
       siteHtml.replace(/ {2,}/g, " ")

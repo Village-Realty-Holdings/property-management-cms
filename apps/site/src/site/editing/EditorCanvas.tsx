@@ -1,13 +1,19 @@
 "use client"
 
-import type { MouseEvent } from "react"
+import { useCallback, type MouseEvent } from "react"
 
+import {
+  editableRegions,
+  postToParent,
+  type CanvasRequest,
+} from "../../admin/editor/bridge"
 import type { AvailableFont } from "../../fonts/available"
 import type { Brand } from "../brand"
 import { Blocks } from "../blocks"
 import type { SiteFixtures } from "../fixtures"
 import { LayoutFrame } from "../LayoutFrame"
 import { siteThemeCss } from "../themeStyle"
+import { CanvasOverlay } from "./overlay"
 import { useCanvasDocument } from "./useCanvasDocument"
 
 /**
@@ -22,6 +28,10 @@ import { useCanvasDocument } from "./useCanvasDocument"
  * frame with no request. `fonts` are the Site's stored Fonts, which a
  * font key in those inputs can name.
  *
+ * The overlay (see overlay.tsx) outlines, selects and offers the Block
+ * toolbar and "+" on the Blocks of the regions the document's mode lets the
+ * Staff User edit, and sends what they ask for to the Admin.
+ *
  * Links do not navigate: the Staff User edits a Page here, and the Admin
  * moves between Pages.
  */
@@ -35,6 +45,9 @@ export function EditorCanvas({
   fonts: readonly AvailableFont[]
 }) {
   const document = useCanvasDocument()
+  const send = useCallback((request: CanvasRequest) => {
+    postToParent(window.parent, window.location.origin, request)
+  }, [])
 
   // Nothing is shown until the Admin has sent something to show.
   if (!document) return <div className="min-h-svh" aria-busy="true" />
@@ -68,6 +81,11 @@ export function EditorCanvas({
       >
         <Blocks blocks={document.page} fixtures={fixtures} editing={editing} />
       </LayoutFrame>
+      <CanvasOverlay
+        editable={editableRegions(document.mode)}
+        selectedId={document.selectedId ?? null}
+        send={send}
+      />
     </div>
   )
 }

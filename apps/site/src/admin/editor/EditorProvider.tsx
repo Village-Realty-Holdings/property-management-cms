@@ -36,6 +36,12 @@ export type EditorApi = {
   duplicateBlock: (id: string) => void
   removeBlock: (id: string) => void
   select: (id: string) => void
+  /**
+   * The canvas's "+" was pressed: a Block is wanted at `index` in `region`.
+   * It does nothing until the Block picker is wired in, through the
+   * provider's `onInsertRequest`.
+   */
+  onInsertRequest: (region: Region, index: number) => void
   deselect: () => void
   undo: () => void
   redo: () => void
@@ -43,6 +49,8 @@ export type EditorApi = {
   /** `sent` is the document the save request carried; `doc` is what the server stored. */
   markSaved: (doc: EditorDocument, sent: EditorDocument) => void
 }
+
+const noInsertRequest = () => {}
 
 const EditorContext = createContext<EditorApi | null>(null)
 
@@ -52,9 +60,12 @@ const EditorContext = createContext<EditorApi | null>(null)
  */
 export function EditorProvider({
   initial,
+  onInsertRequest = noInsertRequest,
   children,
 }: {
   initial: EditorDocument
+  /** What the canvas's "+" does: open the picker for `index` in `region`. */
+  onInsertRequest?: (region: Region, index: number) => void
   children: ReactNode
 }) {
   const [state, dispatch] = useReducer(
@@ -80,13 +91,14 @@ export function EditorProvider({
       duplicateBlock: (id) => dispatch({ type: "duplicateBlock", id }),
       removeBlock: (id) => dispatch({ type: "removeBlock", id }),
       select: (id) => dispatch({ type: "select", id }),
+      onInsertRequest,
       deselect: () => dispatch({ type: "deselect" }),
       undo: () => dispatch({ type: "undo" }),
       redo: () => dispatch({ type: "redo" }),
       discard: () => dispatch({ type: "discard" }),
       markSaved: (doc, sent) => dispatch({ type: "markSaved", doc, sent }),
     }),
-    [state]
+    [state, onInsertRequest]
   )
 
   return <EditorContext.Provider value={api}>{children}</EditorContext.Provider>

@@ -67,14 +67,18 @@ describe("the Block catalogue's samples", () => {
   })
 
   it.each(catalogueEntries.map((entry) => [entry.label, entry] as const))(
-    "%s in the Visual Editor is the same markup plus its field names",
+    "%s in the Visual Editor is the same markup plus its field names, in a frame",
     (_label, entry) => {
       const sample = sampleFor(entry.blockType)
       const site = render(<Block block={sample} index={1} />).container
       const siteHtml = site.innerHTML
       cleanup()
       const editing = render(<Block block={sample} index={1} editing />)
-      const stripped = editing.container.innerHTML.replace(
+      // The canvas wraps each Block in a frame that adds no markup of its own.
+      const frame = editing.container.firstElementChild!
+      expect(frame.getAttribute("data-block-region")).toBe("page")
+      expect(editing.container.children).toHaveLength(1)
+      const stripped = frame.innerHTML.replace(
         / data-(?:block-index|editable-field)="[^"]*"/g,
         ""
       )

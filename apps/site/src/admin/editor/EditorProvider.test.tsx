@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { EditorProvider, useEditor } from "./EditorProvider"
 import type { EditorDocument } from "./state"
@@ -51,6 +51,25 @@ describe("useEditor", () => {
     expect(blocks()).toHaveLength(1)
     act(() => result.current.deselect())
     expect(result.current.selectedId).toBeNull()
+  })
+
+  it("has an onInsertRequest that does nothing until one is given", () => {
+    const { result } = renderHook(() => useEditor(), { wrapper })
+    expect(() => result.current.onInsertRequest("page", 0)).not.toThrow()
+    expect(result.current.isDirty).toBe(false)
+  })
+
+  it("hands an insert request to the onInsertRequest it was given", () => {
+    const onInsertRequest = vi.fn()
+    const { result } = renderHook(() => useEditor(), {
+      wrapper: ({ children }) => (
+        <EditorProvider initial={page} onInsertRequest={onInsertRequest}>
+          {children}
+        </EditorProvider>
+      ),
+    })
+    result.current.onInsertRequest("page", 1)
+    expect(onInsertRequest).toHaveBeenCalledWith("page", 1)
   })
 
   it("discards to the baseline and marks saved", () => {

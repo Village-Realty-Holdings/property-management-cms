@@ -2,7 +2,7 @@ import { normalizeInputs, type ThemeInputs } from "../../theme/inputs"
 import { FALLBACK_INPUTS } from "../../theme/record/fallback"
 import type { PageBlock } from "../../site/blocks/types"
 import type { FooterBlock, HeaderBlock } from "../../site/regions/types"
-import type { EditorDocument } from "./state"
+import type { EditorDocument, Region } from "./state"
 
 /**
  * The message protocol between the Visual Editor and its canvas.
@@ -13,14 +13,23 @@ import type { EditorDocument } from "./state"
  * that message alone. So an edit shows the moment it is made, with no network
  * round trip (Phase 5: instant preview).
  *
- *   Admin  -> canvas   `document`  the document to show
- *   canvas -> Admin    `ready`     the canvas can receive documents
+ *   Admin  -> canvas   `document`        the document to show, and which
+ *                                        Block is selected
+ *   canvas -> Admin    `ready`           the canvas can receive documents
+ *   canvas -> Admin    `select`          a Block was clicked
+ *   canvas -> Admin    `move`            the selected Block's toolbar: up or down
+ *   canvas -> Admin    `duplicate`       ... Duplicate
+ *   canvas -> Admin    `delete`          ... Delete
+ *   canvas -> Admin    `insert-request`  a "+" was pressed: a Block is wanted
+ *                                        at that place in that region
  *
  * Both windows are on the Site's own origin, and both ends check it: a
  * message is read only when it comes from the expected window on the expected
  * origin, and is posted only to that origin, never to "*". Anything else,
- * including a message of another shape, is ignored. Later slices add the
- * canvas's `select`, `insert-request`, `edit-text` and `key` messages here.
+ * including a message of another shape, is ignored. The canvas only asks: the
+ * Admin decides whether a request applies (a Block of a locked region is not
+ * in its document, so a request for it does nothing). Later slices add the
+ * canvas's `edit-text` and `key` messages here.
  */
 
 /** Tags our messages, so they are told apart from any other on the window. */
@@ -42,6 +51,27 @@ export type CanvasDocument = {
   header: HeaderBlock[]
   footer: FooterBlock[]
   theme: ThemeInputs | null
+  /**
+   * The Block the Staff User has selected, by id. `useCanvasBridge` fills it
+   * in from the editor's state; it reads as null when missing.
+   */
+  selectedId?: string | null
+}
+
+/**
+ * The regions a Staff User can edit in the canvas, which the canvas reads
+ * from the document's mode: a Page's Blocks in Page mode, the Header and
+ * Footer in Layout mode, and none in Theme mode. The rest is locked.
+ */
+export function editableRegions(mode: CanvasMode): readonly Region[] {
+  switch (mode) {
+    case "page":
+      return ["page"]
+    case "layout":
+      return ["header", "footer"]
+    case "theme":
+      return []
+  }
 }
 
 type Envelope = { channel: typeof BRIDGE_CHANNEL }
@@ -52,8 +82,20 @@ export type ParentMessage = Envelope & {
   document: CanvasDocument
 }
 
+/** What the canvas asks of the Admin. Each names a Block by its id. */
+export type CanvasRequest =
+  | { type: "select"; id: string }
+  | { type: "move"; id: string; direction: "up" | "down" }
+  | { type: "duplicate"; id: string }
+  | { type: "delete"; id: string }
+  /** `index` is where the new Block goes in `region` (0 is before the first). */
+  | { type: "insert-request"; region: Region; index: number }
+
+/** What the canvas sends: `ready`, or a request. */
+export type CanvasAction = { type: "ready" } | CanvasRequest
+
 /** Canvas to Admin. */
-export type CanvasMessage = Envelope & { type: "ready" }
+export type CanvasMessage = Envelope & CanvasAction
 
 /** The parts of a `MessageEvent` the checks read. */
 export type MessageLike = {
@@ -119,7 +161,7 @@ function readEnvelope(data: unknown): Record<string, unknown> | null {
 /** A document off the wire, or null when it is not a well-formed one. */
 function readDocument(value: unknown): CanvasDocument | null {
   if (!isRecord(value)) return null
-  const { mode, page, header, footer, theme } = value
+  const { mode, page, header, footer, theme, selectedId } = value
   if (!MODES.includes(mode as CanvasMode)) return null
   if (!isBlockList<PageBlock>(page)) return null
   if (!isBlockList<HeaderBlock>(header)) return null
@@ -133,6 +175,7 @@ function readDocument(value: unknown): CanvasDocument | null {
     // Unsaved inputs are made safe to derive from: a bad value takes the
     // default's, as inputs read from storage do.
     theme: theme === null ? null : normalizeInputs(theme, FALLBACK_INPUTS),
+    selectedId: typeof selectedId === "string" ? selectedId : null,
   }
 }
 
@@ -151,6 +194,40 @@ export function readParentMessage(
   return readDocument(data.document)
 }
 
+const REGIONS: readonly Region[] = ["page", "header", "footer"]
+
+const isId = (value: unknown): value is string =>
+  typeof value === "string" && value !== ""
+
+/** An action off the wire, or null when it is not a well-formed one. */
+function readAction(data: Record<string, unknown>): CanvasAction | null {
+  switch (data.type) {
+    case "ready":
+      return { type: "ready" }
+    case "select":
+    case "duplicate":
+    case "delete":
+      return isId(data.id) ? { type: data.type, id: data.id } : null
+    case "move":
+      return isId(data.id) &&
+        (data.direction === "up" || data.direction === "down")
+        ? { type: "move", id: data.id, direction: data.direction }
+        : null
+    case "insert-request":
+      return REGIONS.includes(data.region as Region) &&
+        Number.isInteger(data.index) &&
+        (data.index as number) >= 0
+        ? {
+            type: "insert-request",
+            region: data.region as Region,
+            index: data.index as number,
+          }
+        : null
+    default:
+      return null
+  }
+}
+
 /**
  * The Admin reads the canvas: a known message from the canvas's own `frame`
  * window, on `origin`. Null for anything else, and while the iframe has no
@@ -159,12 +236,12 @@ export function readParentMessage(
 export function readCanvasMessage(
   event: MessageLike,
   expected: { origin: string; frame: Window | null }
-): { type: "ready" } | null {
+): CanvasAction | null {
   if (!expected.frame) return null
   if (event.origin !== expected.origin) return null
   if (event.source !== expected.frame) return null
   const data = readEnvelope(event.data)
-  return data?.type === "ready" ? { type: "ready" } : null
+  return data ? readAction(data) : null
 }
 
 // ── Posting ──────────────────────────────────────────────────────────────────
@@ -191,9 +268,18 @@ export function postDocumentToCanvas(
   frame.postMessage(message, origin)
 }
 
+/** The canvas tells the Admin something: that it is ready, or what it asks for. */
+export function postToParent(
+  parent: Window,
+  origin: string,
+  action: CanvasAction
+): void {
+  assertOrigin(origin)
+  const message: CanvasMessage = { channel: BRIDGE_CHANNEL, ...action }
+  parent.postMessage(message, origin)
+}
+
 /** The canvas tells the Admin it can receive documents. */
 export function postReadyToParent(parent: Window, origin: string): void {
-  assertOrigin(origin)
-  const message: CanvasMessage = { channel: BRIDGE_CHANNEL, type: "ready" }
-  parent.postMessage(message, origin)
+  postToParent(parent, origin, { type: "ready" })
 }

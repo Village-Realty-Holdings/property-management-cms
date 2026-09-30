@@ -1,10 +1,37 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react"
+import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { PageBlock } from "../../site/blocks/types"
 import { BRIDGE_CHANNEL, type CanvasDocument } from "./bridge"
+import { EditorProvider, useEditor } from "./EditorProvider"
+import type { EditorDocument, Region } from "./state"
 import { useCanvasBridge } from "./useCanvasBridge"
+
+const block = (id: string, heading = id) => ({
+  id,
+  blockType: "hero" as const,
+  heading,
+})
+const pageDoc = (...ids: string[]): EditorDocument =>
+  ({
+    kind: "page",
+    title: "Home",
+    path: "/",
+    layout: { mode: "default" },
+    blocks: ids.map((id) => block(id)),
+    seo: { title: "", description: "", image: null },
+  }) as unknown as EditorDocument
+const layoutDoc = (): EditorDocument =>
+  ({
+    kind: "layout",
+    name: "L",
+    paths: [],
+    isDefault: false,
+    header: [{ id: "h1", blockType: "utilityStrip", text: "Hi" }],
+    footer: [],
+  }) as unknown as EditorDocument
 
 const hero = (heading: string) =>
   ({ id: "b1", blockType: "hero", heading }) as PageBlock
@@ -15,6 +42,7 @@ const documentOf = (heading: string): CanvasDocument => ({
   header: [],
   footer: [],
   theme: null,
+  selectedId: null,
 })
 
 const sent = (spy: { mock: { calls: unknown[][] } }) =>
@@ -57,10 +85,30 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const setup = (initial: CanvasDocument) =>
-  renderHook(({ document }) => useCanvasBridge({ current: iframe }, document), {
-    initialProps: { document: initial },
-  })
+const setup = (
+  initial: CanvasDocument,
+  options: {
+    doc?: EditorDocument
+    onInsertRequest?: (region: Region, index: number) => void
+  } = {}
+) =>
+  renderHook(
+    ({ document }) => {
+      useCanvasBridge({ current: iframe }, document)
+      return useEditor()
+    },
+    {
+      initialProps: { document: initial },
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <EditorProvider
+          initial={options.doc ?? pageDoc("b1")}
+          onInsertRequest={options.onInsertRequest}
+        >
+          {children}
+        </EditorProvider>
+      ),
+    }
+  )
 
 describe("useCanvasBridge", () => {
   it("posts the document once the canvas is ready", () => {
@@ -117,5 +165,116 @@ describe("useCanvasBridge", () => {
     unmount()
     canvasReady()
     expect(postMessage).not.toHaveBeenCalled()
+  })
+
+  it("posts the selected Block with the document, and again when it changes", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    canvasReady()
+    act(() => result.current.select("b2"))
+    expect(sent(postMessage)).toEqual([
+      documentMessage(documentOf("One")),
+      documentMessage({ ...documentOf("One"), selectedId: "b2" }),
+    ])
+    act(() => result.current.deselect())
+    expect(sent(postMessage).at(-1)).toEqual(documentMessage(documentOf("One")))
+  })
+})
+
+describe("useCanvasBridge: what the canvas asks for", () => {
+  const ask = (request: object, over: Partial<MessageEventInit> = {}) =>
+    canvasReady(over, { channel: BRIDGE_CHANNEL, ...request })
+  const ids = (editor: { doc: EditorDocument }) =>
+    (editor.doc as unknown as { blocks: { id: string }[] }).blocks.map(
+      (b) => b.id
+    )
+
+  it("selects the Block that was clicked", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    ask({ type: "select", id: "b2" })
+    expect(result.current.selectedId).toBe("b2")
+  })
+
+  it("ignores a select for a Block the document does not have", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
+    ask({ type: "select", id: "gone" })
+    expect(result.current.selectedId).toBeNull()
+  })
+
+  it("moves a Block up and down, one undo step each", () => {
+    const { result } = setup(documentOf("One"), {
+      doc: pageDoc("b1", "b2", "b3"),
+    })
+    ask({ type: "move", id: "b2", direction: "up" })
+    expect(ids(result.current)).toEqual(["b2", "b1", "b3"])
+    ask({ type: "move", id: "b2", direction: "down" })
+    expect(ids(result.current)).toEqual(["b1", "b2", "b3"])
+    act(() => result.current.undo())
+    expect(ids(result.current)).toEqual(["b2", "b1", "b3"])
+  })
+
+  it("does not move the first Block up or the last one down", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    ask({ type: "move", id: "b1", direction: "up" })
+    ask({ type: "move", id: "b2", direction: "down" })
+    expect(ids(result.current)).toEqual(["b1", "b2"])
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("duplicates a Block, and the copy is selected", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    ask({ type: "duplicate", id: "b1" })
+    expect(ids(result.current)).toHaveLength(3)
+    expect(ids(result.current)[0]).toBe("b1")
+    expect(result.current.selectedId).toBe(ids(result.current)[1])
+  })
+
+  it("deletes a Block, and Undo brings it back", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    ask({ type: "delete", id: "b1" })
+    expect(ids(result.current)).toEqual(["b2"])
+    act(() => result.current.undo())
+    expect(ids(result.current)).toEqual(["b1", "b2"])
+  })
+
+  it("ignores a request for a Block of a region the document does not have", () => {
+    // A Layout's document has no Page Blocks.
+    const { result } = setup(documentOf("One"), { doc: layoutDoc() })
+    ask({ type: "delete", id: "b1" })
+    ask({ type: "select", id: "b1" })
+    expect(result.current.selectedId).toBeNull()
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("asks the editor for an insert at the place the canvas named", () => {
+    const onInsertRequest = vi.fn()
+    setup(documentOf("One"), { doc: pageDoc("b1", "b2"), onInsertRequest })
+    ask({ type: "insert-request", region: "page", index: 1 })
+    expect(onInsertRequest).toHaveBeenCalledWith("page", 1)
+    ask({ type: "insert-request", region: "page", index: 2 })
+    expect(onInsertRequest).toHaveBeenLastCalledWith("page", 2)
+  })
+
+  it("does not ask for an insert in a region the document lacks, or past its end", () => {
+    const onInsertRequest = vi.fn()
+    setup(documentOf("One"), { doc: pageDoc("b1"), onInsertRequest })
+    ask({ type: "insert-request", region: "header", index: 0 })
+    ask({ type: "insert-request", region: "page", index: 5 })
+    expect(onInsertRequest).not.toHaveBeenCalled()
+  })
+
+  it("does nothing on insert-request when no picker is wired in", () => {
+    const { result } = setup(documentOf("One"))
+    ask({ type: "insert-request", region: "page", index: 0 })
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("ignores requests from another origin, another window or of another shape", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    ask({ type: "delete", id: "b1" }, { origin: "https://evil.example" })
+    ask({ type: "delete", id: "b1" }, { source: window })
+    ask({ type: "delete", id: "b1" }, { source: null })
+    ask({ type: "delete" })
+    canvasReady({}, { channel: "other", type: "delete", id: "b1" })
+    expect(ids(result.current)).toEqual(["b1", "b2"])
   })
 })

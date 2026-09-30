@@ -6,8 +6,10 @@ import type { FooterBlock, HeaderBlock } from "../../site/regions/types"
 import {
   BRIDGE_CHANNEL,
   canvasDocument,
+  editableRegions,
   postDocumentToCanvas,
   postReadyToParent,
+  postToParent,
   readCanvasMessage,
   readParentMessage,
   type CanvasDocument,
@@ -29,6 +31,7 @@ const DOCUMENT: CanvasDocument = {
   header: [strip],
   footer: [],
   theme: null,
+  selectedId: null,
 }
 
 /** A window stand-in: identity is all the checks look at, and postMessage is spied. */
@@ -96,6 +99,16 @@ describe("readParentMessage (the canvas reads the Admin)", () => {
     })
   })
 
+  it("carries the selected Block's id, and reads a missing or odd one as none", () => {
+    expect(read(message({ ...DOCUMENT, selectedId: "b1" }))?.selectedId).toBe(
+      "b1"
+    )
+    const without: Partial<CanvasDocument> = { ...DOCUMENT }
+    delete without.selectedId
+    expect(read(message(without))?.selectedId).toBeNull()
+    expect(read(message({ ...DOCUMENT, selectedId: 4 }))?.selectedId).toBeNull()
+  })
+
   it("keeps a Block's own fields as sent", () => {
     const page = [{ ...hero("Hi"), cta: { label: "Go", href: "/x" } }]
     expect(read(message({ ...DOCUMENT, page }))?.page).toEqual(page)
@@ -135,6 +148,47 @@ describe("readCanvasMessage (the Admin reads the canvas)", () => {
     ).toBeNull()
   })
 
+  it.each([
+    [{ type: "select", id: "b1" }],
+    [{ type: "duplicate", id: "b1" }],
+    [{ type: "delete", id: "b1" }],
+    [{ type: "move", id: "b1", direction: "up" }],
+    [{ type: "move", id: "b1", direction: "down" }],
+    [{ type: "insert-request", region: "page", index: 0 }],
+    [{ type: "insert-request", region: "footer", index: 3 }],
+  ])("accepts the request %j", (request) => {
+    expect(read({ channel: BRIDGE_CHANNEL, ...request })).toEqual(request)
+  })
+
+  it.each([
+    ["select without an id", { type: "select" }],
+    ["select with an empty id", { type: "select", id: "" }],
+    ["delete with a number for an id", { type: "delete", id: 4 }],
+    ["move without a direction", { type: "move", id: "b1" }],
+    ["move sideways", { type: "move", id: "b1", direction: "left" }],
+    [
+      "insert in an unknown region",
+      { type: "insert-request", region: "x", index: 0 },
+    ],
+    [
+      "insert at a negative index",
+      { type: "insert-request", region: "page", index: -1 },
+    ],
+    [
+      "insert at a fractional index",
+      { type: "insert-request", region: "page", index: 0.5 },
+    ],
+    ["insert with no index", { type: "insert-request", region: "page" }],
+  ])("ignores a request that is malformed: %s", (_name, request) => {
+    expect(read({ channel: BRIDGE_CHANNEL, ...request })).toBeNull()
+  })
+
+  it("ignores a request from another origin or window", () => {
+    const request = { channel: BRIDGE_CHANNEL, type: "select", id: "b1" }
+    expect(read(request, { origin: "https://evil.example" })).toBeNull()
+    expect(read(request, { source: fakeWindow() })).toBeNull()
+  })
+
   it("ignores messages that are not ours or not known", () => {
     expect(read({ ...ready, channel: "other" })).toBeNull()
     expect(read({ channel: BRIDGE_CHANNEL, type: "nope" })).toBeNull()
@@ -157,6 +211,18 @@ describe("posting", () => {
       { channel: BRIDGE_CHANNEL, type: "ready" },
       ORIGIN
     )
+  })
+
+  it("posts a request to the parent, addressed to its origin only", () => {
+    const parent = fakeWindow()
+    postToParent(parent, ORIGIN, { type: "select", id: "b1" })
+    expect(parent.postMessage).toHaveBeenCalledWith(
+      { channel: BRIDGE_CHANNEL, type: "select", id: "b1" },
+      ORIGIN
+    )
+    expect(() =>
+      postToParent(parent, "*", { type: "delete", id: "b1" })
+    ).toThrow()
   })
 
   it("never addresses a message to any origin", () => {
@@ -217,5 +283,13 @@ describe("canvasDocument", () => {
       ...around,
       theme: HARBOUR.inputs,
     })
+  })
+})
+
+describe("editableRegions", () => {
+  it("a Page's Blocks are editable in Page mode, the Layout's in Layout mode, none in Theme mode", () => {
+    expect(editableRegions("page")).toEqual(["page"])
+    expect(editableRegions("layout")).toEqual(["header", "footer"])
+    expect(editableRegions("theme")).toEqual([])
   })
 })

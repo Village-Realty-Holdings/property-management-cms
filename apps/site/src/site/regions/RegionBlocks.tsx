@@ -1,8 +1,9 @@
-import { Fragment } from "react"
+import { Fragment, type ReactNode } from "react"
 
 import { cn } from "@workspace/ui/lib/utils"
 
 import { container } from "../blocks/types"
+import { BlockFrame } from "../editing/BlockFrame"
 import { regionTakes } from "./catalogue"
 import { renderRegionBlock } from "./registry"
 import type {
@@ -53,19 +54,43 @@ type Props =
  *   action, which keep their own background).
  *
  * A Block the region does not take is left out, and a region with nothing to
- * show renders nothing at all.
+ * show renders nothing at all. In the Visual Editor each Block is wrapped
+ * (see `BlockFrame`), with its place in the region's list.
  */
 export function RegionBlocks({ region, blocks, context }: Props) {
+  // In the Visual Editor each Block is wrapped so the overlay can find it.
+  const framed = (
+    node: ReactNode,
+    block: RegionBlock,
+    position: number
+  ): ReactNode =>
+    context.editing && node !== null ? (
+      <BlockFrame
+        id={block.id}
+        blockType={block.blockType}
+        region={region}
+        index={position}
+      >
+        {node}
+      </BlockFrame>
+    ) : (
+      node
+    )
+
   const items = ((blocks ?? []) as readonly RegionBlock[])
     .map((block, position) => ({
       block,
       key: block.id ?? String(position),
-      node: regionTakes(region, block.blockType)
-        ? renderRegionBlock(region, block, {
-            ...context,
-            index: regionIndexBase[region] + position,
-          })
-        : null,
+      node: framed(
+        regionTakes(region, block.blockType)
+          ? renderRegionBlock(region, block, {
+              ...context,
+              index: regionIndexBase[region] + position,
+            })
+          : null,
+        block,
+        position
+      ),
     }))
     .filter((item) => item.node !== null)
   if (items.length === 0) return null
