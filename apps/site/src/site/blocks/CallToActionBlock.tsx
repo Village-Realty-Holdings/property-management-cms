@@ -35,9 +35,16 @@ const styles: Record<
     button: "onAccent",
     surface: "accent",
   },
+  // The Theme's dark surface, accent button.
+  dark: {
+    panel:
+      "border border-surface-dark-foreground/15 bg-surface-dark text-surface-dark-foreground",
+    button: "accent",
+    surface: "dark",
+  },
 }
 
-/** Call to action: a short pitch with one button, in one of three styles. */
+/** Call to action: a short pitch with one button, in one of four styles. */
 export function CallToActionBlock({
   block,
   context,

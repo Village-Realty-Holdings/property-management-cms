@@ -21,6 +21,7 @@ export const CallToAction: Block = {
         { label: "Primary", value: "primary" },
         { label: "Secondary", value: "secondary" },
         { label: "Inverted", value: "inverted" },
+        { label: "Dark surface", value: "dark" },
       ],
     },
     backgroundField,

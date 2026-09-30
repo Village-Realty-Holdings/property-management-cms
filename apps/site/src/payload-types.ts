@@ -144,7 +144,20 @@ export interface Page {
    * URL path on the Site: "/" for Home, "/about". Filled in from the title when left empty.
    */
   path: string;
-  blocks?: (HeroBlock | RichTextBlock | CallToActionBlock)[] | null;
+  blocks?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TrustStripBlock
+      )[]
+    | null;
   layout?: {
     mode?: ('route' | 'specific' | 'none') | null;
     layout?: (number | null) | Layout;
@@ -172,7 +185,15 @@ export interface Page {
  * via the `definition` "HeroBlock".
  */
 export interface HeroBlock {
+  /**
+   * A short line above the heading.
+   */
+  eyebrow?: string | null;
   heading: string;
+  /**
+   * A word or phrase from the heading, shown in the accent style.
+   */
+  accentWord?: string | null;
   subheading?: string | null;
   image?: (number | null) | Media;
   cta?: {
@@ -182,6 +203,23 @@ export interface HeroBlock {
      */
     href?: string | null;
   };
+  /**
+   * Optional. Fused to the foot of the Hero.
+   */
+  trustStrip?:
+    | {
+        /**
+         * Optional, such as "4.9".
+         */
+        stat?: string | null;
+        text: string;
+        /**
+         * A Lucide icon name, such as "wifi" or "map-pin".
+         */
+        icon?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'hero';
@@ -212,6 +250,36 @@ export interface Media {
   filesize?: number | null;
   width?: number | null;
   height?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SearchHeroBlock".
+ */
+export interface SearchHeroBlock {
+  /**
+   * A short line above the heading.
+   */
+  eyebrow?: string | null;
+  heading: string;
+  /**
+   * A word or phrase from the heading, shown in the accent style.
+   */
+  accentWord?: string | null;
+  subheading?: string | null;
+  image?: (number | null) | Media;
+  searchLabel: string;
+  /**
+   * Optional places to suggest in the search.
+   */
+  locations?:
+    | {
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'searchHero';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -252,11 +320,163 @@ export interface CallToActionBlock {
      */
     href?: string | null;
   };
-  style: 'primary' | 'secondary' | 'inverted';
+  style: 'primary' | 'secondary' | 'inverted' | 'dark';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'callToAction';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StepsBlock".
+ */
+export interface StepsBlock {
+  heading: string;
+  intro?: string | null;
+  steps: {
+    title: string;
+    text: string;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'steps';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock".
+ */
+export interface FeaturesBlock {
+  heading: string;
+  intro?: string | null;
+  features: {
+    /**
+     * A Lucide icon name, such as "wifi" or "map-pin".
+     */
+    icon: string;
+    title: string;
+    text: string;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'features';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AmenitiesBlock".
+ */
+export interface AmenitiesBlock {
+  heading: string;
+  intro?: string | null;
+  variant: 'mosaic' | 'icons';
+  items: {
+    label: string;
+    /**
+     * The tile's photo, for the mosaic.
+     */
+    image?: (number | null) | Media;
+    /**
+     * The icon, for the icon list, such as "wifi".
+     */
+    icon?: string | null;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'amenities';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatsBlock".
+ */
+export interface StatsBlock {
+  heading: string;
+  stats: {
+    /**
+     * The figure, such as "4.9" or "120+".
+     */
+    value: string;
+    label: string;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'stats';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock".
+ */
+export interface ImageTextBlock {
+  heading: string;
+  text?: string | null;
+  image?: (number | null) | Media;
+  /**
+   * Optional. Shown with the image.
+   */
+  caption?: string | null;
+  imageSide: 'left' | 'right';
+  /**
+   * Optional. A short list, each with an icon.
+   */
+  points?:
+    | {
+        /**
+         * A Lucide icon name, such as "wifi" or "map-pin".
+         */
+        icon?: string | null;
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'imageText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TrustStripBlock".
+ */
+export interface TrustStripBlock {
+  /**
+   * Optional. A line to introduce the strip.
+   */
+  heading?: string | null;
+  variant: 'items' | 'logos';
+  items?:
+    | {
+        /**
+         * Optional, such as "4.9".
+         */
+        stat?: string | null;
+        text: string;
+        /**
+         * A Lucide icon name, such as "wifi" or "map-pin".
+         */
+        icon?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  logos?:
+    | {
+        /**
+         * The partner's name, read out for the logo.
+         */
+        name: string;
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'trustStrip';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -640,8 +860,15 @@ export interface PagesSelect<T extends boolean = true> {
     | T
     | {
         hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
       };
   layout?:
     | T
@@ -665,7 +892,9 @@ export interface PagesSelect<T extends boolean = true> {
  * via the `definition` "HeroBlock_select".
  */
 export interface HeroBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
   heading?: T;
+  accentWord?: T;
   subheading?: T;
   image?: T;
   cta?:
@@ -673,6 +902,34 @@ export interface HeroBlockSelect<T extends boolean = true> {
     | {
         label?: T;
         href?: T;
+      };
+  trustStrip?:
+    | T
+    | {
+        stat?: T;
+        text?: T;
+        icon?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SearchHeroBlock_select".
+ */
+export interface SearchHeroBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  accentWord?: T;
+  subheading?: T;
+  image?: T;
+  searchLabel?: T;
+  locations?:
+    | T
+    | {
+        name?: T;
+        id?: T;
       };
   id?: T;
   blockName?: T;
@@ -701,6 +958,127 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
         href?: T;
       };
   style?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StepsBlock_select".
+ */
+export interface StepsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  steps?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock_select".
+ */
+export interface FeaturesBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  features?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AmenitiesBlock_select".
+ */
+export interface AmenitiesBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  variant?: T;
+  items?:
+    | T
+    | {
+        label?: T;
+        image?: T;
+        icon?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StatsBlock_select".
+ */
+export interface StatsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageTextBlock_select".
+ */
+export interface ImageTextBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  image?: T;
+  caption?: T;
+  imageSide?: T;
+  points?:
+    | T
+    | {
+        icon?: T;
+        text?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TrustStripBlock_select".
+ */
+export interface TrustStripBlockSelect<T extends boolean = true> {
+  heading?: T;
+  variant?: T;
+  items?:
+    | T
+    | {
+        stat?: T;
+        text?: T;
+        icon?: T;
+        id?: T;
+      };
+  logos?:
+    | T
+    | {
+        name?: T;
+        image?: T;
+        id?: T;
+      };
   background?: T;
   id?: T;
   blockName?: T;

@@ -1,8 +1,15 @@
 import { createElement } from "react"
 
+import { AmenitiesBlock } from "./AmenitiesBlock"
 import { CallToActionBlock } from "./CallToActionBlock"
+import { FeaturesBlock } from "./FeaturesBlock"
 import { HeroBlock } from "./HeroBlock"
+import { ImageTextBlock } from "./ImageTextBlock"
 import { RichTextBlock } from "./RichTextBlock"
+import { SearchHeroBlock } from "./SearchHeroBlock"
+import { StatsBlock } from "./StatsBlock"
+import { StepsBlock } from "./StepsBlock"
+import { TrustStripBlock } from "./TrustStripBlock"
 import type {
   BlockComponent,
   BlockContext,
@@ -19,8 +26,15 @@ import type {
  */
 export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
   hero: HeroBlock,
+  searchHero: SearchHeroBlock,
   richText: RichTextBlock,
   callToAction: CallToActionBlock,
+  steps: StepsBlock,
+  features: FeaturesBlock,
+  amenities: AmenitiesBlock,
+  stats: StatsBlock,
+  imageText: ImageTextBlock,
+  trustStrip: TrustStripBlock,
 }
 
 /**

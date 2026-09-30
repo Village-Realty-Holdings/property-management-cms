@@ -108,40 +108,56 @@ const link = (
   href: value?.href ?? "",
 })
 
+type FormBlockType = BlockValues["blockType"]
+
+/**
+ * The Blocks this form can edit. The form is replaced by the Visual Editor
+ * (Phase 5), which edits every Block, so the Blocks added in Phase 4 are not
+ * modelled here: a Page that holds one opens in the form without it.
+ */
+const isFormBlock = (
+  block: NonNullable<Page["blocks"]>[number]
+): block is Extract<
+  NonNullable<Page["blocks"]>[number],
+  { blockType: FormBlockType }
+> => BLOCK_TYPES.some((type) => type.blockType === block.blockType)
+
 /** A stored Page as form values; rich text goes through `toMarkdown`. */
 export async function pageToValues(
   page: Page,
   toMarkdown: (data: unknown) => Promise<string>
 ): Promise<PageValues> {
   const blocks = await Promise.all(
-    (page.blocks ?? []).map(async (block): Promise<BlockValues> => {
-      switch (block.blockType) {
-        case "hero":
-          return {
-            id: block.id ?? undefined,
-            blockType: "hero",
-            heading: block.heading ?? "",
-            subheading: block.subheading ?? "",
-            image: mediaId(block.image),
-            cta: link(block.cta),
-          }
-        case "richText":
-          return {
-            id: block.id ?? undefined,
-            blockType: "richText",
-            markdown: await toMarkdown(block.content),
-          }
-        case "callToAction":
-          return {
-            id: block.id ?? undefined,
-            blockType: "callToAction",
-            heading: block.heading ?? "",
-            body: block.body ?? "",
-            button: link(block.button),
-            style: block.style ?? "primary",
-          }
-      }
-    })
+    (page.blocks ?? [])
+      .filter(isFormBlock)
+      .map(async (block): Promise<BlockValues> => {
+        switch (block.blockType) {
+          case "hero":
+            return {
+              id: block.id ?? undefined,
+              blockType: "hero",
+              heading: block.heading ?? "",
+              subheading: block.subheading ?? "",
+              image: mediaId(block.image),
+              cta: link(block.cta),
+            }
+          case "richText":
+            return {
+              id: block.id ?? undefined,
+              blockType: "richText",
+              markdown: await toMarkdown(block.content),
+            }
+          case "callToAction":
+            return {
+              id: block.id ?? undefined,
+              blockType: "callToAction",
+              heading: block.heading ?? "",
+              body: block.body ?? "",
+              button: link(block.button),
+              style: block.style ?? "primary",
+            }
+        }
+      })
   )
   return {
     title: page.title ?? "",

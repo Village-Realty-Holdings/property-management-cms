@@ -1,7 +1,14 @@
 import type { BlockOf, BlockType } from "../types"
+import { amenitiesSample } from "./amenities"
 import { callToActionSample } from "./callToAction"
+import { featuresSample } from "./features"
 import { heroSample } from "./hero"
+import { imageTextSample } from "./imageText"
 import { richTextSample } from "./richText"
+import { searchHeroSample } from "./searchHero"
+import { statsSample } from "./stats"
+import { stepsSample } from "./steps"
+import { trustStripSample } from "./trustStrip"
 
 /**
  * Sample data for every Block: every field and option filled, so the
@@ -10,8 +17,15 @@ import { richTextSample } from "./richText"
  */
 export const samples: { [T in BlockType]: BlockOf<T> } = {
   hero: heroSample,
+  searchHero: searchHeroSample,
   richText: richTextSample,
   callToAction: callToActionSample,
+  steps: stepsSample,
+  features: featuresSample,
+  amenities: amenitiesSample,
+  stats: statsSample,
+  imageText: imageTextSample,
+  trustStrip: trustStripSample,
 }
 
 /** The sample for a Block type. */

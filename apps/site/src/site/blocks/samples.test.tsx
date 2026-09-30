@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { backgrounds } from "../../fields/background"
 import { catalogueEntries } from "../../blocks/catalogue"
 import { Block } from "."
+import { iconNames } from "./icons"
 import { blockRegistry } from "./registry"
 import { samples, sampleFor } from "./samples"
 
@@ -99,6 +100,32 @@ describe("the Block catalogue's samples", () => {
       }
     }
   )
+
+  it("picks every icon in the samples from the curated list", () => {
+    const icons: unknown[] = []
+    JSON.stringify(samples, (key, value: unknown) => {
+      if (key === "icon") icons.push(value)
+      return value
+    })
+    expect(icons.length).toBeGreaterThan(10)
+    for (const icon of icons) expect(iconNames).toContain(icon)
+  })
+
+  it("a Call to action in every style renders and passes axe", async () => {
+    for (const style of ["primary", "secondary", "inverted", "dark"] as const) {
+      const block = { ...sampleFor("callToAction"), style }
+      const { container } = render(<Block block={block} index={1} />)
+      expect(container.querySelector("section"), style).not.toBeNull()
+      expect(await violations(container), style).toEqual([])
+      cleanup()
+    }
+  })
+
+  it("the Dark surface Call to action is drawn on the Theme's dark surface", () => {
+    const block = { ...sampleFor("callToAction"), style: "dark" as const }
+    const { container } = render(<Block block={block} index={1} />)
+    expect(container.querySelector(".bg-surface-dark")).not.toBeNull()
+  })
 
   it("a stored Block of a type the Site no longer has renders nothing", () => {
     const { container } = render(
