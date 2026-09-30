@@ -41,6 +41,44 @@ const publicPage = (path: string) =>
     ...asVisitor,
   })
 
+describe("saving a Page keeps its Layout choice", () => {
+  it("does not reset the Layout the form does not edit", async () => {
+    const layout = await t.payload.create({
+      collection: "layouts",
+      data: { name: "Kept Layout" },
+      ...asStaff,
+    })
+    const page = await t.payload.create({
+      collection: "pages",
+      data: {
+        title: "Keeper",
+        path: "/keeper",
+        layout: { mode: "specific", layout: layout.id },
+      },
+      ...asStaff,
+    })
+    for (const intent of ["draft", "publish", "unpublish"] as const) {
+      const result = await savePageAs(t.payload, asStaff, {
+        id: page.id,
+        intent,
+        values: { ...about, title: "Keeper", path: "/keeper" },
+      })
+      expect(result.ok).toBe(true)
+      const latest = await t.payload.findByID({
+        collection: "pages",
+        id: page.id,
+        draft: true,
+        depth: 0,
+        ...asStaff,
+      })
+      expect(latest.layout).toMatchObject({
+        mode: "specific",
+        layout: layout.id,
+      })
+    }
+  })
+})
+
 describe("saving a Page from the Admin form", () => {
   let id: number
 

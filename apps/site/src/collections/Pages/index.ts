@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload"
 import { publishedOrSignedIn, signedIn } from "../../access"
 import { pageBlocks } from "../../blocks"
 import { seoField } from "../../fields/seo"
+import { layoutField } from "./layoutField"
 import { defaultPathFromTitle, validatePagePath } from "./path"
 
 /**
@@ -52,6 +53,7 @@ export const Pages: CollectionConfig = {
       labels: { singular: "Block", plural: "Blocks" },
       blocks: pageBlocks,
     },
+    layoutField(),
     seoField(),
   ],
 }

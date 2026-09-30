@@ -67,7 +67,6 @@ describe("Page paths", () => {
     })
     const read = await payload.findByID({ collection: "pages", id: page.id })
     expect(read.blocks?.map((b) => b.blockType)).toEqual(["hero"])
-    expect(read).not.toHaveProperty("layout")
   })
 
   it("rejects a path another Page uses", async () => {
@@ -91,6 +90,91 @@ describe("Page paths", () => {
         ],
       },
     })
+  })
+})
+
+describe("a Page's Layout", () => {
+  const newLayout = (name: string) =>
+    payload.create({
+      collection: "layouts",
+      data: { name },
+      overrideAccess: false,
+      user: staffUser(),
+    })
+
+  it("defaults to the Layout for the Page's path", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: { title: "Plain", path: "/plain" },
+      overrideAccess: false,
+      user: staffUser(),
+    })
+    expect(page.layout?.mode).toBe("route")
+    expect(page.layout?.layout ?? null).toBeNull()
+  })
+
+  it("rejects a specific Layout without one chosen", async () => {
+    await expect(
+      payload.create({
+        collection: "pages",
+        data: {
+          title: "Pinned",
+          path: "/pinned",
+          layout: { mode: "specific" },
+        },
+        overrideAccess: false,
+        user: staffUser(),
+      })
+    ).rejects.toMatchObject({
+      data: {
+        errors: [expect.objectContaining({ path: "layout.layout" })],
+      },
+    })
+  })
+
+  it("saves a specific Layout when one is chosen", async () => {
+    const chosen = await newLayout("Pinned Layout")
+    const page = await payload.create({
+      collection: "pages",
+      data: {
+        title: "Pinned",
+        path: "/pinned",
+        layout: { mode: "specific", layout: chosen.id },
+      },
+      overrideAccess: false,
+      user: staffUser(),
+    })
+    const read = await payload.findByID({
+      collection: "pages",
+      id: page.id,
+      depth: 0,
+    })
+    expect(read.layout).toMatchObject({ mode: "specific", layout: chosen.id })
+  })
+
+  it("saves No Layout without one chosen", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: { title: "Bare", path: "/bare", layout: { mode: "none" } },
+      overrideAccess: false,
+      user: staffUser(),
+    })
+    expect(page.layout?.mode).toBe("none")
+  })
+
+  it("rejects a specific Layout that does not exist", async () => {
+    await expect(
+      payload.create({
+        collection: "pages",
+        data: {
+          title: "Ghost",
+          path: "/ghost",
+          layout: { mode: "specific", layout: 999999 },
+        },
+        overrideAccess: false,
+        user: staffUser(),
+      })
+    ).rejects.toThrow()
   })
 })
 

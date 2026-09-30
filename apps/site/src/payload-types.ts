@@ -145,6 +145,10 @@ export interface Page {
    */
   path: string;
   blocks?: (HeroBlock | RichTextBlock | CallToActionBlock)[] | null;
+  layout?: {
+    mode?: ('route' | 'specific' | 'none') | null;
+    layout?: (number | null) | Layout;
+  };
   seo?: {
     /**
      * Shown in search results and the browser tab. Defaults to the Page title. Up to 60 characters.
@@ -636,6 +640,12 @@ export interface PagesSelect<T extends boolean = true> {
         hero?: T | HeroBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+      };
+  layout?:
+    | T
+    | {
+        mode?: T;
+        layout?: T;
       };
   seo?:
     | T
