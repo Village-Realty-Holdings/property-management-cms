@@ -56,6 +56,22 @@ describe("buildFontRows", () => {
     )
   })
 
+  it("lists the earlier Theme versions that used a Font, apart from what locks it", () => {
+    const [row, other] = buildFontRows(
+      [slab, { ...slab, id: 8, family: "Karla" }],
+      new Map(),
+      new Map([[7, ["2026-03-01T10:05:00.000Z", "2026-02-01T09:00:00.000Z"]]])
+    )
+    expect(row!.earlierThemeVersions).toEqual([
+      "Mar 1, 2026, 10:05 AM UTC",
+      "Feb 1, 2026, 9:00 AM UTC",
+    ])
+    // They do not lock it: only the live Theme does.
+    expect(row!.locked).toBe(false)
+    expect(row!.deleteBlockedReason).toBeNull()
+    expect(other!.earlierThemeVersions).toEqual([])
+  })
+
   it("gives each Font its own sample family, apart from any built-in name", () => {
     const rows = buildFontRows(
       [slab, { ...slab, id: 8, family: "Karla" }],

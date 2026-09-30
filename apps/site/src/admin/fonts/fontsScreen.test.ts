@@ -12,6 +12,8 @@ import {
 import type { FetchLike } from "../../fonts/googleFonts"
 import { registerFontUsage } from "../../fonts/fontUsage"
 import type { User } from "../../payload-types"
+import { CLASSIC, HARBOUR } from "../../theme"
+import { saveTheme } from "../../theme/record"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import {
   addGoogleFontAs,
@@ -388,6 +390,39 @@ describe("loadFontRows and deleteFontAs", () => {
       usages: ["Used by the Theme (heading font)"],
     })
     expect(row!.deleteBlockedReason).toContain("is in use")
+  })
+
+  it("lists the earlier Theme versions that used a Font, not the live one", async () => {
+    const font = await addSlab()
+    const withFont = (over: object = {}) => ({
+      ...HARBOUR.inputs,
+      headingFont: `font:${font.id}`,
+      ...over,
+    })
+    await saveTheme(payload, { user: staff, inputs: withFont() })
+    await saveTheme(payload, {
+      user: staff,
+      inputs: withFont({ primary: "#0a7d5a" }),
+    })
+    // Live now uses it too: the two saved versions are the live one's past.
+    const [locked] = await loadFontRows(payload, as)
+    expect(locked!.locked).toBe(true)
+    expect(locked!.earlierThemeVersions).toHaveLength(1)
+
+    await saveTheme(payload, { user: staff, inputs: CLASSIC.inputs })
+    const [row] = await loadFontRows(payload, as)
+    expect(row).toMatchObject({ locked: false, deleteBlockedReason: null })
+    expect(row!.earlierThemeVersions).toHaveLength(2)
+    expect(row!.earlierThemeVersions.every((when) => /UTC$/.test(when))).toBe(
+      true
+    )
+  })
+
+  it("lists no earlier Theme version when none used the Font", async () => {
+    await addSlab()
+    await saveTheme(payload, { user: staff, inputs: HARBOUR.inputs })
+    const [row] = await loadFontRows(payload, as)
+    expect(row!.earlierThemeVersions).toEqual([])
   })
 
   it("deletes a Font nothing uses, with its files", async () => {

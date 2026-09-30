@@ -91,8 +91,11 @@ export function contrastWarnings(rawInputs: ThemeInputs): ContrastWarning[] {
   }))
 }
 
-/** Text-bearing token pairs: [foreground, the surface it sits on]. */
-export const TEXT_PAIRS: readonly (readonly [string, string])[] = [
+/**
+ * Text-bearing token pairs: [foreground, the surface it sits on, and what a
+ * transparent surface sits on (default `--background`, the page)].
+ */
+export const TEXT_PAIRS: readonly (readonly [string, string, string?])[] = [
   ["--foreground", "--background"],
   ["--foreground", "--muted"],
   ["--foreground", "--secondary"],
@@ -100,6 +103,7 @@ export const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--popover-foreground", "--popover"],
   ["--primary-foreground", "--primary"],
   ["--accent-foreground", "--accent"],
+  ["--accent-hover-foreground", "--accent-hover"],
   ["--third-foreground", "--third"],
   ["--surface-dark-foreground", "--surface-dark"],
   ["--muted-foreground", "--background"],
@@ -108,6 +112,9 @@ export const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--link", "--muted"],
   ["--btn-fg", "--btn-bg"],
   ["--btn-fg-hover", "--btn-bg-hover"],
+  // The primary button on the accent panel (the inverted Call to action).
+  ["--btn-on-accent-fg", "--btn-on-accent-bg", "--accent"],
+  ["--btn-on-accent-fg-hover", "--btn-on-accent-bg-hover", "--accent"],
   ["--destructive-text", "--background"],
   ["--destructive-text", "--muted"],
 ]
@@ -121,11 +128,11 @@ export type TextPairFailure = {
 /** The text-bearing pairs of a token map that fall below AA. */
 export function textPairFailures(tokens: TokenMap): TextPairFailure[] {
   const failures: TextPairFailure[] = []
-  for (const [foreground, background] of TEXT_PAIRS) {
+  for (const [foreground, background, behind = "--background"] of TEXT_PAIRS) {
     const fg = tokens[foreground]
     let bg = tokens[background]
-    // Outline buttons are transparent: the text sits on the page.
-    if (bg === "transparent") bg = tokens["--background"]
+    // Outline buttons are transparent: the text sits on what is behind them.
+    if (bg === "transparent") bg = tokens[behind]
     if (!fg || !bg) continue
     const ratio = contrastRatio(fg, bg)
     if (ratio < AA_TEXT) failures.push({ foreground, background, ratio })

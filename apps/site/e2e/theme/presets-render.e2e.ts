@@ -143,7 +143,9 @@ describe.each(PRESETS.map((preset) => [preset.name, preset] as const))(
       const { context, page } = await openSession(browser)
       try {
         await visit(page, SAMPLE_PAGE_PATH)
-        const names = [...new Set(TEXT_PAIRS.flat())]
+        const names = [
+          ...new Set(TEXT_PAIRS.flat().filter((name) => name !== undefined)),
+        ]
         const live = await rootTokens(page, names)
         expect(textPairFailures(live)).toEqual([])
         expect(await axeViolations(page)).toEqual([])

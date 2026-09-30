@@ -3,6 +3,8 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
+import { buttonVariants } from "@workspace/ui/components/button"
+
 import {
   classLiterals,
   compileUiCss,
@@ -37,6 +39,15 @@ const ADMIN_DEFAULTS: Record<string, string> = {
   "--btn-border-width": "1px",
   "--btn-bg-hover": "color-mix(in srgb, var(--primary) 80%, var(--background))",
   "--btn-fg-hover": "var(--primary-foreground)",
+  "--accent-hover": "color-mix(in srgb, var(--accent) 80%, var(--background))",
+  "--accent-hover-foreground": "var(--accent-foreground)",
+  "--btn-on-accent-bg": "var(--primary)",
+  "--btn-on-accent-fg": "var(--primary-foreground)",
+  "--btn-on-accent-border-color": "transparent",
+  "--btn-on-accent-bg-hover": "var(--btn-bg-hover)",
+  "--btn-on-accent-fg-hover": "var(--primary-foreground)",
+  // Tailwind's own default transition time, which every component had.
+  "--duration": "150ms",
   "--card-radius": "calc(var(--radius) * 1.4)",
   "--card-shadow": "0 0 #0000",
   // Tailwind's shadow-lg, which the Sheet hardcoded before it read a token.
@@ -131,6 +142,26 @@ describe("classes that read component tokens", () => {
     ],
     ["hover:bg-(--btn-bg-hover)", "background-color: var(--btn-bg-hover)"],
     ["hover:text-(--btn-fg-hover)", "color: var(--btn-fg-hover)"],
+    ["bg-(--btn-on-accent-bg)", "background-color: var(--btn-on-accent-bg)"],
+    ["text-(--btn-on-accent-fg)", "color: var(--btn-on-accent-fg)"],
+    [
+      "border-(--btn-on-accent-border-color)",
+      "border-color: var(--btn-on-accent-border-color)",
+    ],
+    [
+      "hover:bg-(--btn-on-accent-bg-hover)",
+      "background-color: var(--btn-on-accent-bg-hover)",
+    ],
+    [
+      "hover:text-(--btn-on-accent-fg-hover)",
+      "color: var(--btn-on-accent-fg-hover)",
+    ],
+    ["hover:bg-(--accent-hover)", "background-color: var(--accent-hover)"],
+    [
+      "hover:text-(--accent-hover-foreground)",
+      "color: var(--accent-hover-foreground)",
+    ],
+    ["duration-(--duration)", "transition-duration: var(--duration)"],
     ["rounded-(--card-radius)", "border-radius: var(--card-radius)"],
     ["shadow-(--card-shadow)", "--tw-shadow: var(--card-shadow)"],
     ["shadow-(--sheet-shadow)", "--tw-shadow: var(--sheet-shadow)"],
@@ -161,8 +192,56 @@ describe("hover states", () => {
     expect(rootTokens()["--btn-bg-hover"]).toBe(
       "color-mix(in srgb, var(--primary) 80%, var(--background))"
     )
+    // The accent variant hovers to the derived --accent-hover, with its own
+    // text: the text derived for the resting fill can fail on the moved one.
+    expect(css).toContain("background-color: var(--accent-hover)")
+    expect(css).toContain("color: var(--accent-hover-foreground)")
+    expect(rootTokens()["--accent-hover"]).toBe(
+      "color-mix(in srgb, var(--accent) 80%, var(--background))"
+    )
+    expect(source("button")).not.toMatch(/color-mix\(in_srgb,var\(--accent\)/)
+  })
+})
+
+describe("the Motion control", () => {
+  // --duration is what None / Subtle / Lively set; a component that keeps
+  // Tailwind's 150ms ignores it.
+  const MOTION_COMPONENTS = [
+    "button",
+    "badge",
+    "switch",
+    "input",
+    "textarea",
+    "native-select",
+    "breadcrumb",
+    "sheet",
+    "alert-dialog",
+  ]
+
+  it.each(MOTION_COMPONENTS)(
+    "%s takes its duration from --duration",
+    (name) => {
+      const classes = classLiterals(source(name)).join(" ").split(/\s+/)
+      expect(classes).toContain("duration-(--duration)")
+      expect(classes.filter((c) => /(^|:)duration-\d/.test(c))).toEqual([])
+    }
+  )
+
+  it("the class sets the time a transition-all runs for", async () => {
+    const css = await compileUiCss(["transition-all", "duration-(--duration)"])
+    expect(css).toContain("--tw-duration: var(--duration)")
     expect(css).toContain(
-      "color-mix(in srgb,var(--accent) 80%,var(--background))"
+      "transition-duration: var(--tw-duration, var(--default-transition-duration))"
+    )
+  })
+
+  it("the variant classes of a rendered Button carry it", () => {
+    expect(buttonVariants()).toContain("duration-(--duration)")
+    expect(buttonVariants({ variant: "accent" })).toContain(
+      "hover:bg-(--accent-hover)"
+    )
+    expect(buttonVariants({ variant: "onAccent" })).toContain(
+      "bg-(--btn-on-accent-bg)"
     )
   })
 })
@@ -258,6 +337,8 @@ describe("every token class in the components and Blocks is valid Tailwind", () 
       "card",
       "alert-dialog",
       "sheet",
+      "switch",
+      "breadcrumb",
     ].map((name) => join(uiComponents, `${name}.tsx`)),
     ...["CallToActionBlock.tsx", "HeroBlock.tsx", "types.ts"].map((name) =>
       join(blocks, name)
@@ -268,7 +349,7 @@ describe("every token class in the components and Blocks is valid Tailwind", () 
     const classes = classLiterals(readFileSync(file, "utf8"))
       .flatMap((literal) => literal.split(/\s+/))
       .filter((c) =>
-        /--(btn|card|input|sheet|section-y)|surface-dark|(bg|text)-(accent|link|third)/.test(
+        /--(btn|card|input|sheet|section-y|duration|accent-hover)|surface-dark|(bg|text)-(accent|link|third)/.test(
           c
         )
       )

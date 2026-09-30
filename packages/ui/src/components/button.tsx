@@ -6,18 +6,22 @@ import { cn } from "cn"
 // tracking, shadow, lift) is read from the --btn-* tokens in globals.css.
 // Smaller and larger sizes scale from --btn-height and --btn-px. The default
 // variant's fill, text and edge come from --btn-bg, --btn-fg and
-// --btn-border-* (the Theme's Solid or Outline style).
+// --btn-border-* (the Theme's Solid or Outline style). Every transition lasts
+// --duration, the Theme's Motion control.
 const solid =
   "shadow-(--btn-shadow) hover:-translate-y-(--btn-lift) motion-reduce:hover:translate-y-0"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-(--btn-radius) border border-transparent bg-clip-padding text-sm font-(weight:--btn-weight) tracking-(--btn-tracking) whitespace-nowrap [text-transform:var(--btn-transform)] transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 motion-reduce:transition-none dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-(--btn-radius) border border-transparent bg-clip-padding text-sm font-(weight:--btn-weight) tracking-(--btn-tracking) whitespace-nowrap [text-transform:var(--btn-transform)] transition-all duration-(--duration) outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 motion-reduce:transition-none dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default: `border-(length:--btn-border-width) border-(--btn-border-color) bg-(--btn-bg) text-(--btn-fg) hover:bg-(--btn-bg-hover) hover:text-(--btn-fg-hover) ${solid}`,
         // The accent colour: the Site's second brand colour (a Theme input).
-        accent: `bg-accent text-accent-foreground hover:bg-[color-mix(in_srgb,var(--accent)_80%,var(--background))] ${solid}`,
+        accent: `bg-accent text-accent-foreground hover:bg-(--accent-hover) hover:text-(--accent-hover-foreground) ${solid}`,
+        // The Theme's button as drawn on the accent colour (a Call to action
+        // panel): an Outline label there takes the panel's text colour.
+        onAccent: `border-(length:--btn-border-width) border-(--btn-on-accent-border-color) bg-(--btn-on-accent-bg) text-(--btn-on-accent-fg) hover:bg-(--btn-on-accent-bg-hover) hover:text-(--btn-on-accent-fg-hover) ${solid}`,
         outline: `border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 ${solid}`,
         secondary: `bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground ${solid}`,
         ghost:

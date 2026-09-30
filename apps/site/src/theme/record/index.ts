@@ -153,6 +153,38 @@ export async function listThemeHistory(
 }
 
 /**
+ * The earlier Theme versions that use each stored Font, by Font id: the ISO
+ * time each was saved, newest first. The live version is left out, because
+ * the Font usage lock already covers it. Staff only.
+ */
+export async function earlierVersionsUsingFonts(
+  payload: Payload,
+  options: { user: Staff | null }
+): Promise<Map<number, string[]>> {
+  const { docs } = await payload.findGlobalVersions({
+    slug: "theme",
+    depth: 0,
+    pagination: false,
+    sort: "-id",
+    overrideAccess: false,
+    user: options.user,
+  })
+  const found = new Map<number, string[]>()
+  for (const entry of docs.slice(1)) {
+    const version = entry.version as Partial<ThemeDoc>
+    const ids = new Set<number>()
+    for (const key of FONT_KEYS) {
+      const parsed = parseFontKey(version[key])
+      if (parsed?.kind === "stored") ids.add(parsed.id)
+    }
+    for (const id of ids) {
+      found.set(id, [...(found.get(id) ?? []), String(entry.createdAt)])
+    }
+  }
+  return found
+}
+
+/**
  * Puts an old version live again by saving it as a new version, so the
  * history only grows. A stored Font the old version used and that was deleted
  * since is replaced by the Classic font, and the summary says so. When the

@@ -5,10 +5,18 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { safeHref } from "../RichText"
 
 export type BlockLink = { label: string; href: string }
-export type BlockButtonTone = "accent" | "primary"
+export type BlockButtonTone = "accent" | "primary" | "onAccent"
 
-/** A Block's button colour: the Theme's accent or primary colour. */
-const variants = { accent: "accent", primary: "default" } as const
+/**
+ * A Block's button colour: the Theme's accent or primary colour, or the
+ * primary button drawn on the accent colour (`onAccent`), where an Outline
+ * label in the link colour would not be readable.
+ */
+const variants = {
+  accent: "accent",
+  primary: "default",
+  onAccent: "onAccent",
+} as const
 
 /** A link group (`{ label, href }`) when both are set and the href is safe. */
 export function linkOf(

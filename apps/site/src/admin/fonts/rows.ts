@@ -1,6 +1,7 @@
 import type { StoredFont } from "../../fonts/available"
 import { BUILT_IN_FONTS } from "../../fonts/builtIn"
 import { fontFaceCss } from "../../fonts/fontFace"
+import { formatSavedAt } from "../../theme/record/summary"
 import type { FontKind, FontStyle } from "../../fonts/types"
 import {
   faceLabel,
@@ -42,6 +43,12 @@ export type FontRow = {
   sampleFamily: string
   /** What uses the Font, from the Font usage registry. */
   usages: string[]
+  /**
+   * When each earlier (not live) Theme version that uses the Font was saved,
+   * newest first, as "Mar 1, 2026, 10:05 AM UTC". They do not lock the Font,
+   * but restoring one after it is deleted uses the Classic font instead.
+   */
+  earlierThemeVersions: string[]
   locked: boolean
   /** Why Delete is unavailable, or null when the Font can be deleted. */
   deleteBlockedReason: string | null
@@ -67,7 +74,9 @@ function sampleFamilyOf(id: number): string {
 
 export function buildFontRows(
   fonts: readonly StoredFontRecord[],
-  usagesById: ReadonlyMap<number, readonly string[]>
+  usagesById: ReadonlyMap<number, readonly string[]>,
+  /** ISO save times of the earlier Theme versions using each Font. */
+  earlierVersionsById: ReadonlyMap<number, readonly string[]> = new Map()
 ): FontRow[] {
   return fonts.map((font) => {
     const usages = [...(usagesById.get(font.id) ?? [])]
@@ -88,6 +97,9 @@ export function buildFontRows(
       })),
       sampleFamily: sampleFamilyOf(font.id),
       usages,
+      earlierThemeVersions: (earlierVersionsById.get(font.id) ?? []).map(
+        formatSavedAt
+      ),
       locked,
       deleteBlockedReason: locked
         ? `${font.family} is in use, so it can't be deleted. Change what uses it first.`

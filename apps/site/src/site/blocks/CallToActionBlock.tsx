@@ -18,10 +18,10 @@ const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
     panel: "border border-border bg-secondary text-foreground",
     button: "primary",
   },
-  // The accent colour, primary button.
+  // The accent colour, primary button drawn for the accent panel.
   inverted: {
     panel: "bg-accent text-accent-foreground",
-    button: "primary",
+    button: "onAccent",
   },
 }
 

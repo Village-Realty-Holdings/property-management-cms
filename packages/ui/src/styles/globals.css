@@ -39,6 +39,15 @@
  *               --btn-border-color, --btn-border-width   its edge (Outline
  *                                draws the primary colour; Solid has none)
  *               --btn-bg-hover, --btn-fg-hover   its fill and text on hover
+ *               --btn-on-accent-bg, --btn-on-accent-fg,
+ *               --btn-on-accent-border-color,
+ *               --btn-on-accent-bg-hover, --btn-on-accent-fg-hover
+ *                                the same button as drawn on the accent colour
+ *                                (the "onAccent" variant): Outline takes the
+ *                                accent's text colour there
+ *               --accent-hover, --accent-hover-foreground   the accent
+ *                                variant's fill and text on hover
+ *      Motion   --duration       how long a transition lasts (0ms for None)
  *      Cards    --card-radius    corner radius of cards, dialogs and panels
  *               --card-shadow    box-shadow ("0 0 #0000" for none)
  *      Sheets   --sheet-shadow   box-shadow of a sheet that slides in over the
@@ -174,6 +183,14 @@
   --btn-border-width: 1px;
   --btn-bg-hover: color-mix(in srgb, var(--primary) 80%, var(--background));
   --btn-fg-hover: var(--primary-foreground);
+  --btn-on-accent-bg: var(--primary);
+  --btn-on-accent-fg: var(--primary-foreground);
+  --btn-on-accent-border-color: transparent;
+  --btn-on-accent-bg-hover: var(--btn-bg-hover);
+  --btn-on-accent-fg-hover: var(--primary-foreground);
+  --accent-hover: color-mix(in srgb, var(--accent) 80%, var(--background));
+  --accent-hover-foreground: var(--accent-foreground);
+  --duration: 150ms;
   --card-radius: calc(var(--radius) * 1.4);
   --card-shadow: 0 0 #0000;
   --sheet-shadow:

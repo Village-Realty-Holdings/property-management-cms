@@ -242,6 +242,61 @@ describe("buttons", () => {
     expect(t["--btn-fg-hover"]).toBe(t["--primary-foreground"])
   })
 
+  it("the accent button's hover fill keeps AA text, on a dark accent too", () => {
+    for (const accent of ["#b45309", "#6b5b00", "#fcd900", "#009dd6"]) {
+      const t = tokens({ accent })
+      expect(t["--accent-hover"], accent).toMatch(/^#[0-9a-f]{6}$/)
+      expect(
+        contrastRatio(t["--accent-hover-foreground"]!, t["--accent-hover"]!),
+        accent
+      ).toBeGreaterThanOrEqual(AA)
+    }
+  })
+
+  it("the accent button's hover moves away from its text", () => {
+    const dark = tokens({ accent: "#b45309" })
+    expect(dark["--accent-foreground"]).toBe("#ffffff")
+    expect(contrastRatio(dark["--accent-hover"]!, "#ffffff")).toBeGreaterThan(
+      contrastRatio(dark["--accent"]!, "#ffffff")
+    )
+  })
+
+  describe("on the accent panel", () => {
+    it("Solid is the primary button as it is everywhere", () => {
+      const t = tokens({ buttonStyle: "solid" })
+      expect(t["--btn-on-accent-bg"]).toBe(t["--btn-bg"])
+      expect(t["--btn-on-accent-fg"]).toBe(t["--btn-fg"])
+      expect(t["--btn-on-accent-border-color"]).toBe(t["--btn-border-color"])
+      expect(t["--btn-on-accent-bg-hover"]).toBe(t["--btn-bg-hover"])
+      expect(t["--btn-on-accent-fg-hover"]).toBe(t["--btn-fg-hover"])
+    })
+
+    it("Outline is drawn in the panel's own text colour, not the link colour", () => {
+      const t = tokens({ buttonStyle: "outline", accent: "#b45309" })
+      expect(t["--btn-on-accent-bg"]).toBe("transparent")
+      expect(t["--btn-on-accent-fg"]).toBe(t["--accent-foreground"])
+      expect(t["--btn-on-accent-border-color"]).toBe(t["--accent-foreground"])
+      expect(t["--btn-on-accent-bg-hover"]).toBe(t["--accent-foreground"])
+      expect(t["--btn-on-accent-fg-hover"]).toBe(t["--accent"])
+    })
+
+    it.each(["#b45309", "#009dd6", "#fcd900", "#ffffff", "#000000"])(
+      "Outline label, edge and hover pass AA on accent %s",
+      (accent) => {
+        const t = tokens({ buttonStyle: "outline", accent })
+        const on = (name: string, surface: string) =>
+          contrastRatio(t[name]!, surface)
+        expect(on("--btn-on-accent-fg", accent)).toBeGreaterThanOrEqual(AA)
+        expect(
+          on("--btn-on-accent-border-color", accent)
+        ).toBeGreaterThanOrEqual(3)
+        expect(
+          on("--btn-on-accent-fg-hover", t["--btn-on-accent-bg-hover"]!)
+        ).toBeGreaterThanOrEqual(AA)
+      }
+    )
+  })
+
   it.each([
     ["normal", "none", "0em"],
     ["uppercase", "uppercase", "0.06em"],

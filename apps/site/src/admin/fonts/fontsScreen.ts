@@ -7,6 +7,7 @@ import {
   type ImportGoogleFontOptions,
 } from "../../fonts/importGoogleFont"
 import { FONT_FILES_SLUG } from "../../storage"
+import { earlierVersionsUsingFonts } from "../../theme/record"
 import { formStateFromError, type FormState } from "../formState"
 import type { Access } from "../settingsSave"
 import {
@@ -77,7 +78,10 @@ export async function loadFontRows(
       )
     )
   )
-  return buildFontRows(fonts, usages)
+  const earlier = await earlierVersionsUsingFonts(payload, {
+    user: access.user,
+  })
+  return buildFontRows(fonts, usages, earlier)
 }
 
 /**

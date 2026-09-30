@@ -204,11 +204,31 @@ export function deriveTheme(
   const letters = BUTTON_LETTERS[inputs.buttonLetters]
 
   // Solid buttons darken (or lighten) on hover, away from their text.
-  const solidHover = mix(
-    inputs.primary,
-    primaryText === WHITE ? BLACK : WHITE,
-    0.15
-  )
+  const solidHover = hoverOf(inputs.primary, primaryText, ink)
+
+  // The accent button hovers the same way, with text checked on the hover
+  // fill: the accent text was derived for the resting fill only.
+  const accentText = readableOn(inputs.accent, ink)
+  const accentHover = hoverOf(inputs.accent, accentText, ink)
+
+  // Outline buttons are transparent, so on the accent panel the label and
+  // edge take the panel's own text colour (derived to pass AA on the accent).
+  // Solid buttons carry their own fill, so they are the primary button.
+  const onAccent = outline
+    ? {
+        bg: "transparent",
+        fg: accentText,
+        border: accentText,
+        bgHover: accentText,
+        fgHover: inputs.accent,
+      }
+    : {
+        bg: inputs.primary,
+        fg: primaryText,
+        border: inputs.primary,
+        bgHover: solidHover.fill,
+        fgHover: solidHover.text,
+      }
 
   const light: TokenMap = {
     // Semantic: the shadcn set.
@@ -225,7 +245,9 @@ export function deriveTheme(
     "--muted": p.muted,
     "--muted-foreground": p.mutedForeground,
     "--accent": inputs.accent,
-    "--accent-foreground": readableOn(inputs.accent, ink),
+    "--accent-foreground": accentText,
+    "--accent-hover": accentHover.fill,
+    "--accent-hover-foreground": accentHover.text,
     "--destructive": DESTRUCTIVE,
     "--destructive-text": nudgeToContrast(DESTRUCTIVE, p.worstSurface, AA_TEXT),
     "--border": p.border,
@@ -262,12 +284,13 @@ export function deriveTheme(
     "--btn-fg": outline ? p.link : primaryText,
     "--btn-border-color": inputs.primary,
     "--btn-border-width": outline ? "2px" : "0px",
-    "--btn-bg-hover": outline ? inputs.primary : solidHover,
-    "--btn-fg-hover": outline
-      ? primaryText
-      : contrastRatio(primaryText, solidHover) >= AA_TEXT
-        ? primaryText
-        : readableOn(solidHover, ink),
+    "--btn-bg-hover": outline ? inputs.primary : solidHover.fill,
+    "--btn-fg-hover": outline ? primaryText : solidHover.text,
+    "--btn-on-accent-bg": onAccent.bg,
+    "--btn-on-accent-fg": onAccent.fg,
+    "--btn-on-accent-border-color": onAccent.border,
+    "--btn-on-accent-bg-hover": onAccent.bgHover,
+    "--btn-on-accent-fg-hover": onAccent.fgHover,
 
     // Component: cards, inputs, sections.
     "--card-radius": CARD_RADIUS[inputs.cardCorners],
@@ -283,6 +306,22 @@ export function deriveTheme(
   return {
     schemes: { light },
     reducedMotion: { "--duration": "0ms", "--btn-lift": "0px" },
+  }
+}
+
+/**
+ * A solid fill's hover: darker when its text is white, lighter otherwise,
+ * with the text kept if it still reaches AA on the moved fill.
+ */
+function hoverOf(
+  fill: string,
+  text: string,
+  ink: string
+): { fill: string; text: string } {
+  const moved = mix(fill, text === WHITE ? BLACK : WHITE, 0.15)
+  return {
+    fill: moved,
+    text: contrastRatio(text, moved) >= AA_TEXT ? text : readableOn(moved, ink),
   }
 }
 

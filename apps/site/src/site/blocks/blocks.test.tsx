@@ -199,4 +199,33 @@ describe("<BlockButton>", () => {
     expect(two.className).toContain("bg-(--btn-bg) text-(--btn-fg)")
     expect(two.getAttribute("href")).toBe("https://x.test")
   })
+
+  it("onAccent is the primary button as drawn on the accent colour", () => {
+    const { getByRole } = render(
+      <BlockButton link={{ label: "Three", href: "/3" }} tone="onAccent" />
+    )
+    const three = getByRole("link", { name: "Three" })
+    expect(three.className).toContain(
+      "bg-(--btn-on-accent-bg) text-(--btn-on-accent-fg)"
+    )
+    expect(three.className).toContain("border-(--btn-on-accent-border-color)")
+    expect(three.className).toContain("hover:bg-(--btn-on-accent-bg-hover)")
+    expect(three.className).toContain("hover:text-(--btn-on-accent-fg-hover)")
+    // Not the tokens for the page: an Outline label there is not readable here.
+    expect(three.className).not.toMatch(/\(--btn-(bg|fg)(-hover)?\)/)
+  })
+
+  it.each([
+    ["primary", "bg-accent", "bg-accent"],
+    ["secondary", "bg-(--btn-bg)", "bg-(--btn-on-accent-bg)"],
+    ["inverted", "bg-(--btn-on-accent-bg)", "bg-(--btn-bg)"],
+  ] as const)(
+    "a %s Call to action draws a button that reads on its panel",
+    (style, expected, notExpected) => {
+      const { getByRole } = render(<Block block={cta({ style })} index={1} />)
+      const className = getByRole("link", { name: "Book now" }).className
+      expect(className).toContain(expected)
+      if (notExpected !== expected) expect(className).not.toContain(notExpected)
+    }
+  )
 })

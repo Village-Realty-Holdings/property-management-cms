@@ -6,7 +6,8 @@ import { parseFontKey } from "./fontKeys"
  * Theme counts: an old version in the history that used the Font does not
  * keep it (otherwise a Font once used could never be deleted). Restoring such
  * a version after the Font is gone falls back to the Classic font and says so
- * in the version's summary (see restoreThemeVersion).
+ * in the version's summary (see restoreThemeVersion). The Fonts screen names
+ * those versions in its delete confirmation (earlierVersionsUsingFonts).
  */
 export const themeFontUsage: FontUsageFinder = async (
   fontId,

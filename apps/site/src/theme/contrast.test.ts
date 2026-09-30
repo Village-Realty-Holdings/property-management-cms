@@ -4,12 +4,13 @@ import { contrastRatio } from "./colour"
 import {
   applyFix,
   contrastWarnings,
+  TEXT_PAIRS,
   textPairFailures,
   type ContrastWarning,
 } from "./contrast"
 import { deriveTheme } from "./derive"
 import type { ThemeInputs } from "./inputs"
-import { HARBOUR } from "./presets"
+import { HARBOUR, PRESETS } from "./presets"
 
 const fonts = { heading: "serif", body: "sans-serif" }
 const inputs = (over: Partial<ThemeInputs> = {}): ThemeInputs => ({
@@ -150,5 +151,60 @@ describe("textPairFailures", () => {
       background: "--primary",
     })
     expect(failures[0]!.ratio).toBeLessThan(4.5)
+  })
+})
+
+describe("buttons on every surface a Block puts them on", () => {
+  const pairs = (names: string[]) =>
+    names.every((name) =>
+      TEXT_PAIRS.some(([fg, bg]) => fg === name || bg === name)
+    )
+
+  it("checks the accent button's hover and the button on the accent panel", () => {
+    expect(
+      pairs([
+        "--accent-hover-foreground",
+        "--btn-on-accent-fg",
+        "--btn-on-accent-fg-hover",
+      ])
+    ).toBe(true)
+  })
+
+  it.each(
+    PRESETS.flatMap(
+      (p) =>
+        [
+          [p.name, p, "solid"],
+          [p.name, p, "outline"],
+        ] as const
+    )
+  )("%s passes AA with %s", (_, preset, buttonStyle) => {
+    const tokens = deriveTheme({ ...preset.inputs, buttonStyle }, fonts).schemes
+      .light
+    expect(textPairFailures(tokens)).toEqual([])
+  })
+
+  it("an outline label left in the link colour fails on the accent panel", () => {
+    const tokens = {
+      ...deriveTheme({ ...HARBOUR.inputs, buttonStyle: "outline" }, fonts)
+        .schemes.light,
+    }
+    tokens["--btn-on-accent-fg"] = tokens["--accent"]!
+    const failures = textPairFailures(tokens)
+    expect(failures).toHaveLength(1)
+    expect(failures[0]).toMatchObject({ foreground: "--btn-on-accent-fg" })
+    expect(failures[0]!.ratio).toBeLessThan(4.5)
+  })
+
+  it("a transparent button sits on the panel it is drawn on, not the page", () => {
+    const tokens = {
+      ...deriveTheme({ ...HARBOUR.inputs, buttonStyle: "outline" }, fonts)
+        .schemes.light,
+      "--accent": "#ffffff",
+      "--btn-on-accent-fg": "#ffffff",
+    }
+    expect(textPairFailures(tokens).map((f) => f.foreground)).toContain(
+      "--btn-on-accent-fg"
+    )
   })
 })
