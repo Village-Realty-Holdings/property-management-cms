@@ -35,5 +35,5 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function SitePage(props: Props) {
   const page = await pageFor(props)
   if (!page) notFound()
-  return <Blocks blocks={page.layout} />
+  return <Blocks blocks={page.blocks} />
 }

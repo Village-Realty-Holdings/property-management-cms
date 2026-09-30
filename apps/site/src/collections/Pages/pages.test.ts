@@ -23,7 +23,7 @@ afterAll(() => t?.teardown())
 const staffUser = () => ({ ...staff, collection: "users" as const })
 const asVisitor = { overrideAccess: false, user: null } as const
 
-const heroLayout = [{ blockType: "hero" as const, heading: "Welcome" }]
+const heroBlocks = [{ blockType: "hero" as const, heading: "Welcome" }]
 
 describe("Page paths", () => {
   it.each([
@@ -51,11 +51,23 @@ describe("Page paths", () => {
   it("fills the path from the title on create", async () => {
     const page = await payload.create({
       collection: "pages",
-      data: { title: "Our Story", path: "", layout: heroLayout },
+      data: { title: "Our Story", path: "", blocks: heroBlocks },
       overrideAccess: false,
       user: staffUser(),
     })
     expect(page.path).toBe("/our-story")
+  })
+
+  it("stores the Page's Blocks under `blocks`", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: { title: "Blocks page", path: "/blocks-page", blocks: heroBlocks },
+      overrideAccess: false,
+      user: staffUser(),
+    })
+    const read = await payload.findByID({ collection: "pages", id: page.id })
+    expect(read.blocks?.map((b) => b.blockType)).toEqual(["hero"])
+    expect(read).not.toHaveProperty("layout")
   })
 
   it("rejects a path another Page uses", async () => {

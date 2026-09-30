@@ -14,7 +14,7 @@ export default async function NewPage() {
     <PageEditor
       id={null}
       status="new"
-      initial={{ ...emptyPage, layout: [emptyBlock("hero")] }}
+      initial={{ ...emptyPage, blocks: [emptyBlock("hero")] }}
       media={await mediaOptions(staff)}
       dependents={[]}
     />

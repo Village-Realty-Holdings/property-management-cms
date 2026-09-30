@@ -83,7 +83,7 @@ export async function openScratchSite(): Promise<ScratchSite> {
       const data = {
         title: SAMPLE_PAGE_TITLE,
         path: SAMPLE_PAGE_PATH,
-        layout: SAMPLE_BLOCKS,
+        blocks: SAMPLE_BLOCKS,
         _status: "published" as const,
       }
       if (docs[0]) {

@@ -1,7 +1,7 @@
 import type { Page } from "../../payload-types"
 
 /** A Block as stored on a Page. */
-export type PageBlock = NonNullable<Page["layout"]>[number]
+export type PageBlock = NonNullable<Page["blocks"]>[number]
 
 /** Where a Block sits: its position sets heading levels and preloading. */
 export type BlockContext = { index: number }

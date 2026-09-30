@@ -106,7 +106,7 @@ describe.skipIf(!hasDatabase)("three Sites migrating from zero", () => {
     title,
     path: "/",
     _status: "published" as const,
-    layout: [{ blockType: "hero" as const, heading: title }],
+    blocks: [{ blockType: "hero" as const, heading: title }],
   })
 
   const payloadOf = (site: keyof typeof SITES) => sites[site]!.payload

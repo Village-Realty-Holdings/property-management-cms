@@ -142,7 +142,7 @@ export interface Page {
    * URL path on the Site: "/" for Home, "/about". Filled in from the title when left empty.
    */
   path: string;
-  layout?: (HeroBlock | RichTextBlock | CallToActionBlock)[] | null;
+  blocks?: (HeroBlock | RichTextBlock | CallToActionBlock)[] | null;
   seo?: {
     /**
      * Shown in search results and the browser tab. Defaults to the Page title. Up to 60 characters.
@@ -401,7 +401,7 @@ export interface PayloadMigration {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   path?: T;
-  layout?:
+  blocks?:
     | T
     | {
         hero?: T | HeroBlockSelect<T>;

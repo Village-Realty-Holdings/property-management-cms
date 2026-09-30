@@ -33,7 +33,7 @@ const markdown = [
 const values: PageValues = {
   title: "About",
   path: "/about",
-  layout: [
+  blocks: [
     {
       blockType: "hero",
       heading: "About us",
@@ -75,22 +75,22 @@ describe("the Admin's Page form", () => {
       description: "About Pine Lodge",
       image: null,
     })
-    expect(back.layout.map((block) => block.blockType)).toEqual([
+    expect(back.blocks.map((block) => block.blockType)).toEqual([
       "hero",
       "richText",
       "callToAction",
     ])
-    expect(back.layout[0]).toMatchObject({
+    expect(back.blocks[0]).toMatchObject({
       heading: "About us",
       cta: { label: "Book", href: "/book" },
     })
-    expect(back.layout[2]).toMatchObject({
+    expect(back.blocks[2]).toMatchObject({
       style: "inverted",
       button: { href: "tel:+15550100100" },
     })
 
     const text =
-      back.layout[1]!.blockType === "richText" ? back.layout[1]!.markdown : ""
+      back.blocks[1]!.blockType === "richText" ? back.blocks[1]!.markdown : ""
     expect(text).toContain("## Our story")
     expect(text).toContain("**first cabin**")
     expect(text).toMatch(/- Hot tubs/)

@@ -46,7 +46,7 @@ export const Pages: CollectionConfig = {
       },
     },
     {
-      name: "layout",
+      name: "blocks",
       label: "Blocks",
       type: "blocks",
       labels: { singular: "Block", plural: "Blocks" },

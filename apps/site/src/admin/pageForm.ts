@@ -42,7 +42,7 @@ export type BlockValues = HeroValues | RichTextValues | CallToActionValues
 export type PageValues = {
   title: string
   path: string
-  layout: BlockValues[]
+  blocks: BlockValues[]
   seo: { title: string; description: string; image: number | null }
 }
 
@@ -94,7 +94,7 @@ export function emptyBlock(blockType: BlockValues["blockType"]): BlockValues {
 export const emptyPage: PageValues = {
   title: "",
   path: "",
-  layout: [],
+  blocks: [],
   seo: { title: "", description: "", image: null },
 }
 
@@ -113,8 +113,8 @@ export async function pageToValues(
   page: Page,
   toMarkdown: (data: unknown) => Promise<string>
 ): Promise<PageValues> {
-  const layout = await Promise.all(
-    (page.layout ?? []).map(async (block): Promise<BlockValues> => {
+  const blocks = await Promise.all(
+    (page.blocks ?? []).map(async (block): Promise<BlockValues> => {
       switch (block.blockType) {
         case "hero":
           return {
@@ -146,7 +146,7 @@ export async function pageToValues(
   return {
     title: page.title ?? "",
     path: page.path ?? "",
-    layout,
+    blocks,
     seo: {
       title: page.seo?.title ?? "",
       description: page.seo?.description ?? "",
@@ -155,15 +155,15 @@ export async function pageToValues(
   }
 }
 
-type StoredBlock = NonNullable<Page["layout"]>[number]
+type StoredBlock = NonNullable<Page["blocks"]>[number]
 
 /** Form values as Page data; rich text goes through `fromMarkdown`. */
 export async function valuesToPageData(
   values: PageValues,
   fromMarkdown: (markdown: string) => Promise<unknown>
 ) {
-  const layout = await Promise.all(
-    values.layout.map(async (block): Promise<StoredBlock> => {
+  const blocks = await Promise.all(
+    values.blocks.map(async (block): Promise<StoredBlock> => {
       const id = block.id ? { id: block.id } : {}
       switch (block.blockType) {
         case "hero":
@@ -198,7 +198,7 @@ export async function valuesToPageData(
   return {
     title: values.title,
     path: values.path,
-    layout,
+    blocks,
     seo: {
       title: values.seo.title || null,
       description: values.seo.description || null,

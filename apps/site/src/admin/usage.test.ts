@@ -15,11 +15,11 @@ const page = (
   id: number,
   title: string,
   extra: Partial<Page> = {}
-): Pick<Page, "id" | "title" | "path" | "layout" | "seo"> => ({
+): Pick<Page, "id" | "title" | "path" | "blocks" | "seo"> => ({
   id,
   title,
   path: `/p${id}`,
-  layout: [],
+  blocks: [],
   ...extra,
 })
 
@@ -51,7 +51,7 @@ describe("mediaDependents", () => {
       pages: [
         page(1, "Home v2", { seo: { image: 9 } }),
         page(1, "Home", {
-          layout: [{ blockType: "hero", heading: "Hi", image: 9 }],
+          blocks: [{ blockType: "hero", heading: "Hi", image: 9 }],
         }),
       ],
     })
@@ -70,7 +70,7 @@ describe("mediaDependents", () => {
       seo: {} as Seo,
       pages: [
         page(1, "Home", {
-          layout: [
+          blocks: [
             { blockType: "hero", heading: "Hi", image: 9 },
             { blockType: "hero", heading: "Again", image: 9 },
           ],
@@ -95,7 +95,7 @@ describe("pagesLinkingTo", () => {
   const withButton = (id: number, title: string, href: string, own = false) =>
     page(id, title, {
       path: own ? href : `/p${id}`,
-      layout: [
+      blocks: [
         {
           blockType: "callToAction",
           heading: "Go",
@@ -125,7 +125,7 @@ describe("pagesLinkingTo", () => {
     const result = pagesLinkingTo("/", 1, [
       withButton(1, "Home", "/"),
       page(2, "About", {
-        layout: [{ blockType: "hero", heading: "x", cta: { href: "/" } }],
+        blocks: [{ blockType: "hero", heading: "x", cta: { href: "/" } }],
       }),
     ])
     expect(result.map((d) => d.name)).toEqual(["About"])
@@ -184,14 +184,14 @@ describe("looking things up in the database", () => {
     const saved = await savePageAs(t.payload, access, {
       id: null,
       intent: "publish",
-      values: { ...emptyPage, title: "Home", path: "/", layout: [hero] },
+      values: { ...emptyPage, title: "Home", path: "/", blocks: [hero] },
     })
     await savePageAs(t.payload, access, {
       id: saved.id!,
       intent: "draft",
       values: {
         ...saved.values!,
-        layout: [{ ...saved.values!.layout[0]!, image: null } as never],
+        blocks: [{ ...saved.values!.blocks[0]!, image: null } as never],
       },
     })
 
@@ -210,7 +210,7 @@ describe("looking things up in the database", () => {
         ...emptyPage,
         title: "Stays",
         path: "/stays",
-        layout: [
+        blocks: [
           {
             ...emptyBlock("callToAction"),
             heading: "Book",

@@ -38,14 +38,14 @@ const about: PageValues = {
   ...emptyPage,
   title: "About",
   path: "/about",
-  layout: [
+  blocks: [
     { ...(emptyBlock("hero") as HeroValues), id: "b1", heading: "About us" },
   ],
 }
 
 const stored = (values: PageValues): PageValues => ({
   ...values,
-  layout: values.layout.map((block) => ({ ...block, id: block.id ?? "gen1" })),
+  blocks: values.blocks.map((block) => ({ ...block, id: block.id ?? "gen1" })),
 })
 
 beforeEach(() => {
@@ -344,8 +344,8 @@ describe("<PageEditor> field errors and descriptions", () => {
       message: "Some fields need attention.",
       fieldErrors: {
         title: "This field is required.",
-        "layout.0.heading": "This field is required.",
-        "layout.0.cta.href": "Enter a path or a URL.",
+        "blocks.0.heading": "This field is required.",
+        "blocks.0.cta.href": "Enter a path or a URL.",
         "seo.title": "Too long.",
         "seo.description": "Too long.",
       },
@@ -404,11 +404,11 @@ describe("<PageEditor> field errors and descriptions", () => {
     actions.savePage.mockResolvedValue({
       ok: false,
       message: "Some fields need attention.",
-      fieldErrors: { "seo.image": "Pick an image.", "layout.0.style": "Bad." },
+      fieldErrors: { "seo.image": "Pick an image.", "blocks.0.style": "Bad." },
     })
     const user = userEvent.setup()
     renderEditor({
-      initial: { ...about, layout: [emptyBlock("callToAction")] },
+      initial: { ...about, blocks: [emptyBlock("callToAction")] },
     })
     await user.click(screen.getByRole("button", { name: "Save draft" }))
     await screen.findByText("Some fields need attention.")
@@ -425,7 +425,7 @@ describe("<PageEditor> field errors and descriptions", () => {
 describe("<PageEditor> Blocks by keyboard", () => {
   const three: PageValues = {
     ...about,
-    layout: [
+    blocks: [
       { ...(emptyBlock("hero") as HeroValues), id: "b1", heading: "One" },
       { ...emptyBlock("richText"), id: "b2" },
       { ...emptyBlock("callToAction"), id: "b3" },
@@ -484,7 +484,7 @@ describe("<PageEditor> Blocks by keyboard", () => {
 
   it("keeps the same fields for Blocks that are not saved yet when they move", async () => {
     const user = userEvent.setup()
-    renderEditor({ initial: { ...about, layout: [] } })
+    renderEditor({ initial: { ...about, blocks: [] } })
     await user.click(screen.getByRole("button", { name: /Hero/ }))
     await user.click(screen.getByRole("button", { name: /Call to action/ }))
     const first = within(card(1)).getByLabelText("Heading")
@@ -520,7 +520,7 @@ describe("<PageEditor> Blocks by keyboard", () => {
 
   it("moves focus to Add Block when the last Block is removed", async () => {
     const user = userEvent.setup()
-    renderEditor({ initial: { ...about, layout: [three.layout[0]!] } })
+    renderEditor({ initial: { ...about, blocks: [three.blocks[0]!] } })
     await press(user, button(1, "Remove Block"))
     await waitFor(() =>
       expect(document.activeElement).toBe(

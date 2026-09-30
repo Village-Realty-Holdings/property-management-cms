@@ -13,7 +13,7 @@ import type { Access } from "./settingsSave"
 const BRAND_HREF = "/admin/settings/brand"
 const SEO_HREF = "/admin/settings/seo"
 
-type PageUse = Pick<Page, "id" | "title" | "path" | "layout" | "seo">
+type PageUse = Pick<Page, "id" | "title" | "path" | "blocks" | "seo">
 
 /**
  * For every Media id in use: the Brand and SEO settings and the Pages that
@@ -57,7 +57,7 @@ export function mediaDependents({
       if (id == null) return
       entry.uses.set(id, (entry.uses.get(id) ?? new Set()).add(where))
     }
-    for (const block of page.layout ?? []) {
+    for (const block of page.blocks ?? []) {
       if (block.blockType === "hero") note(block.image, "hero image")
     }
     note(page.seo?.image, "SEO image")
@@ -93,7 +93,7 @@ export function pagesLinkingTo(
   return pages
     .filter((page) => page.id !== ownId)
     .filter((page) =>
-      (page.layout ?? []).some((block) => {
+      (page.blocks ?? []).some((block) => {
         const href =
           block.blockType === "hero"
             ? block.cta?.href
@@ -122,7 +122,7 @@ async function loadAllPageVersions(
   const select = {
     title: true,
     path: true,
-    layout: true,
+    blocks: true,
     seo: true,
   } as const
   const [latest, published] = await Promise.all(

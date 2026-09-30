@@ -31,7 +31,7 @@ const about: PageValues = {
   ...emptyPage,
   title: "About",
   path: "/about",
-  layout: [{ ...(emptyBlock("hero") as HeroValues), heading: "About us" }],
+  blocks: [{ ...(emptyBlock("hero") as HeroValues), heading: "About us" }],
 }
 
 const publicPage = (path: string) =>
@@ -58,7 +58,7 @@ describe("saving a Page from the Admin form", () => {
     expect(result.id).toBeGreaterThan(0)
     // The values as stored: Blocks now carry their ids.
     expect(result.values?.title).toBe("About")
-    expect(result.values?.layout[0]?.id).toBeTruthy()
+    expect(result.values?.blocks[0]?.id).toBeTruthy()
     id = result.id!
     expect((await publicPage("/about")).docs).toHaveLength(0)
   })

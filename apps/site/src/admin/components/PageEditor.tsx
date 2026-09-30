@@ -97,8 +97,8 @@ export function PageEditor({
   // Where to go once this render has settled (see the effect below).
   const [goTo, setGoTo] = useState<string | null>(null)
   const [deleted, setDeleted] = useState(false)
-  // One key per Block, in step with `values.layout`.
-  const [keys, setKeys] = useState(() => initial.layout.map(newBlockKey))
+  // One key per Block, in step with `values.blocks`.
+  const [keys, setKeys] = useState(() => initial.blocks.map(newBlockKey))
   const [announcement, setAnnouncement] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
   const pendingFocus = useRef<FocusTarget | null>(null)
@@ -162,42 +162,42 @@ export function PageEditor({
     setValues((current) => ({ ...current, [key]: value }))
   const setBlock = (index: number, block: BlockValues) =>
     set(
-      "layout",
-      values.layout.map((b, i) => (i === index ? block : b))
+      "blocks",
+      values.blocks.map((b, i) => (i === index ? block : b))
     )
   const blockLabel = (block: BlockValues) =>
     BLOCK_TYPES.find((t) => t.blockType === block.blockType)?.label ?? "Block"
   const addBlock = (blockType: BlockValues["blockType"]) => {
-    set("layout", [...values.layout, emptyBlock(blockType)])
+    set("blocks", [...values.blocks, emptyBlock(blockType)])
     setKeys((current) => [...current, newBlockKey()])
   }
   const moveBlock = (index: number, by: -1 | 1) => {
-    const layout = [...values.layout]
-    const [block] = layout.splice(index, 1)
-    layout.splice(index + by, 0, block!)
+    const blocks = [...values.blocks]
+    const [block] = blocks.splice(index, 1)
+    blocks.splice(index + by, 0, block!)
     const moved = [...keys]
     const [key] = moved.splice(index, 1)
     moved.splice(index + by, 0, key!)
     pendingFocus.current = { kind: "move", key: key!, by }
     setAnnouncement(
-      `Moved ${blockLabel(block!)} to position ${index + by + 1} of ${layout.length}.`
+      `Moved ${blockLabel(block!)} to position ${index + by + 1} of ${blocks.length}.`
     )
-    set("layout", layout)
+    set("blocks", blocks)
     setKeys(moved)
   }
   const removeBlock = (index: number) => {
-    const layout = values.layout.filter((_, i) => i !== index)
+    const blocks = values.blocks.filter((_, i) => i !== index)
     const remaining = keys.filter((_, i) => i !== index)
     // The Block before the one removed, else the one that took its place.
     const next = remaining[Math.max(index - 1, 0)]
     pendingFocus.current = next ? { kind: "block", key: next } : { kind: "add" }
-    const removed = blockLabel(values.layout[index]!)
+    const removed = blockLabel(values.blocks[index]!)
     setAnnouncement(
-      layout.length === 0
+      blocks.length === 0
         ? `Removed ${removed}. No Blocks left.`
-        : `Removed ${removed}. ${layout.length} ${layout.length === 1 ? "Block" : "Blocks"} left.`
+        : `Removed ${removed}. ${blocks.length} ${blocks.length === 1 ? "Block" : "Blocks"} left.`
     )
-    set("layout", layout)
+    set("blocks", blocks)
     setKeys(remaining)
   }
 
@@ -345,16 +345,16 @@ export function PageEditor({
               title="Blocks"
               description="The sections of the Page, top to bottom."
             >
-              {values.layout.length === 0 && (
+              {values.blocks.length === 0 && (
                 <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                   No Blocks yet. Add a Hero to start the Page.
                 </p>
               )}
-              {values.layout.map((block, index) => (
+              {values.blocks.map((block, index) => (
                 <BlockCard
                   key={keys[index]}
                   index={index}
-                  count={values.layout.length}
+                  count={values.blocks.length}
                   block={block}
                   media={media}
                   errors={errors}
@@ -474,7 +474,7 @@ function BlockCard({
   onRemove: () => void
 }) {
   const label = BLOCK_TYPES.find((t) => t.blockType === block.blockType)?.label
-  const at = (field: string) => `layout.${index}.${field}`
+  const at = (field: string) => `blocks.${index}.${field}`
   const id = (field: string) => `block-${index}-${field}`
   /** Ties a control to its FormField's description and error. */
   const aria = (
@@ -483,7 +483,7 @@ function BlockCard({
     description = false
   ) => describedBy(id(field), { description, error })
   const hasError = Object.keys(errors).some((path) =>
-    path.startsWith(`layout.${index}.`)
+    path.startsWith(`blocks.${index}.`)
   )
 
   return (
