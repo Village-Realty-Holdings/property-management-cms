@@ -47,6 +47,7 @@
     "@workspace/typescript-config": "workspace:*",
     "dotenv": "^18.0.3",
     "eslint": "^9",
+    "playwright-core": "^1.63.0",
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.11",
