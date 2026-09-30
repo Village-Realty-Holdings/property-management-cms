@@ -249,6 +249,22 @@ describe("Trust strip", () => {
     }
   )
 
+  it("sets each partner logo on a card tile on the coloured backgrounds, and bare on the page", () => {
+    for (const [background, tiled] of [
+      ["default", false],
+      ["muted", false],
+      ["primary", true],
+      ["dark", true],
+    ] as const) {
+      const { container } = render(
+        <Block block={{ ...strip, variant: "logos", background }} index={1} />
+      )
+      for (const li of container.querySelectorAll("li"))
+        expect(li.className.includes("bg-card"), background).toBe(tiled)
+      cleanup()
+    }
+  })
+
   it("paints each background from the Theme's tokens", () => {
     const { container } = render(
       <Block block={{ ...strip, background: "dark" }} index={1} />
@@ -295,6 +311,19 @@ describe("Search Hero", () => {
     expect(
       screen.getByRole("button", { name: search.searchLabel })
     ).toBeTruthy()
+  })
+
+  it("keeps the check-out from starting before the check-in, without blocking the search", async () => {
+    const user = userEvent.setup()
+    render(<Block block={search} index={0} />)
+    const checkOut = screen.getByLabelText(/check-out/i) as HTMLInputElement
+    expect(checkOut.min).toBe("")
+    await user.type(screen.getByLabelText(/check-in/i), "2026-10-10")
+    expect(checkOut.min).toBe("2026-10-10")
+    // A reversed range still searches: the form never blocks on its own validation.
+    await user.type(checkOut, "2026-10-01")
+    await user.click(screen.getByRole("button", { name: search.searchLabel }))
+    expect((await shownToast()).textContent).toMatch(/preview/i)
   })
 
   it("takes a free-text location when the Block suggests none", () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import type { FormEvent } from "react"
+import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@workspace/ui/components/button"
@@ -48,6 +48,7 @@ export function SearchHeroForm({
   context: Pick<BlockContext, "index" | "editing">
 }) {
   const id = (field: string) => `block-${context.index}-search-${field}`
+  const [checkIn, setCheckIn] = useState("")
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -63,19 +64,30 @@ export function SearchHeroForm({
     <>
       <form
         onSubmit={submit}
+        noValidate
         className="grid gap-4 rounded-(--card-radius) bg-card p-4 text-card-foreground shadow-(--card-shadow) sm:grid-cols-2 sm:p-6 lg:grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,0.7fr)_auto] lg:items-end"
       >
         <div className="flex flex-col gap-2">
           <label htmlFor={id("check-in")} className={labelClass}>
             Check-in date
           </label>
-          <Input id={id("check-in")} name="checkIn" type="date" />
+          <Input
+            id={id("check-in")}
+            name="checkIn"
+            type="date"
+            onChange={(event) => setCheckIn(event.target.value)}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor={id("check-out")} className={labelClass}>
             Check-out date
           </label>
-          <Input id={id("check-out")} name="checkOut" type="date" />
+          <Input
+            id={id("check-out")}
+            name="checkOut"
+            type="date"
+            min={checkIn || undefined}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor={id("location")} className={labelClass}>

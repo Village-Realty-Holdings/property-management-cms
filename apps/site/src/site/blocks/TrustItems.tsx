@@ -95,21 +95,37 @@ export function TrustItems({
   )
 }
 
-/** A row of partner logos, each named by its partner. */
+/**
+ * A row of partner logos, each named by its partner. Partners supply their
+ * logos for a light page, so on the coloured surfaces each sits on a card
+ * tile, where it stays legible whatever the Theme's colours are.
+ */
 export function TrustLogos({
   logos,
   label,
+  surface = "page",
 }: {
   logos: TrustLogo[]
   label?: string
+  surface?: TrustSurface
 }) {
+  const tiled = surface !== "page"
   return (
     <ul
       aria-label={label}
-      className="flex flex-wrap items-center gap-x-12 gap-y-6"
+      className={cn(
+        "flex flex-wrap items-center",
+        tiled ? "gap-4" : "gap-x-12 gap-y-6"
+      )}
     >
       {logos.map((logo, i) => (
-        <li key={i} className="flex items-center">
+        <li
+          key={i}
+          className={cn(
+            "flex items-center",
+            tiled && "rounded-(--card-radius) bg-card px-5 py-3"
+          )}
+        >
           <Image
             src={logo.url}
             alt={logo.name}

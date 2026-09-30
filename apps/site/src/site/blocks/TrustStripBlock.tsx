@@ -56,7 +56,7 @@ export function TrustStripBlock({
         </EditableText>
       )}
       {items.length > 0 && <TrustItems items={items} surface={surface} />}
-      {partners.length > 0 && <TrustLogos logos={partners} />}
+      {partners.length > 0 && <TrustLogos logos={partners} surface={surface} />}
     </BlockSection>
   )
 }
