@@ -10,6 +10,10 @@ import {
   type LayoutResult,
   type PreviewPage,
 } from "../layouts/layoutScreen"
+import {
+  makeLayoutFromPageAs,
+  type MakeLayoutResult,
+} from "../layouts/makeFromPage"
 import { requireStaff } from "../session"
 
 /**
@@ -54,4 +58,23 @@ export async function loadLayoutPreviewPage(
 ): Promise<PreviewPage | null> {
   const { payload, as } = await requireStaff()
   return loadPreviewPage(payload, as, pageId)
+}
+
+/**
+ * "Make a new Layout from this one", from the Page tab: copies the Layout
+ * under `name` and switches the Page's Draft to the copy. The Page stays
+ * unpublished; Publish is the Staff User's to press.
+ */
+export async function makeLayoutFromPageDocument(input: {
+  pageId: number
+  layoutId: number
+  name: string
+}): Promise<MakeLayoutResult> {
+  const { payload, as } = await requireStaff()
+  const result = await makeLayoutFromPageAs(payload, as, input)
+  if (result.ok) {
+    revalidatePath("/admin/layouts")
+    revalidatePath("/admin/pages")
+  }
+  return result
 }

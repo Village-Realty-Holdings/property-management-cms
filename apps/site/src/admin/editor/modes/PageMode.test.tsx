@@ -59,10 +59,11 @@ const about: PageDocument = {
   seo: { title: "", description: "", image: null },
 }
 
-const layout = {
+const main = {
   id: 3,
   name: "Main",
-  label: "Main (default)",
+  isDefault: true,
+  paths: [],
   header: [{ id: "lg", blockType: "logo" }] as never,
   footer: [],
 }
@@ -73,7 +74,7 @@ function mount(props: Partial<PageModeProps> = {}) {
       id={4}
       initial={about}
       status="draft"
-      layout={layout}
+      layouts={[main]}
       media={[]}
       pages={[]}
       dependents={[]}
@@ -313,7 +314,7 @@ describe("<PageMode> the Layout", () => {
   })
 
   it("has no Edit Layout for a Page with no Layout", () => {
-    mount({ layout: null })
+    mount({ layouts: [] })
     expect(screen.queryByRole("link", { name: "Edit Layout" })).toBeNull()
   })
 

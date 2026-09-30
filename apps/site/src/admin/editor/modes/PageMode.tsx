@@ -26,10 +26,11 @@ import { OutlinePanel } from "../OutlinePanel"
 import type { PageDocument } from "../state"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
-import { PageSettings, type ResolvedLayout } from "./PageSettings"
+import { PageTab } from "./PageTab"
+import { resolvePageLayout, type LayoutOption } from "./pageTabModel"
 import { saveProblemLines, type SaveProblem } from "./saveProblem"
 
-export type { ResolvedLayout } from "./PageSettings"
+export type { LayoutOption, ResolvedLayout } from "./pageTabModel"
 
 export type PageModeProps = {
   /** The Page's id; null for a New Page, which is not saved until its first Save. */
@@ -37,8 +38,13 @@ export type PageModeProps = {
   /** The Draft, as stored. */
   initial: PageDocument
   status: PageStatus
-  /** The Layout the Page resolves to, shown locked around the Page; null for none. */
-  layout: ResolvedLayout | null
+  /**
+   * Every Layout, with its Blocks. The Page's own is found from its path and
+   * choice as they are edited, and shown locked around the Page.
+   */
+  layouts: readonly LayoutOption[]
+  /** The panel tab to open on; the SEO screen's links ask for "page". */
+  initialTab?: "outline" | "block" | "page"
   /** The Media an image field can pick from. */
   media: readonly MediaOption[]
   /** The Pages a link field can pick from. */
@@ -57,7 +63,8 @@ export type PageModeProps = {
  *  - The status chip is Draft, Published or "Changes not published", from the
  *    last save.
  *  - The Layout is drawn around the Page, locked; "Edit Layout" opens it in
- *    Layout mode, through the unsaved-changes guard.
+ *    Layout mode, through the unsaved-changes guard. The Page tab picks which
+ *    one, and can make a new one from it.
  *  - A New Page (`id` null) is edited unsaved until its first Save, which
  *    creates it and moves the editor to its address.
  */
@@ -85,7 +92,8 @@ function PageModeEditor({
   id,
   initial,
   status: initialStatus,
-  layout,
+  layouts: initialLayouts,
+  initialTab,
   media,
   pages,
   dependents,
@@ -99,7 +107,17 @@ function PageModeEditor({
   const [status, setStatus] = useState(initialStatus)
   const [busy, setBusy] = useState<PageIntent | null>(null)
   const [problem, setProblem] = useState<SaveProblem | null>(null)
-  const [tab, setTab] = useState<string>(TABS.outline)
+  const [tab, setTab] = useState<string>(initialTab ?? TABS.outline)
+  // Layouts made from this Page in this session join the ones it can pick.
+  const [made, setMade] = useState<readonly LayoutOption[]>([])
+  const layouts = useMemo(
+    () => [...initialLayouts, ...made],
+    [initialLayouts, made]
+  )
+  const layout = useMemo(
+    () => resolvePageLayout(layouts, page.path, page.layout),
+    [layouts, page.path, page.layout]
+  )
 
   // Saving is async and the Staff User keeps typing: a save sends what was on
   // screen when it started, and reads the latest from these.
@@ -223,15 +241,24 @@ function PageModeEditor({
             id: TABS.page,
             label: "Page",
             content: (
-              <PageSettings
+              <PageTab
                 id={pageId}
                 status={status}
+                layouts={layouts}
                 layout={layout}
+                media={media}
                 dependents={dependents}
                 problem={problem}
                 busy={busy !== null}
                 onUnpublish={() => void save("unpublish")}
                 onDeleted={() => router.replace("/admin/pages")}
+                onLayoutMade={(option) => {
+                  setMade((current) => [...current, option])
+                  // The Draft now differs from what is live.
+                  setStatus((current) =>
+                    current === "published" ? "changes" : current
+                  )
+                }}
               />
             ),
           },

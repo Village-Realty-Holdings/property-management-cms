@@ -4,8 +4,8 @@ import { notFound } from "next/navigation"
 import { derivePageStatus } from "@/admin/dashboard/pageStatus"
 import { pageDocumentFromPage } from "@/admin/editor/modes/pageDocument"
 import {
+  loadLayoutOptions,
   loadPickers,
-  resolvePageLayout,
 } from "@/admin/editor/modes/loadPageMode"
 import { PageMode } from "@/admin/editor/modes/PageMode"
 import { requireStaff } from "@/admin/session"
@@ -14,11 +14,18 @@ import { editingUrl } from "@/site/editing/flag"
 
 export const metadata: Metadata = { title: "Edit Page" }
 
-type Props = { params: Promise<{ id: string }> }
+type Props = {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string | string[] }>
+}
 
-/** A Page's latest Draft, in the Visual Editor's Page mode. */
-export default async function EditPage({ params }: Props) {
+/**
+ * A Page's latest Draft, in the Visual Editor's Page mode. `?tab=page` opens
+ * the Page tab, which is where the SEO screen's links go.
+ */
+export default async function EditPage({ params, searchParams }: Props) {
   const { id } = await params
+  const { tab } = await searchParams
   const staff = await requireStaff()
   const { payload, as } = staff
 
@@ -35,8 +42,8 @@ export default async function EditPage({ params }: Props) {
     ...as,
   })
 
-  const [layout, pickers, dependents] = await Promise.all([
-    resolvePageLayout(payload, draft),
+  const [layouts, pickers, dependents] = await Promise.all([
+    loadLayoutOptions(payload),
     loadPickers(staff),
     loadPageDependents(payload, as, { id: pageId, path: draft.path }),
   ])
@@ -50,7 +57,8 @@ export default async function EditPage({ params }: Props) {
         published: published._status,
         latest: draft._status,
       })}
-      layout={layout}
+      layouts={layouts}
+      initialTab={tab === "page" ? "page" : undefined}
       dependents={dependents}
       canvasSrc={editingUrl(draft.path)}
       {...pickers}

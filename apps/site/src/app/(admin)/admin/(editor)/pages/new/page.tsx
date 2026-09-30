@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 
 import { newPageDocument, newPagePath } from "@/admin/editor/modes/pageDocument"
 import {
+  loadLayoutOptions,
   loadPickers,
-  resolvePageLayout,
 } from "@/admin/editor/modes/loadPageMode"
 import { PageMode } from "@/admin/editor/modes/PageMode"
 import { requireStaff } from "@/admin/session"
@@ -35,10 +35,7 @@ export default async function NewPage() {
       id={null}
       initial={initial}
       status="draft"
-      layout={await resolvePageLayout(payload, {
-        path: initial.path,
-        layout: { mode: "route" },
-      })}
+      layouts={await loadLayoutOptions(payload)}
       dependents={[]}
       canvasSrc={editingUrl(initial.path)}
       {...await loadPickers(staff)}
