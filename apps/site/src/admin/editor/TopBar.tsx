@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@workspace/ui/components/button"
 
 import { ConfirmDialog } from "../kit"
 import { useEditor } from "./EditorProvider"
-import { PagePicker } from "./PagePicker"
+import { PagePicker, type PickerPage } from "./PagePicker"
 
 export type EditorMode = "page" | "layout" | "theme"
 
@@ -32,6 +32,7 @@ export function TopBar({
   goesLiveOn,
   backHref,
   actions,
+  onPickPage,
 }: {
   mode: EditorMode
   name: string
@@ -39,6 +40,8 @@ export function TopBar({
   goesLiveOn?: number
   backHref: string
   actions?: ReactNode
+  /** What choosing a Page in the Ctrl-K picker does; omit to open it. */
+  onPickPage?: (page: PickerPage) => void
 }) {
   const { undo, redo, discard, canUndo, canRedo, isDirty } = useEditor()
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
@@ -65,7 +68,7 @@ export function TopBar({
         </span>
       )}
 
-      <PagePicker />
+      <PagePicker onPick={onPickPage} />
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <Button

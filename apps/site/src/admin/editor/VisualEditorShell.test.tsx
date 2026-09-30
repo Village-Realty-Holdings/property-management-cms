@@ -27,6 +27,11 @@ const router = vi.hoisted(() => ({
   prefetch: vi.fn(),
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => router }))
+vi.mock("../actions/pagePicker", () => ({
+  searchPages: async () => [
+    { id: 9, title: "Stays", path: "/stays", status: "published" },
+  ],
+}))
 
 import { EditorProvider, useEditor } from "./EditorProvider"
 import type { EditorDocument } from "./state"
@@ -77,6 +82,12 @@ function mount(props: Partial<Parameters<typeof VisualEditorShell>[0]> = {}) {
 }
 
 beforeAll(() => {
+  // The Page picker's command list measures itself.
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
   Element.prototype.scrollIntoView ??= () => {}
 })
 beforeEach(() => {
@@ -128,12 +139,15 @@ describe("the top bar", () => {
     expect(within(bar()).getByText("Goes live on 2 Pages")).toBeTruthy()
   })
 
-  it("has the Page picker's button, not yet usable", () => {
+  it("has the Page picker's button, which opens the picker", async () => {
+    const user = userEvent.setup()
     mount()
     const button = within(bar()).getByRole("button", {
       name: /Pages\s+Ctrl K/,
     })
-    expect(isDisabled(button)).toBe(true)
+    expect(isDisabled(button)).toBe(false)
+    await user.click(button)
+    expect(await screen.findByRole("dialog", { name: /Page/ })).toBeTruthy()
   })
 })
 
@@ -252,6 +266,48 @@ describe("the canvas", () => {
     mount()
     expect(screen.getByRole("main").id).toBe("admin-main")
     expect(screen.getByRole("main").contains(frame())).toBe(true)
+  })
+})
+
+describe("the Ctrl-K Page picker", () => {
+  const pickStays = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.keyboard("{Control>}k{/Control}")
+    await user.click(await screen.findByRole("option", { name: /Stays/ }))
+  }
+
+  it("opens the Page picked in the Visual Editor while clean", async () => {
+    const user = userEvent.setup()
+    mount()
+    await pickStays(user)
+    expect(router.push).toHaveBeenCalledWith("/admin/pages/9")
+  })
+
+  it("asks first while dirty, and leaves only on Discard", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(screen.getByRole("button", { name: "Make an edit" }))
+    await pickStays(user)
+    const dialog = await screen.findByRole("alertdialog")
+    expect(router.push).not.toHaveBeenCalled()
+    await user.click(
+      within(dialog).getByRole("button", { name: "Discard changes" })
+    )
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith("/admin/pages/9")
+    )
+  })
+
+  it("hands the Page to the mode's own handler instead, when it has one", async () => {
+    const user = userEvent.setup()
+    const onPickPage = vi.fn()
+    mount({ onPickPage })
+    await user.click(screen.getByRole("button", { name: "Make an edit" }))
+    await pickStays(user)
+    expect(onPickPage).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 9, path: "/stays" })
+    )
+    expect(router.push).not.toHaveBeenCalled()
+    expect(screen.queryByRole("alertdialog")).toBeNull()
   })
 })
 
