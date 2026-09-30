@@ -15,7 +15,9 @@ const bySlug = (slug: string): Block => {
 /** The field named `path` ("items.title" reaches into an array or group). */
 function field(fields: Field[], path: string): Field {
   const [head, ...rest] = path.split(".")
-  const found = fields.find((f) => "name" in f && f.name === head)
+  const found = fields
+    .flatMap((f) => (f.type === "row" ? f.fields : [f]))
+    .find((f) => "name" in f && f.name === head)
   if (!found) throw new Error(`no field ${head}`)
   if (rest.length === 0) return found
   if (!("fields" in found)) throw new Error(`${head} has no fields`)
@@ -45,12 +47,22 @@ describe("the Page Blocks", () => {
       "searchHero",
       "richText",
       "callToAction",
+      "featuredRentals",
+      "largeGroupRentals",
+      "rentalGrid",
       "steps",
       "features",
       "amenities",
       "stats",
       "imageText",
+      "testimonials",
       "trustStrip",
+      "ownerBand",
+      "newsletter",
+      "blogTeaser",
+      "location",
+      "faq",
+      "form",
     ]
     expect(slugs.filter((s) => wanted.includes(s))).toEqual(wanted)
     expect(new Set(slugs).size).toBe(slugs.length)
@@ -267,9 +279,214 @@ describe("the background field on the new Blocks", () => {
       "stats",
       "imageText",
       "trustStrip",
+      "featuredRentals",
+      "largeGroupRentals",
+      "rentalGrid",
+      "testimonials",
+      "ownerBand",
+      "newsletter",
+      "blogTeaser",
+      "location",
+      "faq",
+      "form",
     ]) {
       const background = loose(bySlug(slug).fields, "background")
       expect(optionValues(background), slug).toEqual([...backgrounds])
     }
+  })
+})
+
+describe("Featured rentals", () => {
+  it("has a heading, a count of 1 to 12 starting at 3, and a carousel or grid layout starting as a grid", () => {
+    const { fields } = bySlug("featuredRentals")
+    expect(isRequired(fields, "heading")).toBe(true)
+    const count = loose(fields, "count")
+    expect(count.type).toBe("number")
+    expect(count.required).toBe(true)
+    expect(count.min).toBe(1)
+    expect(count.max).toBe(12)
+    expect(count.defaultValue).toBe(3)
+    const variant = loose(fields, "variant")
+    expect(optionValues(variant)).toEqual(["carousel", "grid"])
+    expect(variant.defaultValue).toBe("grid")
+    expect(variant.required).toBe(true)
+  })
+})
+
+describe("Large-group rentals", () => {
+  it("has a heading and a minimum sleeps of at least 2", () => {
+    const { fields } = bySlug("largeGroupRentals")
+    expect(isRequired(fields, "heading")).toBe(true)
+    const minSleeps = loose(fields, "minSleeps")
+    expect(minSleeps.type).toBe("number")
+    expect(minSleeps.required).toBe(true)
+    expect(minSleeps.min).toBeGreaterThanOrEqual(2)
+    expect(minSleeps.defaultValue).toBeGreaterThanOrEqual(minSleeps.min)
+  })
+})
+
+describe("Rental grid", () => {
+  it("has a heading and a page size of 3 to 24 starting at 6", () => {
+    const { fields } = bySlug("rentalGrid")
+    expect(isRequired(fields, "heading")).toBe(true)
+    const pageSize = loose(fields, "pageSize")
+    expect(pageSize.type).toBe("number")
+    expect(pageSize.required).toBe(true)
+    expect(pageSize.min).toBe(3)
+    expect(pageSize.max).toBe(24)
+    expect(pageSize.defaultValue).toBe(6)
+  })
+})
+
+describe("Testimonials", () => {
+  it("has quotes with a name, a role line and a 1 to 5 star rating", () => {
+    const { fields } = bySlug("testimonials")
+    const quotes = loose(fields, "testimonials")
+    expect(quotes.type).toBe("array")
+    expect(quotes.required).toBe(true)
+    expect(quotes.minRows).toBeGreaterThanOrEqual(2)
+    expect(quotes.maxRows).toBeGreaterThanOrEqual(6)
+    expect(quotes.defaultValue.length).toBeGreaterThanOrEqual(quotes.minRows)
+    for (const name of ["quote", "name", "role", "rating"])
+      expect(isRequired(fields, `testimonials.${name}`), name).toBe(true)
+    expect(field(fields, "testimonials.quote").type).toBe("textarea")
+    const rating = loose(fields, "testimonials.rating")
+    expect(rating.type).toBe("number")
+    expect(rating.min).toBe(1)
+    expect(rating.max).toBe(5)
+    expect(rating.defaultValue).toBe(5)
+  })
+
+  it("is a carousel or a grid, starting as a carousel", () => {
+    const variant = loose(bySlug("testimonials").fields, "variant")
+    expect(optionValues(variant)).toEqual(["carousel", "grid"])
+    expect(variant.defaultValue).toBe("carousel")
+    expect(variant.required).toBe(true)
+  })
+
+  it("starts its rows with ratings in range", () => {
+    const quotes = loose(bySlug("testimonials").fields, "testimonials")
+    for (const row of quotes.defaultValue as Array<{ rating: number }>) {
+      expect(row.rating).toBeGreaterThanOrEqual(1)
+      expect(row.rating).toBeLessThanOrEqual(5)
+    }
+  })
+})
+
+describe("Owner band", () => {
+  it("has a pitch, a list of benefits and a call to action", () => {
+    const { fields } = bySlug("ownerBand")
+    expect(isRequired(fields, "heading")).toBe(true)
+    expect(field(fields, "pitch").type).toBe("textarea")
+    const benefits = loose(fields, "benefits")
+    expect(benefits.required).toBe(true)
+    expect(benefits.minRows).toBeGreaterThanOrEqual(2)
+    expect(benefits.defaultValue.length).toBeGreaterThanOrEqual(
+      benefits.minRows
+    )
+    expect(isRequired(fields, "benefits.text")).toBe(true)
+    expect(field(fields, "cta.label").type).toBe("text")
+    expect(field(fields, "cta.href").type).toBe("text")
+  })
+
+  it("sits on the Dark surface unless told otherwise", () => {
+    const background = loose(bySlug("ownerBand").fields, "background")
+    expect(background.defaultValue).toBe("dark")
+  })
+})
+
+describe("Newsletter", () => {
+  it("is offered on a Page, with its heading, text, placeholder and button label", () => {
+    const { fields } = bySlug("newsletter")
+    expect(isRequired(fields, "heading")).toBe(true)
+    expect(field(fields, "text").type).toBe("textarea")
+    expect(loose(fields, "emailPlaceholder").defaultValue).toBeTruthy()
+    expect(isRequired(fields, "buttonLabel")).toBe(true)
+  })
+})
+
+describe("Blog teaser", () => {
+  it("has a heading and an optional link to all posts", () => {
+    const { fields } = bySlug("blogTeaser")
+    expect(isRequired(fields, "heading")).toBe(true)
+    expect(field(fields, "allPostsLink.label").type).toBe("text")
+    expect(field(fields, "allPostsLink.href").type).toBe("text")
+    expect(isRequired(fields, "allPostsLink.href")).toBe(false)
+  })
+})
+
+describe("Location", () => {
+  it("has an address, text and a map card or a map image, starting as the card", () => {
+    const { fields } = bySlug("location")
+    expect(isRequired(fields, "heading")).toBe(true)
+    expect(field(fields, "address").type).toBe("textarea")
+    expect(isRequired(fields, "address")).toBe(true)
+    expect(field(fields, "text").type).toBe("textarea")
+    const map = loose(fields, "map")
+    expect(optionValues(map)).toEqual(["card", "image"])
+    expect(map.defaultValue).toBe("card")
+    expect(loose(fields, "mapImage").relationTo).toBe("media")
+  })
+
+  it("shows the map image field, and asks for one, only for the image map", () => {
+    const { fields } = bySlug("location")
+    const image = loose(fields, "mapImage")
+    expect(image.admin.condition({}, { map: "image" })).toBe(true)
+    expect(image.admin.condition({}, { map: "card" })).toBe(false)
+    expect(image.validate(undefined, { siblingData: { map: "card" } })).toBe(
+      true
+    )
+    expect(
+      image.validate(undefined, { siblingData: { map: "image" } })
+    ).toMatch(/image/i)
+    expect(image.validate(3, { siblingData: { map: "image" } })).toBe(true)
+  })
+})
+
+describe("FAQ", () => {
+  it("has question and answer pairs, each one required", () => {
+    const { fields } = bySlug("faq")
+    expect(isRequired(fields, "heading")).toBe(true)
+    const questions = loose(fields, "questions")
+    expect(questions.type).toBe("array")
+    expect(questions.required).toBe(true)
+    expect(questions.minRows).toBeGreaterThanOrEqual(2)
+    expect(questions.defaultValue.length).toBeGreaterThanOrEqual(
+      questions.minRows
+    )
+    expect(isRequired(fields, "questions.question")).toBe(true)
+    expect(field(fields, "questions.answer").type).toBe("textarea")
+    expect(isRequired(fields, "questions.answer")).toBe(true)
+  })
+})
+
+describe("Form", () => {
+  it("offers the spec's six fields to choose from, at least one picked", () => {
+    const { fields } = bySlug("form")
+    const chosen = loose(fields, "formFields")
+    expect(chosen.type).toBe("select")
+    expect(chosen.hasMany).toBe(true)
+    expect(chosen.required).toBe(true)
+    expect(optionValues(chosen)).toEqual([
+      "name",
+      "email",
+      "phone",
+      "message",
+      "propertyAddress",
+      "dates",
+    ])
+    expect(chosen.defaultValue.length).toBeGreaterThan(0)
+    for (const value of chosen.defaultValue)
+      expect(optionValues(chosen)).toContain(value)
+  })
+
+  it("has a heading, an intro, a submit label and a success message", () => {
+    const { fields } = bySlug("form")
+    expect(isRequired(fields, "heading")).toBe(true)
+    expect(field(fields, "intro").type).toBe("textarea")
+    expect(isRequired(fields, "submitLabel")).toBe(true)
+    expect(loose(fields, "submitLabel").defaultValue).toBeTruthy()
+    expect(isRequired(fields, "successMessage")).toBe(true)
+    expect(loose(fields, "successMessage").defaultValue).toBeTruthy()
   })
 })

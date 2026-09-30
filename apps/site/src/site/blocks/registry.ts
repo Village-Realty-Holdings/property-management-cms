@@ -1,14 +1,24 @@
 import { createElement } from "react"
 
 import { AmenitiesBlock } from "./AmenitiesBlock"
+import { BlogTeaserBlock } from "./BlogTeaserBlock"
 import { CallToActionBlock } from "./CallToActionBlock"
+import { FaqBlock } from "./FaqBlock"
+import { FeaturedRentalsBlock } from "./FeaturedRentalsBlock"
 import { FeaturesBlock } from "./FeaturesBlock"
+import { FormBlock } from "./FormBlock"
 import { HeroBlock } from "./HeroBlock"
 import { ImageTextBlock } from "./ImageTextBlock"
+import { LargeGroupRentalsBlock } from "./LargeGroupRentalsBlock"
+import { LocationBlock } from "./LocationBlock"
+import { NewsletterBlock } from "./NewsletterBlock"
+import { OwnerBandBlock } from "./OwnerBandBlock"
+import { RentalGridBlock } from "./RentalGridBlock"
 import { RichTextBlock } from "./RichTextBlock"
 import { SearchHeroBlock } from "./SearchHeroBlock"
 import { StatsBlock } from "./StatsBlock"
 import { StepsBlock } from "./StepsBlock"
+import { TestimonialsBlock } from "./TestimonialsBlock"
 import { TrustStripBlock } from "./TrustStripBlock"
 import type {
   BlockComponent,
@@ -29,12 +39,22 @@ export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
   searchHero: SearchHeroBlock,
   richText: RichTextBlock,
   callToAction: CallToActionBlock,
+  featuredRentals: FeaturedRentalsBlock,
+  largeGroupRentals: LargeGroupRentalsBlock,
+  rentalGrid: RentalGridBlock,
   steps: StepsBlock,
   features: FeaturesBlock,
   amenities: AmenitiesBlock,
   stats: StatsBlock,
   imageText: ImageTextBlock,
+  testimonials: TestimonialsBlock,
   trustStrip: TrustStripBlock,
+  ownerBand: OwnerBandBlock,
+  newsletter: NewsletterBlock,
+  blogTeaser: BlogTeaserBlock,
+  location: LocationBlock,
+  faq: FaqBlock,
+  form: FormBlock,
 }
 
 /**

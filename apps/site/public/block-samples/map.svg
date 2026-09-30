@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="A map of Seaside Bay and the harbour">
+  <rect width="640" height="360" fill="#e8ecf1"/>
+  <path d="M0 250 C120 220 200 290 320 260 S540 230 640 270 V360 H0 Z" fill="#9fb0c2"/>
+  <g stroke="#ffffff" stroke-width="10" fill="none" stroke-linecap="round">
+    <path d="M40 40 L300 130 L600 60"/>
+    <path d="M300 130 L330 230"/>
+    <path d="M120 200 L300 130"/>
+  </g>
+  <g fill="#c5d0dc">
+    <rect x="70" y="80" width="60" height="40" rx="4"/>
+    <rect x="360" y="90" width="70" height="50" rx="4"/>
+    <rect x="470" y="110" width="80" height="40" rx="4"/>
+    <rect x="130" y="150" width="50" height="30" rx="4"/>
+  </g>
+  <path d="M330 150 a24 24 0 1 1 0.1 0 Z M330 150 l-18 -34 a24 24 0 1 1 36 0 Z" fill="#33475b"/>
+  <circle cx="330" cy="104" r="9" fill="#f2b84b"/>
+</svg>

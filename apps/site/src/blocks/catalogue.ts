@@ -135,6 +135,55 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     },
     takesBackground: true,
   },
+  featuredRentals: {
+    blockType: "featuredRentals",
+    slug: "featured-rentals",
+    label: "Featured rentals",
+    group: "Rentals",
+    description:
+      "The Site's first few Rentals as cards, in a carousel or a grid.",
+    thumbnail: thumbnail("featured-rentals"),
+    defaults: {
+      blockType: "featuredRentals",
+      heading: "Featured rentals",
+      count: 3,
+      variant: "grid",
+      background: "default",
+    },
+    takesBackground: true,
+    variantField: "variant",
+  },
+  largeGroupRentals: {
+    blockType: "largeGroupRentals",
+    slug: "large-group-rentals",
+    label: "Large-group rentals",
+    group: "Rentals",
+    description: "The Rentals that sleep at least a number of guests you set.",
+    thumbnail: thumbnail("large-group-rentals"),
+    defaults: {
+      blockType: "largeGroupRentals",
+      heading: "Room for the whole group",
+      minSleeps: 12,
+      background: "default",
+    },
+    takesBackground: true,
+  },
+  rentalGrid: {
+    blockType: "rentalGrid",
+    slug: "rental-grid",
+    label: "Rental grid",
+    group: "Rentals",
+    description:
+      "Every Rental in a grid, with filter chips, a sort and simple pagination.",
+    thumbnail: thumbnail("rental-grid"),
+    defaults: {
+      blockType: "rentalGrid",
+      heading: "Our homes",
+      pageSize: 6,
+      background: "default",
+    },
+    takesBackground: true,
+  },
   steps: {
     blockType: "steps",
     slug: "steps",
@@ -244,6 +293,38 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     takesBackground: true,
     variantField: "imageSide",
   },
+  testimonials: {
+    blockType: "testimonials",
+    slug: "testimonials",
+    label: "Testimonials",
+    group: "Social proof",
+    description:
+      "Guest quotes with a name, a role line and a star rating, in a carousel or a grid.",
+    thumbnail: thumbnail("testimonials"),
+    defaults: {
+      blockType: "testimonials",
+      heading: "What our guests say",
+      variant: "carousel",
+      testimonials: [
+        {
+          quote:
+            "A spotless home, a warm welcome and a view we still talk about.",
+          name: "Alex Morgan",
+          role: "Stayed for a week in June",
+          rating: 5,
+        },
+        {
+          quote: "Easy to book, and the team answered every question quickly.",
+          name: "Sam Rivera",
+          role: "Family trip",
+          rating: 5,
+        },
+      ],
+      background: "default",
+    },
+    takesBackground: true,
+    variantField: "variant",
+  },
   trustStrip: {
     blockType: "trustStrip",
     slug: "trust-strip",
@@ -263,6 +344,118 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     },
     takesBackground: true,
     variantField: "variant",
+  },
+  ownerBand: {
+    blockType: "ownerBand",
+    slug: "owner-band",
+    label: "Owner band",
+    group: "Content",
+    description:
+      "A pitch to property owners: benefits and a button, usually on the dark surface.",
+    thumbnail: thumbnail("owner-band"),
+    defaults: {
+      blockType: "ownerBand",
+      heading: "Own a home? Let us look after it.",
+      benefits: [
+        { text: "Full-service management, from listing to turnover" },
+        { text: "Monthly owner statements you can read at a glance" },
+        { text: "Local team on call, every day" },
+      ],
+      background: "dark",
+    },
+    takesBackground: true,
+  },
+  newsletter: {
+    blockType: "newsletter",
+    slug: "newsletter",
+    label: "Newsletter",
+    group: "Forms",
+    description: "A heading, some text and a visual-only email form.",
+    thumbnail: thumbnail("newsletter"),
+    defaults: {
+      blockType: "newsletter",
+      heading: "Stay in the loop",
+      emailPlaceholder: "Your email address",
+      buttonLabel: "Subscribe",
+      background: "default",
+    },
+    takesBackground: true,
+  },
+  blogTeaser: {
+    blockType: "blogTeaser",
+    slug: "blog-teaser",
+    label: "Blog teaser",
+    group: "Content",
+    description:
+      "The Site's first three blog posts as cards, each linking out.",
+    thumbnail: thumbnail("blog-teaser"),
+    defaults: {
+      blockType: "blogTeaser",
+      heading: "From the journal",
+      background: "default",
+    },
+    takesBackground: true,
+  },
+  location: {
+    blockType: "location",
+    slug: "location",
+    label: "Location",
+    group: "Content",
+    description:
+      "An address and some text beside a static map image or a map card.",
+    thumbnail: thumbnail("location"),
+    defaults: {
+      blockType: "location",
+      heading: "Find us",
+      address: "12 Harbour Road, Seaside Bay",
+      map: "card",
+      background: "default",
+    },
+    takesBackground: true,
+    variantField: "map",
+  },
+  faq: {
+    blockType: "faq",
+    slug: "faq",
+    label: "FAQ",
+    group: "Content",
+    description: "Question and answer pairs in an accordion.",
+    thumbnail: thumbnail("faq"),
+    defaults: {
+      blockType: "faq",
+      heading: "Frequently asked questions",
+      questions: [
+        {
+          question: "What time is check-in?",
+          answer: "Check-in is from 4pm and check-out is by 10am.",
+        },
+        {
+          question: "Can I bring a pet?",
+          answer: "Some homes welcome pets. Look for the pet-friendly label.",
+        },
+      ],
+      background: "default",
+    },
+    takesBackground: true,
+  },
+  form: {
+    blockType: "form",
+    slug: "form",
+    label: "Form",
+    group: "Forms",
+    description:
+      "A visual-only form with the fields you choose. It stores nothing.",
+    thumbnail: thumbnail("form"),
+    defaults: {
+      blockType: "form",
+      heading: "Get in touch",
+      formFields: ["name", "email", "message"],
+      submitLabel: "Send",
+      successMessage:
+        "Thank you. We have received your message and will be in touch soon.",
+      background: "default",
+    },
+    takesBackground: true,
   },
 }
 

@@ -1,5 +1,7 @@
 import type { Block } from "payload"
 
+import { backgroundField } from "../fields/background"
+
 /**
  * A heading, some text and an email form. The form is visual only: it does
  * not send or store anything.
@@ -24,5 +26,6 @@ export const Newsletter: Block = {
       required: true,
       defaultValue: "Subscribe",
     },
+    backgroundField,
   ],
 }

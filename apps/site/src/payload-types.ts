@@ -150,12 +150,22 @@ export interface Page {
         | SearchHeroBlock
         | RichTextBlock
         | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
         | StepsBlock
         | FeaturesBlock
         | AmenitiesBlock
         | StatsBlock
         | ImageTextBlock
+        | TestimonialsBlock
         | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
       )[]
     | null;
   layout?: {
@@ -328,6 +338,52 @@ export interface CallToActionBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturedRentalsBlock".
+ */
+export interface FeaturedRentalsBlock {
+  heading: string;
+  /**
+   * How many Rentals to show.
+   */
+  count: number;
+  variant: 'carousel' | 'grid';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'featuredRentals';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LargeGroupRentalsBlock".
+ */
+export interface LargeGroupRentalsBlock {
+  heading: string;
+  /**
+   * Shows the Rentals that sleep at least this many guests.
+   */
+  minSleeps: number;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'largeGroupRentals';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RentalGridBlock".
+ */
+export interface RentalGridBlock {
+  heading: string;
+  /**
+   * How many Rentals each page shows.
+   */
+  pageSize: number;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'rentalGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "StepsBlock".
  */
 export interface StepsBlock {
@@ -441,6 +497,31 @@ export interface ImageTextBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock".
+ */
+export interface TestimonialsBlock {
+  heading: string;
+  variant: 'carousel' | 'grid';
+  testimonials: {
+    quote: string;
+    name: string;
+    /**
+     * Under the name, such as "Stayed for a week in June".
+     */
+    role: string;
+    /**
+     * From 1 to 5 stars.
+     */
+    rating: number;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'testimonials';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TrustStripBlock".
  */
 export interface TrustStripBlock {
@@ -477,6 +558,116 @@ export interface TrustStripBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'trustStrip';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OwnerBandBlock".
+ */
+export interface OwnerBandBlock {
+  heading: string;
+  pitch?: string | null;
+  benefits: {
+    text: string;
+    id?: string | null;
+  }[];
+  cta?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ownerBand';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock".
+ */
+export interface NewsletterBlock {
+  heading: string;
+  text?: string | null;
+  emailPlaceholder?: string | null;
+  buttonLabel: string;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'newsletter';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlogTeaserBlock".
+ */
+export interface BlogTeaserBlock {
+  heading: string;
+  /**
+   * Optional. Shown when it has a label and a link.
+   */
+  allPostsLink?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'blogTeaser';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LocationBlock".
+ */
+export interface LocationBlock {
+  heading: string;
+  address: string;
+  text?: string | null;
+  map: 'card' | 'image';
+  /**
+   * A picture of the map. Its alt text is read out for it.
+   */
+  mapImage?: (number | null) | Media;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'location';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock".
+ */
+export interface FaqBlock {
+  heading: string;
+  questions: {
+    question: string;
+    answer: string;
+    id?: string | null;
+  }[];
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FormBlock".
+ */
+export interface FormBlock {
+  heading: string;
+  intro?: string | null;
+  /**
+   * The fields the form shows, in this order.
+   */
+  formFields: ('name' | 'email' | 'phone' | 'message' | 'propertyAddress' | 'dates')[];
+  submitLabel: string;
+  successMessage: string;
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'form';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -690,19 +881,6 @@ export interface LegalBarBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "NewsletterBlock".
- */
-export interface NewsletterBlock {
-  heading: string;
-  text?: string | null;
-  emailPlaceholder?: string | null;
-  buttonLabel: string;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'newsletter';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -863,12 +1041,22 @@ export interface PagesSelect<T extends boolean = true> {
         searchHero?: T | SearchHeroBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
         steps?: T | StepsBlockSelect<T>;
         features?: T | FeaturesBlockSelect<T>;
         amenities?: T | AmenitiesBlockSelect<T>;
         stats?: T | StatsBlockSelect<T>;
         imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
         trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
       };
   layout?:
     | T
@@ -958,6 +1146,40 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
         href?: T;
       };
   style?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturedRentalsBlock_select".
+ */
+export interface FeaturedRentalsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  count?: T;
+  variant?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LargeGroupRentalsBlock_select".
+ */
+export interface LargeGroupRentalsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  minSleeps?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RentalGridBlock_select".
+ */
+export interface RentalGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  pageSize?: T;
   background?: T;
   id?: T;
   blockName?: T;
@@ -1059,6 +1281,26 @@ export interface ImageTextBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsBlock_select".
+ */
+export interface TestimonialsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  variant?: T;
+  testimonials?:
+    | T
+    | {
+        quote?: T;
+        name?: T;
+        role?: T;
+        rating?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TrustStripBlock_select".
  */
 export interface TrustStripBlockSelect<T extends boolean = true> {
@@ -1079,6 +1321,103 @@ export interface TrustStripBlockSelect<T extends boolean = true> {
         image?: T;
         id?: T;
       };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OwnerBandBlock_select".
+ */
+export interface OwnerBandBlockSelect<T extends boolean = true> {
+  heading?: T;
+  pitch?: T;
+  benefits?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  cta?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock_select".
+ */
+export interface NewsletterBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  emailPlaceholder?: T;
+  buttonLabel?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlogTeaserBlock_select".
+ */
+export interface BlogTeaserBlockSelect<T extends boolean = true> {
+  heading?: T;
+  allPostsLink?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LocationBlock_select".
+ */
+export interface LocationBlockSelect<T extends boolean = true> {
+  heading?: T;
+  address?: T;
+  text?: T;
+  map?: T;
+  mapImage?: T;
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock_select".
+ */
+export interface FaqBlockSelect<T extends boolean = true> {
+  heading?: T;
+  questions?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FormBlock_select".
+ */
+export interface FormBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  formFields?: T;
+  submitLabel?: T;
+  successMessage?: T;
   background?: T;
   id?: T;
   blockName?: T;
@@ -1257,18 +1596,6 @@ export interface LegalBarBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "NewsletterBlock_select".
- */
-export interface NewsletterBlockSelect<T extends boolean = true> {
-  heading?: T;
-  text?: T;
-  emailPlaceholder?: T;
-  buttonLabel?: T;
   id?: T;
   blockName?: T;
 }
