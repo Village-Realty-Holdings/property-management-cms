@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload"
 
 import { anyone, signedIn } from "../../access"
 import { footerBlocks, headerBlocks } from "../../blocks/region"
+import { refuseDeleteWhenInUse } from "./deleteProtection"
 import {
   clearPreviousDefault,
   firstLayoutIsDefault,
@@ -39,6 +40,7 @@ export const Layouts: CollectionConfig = {
   hooks: {
     beforeValidate: [firstLayoutIsDefault],
     beforeChange: [recordVersionDetails],
+    beforeDelete: [refuseDeleteWhenInUse],
     afterChange: [clearPreviousDefault],
   },
   fields: [
