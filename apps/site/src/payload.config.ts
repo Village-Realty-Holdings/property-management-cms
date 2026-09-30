@@ -7,9 +7,9 @@ import { buildConfig } from "payload"
 import { assertNoDevSignInInProduction } from "./auth"
 import { collections } from "./collections"
 import { Users } from "./collections/Users"
-import { pgForRuntime } from "./database"
+import { pgForRuntime, siteSchema } from "./database"
 import { richTextEditor } from "./fields/richText"
-import { SiteSettings } from "./globals/SiteSettings"
+import { globals } from "./globals"
 import { storagePlugins } from "./storage"
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -19,6 +19,11 @@ type PayloadConfigOptions = {
   databaseUrl: string
   /** Push schema changes straight to the database (dev and tests only). */
   push?: boolean
+  /**
+   * The Postgres schema for this Site's tables (apps/site ADR-0005).
+   * Defaults to DATABASE_SCHEMA; unset or "public" means the public schema.
+   */
+  schemaName?: string
 }
 
 /**
@@ -28,6 +33,7 @@ type PayloadConfigOptions = {
 export function buildPayloadConfig({
   databaseUrl,
   push,
+  schemaName = siteSchema(),
 }: PayloadConfigOptions) {
   // Fails startup instead of serving the dev sign-in (apps/site ADR-0003).
   assertNoDevSignInInProduction()
@@ -51,11 +57,13 @@ export function buildPayloadConfig({
     collections: [...collections],
     db: postgresAdapter({
       pool: { connectionString: databaseUrl },
+      // Drizzle refuses "public" as a schema name: leave it out for that.
+      ...(schemaName && schemaName !== "public" ? { schemaName } : {}),
       pg: pgForRuntime(),
       ...(push === undefined ? {} : { push }),
     }),
     editor: richTextEditor,
-    globals: [SiteSettings],
+    globals,
     // Nothing reads over GraphQL: the Site and the Admin use the Local API.
     graphQL: { disable: true },
     secret: process.env.PAYLOAD_SECRET || "",

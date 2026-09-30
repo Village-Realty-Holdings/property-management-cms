@@ -1,73 +1,47 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
-import { formStateFromError, type FormState } from "../formState"
-import { valuesToPageData, type PageValues } from "../pageForm"
-import { fromMarkdown } from "../richText"
+import type { FormState } from "../formState"
+import type { PageValues } from "../pageForm"
+import {
+  deletePageAs,
+  savePageAs,
+  type PageIntent,
+  type PageSaveResult,
+} from "../pageSave"
 import { requireStaff } from "../session"
 
-export type PageIntent = "draft" | "publish" | "unpublish"
-
-const messages: Record<PageIntent, string> = {
-  draft: "Draft saved.",
-  publish: "Published. The Page is live on the Site.",
-  unpublish: "Unpublished. Visitors no longer see this Page.",
-}
-
 /**
- * Saves a Page from the Admin's form: as a Draft, published, or taken off
- * the Site. `id` is empty for a new Page, which redirects to its edit view.
+ * Saves a Page from the Admin's editor as the Staff User: as a Draft,
+ * published, or taken off the Site. `id` is null for a new Page. The editor
+ * shows the toast and the new status from the result. Nothing here redirects:
+ * the editor stays where it is, so what was typed is never lost.
  */
-export async function savePage(
-  _previous: FormState,
-  formData: FormData
-): Promise<FormState> {
+export async function savePage(input: {
+  id: number | null
+  intent: PageIntent
+  values: PageValues
+}): Promise<PageSaveResult> {
   const { payload, as } = await requireStaff()
-  const id = Number(formData.get("id")) || null
-  const intent = (formData.get("intent") as PageIntent) || "draft"
-  const values = JSON.parse(
-    String(formData.get("values") ?? "{}")
-  ) as PageValues
-
-  let savedId: number
-  try {
-    const data = await valuesToPageData(values, (markdown) =>
-      fromMarkdown(payload, markdown)
-    )
-    const status = intent === "publish" ? "published" : "draft"
-    // A Draft save keeps the Published version as it is; publishing and
-    // unpublishing change what visitors see.
-    const draft = intent === "draft"
-    const saved = id
-      ? await payload.update({
-          collection: "pages",
-          id,
-          data: { ...data, _status: status },
-          draft,
-          ...as,
-        })
-      : await payload.create({
-          collection: "pages",
-          data: { ...data, _status: status },
-          draft,
-          ...as,
-        })
-    savedId = saved.id
-  } catch (error) {
-    return formStateFromError(error)
+  const result = await savePageAs(payload, as, input)
+  if (result.ok) {
+    revalidatePath("/admin/pages")
+    revalidatePath("/admin")
+    // A Published Page changes what visitors see.
+    revalidatePath("/", "layout")
   }
-
-  if (!id) redirect(`/admin/pages/${savedId}?saved=${intent}`)
-  // Refreshes the status badge; the form keeps what was typed.
-  revalidatePath(`/admin/pages/${savedId}`)
-  return { ok: true, message: messages[intent] }
+  return result
 }
 
-export async function deletePage(formData: FormData): Promise<void> {
+/** Deletes a Page. The editor asks first (<DeletePageButton>). */
+export async function deletePage(id: number): Promise<FormState> {
   const { payload, as } = await requireStaff()
-  const id = Number(formData.get("id"))
-  if (id) await payload.delete({ collection: "pages", id, ...as })
-  redirect("/admin/pages")
+  const result = await deletePageAs(payload, as, id)
+  if (result.ok) {
+    revalidatePath("/admin/pages")
+    revalidatePath("/admin")
+    revalidatePath("/", "layout")
+  }
+  return result
 }

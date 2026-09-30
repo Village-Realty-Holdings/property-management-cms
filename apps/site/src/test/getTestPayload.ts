@@ -8,7 +8,26 @@ import { buildPayloadConfig } from "../payload.config"
 type TestPayloadOptions = Omit<
   Parameters<typeof buildPayloadConfig>[0],
   "databaseUrl" | "push"
->
+> & {
+  /**
+   * Push the schema from the config (the default), or leave the database
+   * empty so the test can run `payload.db.migrate()` itself.
+   */
+  push?: boolean
+  /**
+   * Use this database, made with `createTestDatabase()`, instead of a new
+   * one, so several Payloads (one per `schemaName`) can share it. The caller
+   * drops it.
+   */
+  database?: TestDatabase
+}
+
+export type TestDatabase = {
+  /** Connection string of the throwaway database. */
+  url: string
+  /** Drops the database, terminating any connection still open to it. */
+  drop: () => Promise<void>
+}
 
 export type TestPayload = {
   payload: Payload
@@ -19,8 +38,28 @@ export type TestPayload = {
 }
 
 /**
+ * Creates an empty Postgres database (`pm_test_<random>`) on the server
+ * named by DATABASE_URL.
+ */
+export async function createTestDatabase(): Promise<TestDatabase> {
+  const serverUrl = process.env.DATABASE_URL
+  if (!serverUrl) {
+    throw new Error("DATABASE_URL must be set to run integration tests")
+  }
+
+  const name = `pm_test_${randomBytes(6).toString("hex")}`
+  await withAdminClient(serverUrl, (client) =>
+    client.query(`CREATE DATABASE "${name}"`)
+  )
+  const url = new URL(serverUrl)
+  url.pathname = `/${name}`
+  return { url: url.toString(), drop: () => dropDatabase(serverUrl, name) }
+}
+
+/**
  * Starts Payload against a new, empty Postgres database (`pm_test_<random>`)
  * on the server named by DATABASE_URL, with the schema pushed from the config.
+ * Tests run in the `public` schema unless they pass `schemaName`.
  *
  * Call it once per test file and always call `teardown` afterwards:
  *
@@ -31,34 +70,28 @@ export type TestPayload = {
 export async function getTestPayload(
   options: TestPayloadOptions = {}
 ): Promise<TestPayload> {
-  const serverUrl = process.env.DATABASE_URL
-  if (!serverUrl) {
-    throw new Error("DATABASE_URL must be set to run integration tests")
-  }
-
-  const dbName = `pm_test_${randomBytes(6).toString("hex")}`
-  await withAdminClient(serverUrl, (client) =>
-    client.query(`CREATE DATABASE "${dbName}"`)
-  )
-
-  const url = new URL(serverUrl)
-  url.pathname = `/${dbName}`
-  const databaseUrl = url.toString()
+  const { push = true, database, ...configOptions } = options
+  const db = database ?? (await createTestDatabase())
+  const dropOwnDatabase = database ? async () => {} : db.drop
 
   let payload: Payload
   try {
     payload = await getPayload({
-      key: dbName,
-      config: buildPayloadConfig({ ...options, databaseUrl, push: true }),
+      key: `${db.url}#${configOptions.schemaName ?? "public"}`,
+      config: buildPayloadConfig({
+        ...configOptions,
+        databaseUrl: db.url,
+        push,
+      }),
     })
   } catch (error) {
-    await dropDatabase(serverUrl, dbName)
+    await dropOwnDatabase()
     throw error
   }
 
   return {
     payload,
-    databaseUrl,
+    databaseUrl: db.url,
     teardown: async () => {
       try {
         const pool = payload.db.pool
@@ -70,7 +103,7 @@ export async function getTestPayload(
         pool?.on("error", () => {})
         void pool?.end()
       } finally {
-        await dropDatabase(serverUrl, dbName)
+        await dropOwnDatabase()
       }
     },
   }

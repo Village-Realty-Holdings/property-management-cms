@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     pages: Page;
     media: Media;
+    fonts: Font;
+    'font-files': FontFile;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,6 +81,8 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    fonts: FontsSelect<false> | FontsSelect<true>;
+    'font-files': FontFilesSelect<false> | FontFilesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -90,10 +94,12 @@ export interface Config {
   };
   fallbackLocale: null;
   globals: {
-    'site-settings': SiteSetting;
+    brand: Brand;
+    seo: Seo;
   };
   globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    brand: BrandSelect<false> | BrandSelect<true>;
+    seo: SeoSelect<false> | SeoSelect<true>;
   };
   locale: null;
   widgets: {
@@ -183,6 +189,8 @@ export interface Media {
    */
   alt: string;
   caption?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   /**
    * Photographer or source, e.g. © Jane Doe
    */
@@ -242,6 +250,48 @@ export interface CallToActionBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fonts".
+ */
+export interface Font {
+  id: number;
+  /**
+   * The name the Theme shows, and the CSS font-family. For a Google Font, its name on Google Fonts.
+   */
+  family: string;
+  kind: 'serif' | 'sans' | 'slab';
+  /**
+   * Where the files came from.
+   */
+  source?: ('uploaded' | 'google') | null;
+  files: {
+    weight: number;
+    style: 'normal' | 'italic';
+    file: number | FontFile;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "font-files".
+ */
+export interface FontFile {
+  id: number;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -287,6 +337,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'fonts';
+        value: number | Font;
+      } | null)
+    | ({
+        relationTo: 'font-files';
+        value: number | FontFile;
       } | null)
     | ({
         relationTo: 'users';
@@ -409,7 +467,45 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  prefix?: T;
+  _objectKey?: T;
   credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fonts_select".
+ */
+export interface FontsSelect<T extends boolean = true> {
+  family?: T;
+  kind?: T;
+  source?: T;
+  files?:
+    | T
+    | {
+        weight?: T;
+        style?: T;
+        file?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "font-files_select".
+ */
+export interface FontFilesSelect<T extends boolean = true> {
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -473,35 +569,23 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
+ * via the `definition` "brand".
  */
-export interface SiteSetting {
+export interface Brand {
   id: number;
   name: string;
   /**
-   * A short line under the Site name, also used in page metadata.
+   * A short line under the Site name.
    */
   tagline?: string | null;
-  domain?: string | null;
+  /**
+   * Shown in the Site's header.
+   */
+  logo?: (number | null) | Media;
   contact?: {
     phone?: string | null;
     email?: string | null;
     address?: string | null;
-  };
-  branding: {
-    /**
-     * Shown in the Site's header.
-     */
-    logo?: (number | null) | Media;
-    /**
-     * Header, buttons and links.
-     */
-    primaryColor?: string | null;
-    /**
-     * Highlights.
-     */
-    accentColor?: string | null;
-    fontPairing: 'classic' | 'modern' | 'rustic';
   };
   social?:
     | {
@@ -515,26 +599,47 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
+ * via the `definition` "seo".
  */
-export interface SiteSettingsSelect<T extends boolean = true> {
+export interface Seo {
+  id: number;
+  /**
+   * How Page titles read in search results and the browser tab. %s is the Page title and {name} is the Site name.
+   */
+  titlePattern?: string | null;
+  /**
+   * Used for Pages that have no SEO description of their own.
+   */
+  description?: string | null;
+  /**
+   * Shown when a Page without its own SEO image is shared on social media.
+   */
+  image?: (number | null) | Media;
+  /**
+   * The icon in browser tabs. A square PNG works best.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Off adds noindex to every page and makes robots.txt disallow everything.
+   */
+  allowIndexing?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand_select".
+ */
+export interface BrandSelect<T extends boolean = true> {
   name?: T;
   tagline?: T;
-  domain?: T;
+  logo?: T;
   contact?:
     | T
     | {
         phone?: T;
         email?: T;
         address?: T;
-      };
-  branding?:
-    | T
-    | {
-        logo?: T;
-        primaryColor?: T;
-        accentColor?: T;
-        fontPairing?: T;
       };
   social?:
     | T
@@ -543,6 +648,20 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo_select".
+ */
+export interface SeoSelect<T extends boolean = true> {
+  titlePattern?: T;
+  description?: T;
+  image?: T;
+  favicon?: T;
+  allowIndexing?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

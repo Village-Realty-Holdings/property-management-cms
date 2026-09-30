@@ -13,11 +13,16 @@ export function MediaSelect({
   value,
   options,
   onChange,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
 }: {
   id: string
   value: number | null
   options: MediaOption[]
   onChange: (value: number | null) => void
+  /** From `describedBy()`: the FormField's description and error. */
+  "aria-describedby"?: string
+  "aria-invalid"?: true
 }) {
   const chosen = options.find((option) => option.id === value)
   return (
@@ -37,6 +42,8 @@ export function MediaSelect({
       )}
       <NativeSelect
         id={id}
+        aria-describedby={describedBy}
+        aria-invalid={invalid}
         className="w-full max-w-sm"
         value={value ?? ""}
         onChange={(event) =>

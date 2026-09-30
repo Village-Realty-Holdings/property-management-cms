@@ -3,6 +3,7 @@
   "ui": "tui",
   "globalPassThroughEnv": [
     "DATABASE_URL",
+    "DATABASE_SCHEMA",
     "PAYLOAD_SECRET",
     "BREAK_GLASS_EMAIL",
     "BREAK_GLASS_PASSWORD",
@@ -19,6 +20,7 @@
     "ENTRA_REDIRECT_URI",
     "ENTRA_ISSUER",
     "DEV_SIGN_IN",
+    "SITE_URL",
     "PROPERTY_FEED",
     "CMS_READER_KEY",
     "REVALIDATION_SECRET"

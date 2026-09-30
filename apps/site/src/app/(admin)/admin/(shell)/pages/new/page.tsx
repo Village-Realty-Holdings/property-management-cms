@@ -16,6 +16,7 @@ export default async function NewPage() {
       status="new"
       initial={{ ...emptyPage, layout: [emptyBlock("hero")] }}
       media={await mediaOptions(staff)}
+      dependents={[]}
     />
   )
 }

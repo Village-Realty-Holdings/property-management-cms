@@ -4,13 +4,15 @@ import Link from "next/link"
 
 import { cn } from "@workspace/ui/lib/utils"
 
+import type { Brand } from "./brand"
 import { displayFont } from "./display"
 import { fontVars } from "./fonts"
-import { brandColorVars, telHref, type Brand } from "./theme"
+import { telHref, themeColorVars } from "./theme"
 
 /**
- * The Site's theme (colours and font pairing from Site Settings as CSS
- * variables), header and footer. Needs `fontVariables` on <html>.
+ * The Site's colours and fonts as CSS variables (a fixed default until the
+ * Theme exists), and its header and footer from the Brand. Needs
+ * `fontVariables` on <html>.
  */
 export function SiteFrame({
   brand,
@@ -20,13 +22,13 @@ export function SiteFrame({
   children: ReactNode
 }) {
   const style = {
-    ...brandColorVars(brand),
-    ...fontVars(brand.fontPairing),
+    ...themeColorVars(),
+    ...fontVars(),
   } as CSSProperties
 
   // The same variables at :root, so anything portalled out of this wrapper
   // keeps the Site's colours and fonts. Values are colours and font stacks
-  // built by resolveBrand; strip anything that could end the rule.
+  // built by the theme; strip anything that could end the rule.
   const rootVars = Object.entries(style)
     .map(([name, value]) => `${name}:${String(value).replace(/[<>{};]/g, "")}`)
     .join(";")
