@@ -123,6 +123,7 @@ export function LocationBlock({
             <EditableText
               field="address"
               context={context}
+              multiline
               className="block whitespace-pre-line"
             >
               {address}
@@ -134,6 +135,7 @@ export function LocationBlock({
             as="p"
             field="text"
             context={context}
+            multiline
             className="max-w-prose text-pretty whitespace-pre-line"
           >
             {text}

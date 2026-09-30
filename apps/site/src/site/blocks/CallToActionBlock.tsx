@@ -85,6 +85,7 @@ export function CallToActionBlock({
               as="p"
               field="body"
               context={context}
+              multiline
               className="text-base text-pretty whitespace-pre-line sm:text-lg"
             >
               {body}

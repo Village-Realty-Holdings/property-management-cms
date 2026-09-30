@@ -45,6 +45,7 @@ export function FormBlock({
             as="p"
             field="intro"
             context={context}
+            multiline
             className="text-lg text-pretty whitespace-pre-line"
           >
             {intro}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react"
 
 import {
+  acceptsTextEdit,
   postDocumentToCanvas,
   readCanvasMessage,
   type CanvasAction,
@@ -26,9 +27,11 @@ import { blocksIn, findBlock, regionsOf } from "./state"
  * The canvas's other messages become editor actions, so each is one undo step
  * like the same change made in a panel: a click selects, the Block toolbar
  * moves, duplicates and deletes, and a "+" is an insert request, handed to the
- * editor's `onInsertRequest`. The editor decides whether a request applies: a
- * Block that is not in the document being edited (one of a locked region) is
- * ignored.
+ * editor's `onInsertRequest`. Text edited in place (`edit-text`) is a
+ * `setField` of that Block's field, so typing is one coalesced undo step. The
+ * editor decides whether a request applies: a Block that is not in the
+ * document being edited (one of a locked region) is ignored, and so is a value
+ * the field cannot take.
  */
 export function useCanvasBridge(
   frameRef: RefObject<HTMLIFrameElement | null>,
@@ -109,6 +112,30 @@ function apply(
       if (!regionsOf(editor.doc).includes(action.region)) return
       if (action.index > blocksIn(editor.doc, action.region).length) return
       editor.onInsertRequest(action.region, action.index)
+      return
+    }
+    case "edit-text": {
+      // Only a field the Block has, and only a value of its kind: the canvas
+      // asks, and the document decides.
+      const block = blocksIn(editor.doc, action.region)[action.index]
+      if (!block) return
+      const current = action.fieldPath
+        .split(".")
+        .reduce<unknown>(
+          (node, key) =>
+            typeof node === "object" && node !== null
+              ? (node as Record<string, unknown>)[key]
+              : undefined,
+          block
+        )
+      if (!acceptsTextEdit(current, action.value)) return
+      // Each input is a setField of the same field, so a run of typing is one
+      // undo step (see the reducer's coalescing).
+      const list = editor.doc.kind === "page" ? "blocks" : action.region
+      editor.setField(
+        `${list}.${action.index}.${action.fieldPath}`,
+        action.value
+      )
       return
     }
   }

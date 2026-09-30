@@ -1,3 +1,4 @@
+import { validateHref } from "../../fields/link"
 import { normalizeInputs, type ThemeInputs } from "../../theme/inputs"
 import { FALLBACK_INPUTS } from "../../theme/record/fallback"
 import type { PageBlock } from "../../site/blocks/types"
@@ -22,14 +23,18 @@ import type { EditorDocument, Region } from "./state"
  *   canvas -> Admin    `delete`          ... Delete
  *   canvas -> Admin    `insert-request`  a "+" was pressed: a Block is wanted
  *                                        at that place in that region
+ *   canvas -> Admin    `edit-text`       text edited in place: a Block's field
+ *                                        and its whole new value (a string, or
+ *                                        rich text's Lexical JSON), once per
+ *                                        input
  *
  * Both windows are on the Site's own origin, and both ends check it: a
  * message is read only when it comes from the expected window on the expected
  * origin, and is posted only to that origin, never to "*". Anything else,
  * including a message of another shape, is ignored. The canvas only asks: the
  * Admin decides whether a request applies (a Block of a locked region is not
- * in its document, so a request for it does nothing). Later slices add the
- * canvas's `edit-text` and `key` messages here.
+ * in its document, so a request for it does nothing). A later slice adds the
+ * canvas's `key` message here.
  */
 
 /** Tags our messages, so they are told apart from any other on the window. */
@@ -90,6 +95,18 @@ export type CanvasRequest =
   | { type: "delete"; id: string }
   /** `index` is where the new Block goes in `region` (0 is before the first). */
   | { type: "insert-request"; region: Region; index: number }
+  /**
+   * Text edited in place: the whole new value of the field `fieldPath` of the
+   * Block at `index` in `region`. A plain text is a string; rich text is its
+   * Lexical JSON.
+   */
+  | {
+      type: "edit-text"
+      region: Region
+      index: number
+      fieldPath: string
+      value: string | Record<string, unknown>
+    }
 
 /** What the canvas sends: `ready`, or a request. */
 export type CanvasAction = { type: "ready" } | CanvasRequest
@@ -223,9 +240,74 @@ function readAction(data: Record<string, unknown>): CanvasAction | null {
             index: data.index as number,
           }
         : null
+    case "edit-text":
+      return REGIONS.includes(data.region as Region) &&
+        Number.isInteger(data.index) &&
+        (data.index as number) >= 0 &&
+        typeof data.fieldPath === "string" &&
+        isFieldPath(data.fieldPath) &&
+        (typeof data.value === "string" || isRecord(data.value))
+        ? {
+            type: "edit-text",
+            region: data.region as Region,
+            index: data.index as number,
+            fieldPath: data.fieldPath,
+            value: data.value as string | Record<string, unknown>,
+          }
+        : null
     default:
       return null
   }
+}
+
+/** What makes a Block what it is: text edited in place never sets these. */
+const IDENTITY = new Set(["id", "blockType", "blockName"])
+
+/**
+ * A dotted path of field names and list positions ("heading", "cta.label",
+ * "items.2.title"), that does not go through what makes a Block what it is.
+ */
+function isFieldPath(path: string): boolean {
+  return (
+    /^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)*$/.test(path) &&
+    !path.split(".").some((segment) => IDENTITY.has(segment))
+  )
+}
+
+/** A Lexical node: a record with a type, whose children (if any) are nodes. */
+function isLexicalNode(value: unknown, depth = 0): boolean {
+  if (depth > 64 || !isRecord(value) || typeof value.type !== "string") {
+    return false
+  }
+  if (value.type === "link" || value.type === "autolink") {
+    const url = isRecord(value.fields) ? value.fields.url : undefined
+    // A link is a URL or a Site path, as Links are everywhere (see link.ts).
+    if (typeof url !== "string" || url === "" || validateHref(url) !== true) {
+      return false
+    }
+  }
+  if (value.children === undefined) return true
+  return (
+    Array.isArray(value.children) &&
+    value.children.every((child) => isLexicalNode(child, depth + 1))
+  )
+}
+
+/**
+ * Whether an `edit-text` may replace the field's `current` value with
+ * `value`. It must be the same kind of thing: a text for a text, and for rich
+ * text a Lexical document whose links are safe. A field the Block does not
+ * have is not one the canvas can set.
+ */
+export function acceptsTextEdit(current: unknown, value: unknown): boolean {
+  if (typeof current === "string") return typeof value === "string"
+  if (!isRecord(current)) return false
+  if (!isRecord(value) || !isRecord(value.root)) return false
+  return (
+    value.root.type === "root" &&
+    Array.isArray(value.root.children) &&
+    isLexicalNode(value.root)
+  )
 }
 
 /**

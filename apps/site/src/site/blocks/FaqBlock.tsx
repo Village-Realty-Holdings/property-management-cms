@@ -75,6 +75,7 @@ export function FaqBlock({
                   as="p"
                   field={`questions.${index}.answer`}
                   context={context}
+                  multiline
                   className="whitespace-pre-line"
                 >
                   {item.answer}

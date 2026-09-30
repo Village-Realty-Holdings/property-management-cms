@@ -66,7 +66,12 @@ describe("the Block catalogue's samples", () => {
     expect(await violations(container)).toEqual([])
   })
 
-  it.each(catalogueEntries.map((entry) => [entry.label, entry] as const))(
+  it.each(
+    catalogueEntries
+      // Rich text is a Lexical editor in the canvas: see inlineText.test.tsx.
+      .filter((entry) => entry.blockType !== "richText")
+      .map((entry) => [entry.label, entry] as const)
+  )(
     "%s in the Visual Editor is the same markup plus its field names, in a frame",
     (_label, entry) => {
       const sample = sampleFor(entry.blockType)
@@ -79,7 +84,7 @@ describe("the Block catalogue's samples", () => {
       expect(frame.getAttribute("data-block-region")).toBe("page")
       expect(editing.container.children).toHaveLength(1)
       const stripped = frame.innerHTML.replace(
-        / data-(?:block-index|editable-field)="[^"]*"/g,
+        / (?:data-(?:block-index|editable-field)|contenteditable)="[^"]*"/g,
         ""
       )
       expect(stripped).toBe(siteHtml)

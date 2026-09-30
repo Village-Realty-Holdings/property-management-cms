@@ -427,7 +427,8 @@ describe("expandLegalText", () => {
 })
 
 describe("in the Visual Editor", () => {
-  const editable = / data-(?:block-index|editable-field)="[^"]*"/g
+  const editable =
+    / (?:data-(?:block-index|editable-field)|contenteditable)="[^"]*"/g
 
   it.each([
     [

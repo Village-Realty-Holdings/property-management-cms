@@ -143,6 +143,7 @@ export function HeroShell({
             as="p"
             field="subheading"
             context={context}
+            multiline
             className="max-w-2xl text-xl text-pretty whitespace-pre-line sm:text-2xl"
           >
             {subheadingText}

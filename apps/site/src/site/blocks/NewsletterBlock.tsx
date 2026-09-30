@@ -42,6 +42,7 @@ export function NewsletterBlock({
               as="p"
               field="text"
               context={context}
+              multiline
               className="text-base text-pretty whitespace-pre-line sm:text-lg"
             >
               {text}

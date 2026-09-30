@@ -13,6 +13,7 @@ import { Blocks } from "../blocks"
 import type { SiteFixtures } from "../fixtures"
 import { LayoutFrame } from "../LayoutFrame"
 import { siteThemeCss } from "../themeStyle"
+import { CanvasSendContext } from "./canvasSend"
 import { CanvasOverlay } from "./overlay"
 import { useCanvasDocument } from "./useCanvasDocument"
 
@@ -27,6 +28,10 @@ import { useCanvasDocument } from "./useCanvasDocument"
  * follows the Theme the route already emitted, so a control shows on the next
  * frame with no request. `fonts` are the Site's stored Fonts, which a
  * font key in those inputs can name.
+ *
+ * Text is edited in place: plain text in the Blocks' own elements, rich text
+ * with a floating toolbar. Each edit goes to the Admin as it is made (see
+ * `CanvasSendContext`), and comes back in the next document.
  *
  * The overlay (see overlay.tsx) outlines, selects and offers the Block
  * toolbar and "+" on the Blocks of the regions the document's mode lets the
@@ -56,37 +61,43 @@ export function EditorCanvas({
   const editing = document.mode !== "theme"
 
   return (
-    <div onClickCapture={stopNavigation}>
-      {document.theme && (
-        <style
-          id="editor-theme"
-          // Raw, like SiteThemeStyle: React would escape the font rules' quotes.
-          dangerouslySetInnerHTML={{
-            __html: siteThemeCss({ inputs: document.theme, fonts }),
-          }}
+    <CanvasSendContext.Provider value={send}>
+      <div onClickCapture={stopNavigation}>
+        {document.theme && (
+          <style
+            id="editor-theme"
+            // Raw, like SiteThemeStyle: React would escape the font rules' quotes.
+            dangerouslySetInnerHTML={{
+              __html: siteThemeCss({ inputs: document.theme, fonts }),
+            }}
+          />
+        )}
+        <LayoutFrame
+          layout={{ header: document.header, footer: document.footer }}
+          brand={brand}
+          fixtures={fixtures}
+          editing={editing}
+          locked={
+            document.mode === "page"
+              ? "layout"
+              : document.mode === "layout"
+                ? "page"
+                : undefined
+          }
+        >
+          <Blocks
+            blocks={document.page}
+            fixtures={fixtures}
+            editing={editing}
+          />
+        </LayoutFrame>
+        <CanvasOverlay
+          editable={editableRegions(document.mode)}
+          selectedId={document.selectedId ?? null}
+          send={send}
         />
-      )}
-      <LayoutFrame
-        layout={{ header: document.header, footer: document.footer }}
-        brand={brand}
-        fixtures={fixtures}
-        editing={editing}
-        locked={
-          document.mode === "page"
-            ? "layout"
-            : document.mode === "layout"
-              ? "page"
-              : undefined
-        }
-      >
-        <Blocks blocks={document.page} fixtures={fixtures} editing={editing} />
-      </LayoutFrame>
-      <CanvasOverlay
-        editable={editableRegions(document.mode)}
-        selectedId={document.selectedId ?? null}
-        send={send}
-      />
-    </div>
+      </div>
+    </CanvasSendContext.Provider>
   )
 }
 

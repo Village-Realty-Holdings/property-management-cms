@@ -281,3 +281,126 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(ids(result.current)).toEqual(["b1", "b2"])
   })
 })
+
+describe("useCanvasBridge: text edited in place", () => {
+  const ask = (request: object) =>
+    canvasReady({}, { channel: BRIDGE_CHANNEL, ...request })
+  const edit = (over: object) =>
+    ask({
+      type: "edit-text",
+      region: "page",
+      index: 1,
+      fieldPath: "heading",
+      value: "Hello",
+      ...over,
+    })
+  const headings = (editor: { doc: EditorDocument }) =>
+    (editor.doc as unknown as { blocks: { heading: string }[] }).blocks.map(
+      (b) => b.heading
+    )
+  const lexical = (text: string) => ({
+    root: {
+      type: "root",
+      children: [
+        { type: "paragraph", children: [{ type: "text", text, format: 0 }] },
+      ],
+    },
+  })
+
+  it("sets the field of the Block it names", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    edit({})
+    expect(headings(result.current)).toEqual(["b1", "Hello"])
+  })
+
+  it("makes a run of typing one undo step", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
+    edit({ value: "H" })
+    edit({ value: "He" })
+    edit({ value: "Hello" })
+    expect(headings(result.current)).toEqual(["b1", "Hello"])
+    act(() => result.current.undo())
+    expect(headings(result.current)).toEqual(["b1", "b2"])
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("edits a Layout's Header and Footer Blocks by their place in the region", () => {
+    const { result } = setup(documentOf("One"), { doc: layoutDoc() })
+    edit({ region: "header", index: 0, fieldPath: "text", value: "Changed" })
+    expect(
+      (result.current.doc as unknown as { header: { text: string }[] })
+        .header[0]?.text
+    ).toBe("Changed")
+  })
+
+  it("ignores an edit for a Block or a region the document does not have", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
+    edit({ index: 4 })
+    edit({ region: "header", index: 0 })
+    expect(headings(result.current)).toEqual(["b1"])
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("ignores an edit of a field the Block does not have, or of another kind", () => {
+    const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
+    edit({ index: 0, fieldPath: "nope" })
+    edit({ index: 0, fieldPath: "blockType" })
+    edit({ index: 0, fieldPath: "heading", value: lexical("x") })
+    edit({ index: 0, fieldPath: "__proto__.polluted" })
+    expect(headings(result.current)).toEqual(["b1"])
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("takes rich text as Lexical JSON for a rich text field only", () => {
+    const { result } = setup(documentOf("One"), {
+      doc: {
+        ...(pageDoc("b1") as object),
+        blocks: [{ id: "r1", blockType: "richText", content: lexical("Old") }],
+      } as unknown as EditorDocument,
+    })
+    edit({ index: 0, fieldPath: "content", value: lexical("New") })
+    expect(
+      (
+        result.current.doc as unknown as {
+          blocks: { content: ReturnType<typeof lexical> }[]
+        }
+      ).blocks[0]?.content
+    ).toEqual(lexical("New"))
+
+    edit({ index: 0, fieldPath: "content", value: "a string" })
+    edit({
+      index: 0,
+      fieldPath: "content",
+      value: {
+        root: {
+          type: "root",
+          children: [
+            {
+              type: "link",
+              fields: { url: "javascript:alert(1)" },
+              children: [],
+            },
+          ],
+        },
+      },
+    })
+    expect(
+      (
+        result.current.doc as unknown as {
+          blocks: { content: ReturnType<typeof lexical> }[]
+        }
+      ).blocks[0]?.content
+    ).toEqual(lexical("New"))
+  })
+
+  it("ignores an edit in Theme mode, which has no Blocks", () => {
+    const { result } = setup(documentOf("One"), {
+      doc: {
+        kind: "theme",
+        inputs: {},
+      } as unknown as EditorDocument,
+    })
+    edit({})
+    expect(result.current.canUndo).toBe(false)
+  })
+})

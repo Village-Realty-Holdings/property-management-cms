@@ -52,6 +52,7 @@ export function OwnerBandBlock({
               as="p"
               field="pitch"
               context={context}
+              multiline
               className="text-base text-pretty whitespace-pre-line sm:text-lg"
             >
               {pitch}

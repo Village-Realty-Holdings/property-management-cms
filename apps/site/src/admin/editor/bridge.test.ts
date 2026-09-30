@@ -4,6 +4,7 @@ import { CLASSIC, HARBOUR } from "../../theme"
 import type { PageBlock } from "../../site/blocks/types"
 import type { FooterBlock, HeaderBlock } from "../../site/regions/types"
 import {
+  acceptsTextEdit,
   BRIDGE_CHANNEL,
   canvasDocument,
   editableRegions,
@@ -291,5 +292,137 @@ describe("editableRegions", () => {
     expect(editableRegions("page")).toEqual(["page"])
     expect(editableRegions("layout")).toEqual(["header", "footer"])
     expect(editableRegions("theme")).toEqual([])
+  })
+})
+
+describe("edit-text", () => {
+  const frame = fakeWindow()
+  const read = (data: unknown) =>
+    readCanvasMessage(
+      { data, origin: ORIGIN, source: frame as MessageEventSource },
+      { origin: ORIGIN, frame }
+    )
+  const text = (t: string) => ({ type: "text", text: t })
+  const paragraph = (...children: object[]) => ({ type: "paragraph", children })
+  const lexical = (...children: object[]) => ({
+    root: { type: "root", children },
+  })
+  const link = (url: unknown) => ({
+    type: "link",
+    fields: { url },
+    children: [text("x")],
+  })
+
+  it.each([
+    [
+      {
+        type: "edit-text",
+        region: "page",
+        index: 0,
+        fieldPath: "heading",
+        value: "Hi",
+      },
+    ],
+    [
+      {
+        type: "edit-text",
+        region: "footer",
+        index: 2,
+        fieldPath: "cta.label",
+        value: "",
+      },
+    ],
+    [
+      {
+        type: "edit-text",
+        region: "page",
+        index: 1,
+        fieldPath: "items.3.title",
+        value: "A",
+      },
+    ],
+    [
+      {
+        type: "edit-text",
+        region: "page",
+        index: 1,
+        fieldPath: "content",
+        value: lexical(paragraph(text("Hi"))),
+      },
+    ],
+  ])("accepts %j", (request) => {
+    expect(read({ channel: BRIDGE_CHANNEL, ...request })).toEqual(request)
+  })
+
+  const base = { region: "page", index: 0, fieldPath: "a", value: "v" }
+  it.each([
+    ["an unknown region", { ...base, region: "x" }],
+    ["a negative index", { ...base, index: -1 }],
+    ["a fractional index", { ...base, index: 0.5 }],
+    ["no field", { ...base, fieldPath: undefined }],
+    ["an empty field", { ...base, fieldPath: "" }],
+    ["an empty path segment", { ...base, fieldPath: "a..b" }],
+    ["a path that is not a path", { ...base, fieldPath: "a b/c" }],
+    ["a Block's type", { ...base, fieldPath: "blockType" }],
+    ["a Block's id", { ...base, fieldPath: "id" }],
+    ["an item's id", { ...base, fieldPath: "items.0.id" }],
+    ["a number for a value", { ...base, value: 4 }],
+    ["an array for a value", { ...base, value: [] }],
+    ["no value", { ...base, value: undefined }],
+  ])("ignores an edit with %s", (_name, request) => {
+    expect(
+      read({ channel: BRIDGE_CHANNEL, type: "edit-text", ...request })
+    ).toBeNull()
+  })
+
+  describe("what an edit may set", () => {
+    it("a text takes a text, and a Lexical document takes a Lexical document", () => {
+      expect(acceptsTextEdit("Old", "New")).toBe(true)
+      expect(acceptsTextEdit("Old", lexical())).toBe(false)
+      expect(acceptsTextEdit(lexical(), "New")).toBe(false)
+      expect(acceptsTextEdit(lexical(), lexical(paragraph(text("Hi"))))).toBe(
+        true
+      )
+    })
+
+    it("sets only a field that is there", () => {
+      expect(acceptsTextEdit(undefined, "New")).toBe(false)
+      expect(acceptsTextEdit(null, "New")).toBe(false)
+      expect(acceptsTextEdit(4, "New")).toBe(false)
+    })
+
+    it("takes a document only when it is one", () => {
+      expect(acceptsTextEdit(lexical(), { root: { type: "x" } })).toBe(false)
+      expect(acceptsTextEdit(lexical(), { root: { type: "root" } })).toBe(false)
+      expect(acceptsTextEdit(lexical(), { nope: 1 })).toBe(false)
+      expect(acceptsTextEdit(lexical(), lexical({ children: [] }))).toBe(false)
+    })
+
+    it("takes links that are URLs, Site paths, mail or phone, and no others", () => {
+      for (const url of [
+        "https://a.example/x",
+        "/about",
+        "#top",
+        "mailto:a@b.co",
+        "tel:+1555",
+      ]) {
+        expect(
+          acceptsTextEdit(lexical(), lexical(paragraph(link(url)))),
+          url
+        ).toBe(true)
+      }
+      for (const url of [
+        "javascript:alert(1)",
+        "//evil.example",
+        "",
+        4,
+        undefined,
+      ]) {
+        expect(
+          acceptsTextEdit(lexical(), lexical(paragraph(link(url)))),
+          String(url)
+        ).toBe(false)
+      }
+    })
   })
 })

@@ -70,6 +70,7 @@ export function StepsBlock({
             as="p"
             field="intro"
             context={context}
+            multiline
             className="text-base text-pretty whitespace-pre-line sm:text-lg"
           >
             {intro}
@@ -108,6 +109,7 @@ export function StepsBlock({
                   as="p"
                   field={`steps.${step.position}.text`}
                   context={context}
+                  multiline
                   className="text-base text-pretty whitespace-pre-line"
                 >
                   {step.text}
