@@ -33,7 +33,7 @@ export type BlockSurface = "primary" | "accent" | "dark"
  * which puts the ring above the 3:1 that WCAG 1.4.11 asks for on every Theme.
  * (Class names are written out so Tailwind can see them.)
  */
-const focusRings: Record<BlockSurface, string> = {
+export const focusRings: Record<BlockSurface, string> = {
   primary:
     "focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary",
   accent:

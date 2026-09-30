@@ -396,10 +396,11 @@ describe("the Footer", () => {
     expect(hrefOf(getByRole("link", { name: "Talk to us" }))).toBe("/owners")
   })
 
-  it("does not fail on a Newsletter before the page Block registry draws one", () => {
-    // Newsletter is a Phase 4 page Block. Until then the registry has none,
-    // and the Footer leaves it out rather than fail.
-    expect(() => footer([newsletter()])).not.toThrow()
+  it("renders a Newsletter through the page Block registry", () => {
+    const { getByRole, getByLabelText } = footer([newsletter()])
+    expect(getByRole("heading", { name: "Stay in the loop" })).toBeTruthy()
+    expect(getByLabelText(/email/i)).toBeTruthy()
+    expect(getByRole("button", { name: "Subscribe" })).toBeTruthy()
   })
 
   it("renders nothing for a Block that belongs in the Header", () => {
@@ -479,8 +480,6 @@ describe("the region catalogue", () => {
     for (const region of ["header", "footer"] as const) {
       for (const entry of regionCatalogue(region)) {
         expect(entry.thumbnail).toBe(`/block-thumbnails/${entry.slug}.svg`)
-        // Newsletter's thumbnail comes with its page Block (Phase 4).
-        if (entry.blockType === "newsletter") continue
         expect(
           existsSync(join(publicDir, entry.thumbnail)),
           entry.thumbnail
