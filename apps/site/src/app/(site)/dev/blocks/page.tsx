@@ -27,7 +27,7 @@ export default function BlockCataloguePage() {
   devOnly()
   const fixtures = fixturesFor(siteSchema())
   return (
-    <>
+    <main>
       <div className={`${container} py-12`}>
         <h1 className={`${displayFont} text-4xl`}>Block catalogue</h1>
         {blockGroups.map((group) => {
@@ -71,6 +71,6 @@ export default function BlockCataloguePage() {
           fixtures={fixtures}
         />
       ))}
-    </>
+    </main>
   )
 }
