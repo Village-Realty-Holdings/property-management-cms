@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { DEFAULT_PALETTE } from "../../site/theme"
-import { getThemeSummary, siteCardOf, themeStatusLine } from "./site"
+import { CLASSIC, HARBOUR } from "../../theme"
+import { siteCardOf, themeStatusLine, themeSummaryOf } from "./site"
 
 const brand = {
   name: "Warren Beach",
@@ -42,15 +42,35 @@ describe("siteCardOf", () => {
   })
 })
 
-describe("getThemeSummary", () => {
-  it("offers the default palette until a Theme has been saved", () => {
-    const summary = getThemeSummary()
+describe("themeSummaryOf", () => {
+  it("offers the default preset's colours until a Theme has been saved", () => {
+    const summary = themeSummaryOf({
+      source: "default",
+      inputs: CLASSIC.inputs,
+      savedAt: null,
+    })
     expect(summary.savedAt).toBeNull()
-    expect(summary.swatches.map((s) => s.hex)).toEqual([
-      DEFAULT_PALETTE.primary,
-      DEFAULT_PALETTE.accent,
+    expect(summary.swatches).toEqual([
+      { name: "Primary", hex: CLASSIC.inputs.primary },
+      { name: "Accent", hex: CLASSIC.inputs.accent },
+      { name: "Text", hex: CLASSIC.inputs.text },
     ])
     expect(themeStatusLine(summary)).toBe("Not customised yet")
+  })
+
+  it("shows the saved Theme's colours, with the Third colour when set", () => {
+    const summary = themeSummaryOf({
+      source: "saved",
+      inputs: { ...HARBOUR.inputs, third: "#12a4b6" },
+      savedAt: "2026-03-01T10:00:00.000Z",
+    })
+    expect(summary.swatches.map((s) => [s.name, s.hex])).toEqual([
+      ["Primary", HARBOUR.inputs.primary],
+      ["Accent", HARBOUR.inputs.accent],
+      ["Third", "#12a4b6"],
+      ["Text", HARBOUR.inputs.text],
+    ])
+    expect(summary.savedAt).toBe("2026-03-01T10:00:00.000Z")
   })
 
   it("says when the Theme was last saved", () => {

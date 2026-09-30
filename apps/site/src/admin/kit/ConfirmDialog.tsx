@@ -47,6 +47,7 @@ export function ConfirmDialog({
   showDependents = true,
   confirmLabel,
   cancelLabel = "Cancel",
+  confirmVariant = "destructive",
   onConfirm,
 }: {
   open: boolean
@@ -63,6 +64,12 @@ export function ConfirmDialog({
   /** Names the action, e.g. "Delete Layout", not "OK". */
   confirmLabel: string
   cancelLabel?: string
+  /**
+   * How the confirm button looks. Destructive by default; pass "default" to
+   * confirm something that changes a lot but loses nothing, such as
+   * restoring an earlier Theme.
+   */
+  confirmVariant?: "destructive" | "default"
   onConfirm: () =>
     | void
     | { ok?: boolean; message?: string }
@@ -132,7 +139,7 @@ export function ConfirmDialog({
           <Button variant="outline" disabled={pending} onClick={close}>
             {cancelLabel}
           </Button>
-          <Button variant="destructive" disabled={pending} onClick={confirm}>
+          <Button variant={confirmVariant} disabled={pending} onClick={confirm}>
             {pending ? "Working…" : confirmLabel}
           </Button>
         </AlertDialogFooter>

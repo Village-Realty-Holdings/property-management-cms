@@ -9,7 +9,7 @@ import {
   ThemeCard,
   WaitingToPublishCard,
 } from "@/admin/dashboard/cards"
-import { getSiteCard } from "@/admin/dashboard/getSiteCard"
+import { getSiteCard, getThemeCard } from "@/admin/dashboard/getSiteCard"
 import { loadDashboard } from "@/admin/dashboard/queries"
 import { CardSkeleton, PageHeader } from "@/admin/kit"
 import { requireStaff } from "@/admin/session"
@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "Dashboard" }
 
 /** The Admin's home: the Site at a glance and the way into recent work. */
 export default async function Dashboard() {
-  const site = await getSiteCard()
+  const [site, theme] = await Promise.all([getSiteCard(), getThemeCard()])
   return (
     <>
       <PageHeader
@@ -39,7 +39,7 @@ export default async function Dashboard() {
         >
           <ContentCards />
         </Suspense>
-        <ThemeCard />
+        <ThemeCard summary={theme} />
       </div>
     </>
   )

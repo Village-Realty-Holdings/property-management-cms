@@ -1,7 +1,10 @@
 import type { Payload } from "payload"
 
+import { getAvailableFonts } from "../fonts/available"
 import type { Brand, Seo } from "../payload-types"
+import { readLiveTheme, type LiveTheme } from "../theme/record"
 import type { SitemapPage } from "./seo"
+import type { SiteTheme } from "./themeStyle"
 
 /**
  * What the public Site reads about itself, through the Local API as a
@@ -36,4 +39,22 @@ export async function readPublishedPages(
     ...asVisitor,
   })
   return docs.map(({ path, updatedAt }) => ({ path, updatedAt }))
+}
+
+/** The live Theme, and the fonts its font keys can name. */
+export type LiveSiteTheme = LiveTheme & SiteTheme
+
+/**
+ * The live Theme the Site applies: what was last saved (it goes live on save,
+ * apps/site ADR-0004), or the default preset while none is. The Theme and the
+ * Fonts are public records with no Drafts, so the read needs no visitor
+ * filtering; a Font a Theme names that has since been deleted is simply not in
+ * `fonts`, and resolves to the default font.
+ */
+export async function readSiteTheme(payload: Payload): Promise<LiveSiteTheme> {
+  const [live, fonts] = await Promise.all([
+    readLiveTheme(payload),
+    getAvailableFonts(payload),
+  ])
+  return { ...live, fonts }
 }
