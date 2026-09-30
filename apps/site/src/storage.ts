@@ -17,6 +17,11 @@ import { siteSchema } from "./database"
  * - Partly set: throws, so a misconfigured deployment doesn't silently fall
  *   back to local disk.
  *
+ * Font files (the `font-files` collection) go under `<schema>/fonts`, and
+ * are not served from `S3_PUBLIC_URL`: their URL stays Payload's own file
+ * route on the Site's origin, so a Site never asks another host for its fonts
+ * (apps/site ADR-0004 and the Fonts spec).
+ *
  * To put another upload collection in the bucket, add its slug to
  * UPLOAD_COLLECTIONS. That collection must also declare the `prefix` and
  * `_objectKey` text fields the plugin adds (see Media), so its table is the
@@ -24,7 +29,9 @@ import { siteSchema } from "./database"
  */
 
 /** Slugs of the upload collections whose files go to object storage. */
-export const UPLOAD_COLLECTIONS: readonly string[] = ["media"]
+export const FONT_FILES_SLUG = "font-files"
+
+export const UPLOAD_COLLECTIONS: readonly string[] = ["media", FONT_FILES_SLUG]
 
 type Env = Record<string, string | undefined>
 
@@ -48,7 +55,7 @@ export function storagePlugins(
     )
   }
   const prefix = siteSchema(env)
-  const collectionOptions = {
+  const mediaOptions = {
     // One folder per Site in the shared bucket: <bucket>/<schema>/<file>.
     ...(prefix ? { prefix } : {}),
     generateFileURL: ({
@@ -58,6 +65,10 @@ export function storagePlugins(
       filename: string
       prefix?: string
     }) => mediaFileURL(env.S3_PUBLIC_URL!, prefix, filename),
+  }
+  // Font files: <bucket>/<schema>/fonts/<file>, no generateFileURL.
+  const fontOptions = {
+    prefix: [prefix, "fonts"].filter(Boolean).join("/"),
   }
   return [
     s3Storage({
@@ -74,7 +85,10 @@ export function storagePlugins(
       },
       disableLocalStorage: true,
       collections: Object.fromEntries(
-        uploadCollections.map((slug) => [slug, collectionOptions])
+        uploadCollections.map((slug) => [
+          slug,
+          slug === FONT_FILES_SLUG ? fontOptions : mediaOptions,
+        ])
       ),
     }),
   ]

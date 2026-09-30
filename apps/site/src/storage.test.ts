@@ -72,19 +72,57 @@ describe("storagePlugins", () => {
   })
 
   it("covers more upload collections when asked, under the same prefix", () => {
-    const [media, fontFiles] = withStorage(
-      [upload("media"), upload("font-files")],
+    const [media, attachments] = withStorage(
+      [upload("media"), upload("attachments")],
       { ...s3Env, DATABASE_SCHEMA: "avada" },
-      ["media", "font-files"]
+      ["media", "attachments"]
     )
     expect(prefixDefault(media)).toBe("avada")
-    expect(prefixDefault(fontFiles)).toBe("avada")
-    expect(fieldNames(fontFiles)).toContain("_objectKey")
+    expect(prefixDefault(attachments)).toBe("avada")
+    expect(fieldNames(attachments)).toContain("_objectKey")
   })
 
   it("leaves other upload collections on local disk", () => {
     const [, other] = withStorage([upload("media"), upload("other")], s3Env)
     expect(fieldNames(other)).not.toContain("_objectKey")
+  })
+})
+
+describe("font files in object storage", () => {
+  // A stand-in for the font-files collection: only what the plugin reads.
+  const stored = (env: Record<string, string | undefined>) =>
+    withStorage([upload("media"), upload("font-files")], env, [
+      "media",
+      "font-files",
+    ])
+
+  it("stores each Site's font files under <schema>/fonts", () => {
+    const [, fonts] = stored({ ...s3Env, DATABASE_SCHEMA: "avada" })
+    expect(prefixDefault(fonts)).toBe("avada/fonts")
+  })
+
+  it("stores font files under fonts/ when the schema is unset", () => {
+    const [, fonts] = stored(s3Env)
+    expect(prefixDefault(fonts)).toBe("fonts")
+  })
+
+  it("serves font files from the Site, not from the bucket's public URL", async () => {
+    const urlOf = async (collection: CollectionConfig | undefined) => {
+      const field = collection?.fields.find(
+        (f) => "name" in f && f.name === "url"
+      )
+      const hook = (
+        field as { hooks?: { afterRead?: ((args: unknown) => unknown)[] } }
+      ).hooks?.afterRead?.[0]
+      return hook?.({
+        value: "/api/x/file/a.woff2",
+        data: { filename: "a.woff2", prefix: "avada/fonts" },
+      })
+    }
+    const [media, fonts] = stored({ ...s3Env, DATABASE_SCHEMA: "avada" })
+    // Media goes straight to the CDN; font files stay on the Site's origin.
+    expect(await urlOf(media)).toMatch(/^https:\/\/cdn\.example\.test\//)
+    expect(await urlOf(fonts)).toBe("/api/x/file/a.woff2?prefix=avada%2Ffonts")
   })
 })
 

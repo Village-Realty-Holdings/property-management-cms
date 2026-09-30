@@ -23,7 +23,7 @@ The Site's visual style: its colours, fonts, shape, density, shadows, buttons an
 _Avoid_: Skin, styles, look and feel
 
 **Font**:
-A font family uploaded by staff, as one or more files of different weights and styles, for use in the Theme. Fonts are not Media.
+A font family staff have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by staff, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
 _Avoid_: Typeface, font file (for the family)
 
 ### Content
@@ -61,6 +61,10 @@ _Avoid_: Back office, CMS (for the admin itself)
 **Dashboard**:
 The Admin's home page: the Site at a glance and the way into recent work.
 _Avoid_: Home (for the Admin page), overview
+
+**Assets**:
+The Admin's grouping, under Settings, for the files the Theme draws on. Today that is Fonts. It is a heading in the Admin, not a model: Media is Content, not an Asset.
+_Avoid_: Assets for Media, or as a model name
 
 **Visual Editor**:
 The part of the Admin where a Staff User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
