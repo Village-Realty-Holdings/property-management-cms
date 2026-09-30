@@ -50,7 +50,8 @@ Be economical with heavy commands: while iterating run only the vitest files you
 // each other when many worktrees run them at once. Coders run only what they
 // touched; the full check happens once per slice, when it lands.
 const FAST = `${RULES}
-Checks while you build, and before you push: run ONLY the vitest files you added or changed and the ones that import what you changed (\`pnpm --filter site exec vitest run <files>\`), \`pnpm --filter site typecheck\`, and eslint on the files you changed (\`pnpm --filter site exec eslint <files>\`). Do NOT run \`pnpm check\`, \`pnpm test\`, \`turbo\` or the whole vitest suite: many coders share this machine and the land step runs the full check for you. This overrides the "pnpm check once before you push" line above.`
+Checks while you build, and before you push: run ONLY the vitest files you added or changed and the ones that import what you changed (\`pnpm --filter site exec vitest run <files>\`), \`pnpm --filter site typecheck\`, and eslint on the files you changed (\`pnpm --filter site exec eslint <files>\`). Do NOT run \`pnpm check\`, \`pnpm test\`, \`turbo\` or the whole vitest suite: many coders share this machine and the land step runs the full check for you. This overrides the "pnpm check once before you push" line above.
+If your wip branch already exists locally, or is checked out in another worktree under .claude/worktrees/, that is debris from a cancelled attempt at this same slice, not a live coder: nothing else is building your slice. Remove that worktree (\`git worktree remove --force <path>\`), delete the local branch, and carry on from origin/${BASE}.`
 // Slices built before FAST existed keep their original prompt, so a resumed
 // run reuses their results instead of building them again.
 const BUILT_WITH_FULL_CHECK = new Set([
@@ -277,7 +278,7 @@ async function buildSlices(slices, tag, gates = {}) {
     const blocking = review?.blocking ?? []
     const landed = await withLane(() =>
       agent(
-        `${RULES}\n\nLand slice ${s.key}. In your worktree check out origin/${built.branch}.${blocking.length ? ` First fix these review findings, test-first where it is logic:\n${blocking.map((b) => `- ${b}`).join("\n")}\n` : ""} ${LAND} The coder ran only the tests for the files it touched, so after the rebase always run \`pnpm check\` once, in the foreground, before you push: it takes several minutes, so give that command a 10 minute timeout and do not start it twice. Then delete ${built.branch} from origin. Return the landed commit.`,
+        `${RULES}\n\nLand slice ${s.key}. In your worktree check out origin/${built.branch}.${blocking.length ? ` First fix these review findings, test-first where it is logic:\n${blocking.map((b) => `- ${b}`).join("\n")}\n` : ""} ${LAND} The coder ran only the tests for the files it touched, so after the rebase always run \`pnpm check\` once, in the foreground, before you push: it takes several minutes, so give that command a 10 minute timeout and do not start it twice. Then delete ${built.branch} from origin, and remove any other worktree under .claude/worktrees/ that has ${built.branch} checked out (\`git worktree remove --force\`) along with the local branch. Return the landed commit.`,
         {
           label: `land ${s.key}`,
           phase: "Build",
