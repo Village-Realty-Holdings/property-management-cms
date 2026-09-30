@@ -23,11 +23,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, ChevronUp, Lock } from "lucide-react"
+import { ChevronDown, ChevronUp, Lock, Plus } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { catalogue } from "../../blocks/catalogue"
+import { regionCatalogueByType } from "../../site/regions/catalogue"
+import type { RegionBlockType } from "../../site/regions/types"
 import { BLOCK_TYPES, type BlockValues } from "../pageForm"
 import { useEditor } from "./EditorProvider"
 import { blocksIn, type Region } from "./state"
@@ -37,6 +40,9 @@ import { blocksIn, type Region } from "./state"
  * edited. A row names the Block (its catalogue label) with a text hint, and
  * selecting it selects the Block. Blocks reorder within their region by drag
  * or, from the keyboard, with each row's Move up and Move down buttons.
+ *
+ * Each region the document owns has a "+" that opens the Block picker to add
+ * a Block at the end of it.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -55,7 +61,12 @@ const HINT_LENGTH = 60
 
 /** The Block's name in the catalogue ("Hero"); an unknown type shows its type, spaced out. */
 function blockLabel(block: BlockValues): string {
-  const known = BLOCK_TYPES.find((type) => type.blockType === block.blockType)
+  const type = String(block.blockType)
+  if (Object.hasOwn(catalogue, type))
+    return catalogue[type as keyof typeof catalogue].label
+  if (Object.hasOwn(regionCatalogueByType, type))
+    return regionCatalogueByType[type as RegionBlockType].label
+  const known = BLOCK_TYPES.find((entry) => entry.blockType === type)
   if (known) return known.label
   const spaced = String(block.blockType)
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -122,7 +133,7 @@ export function OutlinePanel({
    */
   onSelectBlock?: (id: string) => void
 }) {
-  const { doc, selectedId, select, moveBlock } = useEditor()
+  const { doc, selectedId, select, moveBlock, onInsertRequest } = useEditor()
   const [announcement, setAnnouncement] = useState("")
   const tree = useRef<HTMLDivElement>(null)
   /** The button to give focus back to once a move has re-rendered the rows. */
@@ -287,8 +298,16 @@ export function OutlinePanel({
                 {REGION_LABEL[region]}
               </h2>
               {editable && (
-                // The block picker's "+" for this region goes here.
-                <span data-outline-add-slot={region} />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Add a Block to the ${REGION_LABEL[region]}`}
+                  // At the end of the region; the canvas's "+" picks a place.
+                  onClick={() => onInsertRequest(region, blocks.length)}
+                >
+                  <Plus aria-hidden />
+                </Button>
               )}
             </div>
 

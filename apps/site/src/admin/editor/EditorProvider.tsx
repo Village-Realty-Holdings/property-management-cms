@@ -5,8 +5,11 @@ import {
   useContext,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react"
+
+import { BlockPicker, type InsertTarget } from "./BlockPicker"
 
 import {
   canRedo,
@@ -37,9 +40,10 @@ export type EditorApi = {
   removeBlock: (id: string) => void
   select: (id: string) => void
   /**
-   * The canvas's "+" was pressed: a Block is wanted at `index` in `region`.
-   * It does nothing until the Block picker is wired in, through the
-   * provider's `onInsertRequest`.
+   * A "+" was pressed, in the canvas or the Outline: a Block is wanted at
+   * `index` in `region`. It opens the Block picker, which inserts the chosen
+   * Block there and selects it, unless the provider was given its own
+   * `onInsertRequest`.
    */
   onInsertRequest: (region: Region, index: number) => void
   deselect: () => void
@@ -50,8 +54,6 @@ export type EditorApi = {
   markSaved: (doc: EditorDocument, sent: EditorDocument) => void
 }
 
-const noInsertRequest = () => {}
-
 const EditorContext = createContext<EditorApi | null>(null)
 
 /**
@@ -60,11 +62,11 @@ const EditorContext = createContext<EditorApi | null>(null)
  */
 export function EditorProvider({
   initial,
-  onInsertRequest = noInsertRequest,
+  onInsertRequest: customInsertRequest,
   children,
 }: {
   initial: EditorDocument
-  /** What the canvas's "+" does: open the picker for `index` in `region`. */
+  /** What a "+" does, in place of opening the Block picker. */
   onInsertRequest?: (region: Region, index: number) => void
   children: ReactNode
 }) {
@@ -72,6 +74,13 @@ export function EditorProvider({
     editorReducer,
     initial,
     createEditorState
+  )
+  const [picking, setPicking] = useState<InsertTarget | null>(null)
+  const onInsertRequest = useMemo(
+    () =>
+      customInsertRequest ??
+      ((region: Region, index: number) => setPicking({ region, index })),
+    [customInsertRequest]
   )
 
   const api = useMemo<EditorApi>(
@@ -101,7 +110,16 @@ export function EditorProvider({
     [state, onInsertRequest]
   )
 
-  return <EditorContext.Provider value={api}>{children}</EditorContext.Provider>
+  return (
+    <EditorContext.Provider value={api}>
+      {children}
+      <BlockPicker
+        target={picking}
+        onClose={() => setPicking(null)}
+        onInsert={api.insertBlock}
+      />
+    </EditorContext.Provider>
+  )
 }
 
 export function useEditor(): EditorApi {

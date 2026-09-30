@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, renderHook } from "@testing-library/react"
+import { act, cleanup, renderHook, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -262,9 +262,12 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(onInsertRequest).not.toHaveBeenCalled()
   })
 
-  it("does nothing on insert-request when no picker is wired in", () => {
+  it("opens the Block picker on insert-request, changing nothing until a Block is chosen", () => {
+    Element.prototype.scrollIntoView ??= () => {}
     const { result } = setup(documentOf("One"))
+    expect(screen.queryByRole("dialog")).toBeNull()
     ask({ type: "insert-request", region: "page", index: 0 })
+    expect(screen.getByRole("dialog", { name: /Block/ })).toBeTruthy()
     expect(result.current.canUndo).toBe(false)
   })
 

@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { act, renderHook } from "@testing-library/react"
+import { act, render, renderHook, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import { EditorProvider, useEditor } from "./EditorProvider"
+import { EditorProvider, useEditor, type EditorApi } from "./EditorProvider"
 import type { EditorDocument } from "./state"
 
 const page: EditorDocument = {
@@ -53,10 +54,32 @@ describe("useEditor", () => {
     expect(result.current.selectedId).toBeNull()
   })
 
-  it("has an onInsertRequest that does nothing until one is given", () => {
-    const { result } = renderHook(() => useEditor(), { wrapper })
-    expect(() => result.current.onInsertRequest("page", 0)).not.toThrow()
-    expect(result.current.isDirty).toBe(false)
+  it("opens the Block picker on an insert request, and inserts and selects the chosen Block", async () => {
+    Element.prototype.scrollIntoView ??= () => {}
+    const user = userEvent.setup()
+    let editor!: EditorApi
+    function Grab() {
+      editor = useEditor()
+      return null
+    }
+    render(
+      <EditorProvider initial={page}>
+        <Grab />
+      </EditorProvider>
+    )
+    expect(screen.queryByRole("dialog")).toBeNull()
+
+    act(() => editor.onInsertRequest("page", 0))
+    expect(screen.getByRole("dialog", { name: /Block/ })).toBeTruthy()
+    await user.click(screen.getByRole("option", { name: /^FAQ\b/ }))
+
+    expect(screen.queryByRole("dialog")).toBeNull()
+    const blocks = (
+      editor.doc as { blocks: { id: string; blockType: string }[] }
+    ).blocks
+    expect(blocks.map((b) => b.blockType)).toEqual(["faq", "richText"])
+    expect(editor.selectedId).toBe(blocks[0]!.id)
+    expect(editor.isDirty).toBe(true)
   })
 
   it("hands an insert request to the onInsertRequest it was given", () => {

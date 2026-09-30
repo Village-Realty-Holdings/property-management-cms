@@ -2,7 +2,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import axe from "axe-core"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 
 import type { BlockValues } from "../pageForm"
 import { EditorProvider, useEditor } from "./EditorProvider"
@@ -286,13 +286,61 @@ describe("the text hint", () => {
   })
 })
 
-describe("the place for the block picker's +", () => {
-  it("is marked in each region that can take Blocks", () => {
-    const { container } = mount(pageDoc())
-    const slots = [...container.querySelectorAll("[data-outline-add-slot]")]
-    expect(slots.map((s) => s.getAttribute("data-outline-add-slot"))).toEqual([
-      "page",
+describe("adding a Block with +", () => {
+  beforeAll(() => {
+    Element.prototype.scrollIntoView ??= () => {}
+  })
+  const plus = (region: string) =>
+    screen.queryByRole("button", { name: `Add a Block to the ${region}` })
+
+  it("has one + for each region the open document owns", () => {
+    mount(pageDoc())
+    expect(plus("Page")).toBeTruthy()
+    expect(plus("Header")).toBeNull()
+    expect(plus("Footer")).toBeNull()
+    cleanup()
+    mount(layoutDoc())
+    expect(plus("Header")).toBeTruthy()
+    expect(plus("Footer")).toBeTruthy()
+    expect(plus("Page")).toBeNull()
+    cleanup()
+    mount(themeDoc())
+    expect(screen.queryByRole("button", { name: /^Add a Block/ })).toBeNull()
+  })
+
+  it("opens the Block picker, then adds the chosen Block to the end and selects it", async () => {
+    const user = userEvent.setup()
+    mount(pageDoc())
+    await user.click(plus("Page")!)
+    await user.click(screen.getByRole("option", { name: /^FAQ\b/ }))
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(itemNames(group("Page"))).toEqual([
+      "Hero",
+      "Rich text",
+      "Call to action",
+      "FAQ",
     ])
+    const order = value("page order")!.split(",")
+    expect(value("selected")).toBe(order[3])
+    expect(value("can undo")).toBe("true")
+  })
+
+  it("adds to an empty region", async () => {
+    const user = userEvent.setup()
+    mount({ ...(pageDoc() as PageDocument), blocks: [] })
+    await user.click(plus("Page")!)
+    await user.click(screen.getByRole("option", { name: /^Hero\b/ }))
+    expect(itemNames(group("Page"))).toEqual(["Hero"])
+  })
+
+  it("offers a Header only its own Blocks", async () => {
+    const user = userEvent.setup()
+    mount(layoutDoc())
+    await user.click(plus("Header")!)
+    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
+    await user.click(screen.getByRole("option", { name: /^Utility strip\b/ }))
+    expect(value("header order")!.split(",")).toHaveLength(3)
   })
 })
 
