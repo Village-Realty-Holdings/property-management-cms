@@ -284,6 +284,9 @@ function PageModeEditor({
             <Button
               size="sm"
               disabled={busy !== null || (status === "published" && !isDirty)}
+              // Stays a keyboard stop while there is nothing to publish.
+              focusableWhenDisabled
+              className="aria-disabled:opacity-50"
               onClick={() => void save("publish")}
             >
               Publish

@@ -271,7 +271,9 @@ function PresetButton({
       <span
         id={id}
         aria-hidden="true"
-        className="text-xs text-muted-foreground"
+        // Not muted-foreground: it is under 4.5:1 on the muted fill of the
+        // preset in use.
+        className="text-xs text-foreground/70"
       >
         {preset.blurb}
       </span>

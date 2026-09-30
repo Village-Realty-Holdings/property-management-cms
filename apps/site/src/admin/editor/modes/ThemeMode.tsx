@@ -91,14 +91,25 @@ function ThemeModeBody({
 
   // ── The canvas: the Page it stands on, with the unsaved Theme ────────────
   const [preview, setPreview] = useState(home)
+  const [canvasSrc, setCanvasSrc] = useState(() => editingUrl(home.path))
   const latestPick = useRef(0)
+  // What the Staff User has unsaved now, for a pick that finishes later.
+  const unsaved = useRef<ThemeInputs | undefined>(undefined)
+  useEffect(() => {
+    unsaved.current = isDirty ? inputs : undefined
+  })
 
   const pickPage = async (picked: PickerPage) => {
     const pick = ++latestPick.current
     const next = await loadPreviewPage(picked.id).catch(() => null)
     // A slower answer to an earlier pick never replaces a later one, and a
     // Page that is gone leaves the canvas where it was.
-    if (next && pick === latestPick.current) setPreview(next)
+    if (next && pick === latestPick.current) {
+      setPreview(next)
+      // The new canvas is drawn with the unsaved Theme from its first paint,
+      // not with the live one until the Admin's first message reaches it.
+      setCanvasSrc(editingUrl(next.path, unsaved.current))
+    }
   }
 
   const canvas = useMemo(
@@ -164,7 +175,7 @@ function ThemeModeBody({
       mode="theme"
       name="Theme"
       goesLiveOn={publishedPages}
-      canvasSrc={editingUrl(preview.path)}
+      canvasSrc={canvasSrc}
       onSave={save}
       canSave={isDirty && !saving}
       onPickPage={pickPage}

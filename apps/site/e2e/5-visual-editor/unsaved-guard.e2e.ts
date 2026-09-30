@@ -236,7 +236,12 @@ describe("the unsaved-changes guard in Layout mode", () => {
 describe("the unsaved-changes guard in Theme mode", () => {
   /** Makes the Theme unsaved: a new Primary colour, typed. */
   async function editPrimary(p: Page) {
-    const field = p.getByRole("textbox", { name: /^Primary\b/ }).first()
+    // The hex field: its swatch ("Primary colour picker") is typed into by
+    // value, not by keys.
+    const field = p.getByRole("textbox", {
+      name: "Primary colour",
+      exact: true,
+    })
     await field.click()
     await p.keyboard.press("Control+a")
     await p.keyboard.type("#6b2d5c")

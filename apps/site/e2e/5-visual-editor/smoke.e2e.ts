@@ -116,6 +116,8 @@ describe("the Visual Editor, end to end on one Site", () => {
     await (await openTab(page, "Block"))
       .getByLabel("Heading", { exact: true })
       .fill(HEADING)
+    // Selecting the Hero opened the Block tab: back to the Outline for the next.
+    await openTab(page, "Outline")
     await outlineItems(page, "Call to action").first().click()
     await (await openTab(page, "Block"))
       .getByLabel("Heading", { exact: true })

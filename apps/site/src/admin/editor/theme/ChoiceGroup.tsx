@@ -3,9 +3,9 @@
 import { useId } from "react"
 
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group"
+  RadioGroup,
+  RadioGroupButton,
+} from "@workspace/ui/components/radio-group"
 import { cn } from "@workspace/ui/lib/utils"
 
 type Choice<V extends string> = {
@@ -15,7 +15,7 @@ type Choice<V extends string> = {
 }
 
 /**
- * A pick from a short list, as a toggle group. Pressing the choice in use
+ * A pick from a short list, as a radio group drawn as buttons. Pressing the choice in use
  * does nothing: a Theme control always has a value. The help, and the chosen
  * option's hint, show under the group.
  */
@@ -47,25 +47,21 @@ export function ChoiceGroup<V extends string>({
       >
         {label}
       </span>
-      <ToggleGroup
+      <RadioGroup
         aria-labelledby={id}
         aria-describedby={description ? `${id}-description` : undefined}
-        variant="outline"
-        size="sm"
-        spacing={1}
-        className="flex-wrap"
-        value={[value]}
+        className="flex w-auto flex-row flex-wrap gap-1"
+        value={value}
         onValueChange={(next) => {
-          const chosen = next[0] as V | undefined
-          if (chosen !== undefined && chosen !== value) onChange(chosen)
+          if (next !== value) onChange(next as V)
         }}
       >
         {options.map((option) => (
-          <ToggleGroupItem key={option.value} value={option.value}>
+          <RadioGroupButton key={option.value} value={option.value}>
             {option.label}
-          </ToggleGroupItem>
+          </RadioGroupButton>
         ))}
-      </ToggleGroup>
+      </RadioGroup>
       {description && (
         <p id={`${id}-description`} className="text-xs text-muted-foreground">
           {description}

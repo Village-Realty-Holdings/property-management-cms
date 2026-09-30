@@ -4,6 +4,8 @@ import { Radio as RadioPrimitive } from "@base-ui/react/radio"
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
 import { cn } from "cn"
 
+import { toggleVariants } from "@workspace/ui/components/toggle"
+
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
     <RadioGroupPrimitive
@@ -34,4 +36,29 @@ function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
   )
 }
 
-export { RadioGroup, RadioGroupItem }
+/**
+ * A choice in a RadioGroup drawn as a button, like a toggle: for a short
+ * pick-one list (a Theme control) whose options are words, not circles. It is
+ * still a radio to assistive technology, so the arrow keys move between the
+ * choices and the group reads as "one of".
+ */
+function RadioGroupButton({
+  className,
+  ...props
+}: Omit<RadioPrimitive.Root.Props, "render" | "nativeButton">) {
+  return (
+    <RadioPrimitive.Root
+      data-slot="radio-group-button"
+      render={<button type="button" />}
+      nativeButton
+      className={cn(
+        toggleVariants({ variant: "outline", size: "sm" }),
+        "shrink-0 focus:z-10 focus-visible:z-10 aria-checked:bg-muted",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { RadioGroup, RadioGroupItem, RadioGroupButton }

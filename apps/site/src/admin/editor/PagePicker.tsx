@@ -155,6 +155,8 @@ export function PagePicker({
       <CommandDialog
         open={open}
         onOpenChange={changeOpen}
+        // No fade or zoom: see BlockPicker.
+        className="duration-0"
         title="Go to a Page"
         description="Search Pages by title or path, then press Enter to open one."
       >
@@ -182,7 +184,7 @@ export function PagePicker({
                       <span className="block truncate font-medium">
                         {page.title}
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
+                      <span className="block truncate text-xs text-foreground/70">
                         {page.path}
                       </span>
                     </span>

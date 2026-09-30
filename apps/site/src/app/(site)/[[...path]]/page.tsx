@@ -53,7 +53,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function SitePage(props: Props) {
   // Only for a signed-in Staff User; the flag is ignored for anyone else.
   if (await isEditingCanvasRequest(await props.searchParams)) {
-    return <EditingPage />
+    return <EditingPage searchParams={await props.searchParams} />
   }
   const { path } = await props.params
   const page = await getPublishedPage(pathFromSegments(path))

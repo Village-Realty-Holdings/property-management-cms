@@ -123,6 +123,26 @@ describe("EditorCanvas", () => {
     expect(screen.getByRole("heading", { name: "First heading" })).toBeTruthy()
   })
 
+  it("starts with the unsaved Theme its URL carried, before any document comes, and hands over to the document's", () => {
+    render(
+      <EditorCanvas
+        brand={brand}
+        fixtures={fixtures}
+        fonts={[]}
+        initialTheme={HARBOUR.inputs}
+      />
+    )
+    expect(themeCss()).toContain(`--primary:${HARBOUR.inputs.primary};`)
+
+    deliver(
+      documentOf({
+        mode: "theme",
+        theme: { ...HARBOUR.inputs, primary: "#123456" },
+      })
+    )
+    expect(themeCss()).toContain("--primary:#123456;")
+  })
+
   it("applies unsaved Theme inputs as tokens at :root, and removes them with the Theme", () => {
     render(<EditorCanvas brand={brand} fixtures={fixtures} fonts={[]} />)
     deliver(documentOf())

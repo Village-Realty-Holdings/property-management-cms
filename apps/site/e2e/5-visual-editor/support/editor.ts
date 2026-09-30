@@ -707,10 +707,14 @@ export const barButton = (page: Page, name: string | RegExp) =>
 
 /**
  * Presses Discard, and confirms it if the editor asks first (discarding loses
- * work, so it may).
+ * work, so it may). Does nothing when Discard is disabled: nothing is unsaved,
+ * so there is nothing left to discard (an edit that ends on the saved value
+ * leaves the editor clean).
  */
 export async function discard(page: Page): Promise<void> {
-  await barButton(page, "Discard").click()
+  const button = barButton(page, "Discard")
+  if (await button.isDisabled()) return
+  await button.click()
   const confirm = page.getByRole("alertdialog")
   try {
     await confirm.waitFor({ timeout: 2_000 })

@@ -75,9 +75,10 @@ export function PageTab({
   onLayoutMade: (layout: LayoutOption) => void
 }) {
   const { doc, setField } = useEditor()
-  // A New Page's path follows its title when the title is left, unless the
-  // Staff User has written the path themselves.
-  const titleAtFocus = useRef("")
+  // A New Page's path follows its title as it is typed, unless the Staff User
+  // has written the path themselves. This is the title the path was last made
+  // from: a title emptied and typed again still finds the path it moved.
+  const pathTitle = useRef<string | null>(null)
   if (doc.kind !== "page") return null
   const page: PageDocument = doc
 
@@ -105,17 +106,20 @@ export function PageTab({
       <FormField id="page-title" label="Title" error={titleError}>
         <Input
           {...inputProps("title", "title", page.title)}
-          onFocus={() => {
-            titleAtFocus.current = page.title
-          }}
-          onBlur={() => {
+          onChange={(event) => {
+            const to = event.target.value
+            setField("title", to)
+            const from = (pathTitle.current ??= page.title)
             const next = nextPathForTitle({
               saved: id !== null,
               path: page.path,
-              from: titleAtFocus.current,
-              to: page.title,
+              from,
+              to,
             })
-            if (next !== null) setField("path", next)
+            if (next !== null) {
+              setField("path", next)
+              pathTitle.current = to
+            }
           }}
           {...describedBy("page-title", { error: titleError })}
         />

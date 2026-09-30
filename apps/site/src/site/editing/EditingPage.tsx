@@ -5,6 +5,7 @@ import { resolveBrand } from "../brand"
 import { fixturesFor } from "../fixtures"
 import { getBrand, getTheme } from "../queries"
 import { EditorCanvas } from "./EditorCanvas"
+import { readThemeParam } from "./flag"
 
 /**
  * The Site route in its editing mode, for a signed-in Staff User (see
@@ -14,13 +15,18 @@ import { EditorCanvas } from "./EditorCanvas"
  * posts them to the canvas, so the canvas shows the unsaved document, a Draft
  * included, and a Page that is not Published yet still has a canvas.
  */
-export async function EditingPage() {
+export async function EditingPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
   const [brand, theme] = await Promise.all([getBrand(), getTheme()])
   return (
     <EditorCanvas
       brand={resolveBrand(brand)}
       fixtures={fixturesFor(siteSchema())}
       fonts={theme.fonts}
+      initialTheme={readThemeParam(searchParams)}
     />
   )
 }

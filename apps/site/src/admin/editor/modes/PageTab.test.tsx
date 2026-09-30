@@ -146,6 +146,32 @@ describe("<PageTab> path", () => {
     expect(within(panel()).getByText(/used by the app/i)).toBeTruthy()
   })
 
+  it("moves a New Page's path with its title as it is typed, so a path filled in next replaces it whole", async () => {
+    mount({
+      id: null,
+      initial: { ...about, title: "Untitled Page", path: "/untitled-page" },
+    })
+    const user = userEvent.setup()
+    const title = within(panel()).getByLabelText("Title", { exact: true })
+    const path = () =>
+      (
+        within(panel()).getByLabelText("Path", {
+          exact: true,
+        }) as HTMLInputElement
+      ).value
+    await user.clear(title)
+    await user.type(title, "Our story")
+    expect(path()).toBe("/our-story")
+    // Emptied and typed again: still the title's path.
+    await user.clear(title)
+    await user.type(title, "Stays")
+    expect(path()).toBe("/stays")
+    // Once the path is written by hand it is the Staff User's.
+    await user.type(within(panel()).getByLabelText("Path"), "-x")
+    await user.type(title, " by the sea")
+    expect(path()).toBe("/stays-x")
+  })
+
   it("gives a New Page the path of its title when the title is left", async () => {
     mount({
       id: null,

@@ -257,17 +257,17 @@ describe("<ThemeControls>", () => {
       const start = DEFAULT_INPUTS
       expect(start[key]).not.toBe(stored)
       const { onChange, user } = setup(start)
-      const scope = screen.getByRole("group", { name: group })
-      await user.click(within(scope).getByRole("button", { name: label }))
+      const scope = screen.getByRole("radiogroup", { name: group })
+      await user.click(within(scope).getByRole("radio", { name: label }))
       expect(lastCall(onChange)).toEqual({ ...start, [key]: stored })
     }
   )
 
   it("does not clear a choice by pressing it again", async () => {
     const { onChange, user } = setup()
-    const scope = screen.getByRole("group", { name: "Spacing" })
+    const scope = screen.getByRole("radiogroup", { name: "Spacing" })
     await user.click(
-      within(scope).getByRole("button", { name: "Comfortable", pressed: true })
+      within(scope).getByRole("radio", { name: "Comfortable", checked: true })
     )
     expect(onChange).not.toHaveBeenCalled()
   })

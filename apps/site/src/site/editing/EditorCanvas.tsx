@@ -8,6 +8,7 @@ import {
   type CanvasRequest,
 } from "../../admin/editor/bridge"
 import type { AvailableFont } from "../../fonts/available"
+import type { ThemeInputs } from "../../theme"
 import type { Brand } from "../brand"
 import { Blocks } from "../blocks"
 import type { SiteFixtures } from "../fixtures"
@@ -48,10 +49,17 @@ export function EditorCanvas({
   brand,
   fixtures,
   fonts,
+  initialTheme,
 }: {
   brand: Brand
   fixtures: SiteFixtures
   fonts: readonly AvailableFont[]
+  /**
+   * The unsaved Theme the canvas's URL carried (Theme mode moving to another
+   * Page). It is drawn from the first paint, until the Admin's first document
+   * brings the Theme as it is now.
+   */
+  initialTheme?: ThemeInputs | null
 }) {
   const document = useCanvasDocument()
   const send = useCallback((request: CanvasRequest) => {
@@ -60,8 +68,26 @@ export function EditorCanvas({
 
   useForwardShortcuts(send)
 
+  // The Theme being edited: the Admin's, once it has sent a document; until
+  // then the one the URL carried.
+  const theme = document ? document.theme : (initialTheme ?? null)
+  const themeStyle = theme && (
+    <style
+      id="editor-theme"
+      // Raw, like SiteThemeStyle: React would escape the font rules' quotes.
+      dangerouslySetInnerHTML={{
+        __html: siteThemeCss({ inputs: theme, fonts }),
+      }}
+    />
+  )
+
   // Nothing is shown until the Admin has sent something to show.
-  if (!document) return <div className="min-h-svh" aria-busy="true" />
+  if (!document)
+    return (
+      <div className="min-h-svh" aria-busy="true">
+        {themeStyle}
+      </div>
+    )
 
   // Theme mode shows Pages to see the Theme on: Block editing is off.
   const editing = document.mode !== "theme"
@@ -69,15 +95,7 @@ export function EditorCanvas({
   return (
     <CanvasSendContext.Provider value={send}>
       <div onClickCapture={stopNavigation}>
-        {document.theme && (
-          <style
-            id="editor-theme"
-            // Raw, like SiteThemeStyle: React would escape the font rules' quotes.
-            dangerouslySetInnerHTML={{
-              __html: siteThemeCss({ inputs: document.theme, fonts }),
-            }}
-          />
-        )}
+        {themeStyle}
         <LayoutFrame
           layout={{ header: document.header, footer: document.footer }}
           brand={brand}

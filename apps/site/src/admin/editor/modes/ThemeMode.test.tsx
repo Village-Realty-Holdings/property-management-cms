@@ -49,6 +49,7 @@ vi.mock("sonner", () => ({ toast }))
 
 import { combineFonts } from "../../../fonts/available"
 import type { PageBlock } from "../../../site/blocks/types"
+import { readThemeParam } from "../../../site/editing/flag"
 import { DEFAULT_INPUTS, HARBOUR, type ThemeInputs } from "../../../theme"
 import type { PreviewPage } from "../../theme/previewPage"
 import type { HistoryRow } from "../../theme/themeScreen"
@@ -243,8 +244,13 @@ describe("previewing", () => {
     )
 
     await waitFor(() =>
-      expect(frame().getAttribute("src")).toBe("/stays?__edit=1")
+      expect(frame().getAttribute("src")).toMatch(/^\/stays\?__edit=1/)
     )
+    // The new canvas is drawn with the unsaved Theme from its first paint.
+    const src = new URL(frame().getAttribute("src") ?? "", "http://admin")
+    expect(readThemeParam(Object.fromEntries(src.searchParams))).toMatchObject({
+      primary: "#8a1f5c",
+    })
     expect(actions.loadPreviewPage).toHaveBeenCalledWith(9)
     // Nothing navigates: the editor stays on /admin/theme.
     expect(router.push).not.toHaveBeenCalled()

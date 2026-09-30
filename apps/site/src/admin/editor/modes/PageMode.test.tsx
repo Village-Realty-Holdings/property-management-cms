@@ -257,13 +257,12 @@ describe("<PageMode> Publish", () => {
 
   it("has nothing to publish when the Page is Published and unchanged", () => {
     mount({ status: "published" })
+    // Not `disabled`: it stays a keyboard stop, and says so with aria-disabled.
     expect(
-      (
-        within(topBar()).getByRole("button", {
-          name: "Publish",
-        }) as HTMLButtonElement
-      ).disabled
-    ).toBe(true)
+      within(topBar())
+        .getByRole("button", { name: "Publish" })
+        .getAttribute("aria-disabled")
+    ).toBe("true")
   })
 
   it("can publish a Page whose Draft has Changes not published", () => {

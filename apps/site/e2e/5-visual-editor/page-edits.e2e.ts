@@ -344,6 +344,8 @@ describe("editing a Page in the Visual Editor", () => {
     await selectInOutline("Call to action")
     await expectNoAxeViolations(page, "Page mode with a Block selected")
     await (await blockToolbarButton(page, "Duplicate")).click()
+    // The Block tab is open: the Outline is where the Blocks are counted.
+    await openTab(page, "Outline")
     await expect
       .poll(() => outlineItems(page, "Call to action").count())
       .toBe(2)
@@ -376,6 +378,7 @@ describe("editing a Page in the Visual Editor", () => {
   })
 
   it("reorders Blocks by dragging them in the Outline", async () => {
+    await openTab(page, "Outline")
     await drag(
       page,
       outlineItems(page, "Call to action").first(),
@@ -409,6 +412,7 @@ describe("editing a Page in the Visual Editor", () => {
 
     await selectInOutline("Rich text")
     await page.keyboard.press("Delete")
+    await openTab(page, "Outline")
     await expect.poll(() => outlineItems(page, "Rich text").count()).toBe(0)
     await page.keyboard.press("Control+z")
     await expect.poll(() => outlineItems(page, "Rich text").count()).toBe(1)
@@ -518,7 +522,9 @@ describe("editing a Page in the Visual Editor", () => {
   it("shows the Layout but keeps it locked, and Edit Layout switches to Layout mode", async () => {
     const header = canvas(page).locator("header").first()
     await expectVisible(header, "the Layout's Header in the canvas")
-    await header.click({ position: { x: 5, y: 5 } })
+    // The locked Layout is `inert`, so a click on it falls through to the
+    // page: Playwright must press there without waiting for it to be a target.
+    await header.click({ position: { x: 5, y: 5 }, force: true })
     expect(
       await anyVisibleInEditor(page, (root) =>
         root.getByRole("button", { name: "Duplicate", exact: true })

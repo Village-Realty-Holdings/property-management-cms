@@ -128,6 +128,9 @@ export function BlockPicker({
       onOpenChange={(open) => {
         if (!open) onClose()
       }}
+      // No fade or zoom: a Staff User who searches right away, and the
+      // contrast checks, see the final colours, not a half-faded dialog.
+      className="duration-0"
       title="Add a Block"
       description="Search the Blocks you can add, then press Enter to add one."
     >
@@ -196,7 +199,7 @@ function PickerBody({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{entry.label}</span>{" "}
-                  <span className="block text-xs text-muted-foreground">
+                  <span className="block text-xs text-foreground/70">
                     {entry.description}
                   </span>
                 </span>
