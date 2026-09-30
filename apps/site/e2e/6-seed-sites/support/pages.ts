@@ -101,12 +101,18 @@ export async function pagesList(page: Page, origin: string) {
   })
 }
 
-/** The text of the page's main landmark (CSS case changes don't apply). */
+/**
+ * The text of the page's main landmark, one line per block of text. (Not
+ * `textContent`, which runs neighbouring headings and paragraphs together
+ * with no space between them, so "Steps" + "Book in Three Steps" would read
+ * "StepsBook in Three Steps". The matching lowercases both sides, so the CSS
+ * case changes `innerText` applies don't matter.)
+ */
 export async function mainText(page: Page): Promise<string> {
   return page
     .getByRole("main")
     .first()
-    .evaluate((element) => element.textContent ?? "")
+    .evaluate((element) => (element as HTMLElement).innerText ?? "")
 }
 
 /**
