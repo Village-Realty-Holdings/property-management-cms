@@ -110,7 +110,7 @@ describe("loadLayoutScreen", () => {
       isLive: true,
       author: "Sam Staff",
     })
-    expect(screen?.history[0]?.when).toMatch(/UTC$/)
+    expect(screen?.history[0]?.savedAt).toMatch(/^\d{4}-\d\d-\d\dT/)
   })
 })
 

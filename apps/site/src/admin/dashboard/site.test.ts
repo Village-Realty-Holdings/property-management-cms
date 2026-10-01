@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { CLASSIC, HARBOUR } from "../../theme"
-import { siteCardOf, themeStatusLine, themeSummaryOf } from "./site"
+import { siteCardOf, themeSummaryOf } from "./site"
 
 const brand = {
   name: "Warren Beach",
@@ -55,7 +55,6 @@ describe("themeSummaryOf", () => {
       { name: "Accent", hex: CLASSIC.inputs.accent },
       { name: "Text", hex: CLASSIC.inputs.text },
     ])
-    expect(themeStatusLine(summary)).toBe("Not customised yet")
   })
 
   it("shows the saved Theme's colours, with the Third colour when set", () => {
@@ -71,11 +70,5 @@ describe("themeSummaryOf", () => {
       ["Text", HARBOUR.inputs.text],
     ])
     expect(summary.savedAt).toBe("2026-03-01T10:00:00.000Z")
-  })
-
-  it("says when the Theme was last saved", () => {
-    expect(
-      themeStatusLine({ swatches: [], savedAt: "2026-03-01T10:00:00.000Z" })
-    ).toMatch(/^Last saved /)
   })
 })

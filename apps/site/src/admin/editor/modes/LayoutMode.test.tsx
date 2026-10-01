@@ -18,6 +18,10 @@ import {
   it,
   vi,
 } from "vitest"
+import { setTimeZone } from "../../../test/timeZone"
+
+// Times are shown in the machine's zone: pin it.
+setTimeZone("UTC")
 
 const router = vi.hoisted(() => ({
   push: vi.fn(),
@@ -66,7 +70,6 @@ const doc: LayoutDocument = {
 const version = (over: Partial<LayoutVersionRow>): LayoutVersionRow => ({
   id: 1,
   savedAt: "2026-03-01T10:00:00.000Z",
-  when: "Mar 1, 2026, 10:00 AM UTC",
   author: "Sam Staff",
   summary: "Saved again",
   isLive: false,
@@ -77,7 +80,7 @@ const history = [
   version({ id: 3, isLive: true, summary: "Header changed" }),
   version({
     id: 2,
-    when: "Mar 2, 2026, 9:00 AM UTC",
+    savedAt: "2026-03-02T09:00:00.000Z",
     summary: "Footer changed",
   }),
   version({ id: 1, author: null, summary: "Created" }),

@@ -7,6 +7,8 @@ import { Button } from "@workspace/ui/components/button"
 
 import { restoreTheme } from "../actions/theme"
 import { ConfirmDialog, notify } from "../kit"
+import { LocalTime, useLocalMoment } from "../time/LocalTime"
+import { formatMoment } from "../time/formatMoment"
 import type { HistoryRow } from "../theme/themeScreen"
 
 /** The label of Restore on the live version, which is also why it is off. */
@@ -22,6 +24,30 @@ function substitutionNote(substitutions: HistoryRow["substitutions"]): string {
   const labels = substitutions.map((s) => s.label).join(" and ")
   const families = substitutions.map((s) => s.family).join(" and ")
   return `The ${labels} ${many ? "were" : "was"} deleted, so the Classic ${many ? "fonts" : "font"} (${families}) will be used instead.`
+}
+
+/** Restore for one version; it names the version by when it was saved. */
+function RestoreButton({
+  row,
+  onClick,
+}: {
+  row: HistoryRow
+  onClick: () => void
+}) {
+  const saved = useLocalMoment(row.savedAt, { withZone: true })
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="shrink-0"
+      aria-label={`Restore the version saved ${saved}`}
+      onClick={onClick}
+    >
+      <HistoryIcon aria-hidden="true" />
+      Restore
+    </Button>
+  )
 }
 
 /**
@@ -53,7 +79,7 @@ export function ThemeHistory({ rows }: { rows: readonly HistoryRow[] }) {
             <div className="min-w-0">
               <p className="text-sm font-medium">{row.summary}</p>
               <p className="text-sm text-muted-foreground">
-                <time dateTime={row.savedAt}>{row.when}</time>
+                <LocalTime iso={row.savedAt} withZone />
                 {row.author ? ` · ${row.author}` : ""}
               </p>
               {row.substitutions.length > 0 && !row.isLive && (
@@ -80,20 +106,13 @@ export function ThemeHistory({ rows }: { rows: readonly HistoryRow[] }) {
                 {LIVE_VERSION_LABEL}
               </Button>
             ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                aria-label={`Restore the version saved ${row.when}`}
+              <RestoreButton
+                row={row}
                 onClick={() => {
                   setTarget(row)
                   setOpen(true)
                 }}
-              >
-                <HistoryIcon aria-hidden="true" />
-                Restore
-              </Button>
+              />
             )}
           </li>
         ))}
@@ -104,7 +123,7 @@ export function ThemeHistory({ rows }: { rows: readonly HistoryRow[] }) {
         title="Restore this version?"
         description={
           target
-            ? `Your Site will look like it did on ${target.when}, straight away. It is saved as a new version, so nothing is lost.${
+            ? `Your Site will look like it did on ${formatMoment(target.savedAt, { withZone: true })}, straight away. It is saved as a new version, so nothing is lost.${
                 target.substitutions.length > 0
                   ? ` ${substitutionNote(target.substitutions)}`
                   : ""

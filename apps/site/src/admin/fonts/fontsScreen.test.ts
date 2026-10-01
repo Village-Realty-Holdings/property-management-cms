@@ -413,9 +413,9 @@ describe("loadFontRows and deleteFontAs", () => {
     const [row] = await loadFontRows(payload, as)
     expect(row).toMatchObject({ locked: false, deleteBlockedReason: null })
     expect(row!.earlierThemeVersions).toHaveLength(2)
-    expect(row!.earlierThemeVersions.every((when) => /UTC$/.test(when))).toBe(
-      true
-    )
+    expect(
+      row!.earlierThemeVersions.every((when) => !Number.isNaN(Date.parse(when)))
+    ).toBe(true)
   })
 
   it("lists no earlier Theme version when none used the Font", async () => {

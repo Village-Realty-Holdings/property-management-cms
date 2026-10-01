@@ -69,15 +69,3 @@ export function themeSummaryOf(theme: LiveTheme): ThemeSummary {
     savedAt: theme.source === "saved" ? theme.savedAt : null,
   }
 }
-
-const savedFormat = new Intl.DateTimeFormat("en", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-})
-
-export function themeStatusLine(summary: ThemeSummary): string {
-  return summary.savedAt
-    ? `Last saved ${savedFormat.format(new Date(summary.savedAt))} UTC`
-    : "Not customised yet"
-}

@@ -14,6 +14,7 @@ import {
   type FontRow,
 } from "../../fonts/rows"
 import { ConfirmDialog, EmptyState, notify, PageHeader } from "../../kit"
+import { formatMoment } from "../../time/formatMoment"
 import { AddGoogleFontSheet } from "./AddGoogleFontSheet"
 import { UploadFontsSheet } from "./UploadFontsSheet"
 
@@ -129,7 +130,7 @@ export function FontsScreen({
           description={deleteDescription(deleting)}
           dependents={deleting.earlierThemeVersions.map((when) => ({
             kind: "Theme version",
-            name: `saved ${when}`,
+            name: `saved ${formatMoment(when, { withZone: true })}`,
           }))}
           confirmLabel="Delete Font"
           onConfirm={async () => {

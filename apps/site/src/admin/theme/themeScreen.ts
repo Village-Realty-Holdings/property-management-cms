@@ -10,7 +10,6 @@ import {
   restoreThemeVersion,
   saveTheme,
 } from "../../theme/record"
-import { formatSavedAt } from "../../theme/record/summary"
 import { themeSummaryOf, type ThemeSummary } from "../dashboard/site"
 import { formStateFromError, type FormState } from "../formState"
 import { themeDetails, type DetailRow } from "./themeDetails"
@@ -32,10 +31,8 @@ export type StaffAccess = {
 /** One saved version, as the History list shows it. */
 export type HistoryRow = {
   id: number
-  /** ISO time of the save. */
+  /** ISO time of the save; History shows it in the viewer's time zone. */
   savedAt: string
-  /** "Mar 1, 2026, 10:05 AM UTC". */
-  when: string
   /** Who saved it; null when that user has been deleted. */
   author: string | null
   /** What changed, or the Staff User's note. */
@@ -107,7 +104,6 @@ export async function loadThemeScreen(
     history: versions.map((version) => ({
       id: version.id,
       savedAt: version.savedAt,
-      when: formatSavedAt(version.savedAt),
       author: version.author?.name ?? null,
       summary: version.summary,
       isLive: version.isLive,
@@ -153,7 +149,7 @@ export async function restoreThemeAs(
     }
     return {
       ok: true,
-      message: `Restored the version from ${formatSavedAt(version.savedAt)}. It is live on your Site.`,
+      message: "Restored that version. It is live on your Site.",
     }
   } catch (error) {
     return formStateFromError(error)

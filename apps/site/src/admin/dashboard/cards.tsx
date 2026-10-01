@@ -12,7 +12,7 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { EmptyState } from "../kit/EmptyState"
 import { DashboardCard } from "./DashboardCard"
 import { NEW_LAYOUT_HREF, type PageRow, type RecentItem } from "./rows"
-import { themeStatusLine, type SiteCard, type ThemeSummary } from "./site"
+import type { SiteCard, ThemeSummary } from "./site"
 import { StatusChip } from "./StatusChip"
 import { UpdatedAt } from "./UpdatedAt"
 
@@ -205,7 +205,13 @@ export function ThemeCard({ summary }: { summary: ThemeSummary }) {
     <DashboardCard id="dash-theme" title="Theme">
       <ThemeSwatches summary={summary} />
       <p className="text-sm text-muted-foreground">
-        {themeStatusLine(summary)}
+        {summary.savedAt ? (
+          <>
+            Last saved <UpdatedAt iso={summary.savedAt} />
+          </>
+        ) : (
+          "Not customised yet"
+        )}
       </p>
       <div>
         <Link

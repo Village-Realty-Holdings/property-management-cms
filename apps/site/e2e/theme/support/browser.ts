@@ -60,7 +60,11 @@ export type Session = { context: BrowserContext; page: Page; log: PageLog }
 
 export async function openSession(
   browser: Browser,
-  options: { reducedMotion?: "reduce" | "no-preference" } = {}
+  options: {
+    reducedMotion?: "reduce" | "no-preference"
+    /** The browser's time zone (an IANA name); the machine's when absent. */
+    timezoneId?: string
+  } = {}
 ): Promise<Session> {
   const context = await browser.newContext({
     viewport: DESKTOP,
@@ -68,6 +72,7 @@ export async function openSession(
     reducedMotion: options.reducedMotion ?? "no-preference",
     // The Site is English; keeps text shaping the same between runs.
     locale: "en-GB",
+    ...(options.timezoneId ? { timezoneId: options.timezoneId } : {}),
   })
   const page = await context.newPage()
   const log: PageLog = {

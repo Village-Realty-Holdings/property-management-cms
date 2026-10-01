@@ -75,7 +75,6 @@ const stays: PreviewPage = {
 const version = (id: number, over: Partial<HistoryRow> = {}): HistoryRow => ({
   id,
   savedAt: "2026-03-02T09:00:00.000Z",
-  when: "Mar 2, 2026, 9:00 AM UTC",
   author: "Ada",
   summary: "Primary colour",
   isLive: false,

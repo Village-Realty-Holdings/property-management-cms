@@ -1,14 +1,6 @@
-const format = new Intl.DateTimeFormat("en", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-})
+import { LocalTime } from "../time/LocalTime"
 
-/** A moment as text, in UTC so the server and the browser agree. */
+/** When something was last saved, in the viewer's time zone. */
 export function UpdatedAt({ iso }: { iso: string }) {
-  return (
-    <time dateTime={iso} title="UTC">
-      {format.format(new Date(iso))}
-    </time>
-  )
+  return <LocalTime iso={iso} />
 }

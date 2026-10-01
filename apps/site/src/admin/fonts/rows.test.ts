@@ -63,8 +63,8 @@ describe("buildFontRows", () => {
       new Map([[7, ["2026-03-01T10:05:00.000Z", "2026-02-01T09:00:00.000Z"]]])
     )
     expect(row!.earlierThemeVersions).toEqual([
-      "Mar 1, 2026, 10:05 AM UTC",
-      "Feb 1, 2026, 9:00 AM UTC",
+      "2026-03-01T10:05:00.000Z",
+      "2026-02-01T09:00:00.000Z",
     ])
     // They do not lock it: only the live Theme does.
     expect(row!.locked).toBe(false)

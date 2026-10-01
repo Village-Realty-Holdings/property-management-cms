@@ -10,7 +10,6 @@ import {
 import { loadLayoutUsage } from "../../layouts/usage"
 import type { Layout, Page } from "../../payload-types"
 import type { PageBlock } from "../../site/blocks/types"
-import { formatSavedAt } from "../../theme/record/summary"
 import type { StaffAccess } from "../dashboard/queries"
 import { loadPageRows } from "../dashboard/queries"
 import type { LayoutDocument } from "../editor/state"
@@ -32,10 +31,8 @@ export const UNTITLED_LAYOUT = "Untitled Layout"
 /** One saved version, as the History tab shows it. */
 export type LayoutVersionRow = {
   id: number
-  /** ISO time of the save. */
+  /** ISO time of the save; the History tab shows it in the viewer's time zone. */
   savedAt: string
-  /** "Mar 1, 2026, 10:05 AM UTC". */
-  when: string
   /** Who saved it; null when that user has been deleted. */
   author: string | null
   /** What changed, or the Staff User's note. */
@@ -125,7 +122,6 @@ async function readVersionRows(
   return versions.map((version) => ({
     id: version.id,
     savedAt: version.savedAt,
-    when: formatSavedAt(version.savedAt),
     author: version.author?.name ?? null,
     summary: version.summary,
     isLive: version.isLive,

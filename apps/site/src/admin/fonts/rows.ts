@@ -1,7 +1,6 @@
 import type { StoredFont } from "../../fonts/available"
 import { BUILT_IN_FONTS } from "../../fonts/builtIn"
 import { fontFaceCss } from "../../fonts/fontFace"
-import { formatSavedAt } from "../../theme/record/summary"
 import type { FontKind, FontStyle } from "../../fonts/types"
 import {
   faceLabel,
@@ -45,7 +44,8 @@ export type FontRow = {
   usages: string[]
   /**
    * When each earlier (not live) Theme version that uses the Font was saved,
-   * newest first, as "Mar 1, 2026, 10:05 AM UTC". They do not lock the Font,
+   * newest first, as ISO times (the screen shows them in the viewer's time
+   * zone). They do not lock the Font,
    * but restoring one after it is deleted uses the Classic font instead.
    */
   earlierThemeVersions: string[]
@@ -97,9 +97,7 @@ export function buildFontRows(
       })),
       sampleFamily: sampleFamilyOf(font.id),
       usages,
-      earlierThemeVersions: (earlierVersionsById.get(font.id) ?? []).map(
-        formatSavedAt
-      ),
+      earlierThemeVersions: [...(earlierVersionsById.get(font.id) ?? [])],
       locked,
       deleteBlockedReason: locked
         ? `${font.family} is in use, so it can't be deleted. Change what uses it first.`

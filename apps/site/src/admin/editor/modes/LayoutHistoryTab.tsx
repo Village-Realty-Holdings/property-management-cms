@@ -7,6 +7,32 @@ import { Button } from "@workspace/ui/components/button"
 
 import { ConfirmDialog } from "../../kit"
 import type { LayoutVersionRow } from "../../layouts/layoutScreen"
+import { LocalTime, useLocalMoment } from "../../time/LocalTime"
+import { formatMoment } from "../../time/formatMoment"
+
+/** Restore for one version; it names the version by when it was saved. */
+function RestoreButton({
+  row,
+  onClick,
+}: {
+  row: LayoutVersionRow
+  onClick: () => void
+}) {
+  const saved = useLocalMoment(row.savedAt, { withZone: true })
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="self-start"
+      aria-label={`Restore the version saved ${saved}`}
+      onClick={onClick}
+    >
+      <HistoryIcon aria-hidden />
+      Restore
+    </Button>
+  )
+}
 
 /**
  * The Layout's version history, newest first: when each save was made, who
@@ -58,7 +84,7 @@ export function LayoutHistoryTab({
             <div className="min-w-0">
               <p className="text-sm font-medium">{row.summary}</p>
               <p className="text-sm text-muted-foreground">
-                <time dateTime={row.savedAt}>{row.when}</time>
+                <LocalTime iso={row.savedAt} withZone />
                 {row.author ? ` · ${row.author}` : ""}
               </p>
             </div>
@@ -67,17 +93,7 @@ export function LayoutHistoryTab({
                 Live on your Site
               </p>
             ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                aria-label={`Restore the version saved ${row.when}`}
-                onClick={() => setTarget(row)}
-              >
-                <HistoryIcon aria-hidden />
-                Restore
-              </Button>
+              <RestoreButton row={row} onClick={() => setTarget(row)} />
             )}
           </li>
         ))}
@@ -88,7 +104,7 @@ export function LayoutHistoryTab({
         title="Restore this version?"
         description={
           target
-            ? `Your Layout goes back to how it was on ${target.when}. ${reach} It is saved as a new version, so nothing is lost.${
+            ? `Your Layout goes back to how it was on ${formatMoment(target.savedAt, { withZone: true })}. ${reach} It is saved as a new version, so nothing is lost.${
                 dirty ? " Your unsaved changes here are discarded." : ""
               }`
             : undefined

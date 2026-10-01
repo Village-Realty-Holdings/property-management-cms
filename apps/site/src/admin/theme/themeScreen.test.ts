@@ -72,7 +72,7 @@ describe("loadThemeScreen", () => {
       author: "Ada",
       summary: expect.stringContaining("Primary colour"),
     })
-    expect(screen.history[1]?.when).toMatch(/UTC$/)
+    expect(screen.history[1]?.savedAt).toMatch(/^\d{4}-\d\d-\d\dT/)
   })
 })
 
@@ -81,7 +81,9 @@ describe("restoreThemeAs", () => {
     const [first] = await twoVersions()
     const result = await restoreThemeAs(payload, access(), first!)
     expect(result.ok).toBe(true)
-    expect(result.message).toMatch(/^Restored the version from .* UTC\./)
+    expect(result.message).toBe(
+      "Restored that version. It is live on your Site."
+    )
     expect((await readLiveTheme(payload)).inputs).toEqual(CLASSIC.inputs)
     // The history only grows: the restore is a third version, and is live.
     const screen = await loadThemeScreen(payload, access())

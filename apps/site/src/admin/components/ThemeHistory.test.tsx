@@ -8,6 +8,10 @@ import {
   within,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { setTimeZone } from "../../test/timeZone"
+
+// The times are shown in the machine's zone: pin it.
+setTimeZone("UTC")
 
 import type { HistoryRow } from "../theme/themeScreen"
 
@@ -25,7 +29,6 @@ import { ThemeHistory } from "./ThemeHistory"
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
   id: 3,
   savedAt: "2026-03-02T09:00:00.000Z",
-  when: "Mar 2, 2026, 9:00 AM UTC",
   author: "Ada",
   summary: "Primary colour, Button corners",
   isLive: false,
@@ -35,7 +38,7 @@ const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
 })
 
 const rows = [
-  row({ id: 5, isLive: true, when: "Mar 5, 2026, 9:00 AM UTC" }),
+  row({ id: 5, isLive: true, savedAt: "2026-03-05T09:00:00.000Z" }),
   row({ id: 4, summary: "Spacing", author: null }),
   row({
     id: 3,
@@ -64,6 +67,22 @@ describe("<ThemeHistory>", () => {
     expect(items[0]!.textContent).toContain("Mar 5, 2026, 9:00 AM UTC")
     expect(items[1]!.textContent).toContain("Spacing")
     expect(items[2]!.textContent).toContain("Ada")
+  })
+
+  it("shows each time in the viewer's time zone, in the list and on Restore", () => {
+    setTimeZone("America/Chicago")
+    try {
+      render(<ThemeHistory rows={rows} />)
+      const items = screen.getAllByRole("listitem")
+      expect(items[0]!.textContent).toContain("Mar 5, 2026, 3:00 AM CST")
+      expect(
+        within(items[1]!).getByRole("button", {
+          name: "Restore the version saved Mar 2, 2026, 3:00 AM CST",
+        })
+      ).toBeTruthy()
+    } finally {
+      setTimeZone("UTC")
+    }
   })
 
   it("disables Restore on the live version, with the reason as its label", () => {
