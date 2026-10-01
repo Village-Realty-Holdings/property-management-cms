@@ -28,6 +28,9 @@ process.env.DATABASE_SCHEMA = SCHEMA
 export const PORT = Number(process.env.E2E_PORT ?? 3101)
 export const ORIGIN = `http://localhost:${PORT}`
 export const PAYLOAD_SECRET = "e2e-theme-rendering-secret"
+// Specs that open Payload in the test process (openScratchSite) need a secret
+// too, whether or not the machine has a .env with one.
+process.env.PAYLOAD_SECRET ??= PAYLOAD_SECRET
 
 /** Where the screenshots of this run are written (the Phase 2 review set). */
 export const SCREENSHOT_DIR = fileURLToPath(
