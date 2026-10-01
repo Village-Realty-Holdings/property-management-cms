@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" role="img" aria-label="Text with headings, lists and links">
+  <rect width="480" height="320" rx="12" fill="#f3f4f6"/>
+  <rect x="48" y="40" width="220" height="18" rx="6" fill="#4b5563"/>
+  <rect x="48" y="78" width="384" height="10" rx="5" fill="#9ca3af"/>
+  <rect x="48" y="102" width="360" height="10" rx="5" fill="#9ca3af"/>
+  <rect x="48" y="126" width="384" height="10" rx="5" fill="#9ca3af"/>
+  <rect x="48" y="150" width="300" height="10" rx="5" fill="#9ca3af"/>
+  <rect x="48" y="184" width="384" height="10" rx="5" fill="#9ca3af"/>
+  <rect x="48" y="208" width="250" height="10" rx="5" fill="#9ca3af"/>
+  <text x="240" y="296" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" fill="#4b5563">Text with headings, lists and links</text>
+</svg>

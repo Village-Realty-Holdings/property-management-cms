@@ -39,6 +39,8 @@ export const config = [
       "out/**",
       "build/**",
       ".next/**",
+      ".open-next/**",
+      ".wrangler/**",
       "**/.turbo/**",
       "**/coverage/**",
       "**/next-env.d.ts",

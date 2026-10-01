@@ -38,9 +38,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.*.example
 
 # vercel
 .vercel
+
+# cloudflare (OpenNext build, wrangler state, local secrets)
+.open-next/
+.wrangler/
+.dev.vars*
 
 # typescript
 *.tsbuildinfo
@@ -48,3 +54,12 @@ next-env.d.ts
 
 # claude code
 .claude/settings.local.json
+
+# payload local uploads (dev)
+apps/cms/media/
+
+# demo seed output (secrets)
+apps/cms/.seed-output.json
+
+# Agent worktrees
+.claude/worktrees/

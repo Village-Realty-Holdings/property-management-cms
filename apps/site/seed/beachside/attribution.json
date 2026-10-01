@@ -1,0 +1,116 @@
+{
+  "fixtures/beachside/rental-sandpiper-row.webp": {
+    "author": "Sandra Seitamaa",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/five-assorted-color-2-storey-houses-aerb5gwZ4vg",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-villa-marisol.webp": {
+    "author": "Armand Khoury",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-boat-is-in-the-water-near-a-house-yoR2dd32KBw",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-sunset-terrace.webp": {
+    "author": "Angie Pham",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/white-and-brown-concrete-building-near-green-trees-during-sunset-Q4HbxLVWvJQ",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-palmetto-pool-house.webp": {
+    "author": "Kevin Doran",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/green-palm-trees-near-body-of-water-during-daytime-NdgNVPB0DT0",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-lagoon-cottage.webp": {
+    "author": "Grant Durr",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/white-and-brown-concrete-house-beside-body-of-water-during-daytime-ybVhYLhh1wA",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-coral-pool-house.webp": {
+    "author": "Zoshua Colah",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-house-with-a-swimming-pool-in-front-of-it-Tw1dYTSPSpI",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-driftwood-landing.webp": {
+    "author": "Grant Durr",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/white-and-red-concrete-building-near-body-of-water-during-daytime-6gLnH0In7F0",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-pastel-row-bungalow.webp": {
+    "author": "Belinda Fewings",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/white-and-green-house-near-body-of-water-during-daytime-_wgbwFjwmnE",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-shoreline-hot-tub-house.webp": {
+    "author": "Gene Gallin",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/white-and-brown-concrete-house-kSjguVTu0Rw",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/rental-dune-house.webp": {
+    "author": "serjan midili",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/brown-wooden-house-on-beach-during-daytime-8SuNIFnfKZY",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/post-sunset-spots.webp": {
+    "author": "John O'Nelio",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/the-sun-is-setting-over-the-ocean-on-the-beach-8iq2fLo0KXc",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/post-packing-list.webp": {
+    "author": "Roland Denes",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/beige-and-teal-wooden-shed-near-body-of-water-during-daytime-EvhrMyWfWtk",
+    "licence": "Unsplash License"
+  },
+  "fixtures/beachside/post-big-family-stays.webp": {
+    "author": "Colton Jones",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-bedroom-with-a-view-of-the-ocean-OfLluwPamI0",
+    "licence": "Unsplash License"
+  },
+  "hero-shoreline-dawn.webp": {
+    "author": "Quino Al",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/body-of-water-and-seashore-JFeOy62yjXk",
+    "licence": "Unsplash License"
+  },
+  "amenity-pool.webp": {
+    "author": "kilarov",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/outdoor-pool-aXq37rUfotU",
+    "licence": "Unsplash License"
+  },
+  "amenity-deck.webp": {
+    "author": "Noelle",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-chair-and-a-lamp-on-a-balcony-overlooking-the-ocean-rTsEfReVxSo",
+    "licence": "Unsplash License"
+  },
+  "amenity-beach-dining.webp": {
+    "author": "Cody Chan",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/tables-and-chairs-near-seashore-cUJJdNmrGVQ",
+    "licence": "Unsplash License"
+  },
+  "amenity-living-room.webp": {
+    "author": "Freddy G",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-living-room-filled-with-furniture-and-a-flat-screen-tv-L6dJu7Bcpww",
+    "licence": "Unsplash License"
+  },
+  "amenity-lounge.webp": {
+    "author": "Antonio Araujo",
+    "source": "Unsplash",
+    "sourceUrl": "https://unsplash.com/photos/a-view-of-a-swimming-pool-from-inside-a-house-YOWgNqwq7Yk",
+    "licence": "Unsplash License"
+  }
+}

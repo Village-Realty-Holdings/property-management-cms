@@ -1,9 +1,40 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "DATABASE_SCHEMA",
+    "PAYLOAD_SECRET",
+    "BREAK_GLASS_EMAIL",
+    "BREAK_GLASS_PASSWORD",
+    "S3_BUCKET",
+    "S3_ENDPOINT",
+    "S3_REGION",
+    "S3_ACCESS_KEY_ID",
+    "S3_SECRET_ACCESS_KEY",
+    "S3_PUBLIC_URL",
+    "SUBMISSION_RETENTION_DAYS",
+    "ENTRA_TENANT_ID",
+    "ENTRA_CLIENT_ID",
+    "ENTRA_CLIENT_SECRET",
+    "ENTRA_REDIRECT_URI",
+    "ENTRA_ISSUER",
+    "DEV_SIGN_IN",
+    "SITE_URL",
+    "PROPERTY_FEED",
+    "CMS_READER_KEY",
+    "REVALIDATION_SECRET"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "SITE",
+        "CONTENT_ADAPTER",
+        "CMS_URL",
+        "CMS_READER_KEY",
+        "S3_PUBLIC_URL"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
@@ -15,6 +46,12 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "cache": false
+    },
+    "generate:types": {
+      "cache": false
     },
     "dev": {
       "cache": false,

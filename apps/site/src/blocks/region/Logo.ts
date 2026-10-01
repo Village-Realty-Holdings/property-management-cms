@@ -1,0 +1,30 @@
+import type { Block } from "payload"
+
+/**
+ * The Site's logo, from the Brand (its logo, or its name when it has none),
+ * linking Home. The image is not chosen here: change it in the Brand.
+ */
+export const Logo: Block = {
+  slug: "logo",
+  interfaceName: "LogoBlock",
+  labels: { singular: "Logo", plural: "Logos" },
+  fields: [
+    {
+      name: "size",
+      type: "select",
+      required: true,
+      defaultValue: "medium",
+      options: [
+        { label: "Small", value: "small" },
+        { label: "Medium", value: "medium" },
+        { label: "Large", value: "large" },
+      ],
+    },
+    {
+      name: "showTagline",
+      label: "Show the Brand's tagline",
+      type: "checkbox",
+      defaultValue: false,
+    },
+  ],
+}

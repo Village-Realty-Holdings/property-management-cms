@@ -1,0 +1,22 @@
+/*
+ * Admin-wide accessibility styles. Scoped to pages that mount <AdminKitHost>
+ * (it renders [data-admin-kit-host]), so the public Site is untouched.
+ */
+
+/*
+ * A focus indicator every keyboard user can see: 2px, the foreground colour
+ * (>= 3:1 against the page in light and dark), clear of the element's edge.
+ * Wins over components that turn the outline off (`outline-none`) and
+ * over the faint 50% ring shadcn adds.
+ */
+:root:has([data-admin-kit-host]) :focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+/* Skeletons stop pulsing for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root:has([data-admin-kit-host]) [data-slot="skeleton"] {
+    animation: none;
+  }
+}

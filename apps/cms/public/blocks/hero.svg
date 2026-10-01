@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320" role="img" aria-label="Big heading, image and a button">
+  <rect width="480" height="320" rx="12" fill="#f3f4f6"/>
+  <rect x="32" y="28" width="416" height="222" rx="8" fill="#d1d5db"/>
+  <path d="M32 210 L150 120 L240 190 L320 140 L448 230 L448 242 Q448 250 440 250 L40 250 Q32 250 32 242 Z" fill="#b8bec7"/>
+  <rect x="120" y="78" width="240" height="22" rx="6" fill="#4b5563"/>
+  <rect x="160" y="114" width="160" height="10" rx="5" fill="#6b7280"/>
+  <rect x="190" y="146" width="100" height="26" rx="13" fill="#2f6f5e"/>
+  <text x="240" y="296" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" fill="#4b5563">Big heading, image and a button</text>
+</svg>

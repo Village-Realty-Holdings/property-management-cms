@@ -1,0 +1,34 @@
+{
+  "name": "@workspace/content",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint",
+    "format": "prettier --write \"**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./shared": "./src/shared/index.ts",
+    "./queries": "./src/queries/index.ts",
+    "./proxy": "./src/proxy.ts"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9",
+    "graphql": "^16.14.2",
+    "next": "16.3.3",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "next": "16.3.3"
+  },
+  "dependencies": {
+    "@payloadcms/sdk": "3.90.2",
+    "qs-esm": "^8.0.2"
+  }
+}
