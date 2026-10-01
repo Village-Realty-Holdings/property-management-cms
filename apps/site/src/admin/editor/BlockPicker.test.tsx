@@ -204,6 +204,34 @@ describe("inserting", () => {
     )
   })
 
+  it("moves over the grid with the arrow keys, Enter adds the highlighted Block", async () => {
+    const user = userEvent.setup()
+    const { onInsert } = open({ region: "page", index: 0 })
+    const [first, second] = pickerGroups("page").flatMap((g) => g.entries)
+    expect(
+      option(new RegExp(`^${first!.label}\\b`)).getAttribute("aria-selected")
+    ).toBe("true")
+    await user.keyboard("{ArrowRight}")
+    expect(
+      option(new RegExp(`^${second!.label}\\b`)).getAttribute("aria-selected")
+    ).toBe("true")
+    await user.keyboard("{ArrowLeft}{ArrowRight}{Enter}")
+    expect(onInsert).toHaveBeenCalledWith("page", 0, second!.defaults)
+  })
+
+  it("leaves Left and Right to the caret while the search text has one to move", async () => {
+    const user = userEvent.setup()
+    open({ region: "page", index: 0 })
+    await user.type(searchBox(), "ro")
+    const before = screen
+      .getAllByRole("option")
+      .map((o) => o.getAttribute("aria-selected"))
+    await user.keyboard("{ArrowLeft}")
+    expect(
+      screen.getAllByRole("option").map((o) => o.getAttribute("aria-selected"))
+    ).toEqual(before)
+  })
+
   it("Escape closes without inserting", async () => {
     const user = userEvent.setup()
     const { onInsert, onClose } = open({ region: "page", index: 0 })

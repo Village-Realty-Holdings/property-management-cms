@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent } from "react"
 
 import {
   Command,
@@ -18,13 +18,16 @@ import {
 } from "../../blocks/catalogue"
 import { regionCatalogue } from "../../site/regions/catalogue"
 import type { BlockValues } from "../pageForm"
+import { moveInGrid, type GridKey } from "./pickerGrid"
 import type { Region } from "./state"
 
 /**
- * The Block picker: a command-style dialog, opened by a "+" in the Outline or
- * between Blocks on the canvas, that searches the Blocks a region takes,
- * grouped and with a thumbnail each, and inserts the chosen one with the
- * catalogue's default values. The Page offers the whole Block catalogue; a
+ * The Block picker: a large command-style dialog (most of the viewport on a
+ * desktop, a full-screen sheet on a phone), opened by a "+" in the Outline or
+ * between Blocks on the canvas. It searches the Blocks a region takes, under a
+ * heading per group, as a responsive grid of big thumbnails each with its name
+ * and one-line description, and inserts the chosen one with the catalogue's
+ * default values. The arrow keys move over the grid, Enter inserts. The Page offers the whole Block catalogue; a
  * Header or Footer only the Blocks allowed there (the Footer also takes
  * Newsletter and Call to action, which are Page Blocks).
  *
@@ -130,7 +133,8 @@ export function BlockPicker({
       }}
       // No fade or zoom: a Staff User who searches right away, and the
       // contrast checks, see the final colours, not a half-faded dialog.
-      className="duration-0"
+      className={DIALOG_CLASS}
+      showCloseButton
       title="Add a Block"
       description="Search the Blocks you can add, then press Enter to add one."
     >
@@ -149,6 +153,40 @@ export function BlockPicker({
   )
 }
 
+/**
+ * Sized by the viewport, not the content: a full-screen sheet below `sm`, then
+ * 90% of the width (up to 80rem) and 85% of the height, centred. The Popup's
+ * own `grid` becomes a flex column so the list takes the height left under the
+ * search box and scrolls inside it.
+ */
+const DIALOG_CLASS = [
+  // No fade or zoom (see above).
+  "duration-0",
+  "flex flex-col gap-0",
+  "top-0 left-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none!",
+  "sm:top-1/2 sm:left-1/2 sm:h-[85vh] sm:w-[90vw] sm:max-w-7xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-(--card-radius)!",
+].join(" ")
+
+const GRID_KEYS = new Set<string>([
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+])
+
+/** How many entries sit side by side in the picker's grid right now. */
+function measureColumns(list: HTMLElement | null): number {
+  let columns = 1
+  for (const items of list?.querySelectorAll("[cmdk-group-items]") ?? []) {
+    const options = Array.from(items.children) as HTMLElement[]
+    const first = options[0]
+    if (!first) continue
+    const inFirstRow = options.filter((o) => o.offsetTop === first.offsetTop)
+    columns = Math.max(columns, inFirstRow.length)
+  }
+  return columns
+}
+
 function PickerBody({
   target,
   onPick,
@@ -158,6 +196,7 @@ function PickerBody({
 }) {
   const [query, setQuery] = useState("")
   const [highlighted, setHighlighted] = useState("")
+  const list = useRef<HTMLDivElement>(null)
   const groups = filterGroups(pickerGroups(target.region), query)
   const visible = groups.flatMap((group) => group.entries)
   // Enter adds the highlighted Block, so it must always be one on screen: the
@@ -166,12 +205,55 @@ function PickerBody({
     ? highlighted
     : (visible[0]?.blockType ?? "")
 
+  // The arrows can move the highlight out of sight in the scrolling list.
+  useEffect(() => {
+    list.current
+      ?.querySelector('[cmdk-item][aria-selected="true"]')
+      ?.scrollIntoView?.({ block: "nearest" })
+  }, [current])
+
+  /**
+   * Arrows over the grid. They belong to the grid as long as they do not
+   * edit the search text: Left and Right move the caret while there is text
+   * and the caret is not at the edge they point to.
+   */
+  function onKeyDown(event: KeyboardEvent) {
+    if (!GRID_KEYS.has(event.key)) return
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+    const input = event.target as HTMLInputElement
+    if (query) {
+      if (event.key === "ArrowLeft" && input.selectionStart !== 0) return
+      if (event.key === "ArrowRight" && input.selectionEnd !== query.length)
+        return
+    }
+    const group = groups.findIndex((g) =>
+      g.entries.some((entry) => entry.blockType === current)
+    )
+    if (group < 0) return
+    const from = {
+      group,
+      index: groups[group]!.entries.findIndex((e) => e.blockType === current),
+    }
+    const to = moveInGrid(
+      groups.map((g) => g.entries.length),
+      measureColumns(list.current),
+      from,
+      event.key as GridKey
+    )
+    // Stops cmdk's own up/down, which would walk the grid as a single column.
+    event.preventDefault()
+    setHighlighted(groups[to.group]!.entries[to.index]!.blockType)
+  }
+
   return (
     // The matching is ours, so cmdk must not filter again.
     <Command
       shouldFilter={false}
       value={current}
       onValueChange={setHighlighted}
+      onKeyDown={onKeyDown}
+      // Room for the dialog's close button beside the search box.
+      className="**:data-[slot=command-input-wrapper]:pr-10"
     >
       <CommandInput
         value={query}
@@ -179,27 +261,41 @@ function PickerBody({
         placeholder="Search Blocks"
         aria-label="Search Blocks"
       />
-      <CommandList className="max-h-[60vh]">
+      <CommandList
+        ref={list}
+        className="max-h-none min-h-0 flex-1 scroll-py-10 p-1"
+      >
         {groups.map((group) => (
-          <CommandGroup key={group.heading} heading={group.heading}>
+          <CommandGroup
+            key={group.heading}
+            heading={group.heading}
+            // Headings stay in view while their grid scrolls under them. Not
+            // `overflow-hidden`, which would stop them sticking.
+            className="overflow-visible **:[[cmdk-group-heading]]:sticky **:[[cmdk-group-heading]]:top-0 **:[[cmdk-group-heading]]:z-10 **:[[cmdk-group-heading]]:bg-popover **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-2 **:[[cmdk-group-heading]]:text-sm **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-foreground **:[[cmdk-group-items]]:grid **:[[cmdk-group-items]]:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] **:[[cmdk-group-items]]:gap-3 **:[[cmdk-group-items]]:p-2"
+          >
             {group.entries.map((entry) => (
               <CommandItem
                 key={entry.blockType}
                 value={entry.blockType}
                 onSelect={() => onPick(entry)}
+                // A card: thumbnail over name and description. The trailing
+                // check icon of the shared item is not part of it.
+                className="flex-col items-stretch gap-2 border p-2 data-selected:ring-2 data-selected:ring-ring *:[svg]:hidden"
               >
                 {/* Decorative: the visible label names the Block. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={entry.thumbnail}
                   alt=""
-                  width={64}
-                  height={48}
-                  className="h-12 w-16 shrink-0 rounded-sm border bg-background object-cover"
+                  width={160}
+                  height={100}
+                  className="aspect-[8/5] w-full rounded-sm border bg-background object-cover"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium">{entry.label}</span>{" "}
-                  <span className="block text-xs text-foreground/70">
+                  <span className="block text-base font-medium">
+                    {entry.label}
+                  </span>{" "}
+                  <span className="block text-sm text-foreground/70">
                     {entry.description}
                   </span>
                 </span>
