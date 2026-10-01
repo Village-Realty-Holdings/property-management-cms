@@ -40,6 +40,9 @@ export const meta = {
 const SPEC = "apps/site/docs/plans/site-builder-milestone.md"
 const BASE = "milestone/site-builder"
 const PHASES = args?.phases ?? [3, 4, 5, 6]
+// skipTo: "iterate" starts at the iteration loop (build and audit-1 already on the branch),
+// without replaying the earlier agent calls through the resume cache.
+const SKIP_TO = args?.skipTo ?? null
 const ITERATIONS = args?.iterations ?? 3
 const CODER = { model: "sonnet", effort: "high" }
 
@@ -345,51 +348,56 @@ const audit = (n) =>
     }
   )
 
-// ── Plan the slices and write the acceptance suite, side by side ──
-// Each phase's slices wait only for that phase's suite, not for all of them.
-const PLAN = () =>
-  agent(
-    `${RULES}\n\nYou are the lead. Read the spec sections for Phases ${PHASES.join(", ")} and the code on origin/${BASE}. Cut ALL of that work into small vertical slices: one screen, one Block, one behaviour, one seed. Aim for slices a coder finishes in about 10 minutes; expect 25–40. Each brief must quote the spec text it covers and name the files or areas it owns, so that two slices never own the same file unless one is "after" the other. List in "after" only real code dependencies; most Blocks, for instance, depend on nothing. Chain through "after" any slices that change the Payload schema or the migration, so they never run side by side. Where several slices need a shared seam (a Block registry, the editor shell, the fixtures shape), make that seam its own small early slice. Every acceptance item in those phases must be covered by some slice.`,
-    {
-      label: "plan slices",
-      phase: "Plan",
-      model: "opus",
-      effort: "high",
-      schema: SLICES,
-    }
-  )
-const planning = PLAN()
-const gates = Object.fromEntries(
-  PHASES.map((p) => [
-    String(p),
+let built = [],
+  carried = [],
+  red = [],
+  top = []
+if (SKIP_TO !== "iterate") {
+  // ── Plan the slices and write the acceptance suite, side by side ──
+  // Each phase's slices wait only for that phase's suite, not for all of them.
+  const PLAN = () =>
     agent(
-      `${RULES}\n\nWrite the browser acceptance suite for Phase ${p} before any of it is built. In your worktree, on a branch from origin/${BASE}, add apps/site/e2e/${p}-<slug>/*.e2e.ts following the patterns and support helpers in apps/site/e2e/theme/. Cover every item under "Acceptance for phase ${p}" and the phase's UX rules, including an axe WCAG 2.2 AA check on each new screen. Drive everything through the browser and HTTP only: import nothing from code that does not exist yet, and select by role, label and the names the spec uses. The tests will be red for now; they sit outside pnpm check, which must stay green (lint and typecheck included). ${LAND} Return the files and what each covers.`,
+      `${RULES}\n\nYou are the lead. Read the spec sections for Phases ${PHASES.join(", ")} and the code on origin/${BASE}. Cut ALL of that work into small vertical slices: one screen, one Block, one behaviour, one seed. Aim for slices a coder finishes in about 10 minutes; expect 25–40. Each brief must quote the spec text it covers and name the files or areas it owns, so that two slices never own the same file unless one is "after" the other. List in "after" only real code dependencies; most Blocks, for instance, depend on nothing. Chain through "after" any slices that change the Payload schema or the migration, so they never run side by side. Where several slices need a shared seam (a Block registry, the editor shell, the fixtures shape), make that seam its own small early slice. Every acceptance item in those phases must be covered by some slice.`,
       {
-        label: `acceptance ${p}`,
-        phase: "Acceptance",
+        label: "plan slices",
+        phase: "Plan",
         model: "opus",
         effort: "high",
-        isolation: "worktree",
+        schema: SLICES,
       }
-    ).catch(() => null),
-  ])
-)
-const plan = await planning
-if (!plan?.slices?.length) throw new Error("planner returned no slices")
-log(`${plan.slices.length} slices planned for phases ${PHASES.join(", ")}`)
+    )
+  const planning = PLAN()
+  const gates = Object.fromEntries(
+    PHASES.map((p) => [
+      String(p),
+      agent(
+        `${RULES}\n\nWrite the browser acceptance suite for Phase ${p} before any of it is built. In your worktree, on a branch from origin/${BASE}, add apps/site/e2e/${p}-<slug>/*.e2e.ts following the patterns and support helpers in apps/site/e2e/theme/. Cover every item under "Acceptance for phase ${p}" and the phase's UX rules, including an axe WCAG 2.2 AA check on each new screen. Drive everything through the browser and HTTP only: import nothing from code that does not exist yet, and select by role, label and the names the spec uses. The tests will be red for now; they sit outside pnpm check, which must stay green (lint and typecheck included). ${LAND} Return the files and what each covers.`,
+        {
+          label: `acceptance ${p}`,
+          phase: "Acceptance",
+          model: "opus",
+          effort: "high",
+          isolation: "worktree",
+        }
+      ).catch(() => null),
+    ])
+  )
+  const plan = await planning
+  if (!plan?.slices?.length) throw new Error("planner returned no slices")
+  log(`${plan.slices.length} slices planned for phases ${PHASES.join(", ")}`)
 
-// ── Build ──
-const built = await buildSlices(plan.slices, "p", gates)
-await Promise.all(Object.values(gates))
-const carried = built.filter((r) => !r.landed).map((r) => r.key)
-const red = await stabilise("build")
-
+  // ── Build ──
+  built = await buildSlices(plan.slices, "p", gates)
+  await Promise.all(Object.values(gates))
+  carried = built.filter((r) => !r.landed).map((r) => r.key)
+  red = await stabilise("build")
+}
 // ── Audit, then iterate ──
-let top = (await audit(1))?.top ?? []
+if (SKIP_TO !== "iterate") top = (await audit(1))?.top ?? []
 const iterations = []
 for (let i = 1; i <= ITERATIONS; i++) {
   const triage = await agent(
-    `${RULES}\n\nRead apps/site/docs/audits/audit-${i}.md on origin/${BASE}. Turn its top 10–15 findings by impact into slices for coding agents (skip anything the spec puts out of scope, and say which in "dropped"). One finding or one tight group per slice, with the finding text in the brief and a concrete check in "accept". Prefix keys with i${i}-. Use "after" only where two slices touch the same files. Use phase "i${i}".${i === 1 && carried.length ? ` Also add slices for this earlier work that failed to land: ${carried.join(", ")}.` : ""}`,
+    `${RULES}\n\nRead apps/site/docs/audits/audit-${i}.md on origin/${BASE}${i === 1 ? ", and apps/site/docs/audits/user-notes-1.md: the user's own observations. Every user note becomes a slice (group notes 2–5 into one media-field slice); they are never dropped" : ""}. Turn its top 10–15 findings by impact into slices for coding agents (skip anything the spec puts out of scope, and say which in "dropped"). One finding or one tight group per slice, with the finding text in the brief and a concrete check in "accept". Prefix keys with i${i}-. Use "after" only where two slices touch the same files. Use phase "i${i}".${i === 1 && carried.length ? ` Also add slices for this earlier work that failed to land: ${carried.join(", ")}.` : ""}`,
     {
       label: `triage audit-${i}`,
       phase: "Iterate",
