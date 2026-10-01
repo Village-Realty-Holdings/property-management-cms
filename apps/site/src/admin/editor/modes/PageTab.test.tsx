@@ -219,7 +219,7 @@ describe("<PageTab> Layout mode", () => {
         }) as HTMLInputElement
       ).checked
     ).toBe(true)
-    expect(within(tab).getByText("Uses Main (default).")).toBeTruthy()
+    expect(within(tab).getByText("Uses Main, the default Layout.")).toBeTruthy()
   })
 
   it("follows the path as it is edited", async () => {
@@ -228,7 +228,9 @@ describe("<PageTab> Layout mode", () => {
     const path = within(panel()).getByLabelText("Path", { exact: true })
     await user.clear(path)
     await user.type(path, "/stays/cabin")
-    expect(within(panel()).getByText("Uses Listings, via /stays.")).toBeTruthy()
+    expect(
+      within(panel()).getByText("Uses Listings, which covers /stays.")
+    ).toBeTruthy()
     // The top bar's Edit Layout follows too.
     expect(
       within(topBar())
@@ -457,6 +459,26 @@ describe("<PageTab> Make a new Layout from this one", () => {
 })
 
 describe("<PageTab> SEO", () => {
+  it("reads the field, its advice, then its count, and describes the field by both", () => {
+    mount()
+    const field = within(panel()).getByLabelText("SEO title")
+    const advice = panel().querySelector("#page-seo-title-description")
+    const count = panel().querySelector("#page-seo-title-count")
+    expect(advice).toBeTruthy()
+    expect(count).toBeTruthy()
+    expect(
+      field.compareDocumentPosition(advice as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(
+      (advice as Node).compareDocumentPosition(count as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(field.getAttribute("aria-describedby")).toBe(
+      "page-seo-title-description page-seo-title-count"
+    )
+  })
+
   it("counts the title and the description as they are typed", async () => {
     mount()
     const user = userEvent.setup()

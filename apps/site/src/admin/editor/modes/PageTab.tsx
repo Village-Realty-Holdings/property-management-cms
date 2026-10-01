@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import { FieldDescription } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import {
   NativeSelect,
@@ -29,6 +30,7 @@ import { InlineError, notify, type Dependent } from "../../kit"
 import { useEditor } from "../EditorProvider"
 import type { LayoutChoice, PageDocument } from "../state"
 import {
+  describeLayoutUse,
   nextPathForTitle,
   seoCount,
   suggestLayoutName,
@@ -157,7 +159,6 @@ export function PageTab({
         <FormField
           id="page-seo-title"
           label="SEO title"
-          description="Shown in search results. Leave empty for the default."
           error={fieldErrorFor(problem, "seo.title")}
         >
           <Input
@@ -168,12 +169,14 @@ export function PageTab({
               error: fieldErrorFor(problem, "seo.title"),
             })}
           />
+          <FieldDescription id="page-seo-title-description">
+            Shown in search results. Leave empty for the default.
+          </FieldDescription>
           <Counter id="page-seo-title-count" count={seoTitle} />
         </FormField>
         <FormField
           id="page-seo-description"
           label="SEO description"
-          description="A sentence for search results and link previews."
           error={fieldErrorFor(problem, "seo.description")}
         >
           <Textarea
@@ -189,6 +192,9 @@ export function PageTab({
               error: fieldErrorFor(problem, "seo.description"),
             })}
           />
+          <FieldDescription id="page-seo-description-description">
+            A sentence for search results and link previews.
+          </FieldDescription>
           <Counter id="page-seo-description-count" count={seoDescription} />
         </FormField>
         <FormField
@@ -301,12 +307,7 @@ function LayoutSection({
     }
   }
 
-  const summary =
-    choice.mode === "none"
-      ? "Nothing is drawn around the Page."
-      : resolved
-        ? `Uses ${resolved.label}.`
-        : "There is no Layout to use yet."
+  const summary = describeLayoutUse(choice, resolved)
 
   return (
     <fieldset className="grid gap-2" aria-describedby={`${group}-summary`}>

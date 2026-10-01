@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  describeLayoutUse,
   nextPathForTitle,
   resolvePageLayout,
   seoCount,
@@ -116,5 +117,33 @@ describe("suggestLayoutName", () => {
     expect(
       suggestLayoutName("Main", [...taken, { name: "main (copy 2)" }])
     ).toBe("Main (copy 3)")
+  })
+})
+
+describe("describeLayoutUse", () => {
+  const use = (path: string, choice: Parameters<typeof resolvePageLayout>[2]) =>
+    describeLayoutUse(choice, resolvePageLayout(layouts, path, choice))
+
+  it("says a Layout covers the path", () => {
+    expect(use("/stays/cabin", { mode: "default" })).toBe(
+      "Uses Listings, which covers /stays."
+    )
+  })
+
+  it("says the default Layout is the default", () => {
+    expect(use("/about", { mode: "default" })).toBe(
+      "Uses Main, the default Layout."
+    )
+  })
+
+  it("names a specific Layout plainly", () => {
+    expect(use("/stays", { mode: "layout", layoutId: 1 })).toBe("Uses Main.")
+  })
+
+  it("says nothing is drawn for No Layout, and when there is none to use", () => {
+    expect(use("/", { mode: "none" })).toBe("Nothing is drawn around the Page.")
+    expect(describeLayoutUse({ mode: "default" }, null)).toBe(
+      "There is no Layout to use yet."
+    )
   })
 })

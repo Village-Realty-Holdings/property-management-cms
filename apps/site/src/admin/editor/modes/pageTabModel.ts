@@ -31,6 +31,10 @@ export type ResolvedLayout = {
   name: string
   /** How the Page came to use it: "Listings, via /stays", "Main (default)". */
   label: string
+  /** Why this Layout: it was picked, its paths cover the Page, or it is the default. */
+  reason: "specific" | "path" | "default"
+  /** The path prefix that covers the Page, when `reason` is "path". */
+  via?: string
   header: BlockValues[]
   footer: BlockValues[]
 }
@@ -67,7 +71,31 @@ export function resolvePageLayout(
   })
   if (!resolution.layout) return null
   const { id, name, header, footer } = resolution.layout
-  return { id, name, label: layoutLabel(resolution), header, footer }
+  const found = {
+    id,
+    name,
+    label: layoutLabel(resolution),
+    reason: resolution.reason,
+    header,
+    footer,
+  }
+  return resolution.reason === "path"
+    ? { ...found, via: resolution.via }
+    : found
+}
+
+/** The sentence under the Layout choice: which Layout the Page wears, and why. */
+export function describeLayoutUse(
+  choice: LayoutChoice,
+  resolved: ResolvedLayout | null
+): string {
+  if (choice.mode === "none") return "Nothing is drawn around the Page."
+  if (!resolved) return "There is no Layout to use yet."
+  if (resolved.reason === "path")
+    return `Uses ${resolved.name}, which covers ${resolved.via}.`
+  if (resolved.reason === "default")
+    return `Uses ${resolved.name}, the default Layout.`
+  return `Uses ${resolved.name}.`
 }
 
 /**
