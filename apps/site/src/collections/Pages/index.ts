@@ -3,6 +3,8 @@ import type { CollectionConfig } from "payload"
 import { publishedOrSignedIn, signedIn } from "../../access"
 import { pageBlocks } from "../../blocks"
 import { seoField } from "../../fields/seo"
+import { layoutField } from "./layoutField"
+import { refuseDeleteWhenLinked } from "./navigationGuard"
 import { defaultPathFromTitle, validatePagePath } from "./path"
 
 /**
@@ -24,6 +26,7 @@ export const Pages: CollectionConfig = {
     delete: signedIn,
     readVersions: signedIn,
   },
+  hooks: { beforeDelete: [refuseDeleteWhenLinked] },
   versions: {
     // Validate Drafts too, so a Draft can't hold a path that won't publish.
     drafts: { autosave: false, validate: true },
@@ -46,12 +49,13 @@ export const Pages: CollectionConfig = {
       },
     },
     {
-      name: "layout",
+      name: "blocks",
       label: "Blocks",
       type: "blocks",
       labels: { singular: "Block", plural: "Blocks" },
       blocks: pageBlocks,
     },
+    layoutField(),
     seoField(),
   ],
 }

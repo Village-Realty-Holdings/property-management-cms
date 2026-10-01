@@ -2,30 +2,49 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { CallToActionBlock as CallToActionBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockButton, linkOf, type BlockButtonTone } from "./BlockButton"
-import { container, type BlockContext } from "./types"
+import {
+  BlockButton,
+  linkOf,
+  type BlockButtonTone,
+  type BlockSurface,
+} from "./BlockButton"
+import { BlockSection } from "./BlockSection"
+import { EditableText } from "./Editable"
+import type { BlockContext } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
-const styles: Record<Style, { panel: string; button: BlockButtonTone }> = {
+const styles: Record<
+  Style,
+  { panel: string; button: BlockButtonTone; surface?: BlockSurface }
+> = {
   // The Site's primary colour, accent button.
   primary: {
-    panel: "bg-(--brand-primary) text-(--brand-primary-foreground)",
+    panel: "bg-primary text-primary-foreground",
     button: "accent",
+    surface: "primary",
   },
   // Quiet: tinted paper with a hairline, primary button.
   secondary: {
     panel: "border border-border bg-secondary text-foreground",
     button: "primary",
   },
-  // The accent colour, primary button.
+  // The accent colour, primary button drawn for the accent panel.
   inverted: {
-    panel: "bg-(--brand-accent) text-(--brand-accent-foreground)",
-    button: "primary",
+    panel: "bg-accent text-accent-foreground",
+    button: "onAccent",
+    surface: "accent",
+  },
+  // The Theme's dark surface, accent button.
+  dark: {
+    panel:
+      "border border-surface-dark-foreground/15 bg-surface-dark text-surface-dark-foreground",
+    button: "accent",
+    surface: "dark",
   },
 }
 
-/** Call to action: a short pitch with one button, in one of three styles. */
+/** Call to action: a short pitch with one button, in one of four styles. */
 export function CallToActionBlock({
   block,
   context,
@@ -40,15 +59,19 @@ export function CallToActionBlock({
   const style = styles[block.style] ?? styles.primary
   const id = `block-${context.index}-heading`
   return (
-    <section aria-labelledby={id} className={`${container} py-10 sm:py-14`}>
+    <BlockSection background={block.background} labelledBy={id}>
       <div
         className={cn(
-          "relative flex flex-col gap-6 overflow-hidden rounded-2xl px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
+          "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
+          "shadow-(--card-shadow)",
           style.panel
         )}
       >
         <div className="flex max-w-2xl flex-col gap-3">
-          <h2
+          <EditableText
+            as="h2"
+            field="heading"
+            context={context}
             id={id}
             className={cn(
               displayFont,
@@ -56,21 +79,29 @@ export function CallToActionBlock({
             )}
           >
             {heading}
-          </h2>
+          </EditableText>
           {body && (
-            <p className="text-base text-pretty whitespace-pre-line opacity-85 sm:text-lg">
+            <EditableText
+              as="p"
+              field="body"
+              context={context}
+              multiline
+              className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            >
               {body}
-            </p>
+            </EditableText>
           )}
         </div>
         {button && (
           <BlockButton
             link={button}
             tone={style.button}
+            surface={style.surface}
+            editable={{ field: "button.label", context }}
             className="self-start md:self-auto"
           />
         )}
       </div>
-    </section>
+    </BlockSection>
   )
 }

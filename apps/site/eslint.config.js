@@ -11,4 +11,25 @@ export default [
       "src/app/(payload)/**",
     ],
   },
+  // Editors navigate through the guarded router (ADR-0006 / Phase 5): a plain
+  // Next router skips the unsaved-changes dialog without any error.
+  {
+    files: ["src/admin/**/*.{ts,tsx}", "src/app/(admin)/**/*.{ts,tsx}"],
+    ignores: ["src/admin/kit/unsaved/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/navigation",
+              importNames: ["useRouter"],
+              message:
+                "Editors must navigate through the guarded router: use useUnsavedChangesGuard from @/admin/kit (it returns { dialog, router }). A plain useRouter bypasses the unsaved-changes guard.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]

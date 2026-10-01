@@ -4,7 +4,7 @@ export type FormState = {
   message?: string
   /** Whether `message` reports success or failure. */
   ok?: boolean
-  /** Field errors keyed by Payload field path, e.g. "layout.0.heading". */
+  /** Field errors keyed by Payload field path, e.g. "blocks.0.heading". */
   fieldErrors?: Record<string, string>
 }
 

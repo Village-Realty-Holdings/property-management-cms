@@ -101,7 +101,7 @@ function renderNode(node: LexicalNode, key: number): ReactNode {
       return (
         <blockquote
           key={key}
-          className="border-l-4 border-(--brand-accent) pl-4 text-lg italic"
+          className="border-l-4 border-accent pl-4 text-lg italic"
         >
           {children()}
         </blockquote>
@@ -134,7 +134,7 @@ function renderNode(node: LexicalNode, key: number): ReactNode {
               checked={node.checked}
               readOnly
               disabled
-              className="mt-1.5 accent-(--brand-primary)"
+              className="mt-1.5 accent-primary"
             />
             <span>{children()}</span>
           </li>
@@ -149,7 +149,7 @@ function renderNode(node: LexicalNode, key: number): ReactNode {
       const newTab = fields.newTab === true
       if (!href) return <span key={key}>{children()}</span>
       const className =
-        "font-medium text-primary underline decoration-(--brand-accent) decoration-2 underline-offset-4 hover:decoration-primary"
+        "font-medium text-link underline decoration-accent decoration-2 underline-offset-4 hover:decoration-link"
       return href.startsWith("/") && !newTab ? (
         <Link key={key} href={href} className={className}>
           {children()}

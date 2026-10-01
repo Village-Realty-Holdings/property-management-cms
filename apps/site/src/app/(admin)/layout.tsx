@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 
 import "@workspace/ui/globals.css"
 
+import { AdminKitHost } from "@/admin/kit"
+
 export const metadata: Metadata = {
   title: { default: "Admin", template: "%s · Admin" },
   robots: { index: false, follow: false },
@@ -13,6 +15,7 @@ export default function AdminRootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-svh bg-muted/40 font-sans text-foreground antialiased">
+        <AdminKitHost />
         {children}
       </body>
     </html>

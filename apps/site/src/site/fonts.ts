@@ -7,14 +7,13 @@ import {
   Zilla_Slab,
 } from "next/font/google"
 
-import type { FontPairing } from "./theme"
-
 /**
- * The three font pairings a Site can choose (Site Settings `branding.fontPairing`).
- * Each font only defines a CSS variable; the layout points `--font-sans`
- * (body) and `--font-display` (headings) at the Site's pair, so the browser
- * downloads only the two faces the Site uses. Not preloaded: the layout
- * reads the pair from Site Settings at request time.
+ * The six built-in fonts, self-hosted by next/font. Each font only defines a
+ * CSS variable, on <html> through `fontVariables`; the Theme's stacks
+ * (`resolveFontStack`, ./fontStacks) point `--font-sans` and `--font-display`
+ * at them, so the browser downloads only the faces in use. Not preloaded:
+ * the fonts are chosen at request time. Uploaded and Google-imported Fonts
+ * are stored Fonts, served through @font-face (see ./fontStacks).
  */
 
 const newsreader = Newsreader({
@@ -50,7 +49,7 @@ const karla = Karla({
   preload: false,
 })
 
-/** Classes that define every pairing's font variables. */
+/** Classes that define every built-in font's variable. */
 export const fontVariables = [
   newsreader,
   publicSans,
@@ -61,20 +60,3 @@ export const fontVariables = [
 ]
   .map((font) => font.variable)
   .join(" ")
-
-/** CSS custom properties selecting the Site's pair. */
-export function fontVars(pairing: FontPairing): Record<string, string> {
-  return {
-    "--font-sans": `var(--font-${pairing}-body)`,
-    "--font-display": `var(--font-${pairing}-display)`,
-    // Headings per pairing: weight and tracking suit each face.
-    "--display-weight": { classic: "500", modern: "700", rustic: "600" }[
-      pairing
-    ],
-    "--display-tracking": {
-      classic: "-0.015em",
-      modern: "-0.035em",
-      rustic: "-0.01em",
-    }[pairing],
-  }
-}

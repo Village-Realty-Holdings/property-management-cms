@@ -4,32 +4,43 @@ import { connection } from "next/server"
 
 import "@workspace/ui/globals.css"
 
+import { resolveBrand } from "@/site/brand"
 import { fontVariables } from "@/site/fonts"
-import { getSiteSettings } from "@/site/queries"
-import { SiteFrame } from "@/site/SiteFrame"
-import { resolveBrand } from "@/site/theme"
+import { getBrand, getSeo, getTheme } from "@/site/queries"
+import { resolveSeo, siteMetadata, siteUrl } from "@/site/seo"
+import { SiteThemeStyle } from "@/site/SiteThemeStyle"
 
+/** Site-wide metadata from the Brand and SEO: Open Graph, favicon, noindex. */
 export async function generateMetadata(): Promise<Metadata> {
-  const brand = resolveBrand(await getSiteSettings())
-  return {
-    title: { default: brand.name, template: `%s · ${brand.name}` },
-    description: brand.tagline ?? undefined,
-  }
+  await connection()
+  const [brand, seo] = await Promise.all([getBrand(), getSeo()])
+  return siteMetadata({
+    brand: resolveBrand(brand),
+    seo: resolveSeo(seo),
+    baseUrl: siteUrl(),
+  })
 }
 
-/** The public Site's root layout: branding from Site Settings. */
+/**
+ * The public Site's root layout: the look, from the Theme. Each Page adds its
+ * own Layout (see LayoutFrame). The Theme's variables and font faces are
+ * emitted at :root, so dialogs and sheets portalled out of the Site's wrapper
+ * are themed too.
+ */
 export default async function SiteLayout({
   children,
 }: {
   children: ReactNode
 }) {
-  // Read Site Settings and Pages on every request, so a publish shows at once.
+  // Read the Theme, Layouts and Pages on every request, so a publish, a Theme
+  // save or a restore shows on the next page load.
   await connection()
-  const brand = resolveBrand(await getSiteSettings())
+  const theme = await getTheme()
   return (
     <html lang="en" className={fontVariables}>
-      <body className="antialiased">
-        <SiteFrame brand={brand}>{children}</SiteFrame>
+      <body className="bg-background font-sans text-foreground antialiased">
+        <SiteThemeStyle theme={theme} />
+        {children}
       </body>
     </html>
   )

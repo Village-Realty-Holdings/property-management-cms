@@ -1,6 +1,26 @@
 import pg from "pg"
 
 /**
+ * The Postgres schema this deployment's Site lives in: `DATABASE_SCHEMA`
+ * (apps/site ADR-0005). Undefined means the adapter's default, `public`.
+ *
+ * The name is also the local Media folder and the S3/R2 key prefix, so it
+ * must be a plain lowercase identifier.
+ */
+export function siteSchema(
+  env: Record<string, string | undefined> = process.env
+): string | undefined {
+  const name = env.DATABASE_SCHEMA?.trim()
+  if (!name) return undefined
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(name)) {
+    throw new Error(
+      `DATABASE_SCHEMA ${JSON.stringify(name)} must be lowercase letters, digits and underscores, starting with a letter or underscore (at most 63 characters)`
+    )
+  }
+  return name
+}
+
+/**
  * The `pg` module Payload's Postgres adapter uses, chosen here and nowhere
  * else (apps/cms ADR-0015).
  *
