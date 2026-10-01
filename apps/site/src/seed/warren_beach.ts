@@ -364,6 +364,12 @@ export const seed: SeedModule = async (seed) => {
     type: "page" as const,
     page: page.id,
   })
+  // The guide (a blog) is not one of the four seeded Pages: its links go to
+  // the real site, where it lives.
+  const realSite = (path: string) => ({
+    type: "url" as const,
+    url: `https://warrenbeachrentals.com${path}`,
+  })
   const feature = (label: string) => ({
     label,
     column: "Search by Feature",
@@ -416,6 +422,13 @@ export const seed: SeedModule = async (seed) => {
           },
           { label: "Specials", link: toPage(rentals) },
           { label: "Snowbird Rentals", link: toPage(rentals) },
+          {
+            label: "Emerald Coast Guide",
+            children: [
+              { label: "Blog", link: realSite("/blog/") },
+              { label: "Things to Do", link: realSite("/things-to-do/") },
+            ],
+          },
           {
             label: "About Us",
             children: [

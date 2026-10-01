@@ -1034,9 +1034,48 @@ export const seed: SeedModule = async (seed) => {
       {
         blockType: "navigation",
         items: [
-          { label: "Vacation Rentals", link: page(search.id) },
-          { label: "Property Management", link: page(owners.id) },
-          { label: "About", link: page(about.id) },
+          {
+            label: "Vacation Rentals",
+            display: "mega",
+            children: [
+              {
+                label: "Find Your Perfect Cabin",
+                column: "Find a stay",
+                link: page(search.id),
+              },
+              ...[
+                "Indoor Pools",
+                "Hot Tubs",
+                "Pet-Friendly Cabins",
+                "Game Rooms",
+                "Large Cabins",
+              ].map((label) => ({
+                label,
+                column: "By Amenity",
+                link: page(search.id),
+              })),
+              ...["Gatlinburg", "Pigeon Forge", "Sevierville"].map((label) => ({
+                label,
+                column: "Top Destinations",
+                link: page(search.id),
+              })),
+            ],
+          },
+          {
+            label: "Property Management",
+            children: [
+              { label: "Free Rental Projection", link: page(owners.id) },
+              { label: "Vacation Rental Insights", link: page(owners.id) },
+              { label: "Cabin Owner FAQ", link: page(owners.id) },
+            ],
+          },
+          {
+            label: "About",
+            children: [
+              { label: "About Avada", link: page(about.id) },
+              { label: "Contact Us", link: page(contact.id) },
+            ],
+          },
         ],
       },
       {
