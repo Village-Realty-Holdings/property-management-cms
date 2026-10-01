@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { FileTextIcon, PlusIcon, SearchIcon } from "lucide-react"
 
+import { Badge } from "@workspace/ui/components/badge"
 import { buttonVariants } from "@workspace/ui/components/button"
 
 import { EmptyState } from "../kit/EmptyState"
@@ -86,6 +87,11 @@ export function PagesTable({
                 >
                   {row.title}
                 </Link>
+                {row.isTemplate && (
+                  <Badge variant="secondary" className="ml-2">
+                    Page Template
+                  </Badge>
+                )}
               </th>
               <td className="px-4 py-3 font-mono text-xs">{row.path}</td>
               <td className="px-4 py-3">

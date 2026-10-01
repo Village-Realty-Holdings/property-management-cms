@@ -119,6 +119,8 @@ describe("the Warren Beach seed", () => {
   it("creates the four Pages, Published, at their paths", async () => {
     const { docs } = await payload.find({
       collection: "pages",
+      // The starter Page Templates are Pages too, but not the Site's own.
+      where: { isTemplate: { not_equals: true } },
       draft: false,
       depth: 0,
       sort: "path",

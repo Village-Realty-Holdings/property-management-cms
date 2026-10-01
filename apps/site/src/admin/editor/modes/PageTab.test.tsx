@@ -500,6 +500,33 @@ describe("<PageTab> SEO", () => {
     expect(button(topBar(), "Publish").disabled).toBe(false)
   })
 
+  it("turns the Page into a Page Template, which can't be published", async () => {
+    mount({ initial: { ...about, isTemplate: false } })
+    const user = userEvent.setup()
+    expect(button(topBar(), "Publish").disabled).toBe(false)
+    await user.click(within(panel()).getByLabelText("Use as a Page Template"))
+
+    // Publish stays a keyboard stop while it is off.
+    expect(button(topBar(), "Publish").getAttribute("aria-disabled")).toBe(
+      "true"
+    )
+    await user.click(button(topBar(), "Save"))
+    await waitFor(() => expect(pages.savePage).toHaveBeenCalled())
+    expect(pages.savePage.mock.calls[0]![0]).toMatchObject({
+      intent: "draft",
+      document: { isTemplate: true },
+    })
+  })
+
+  it("asks for a live Page to be unpublished before it is a Page Template", () => {
+    mount({ status: "published" })
+    const box = within(panel()).getByLabelText(
+      "Use as a Page Template"
+    ) as HTMLInputElement
+    expect(box.disabled).toBe(true)
+    expect(within(panel()).getByText(/Unpublish the Page first/)).toBeTruthy()
+  })
+
   it("picks the share image from the Media", async () => {
     mount()
     const user = userEvent.setup()

@@ -38,6 +38,10 @@ _Avoid_: Landing page, screen, post
 The Header and Footer that wrap a Page's content. One Layout is the Site's default, a Layout can be the default for the Pages under a path, and a Page can use another Layout or none.
 _Avoid_: Template, shell, chrome, master page
 
+**Page Template**:
+A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add two starters: Home, and Tuck-in (an announcement that a company has joined the brand).
+_Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made)
+
 **Block**:
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action.
 _Avoid_: Component, widget, section, element

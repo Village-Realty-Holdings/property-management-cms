@@ -1,6 +1,7 @@
 import type { Payload } from "payload"
 
 import type { FetchLike } from "../fonts/googleFonts"
+import { ensureStarterTemplates } from "../pageTemplates/starters"
 import { seed as avada } from "./avada"
 import { seed as beachside } from "./beachside"
 import { createSeeder, seedStaffUser, type Seeder } from "./upsert"
@@ -31,7 +32,8 @@ export function seedModuleFor(schema: string | undefined): SeedModule {
 
 /**
  * Runs a seed against a migrated database as the seed Staff User, and returns
- * what it did, record by record. Running it again changes nothing.
+ * what it did, record by record. Every Site also gets the starter Page
+ * Templates it doesn't have. Running it again changes nothing.
  */
 export async function runSeed(
   payload: Payload,
@@ -39,5 +41,12 @@ export async function runSeed(
 ): Promise<Seeder["report"]> {
   const seeder = createSeeder(payload, await seedStaffUser(payload), { fetch })
   await module(seeder)
+  const starters = await ensureStarterTemplates(payload, {
+    overrideAccess: false,
+    user: seeder.user,
+  })
+  for (const { path, action } of starters) {
+    seeder.report.push({ kind: "page template", key: path, action })
+  }
   return seeder.report
 }

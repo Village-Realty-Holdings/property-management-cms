@@ -1,5 +1,7 @@
 import { NotFound, type Payload } from "payload"
 
+import { TEMPLATE_IS_NOT_PUBLISHED } from "../collections/Pages"
+
 import { derivePageStatus, type PageStatus } from "./dashboard/pageStatus"
 import {
   pageDataFromDocument,
@@ -50,7 +52,28 @@ export async function savePageAs(
   if (!INTENTS.includes(intent)) {
     return { ok: false, message: "Choose Save draft, Publish or Unpublish." }
   }
+  if (document.isTemplate && intent === "publish") {
+    return { ok: false, message: TEMPLATE_IS_NOT_PUBLISHED }
+  }
   try {
+    // A Page Template stays off the Site: a live Page is unpublished first.
+    if (document.isTemplate && id && intent === "draft") {
+      const live = await payload.findByID({
+        collection: "pages",
+        id,
+        draft: false,
+        depth: 0,
+        select: { _status: true },
+        ...access,
+      })
+      if (live._status === "published") {
+        return {
+          ok: false,
+          message:
+            "This Page is live on the Site. Unpublish it before making it a Page Template.",
+        }
+      }
+    }
     const data = pageDataFromDocument(document)
     const _status = intent === "publish" ? "published" : "draft"
     const draft = intent === "draft"

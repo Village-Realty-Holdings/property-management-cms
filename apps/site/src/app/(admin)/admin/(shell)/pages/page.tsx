@@ -1,13 +1,15 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { PlusIcon } from "lucide-react"
+import { LayoutPanelTopIcon } from "lucide-react"
 
 import { buttonVariants } from "@workspace/ui/components/button"
 
+import { NewPageButton } from "@/admin/components/pageTemplates/NewPageButton"
 import { PagesSearch, PagesTable } from "@/admin/dashboard/PagesTable"
 import { loadPageRows } from "@/admin/dashboard/queries"
 import { PageHeader, TableSkeleton } from "@/admin/kit"
+import { loadPageTemplateRows } from "@/admin/pageTemplates"
 import { requireStaff } from "@/admin/session"
 
 export const metadata: Metadata = { title: "Pages" }
@@ -28,10 +30,17 @@ export default async function PagesList({
         title="Pages"
         description="Everything visitors can open on your Site."
         action={
-          // The Visual Editor takes over New Page in Phase 5.
-          <Link href="/admin/pages/new" className={buttonVariants()}>
-            <PlusIcon aria-hidden="true" /> New Page
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/pages/templates"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <LayoutPanelTopIcon aria-hidden="true" /> Page Templates
+            </Link>
+            <Suspense fallback={<NewPageButton templates={[]} />}>
+              <NewPage />
+            </Suspense>
+          </div>
         }
       />
       <PagesSearch query={query} />
@@ -43,6 +52,12 @@ export default async function PagesList({
       </Suspense>
     </>
   )
+}
+
+/** New Page, which offers the Page Templates when there are some. */
+async function NewPage() {
+  const { payload, as } = await requireStaff()
+  return <NewPageButton templates={await loadPageTemplateRows(payload, as)} />
 }
 
 async function Rows({ query }: { query: string }) {

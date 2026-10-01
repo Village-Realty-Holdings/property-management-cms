@@ -13,7 +13,10 @@ export function continueEditing(
     .slice(0, limit)
 }
 
-/** Pages with changes nobody has published: a Draft, or a newer Draft of a Published Page. */
+/**
+ * Pages with changes nobody has published: a Draft, or a newer Draft of a
+ * Published Page. Not Page Templates, which are never published.
+ */
 export function waitingToPublish(rows: readonly PageRow[]): PageRow[] {
-  return rows.filter((row) => row.status !== "published")
+  return rows.filter((row) => row.status !== "published" && !row.isTemplate)
 }

@@ -7,6 +7,10 @@ import { layoutField } from "./layoutField"
 import { refuseDeleteWhenLinked } from "./navigationGuard"
 import { defaultPathFromTitle, validatePagePath } from "./path"
 
+/** Why a Page Template won't publish. */
+export const TEMPLATE_IS_NOT_PUBLISHED =
+  "A Page Template can't be published. Turn off Page Template first."
+
 /**
  * A page of the Site at its own path, composed from Blocks: "/" for Home,
  * "/about", "/company/team". Staff Users edit the Draft; visitors see the
@@ -57,5 +61,23 @@ export const Pages: CollectionConfig = {
     },
     layoutField(),
     seoField(),
+    {
+      // A Page Template is a Page: one that new Pages can start from a copy
+      // of, and that stays off the Site.
+      name: "isTemplate",
+      label: "Page Template",
+      type: "checkbox",
+      defaultValue: false,
+      validate: (value: unknown, { data }: { data: unknown }) =>
+        value === true &&
+        (data as { _status?: string } | undefined)?._status === "published"
+          ? TEMPLATE_IS_NOT_PUBLISHED
+          : true,
+      admin: {
+        position: "sidebar",
+        description:
+          "New Pages can start from a copy of this Page. A Page Template is never published.",
+      },
+    },
   ],
 }

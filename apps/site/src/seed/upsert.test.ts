@@ -247,7 +247,8 @@ describe("a sample seed", () => {
 
     const after = await snapshot()
     expect(after.counts).toMatchObject({
-      pages: 2,
+      // The sample's two Pages and the two starter Page Templates.
+      pages: 4,
       layouts: 2,
       media: 1,
       fonts: 1,
@@ -258,6 +259,17 @@ describe("a sample seed", () => {
 
     const brand = await payload.findGlobal({ slug: "brand", depth: 0 })
     expect(brand.name).toBe("Sample Rentals")
+    // Every Site gets the starter Page Templates, as Drafts.
+    const templates = await payload.find({
+      collection: "pages",
+      where: { isTemplate: { equals: true } },
+      sort: "path",
+      depth: 0,
+    })
+    expect(templates.docs.map((page) => [page.path, page._status])).toEqual([
+      ["/templates/home", "draft"],
+      ["/templates/tuck-in", "draft"],
+    ])
     const home = await payload.find({
       collection: "pages",
       where: { path: { equals: "/" } },

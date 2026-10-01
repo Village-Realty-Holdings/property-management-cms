@@ -41,7 +41,7 @@ function copyName(name: string, taken: ReadonlySet<string>): string {
  * Block rows carry generated ids, and a row id belongs to one row: a copy
  * gets fresh ones. Only string ids go (rows); a relationship's id is a number.
  */
-function withoutRowIds<T>(value: T): T {
+export function withoutRowIds<T>(value: T): T {
   if (Array.isArray(value)) return value.map(withoutRowIds) as T
   if (value && typeof value === "object") {
     return Object.fromEntries(

@@ -29,6 +29,8 @@ export type PageDocument = {
   layout: LayoutChoice
   blocks: BlockValues[]
   seo: PageValues["seo"]
+  /** A Page Template: new Pages can start from a copy of it. Absent means no. */
+  isTemplate?: boolean
 }
 
 export type LayoutDocument = {

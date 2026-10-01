@@ -12,6 +12,8 @@ export type PageRow = {
   /** The Layout the Page uses, as shown: "Listings, via /stays" or "No Layout". */
   layout: string
   updatedAt: string
+  /** It is a Page Template. */
+  isTemplate?: boolean
 }
 
 /** One line of the Layouts list. */
@@ -65,7 +67,8 @@ export function layoutLabelForPage(
   return labels.get(pageId) ?? NO_LAYOUT
 }
 
-type PageFacts = Pick<Page, "id" | "title" | "path" | "updatedAt" | "_status">
+type PageFacts = Pick<Page, "id" | "title" | "path" | "updatedAt" | "_status"> &
+  Pick<Partial<Page>, "isTemplate">
 
 /**
  * A Pages list row. `latest` is the Page's newest version (the Draft, if
@@ -87,6 +90,7 @@ export function toPageRow(
     }),
     layout,
     updatedAt: latest.updatedAt,
+    ...(latest.isTemplate ? { isTemplate: true } : {}),
   }
 }
 

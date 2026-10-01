@@ -46,6 +46,7 @@ export function pageDocumentFromPage(page: Page): PageDocument {
       description: page.seo?.description ?? "",
       image: idOf(page.seo?.image),
     },
+    isTemplate: page.isTemplate === true,
   }
 }
 
@@ -73,6 +74,7 @@ export function pageDataFromDocument(doc: PageDocument) {
       description: doc.seo.description || null,
       image: doc.seo.image,
     },
+    isTemplate: doc.isTemplate === true,
   }
 }
 
@@ -94,6 +96,7 @@ export function newPageDocument(path: string = NEW_PAGE_PATH): PageDocument {
     layout: { mode: "default" },
     blocks: [{ ...(emptyBlock("hero") as HeroValues), heading: "Welcome" }],
     seo: { title: "", description: "", image: null },
+    isTemplate: false,
   }
 }
 

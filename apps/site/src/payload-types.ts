@@ -186,6 +186,10 @@ export interface Page {
      */
     image?: (number | null) | Media;
   };
+  /**
+   * New Pages can start from a copy of this Page. A Page Template is never published.
+   */
+  isTemplate?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1079,6 +1083,7 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T;
         image?: T;
       };
+  isTemplate?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

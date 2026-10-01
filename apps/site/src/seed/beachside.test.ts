@@ -83,6 +83,8 @@ const counts = async () => {
 const pagesInOrder = async () => {
   const { docs } = await payload.find({
     collection: "pages",
+    // The starter Page Templates are Pages too, but not the Site's own.
+    where: { isTemplate: { not_equals: true } },
     depth: 0,
     sort: "createdAt",
     pagination: false,
@@ -99,7 +101,8 @@ describe("the Beachside seed", () => {
     expect(report.length).toBeGreaterThan(10)
 
     expect(await counts()).toMatchObject({
-      pages: 4,
+      // Its four Pages and the two starter Page Templates.
+      pages: 6,
       layouts: 1,
       media: 7,
       fonts: 2,

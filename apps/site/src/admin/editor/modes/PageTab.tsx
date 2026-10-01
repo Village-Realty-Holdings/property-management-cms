@@ -216,6 +216,35 @@ export function PageTab({
         </FormField>
       </section>
 
+      <section
+        aria-labelledby="page-template-heading"
+        className="grid gap-2 border-t pt-4"
+      >
+        <h3 id="page-template-heading" className="text-sm font-medium">
+          Page Template
+        </h3>
+        <div className="flex items-center gap-2">
+          <input
+            id="page-is-template"
+            type="checkbox"
+            checked={page.isTemplate === true}
+            // A live Page is unpublished first; one already on can be turned off.
+            disabled={status !== "draft" && page.isTemplate !== true}
+            aria-describedby="page-is-template-description"
+            onChange={(event) => setField("isTemplate", event.target.checked)}
+            className="size-4 accent-primary"
+          />
+          <label htmlFor="page-is-template" className="text-sm">
+            Use as a Page Template
+          </label>
+        </div>
+        <FieldDescription id="page-is-template-description">
+          {status !== "draft" && page.isTemplate !== true
+            ? "Unpublish the Page first: a Page Template stays off the Site."
+            : "New Pages can start from a copy of this Page. It can't be published while this is on."}
+        </FieldDescription>
+      </section>
+
       {id !== null && (
         <section
           aria-labelledby="page-danger-heading"
