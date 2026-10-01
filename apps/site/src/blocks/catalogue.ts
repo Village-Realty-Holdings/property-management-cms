@@ -356,11 +356,14 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     defaults: {
       blockType: "ownerBand",
       heading: "Own a home? Let us look after it.",
+      pitch:
+        "We handle bookings, guests and upkeep, so your home earns while you enjoy it.",
       benefits: [
         { text: "Full-service management, from listing to turnover" },
         { text: "Monthly owner statements you can read at a glance" },
         { text: "Local team on call, every day" },
       ],
+      cta: { label: "Talk to us about your home", href: "/contact" },
       background: "dark",
     },
     takesBackground: true,
@@ -375,6 +378,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     defaults: {
       blockType: "newsletter",
       heading: "Stay in the loop",
+      text: "New homes, seasonal offers and local tips, once a month.",
       emailPlaceholder: "Your email address",
       buttonLabel: "Subscribe",
       background: "default",
