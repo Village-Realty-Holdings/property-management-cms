@@ -157,10 +157,15 @@ describe("Admin times are in the viewer's time zone", () => {
     expect(
       await page.locator("time", { hasText: EVENING_LOCAL }).count()
     ).toBeGreaterThan(0)
-    // Nothing on the page is still UTC's "Oct 1".
-    expect(await page.locator("time", { hasText: /Oct 1, 2026/ }).count()).toBe(
-      0
-    )
+    // This test's own rows are not still UTC's "Oct 1". Other records saved
+    // on the day of the run may rightly say so.
+    for (const iso of [LATE, EVENING]) {
+      for (const text of await page
+        .locator(`time[datetime="${iso}"]`)
+        .allTextContents()) {
+        expect(text).not.toContain("Oct 1")
+      }
+    }
   })
 
   it("the Dashboard's Theme card says when the Theme was saved in local time", async () => {
