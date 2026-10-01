@@ -44,22 +44,57 @@ describe("<MediaDeleteButton>", () => {
     expect(actions.deleteMedia).not.toHaveBeenCalled()
   })
 
-  it("names what uses the image before it goes", async () => {
-    const user = userEvent.setup()
-    renderButton([
-      { kind: "Brand setting", name: "Logo" },
-      { kind: "Page", name: "Home (hero image)" },
-      { kind: "Page", name: "About (SEO image)" },
-    ])
-    await user.click(screen.getByRole("button", { name: "Delete hero.jpg" }))
+  describe("an image that is in use", () => {
+    const inUse = [
+      { kind: "Brand setting", name: "Logo", href: "/admin/settings/brand" },
+      {
+        kind: "Page",
+        name: "Home, Block 3, Amenities (Amenity 2: Image)",
+        href: "/admin/pages/1",
+      },
+      { kind: "Layout", name: "Main, Header Block 1, Logo" },
+    ]
 
-    const dialog = await screen.findByRole("alertdialog")
-    expect(
-      within(dialog).getByText("Used by 1 Brand setting and 2 Pages.")
-    ).toBeTruthy()
-    expect(within(dialog).getByText("Brand setting: Logo")).toBeTruthy()
-    expect(within(dialog).getByText("Page: Home (hero image)")).toBeTruthy()
-    expect(within(dialog).queryByText(/Nothing else uses it/)).toBeNull()
+    it("can't be deleted: the dialog names every use, each with a link", async () => {
+      const user = userEvent.setup()
+      renderButton(inUse)
+      await user.click(screen.getByRole("button", { name: "Delete hero.jpg" }))
+
+      const dialog = await screen.findByRole("alertdialog")
+      expect(
+        within(dialog).getByText(
+          "Used by 1 Brand setting, 1 Page and 1 Layout."
+        )
+      ).toBeTruthy()
+      const link = within(dialog).getByRole("link", {
+        name: "Page: Home, Block 3, Amenities (Amenity 2: Image)",
+      })
+      expect(link.getAttribute("href")).toBe("/admin/pages/1")
+      expect(
+        within(dialog)
+          .getByRole("link", { name: "Brand setting: Logo" })
+          .getAttribute("href")
+      ).toBe("/admin/settings/brand")
+      // A use with no screen of its own is still named.
+      expect(
+        within(dialog).getByText("Layout: Main, Header Block 1, Logo")
+      ).toBeTruthy()
+      expect(within(dialog).queryByText(/Nothing else uses it/)).toBeNull()
+    })
+
+    it("offers no way to delete it", async () => {
+      const user = userEvent.setup()
+      renderButton(inUse)
+      await user.click(screen.getByRole("button", { name: "Delete hero.jpg" }))
+
+      const dialog = await screen.findByRole("alertdialog")
+      expect(
+        within(dialog).queryByRole("button", { name: "Delete image" })
+      ).toBeNull()
+      await user.click(within(dialog).getByRole("button", { name: "Close" }))
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+      expect(actions.deleteMedia).not.toHaveBeenCalled()
+    })
   })
 
   it("cancelling leaves the image alone", async () => {

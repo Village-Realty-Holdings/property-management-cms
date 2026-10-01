@@ -5,6 +5,7 @@ import { NotFound } from "payload"
 
 import { formStateFromError, type FormState } from "../formState"
 import { requireStaff } from "../session"
+import { loadMediaDependents, mediaInUseMessage } from "../usage"
 
 /** Uploads an image to Media with its alt text. */
 export async function uploadMedia(
@@ -37,8 +38,10 @@ export async function uploadMedia(
 }
 
 /**
- * Deletes one image. The Media screen asks first (<MediaDeleteButton>); the
- * result is shown in its dialog.
+ * Deletes one image. Refused, with the reason, while the Brand, SEO or any
+ * Block of a Page (Draft or Published) or a Layout shows it: the dialog
+ * (<MediaDeleteButton>) says so up front, and this checks again, because the
+ * dialog's list can be out of date or the call can come from anywhere.
  */
 export async function deleteMedia(id: number): Promise<FormState> {
   if (!Number.isInteger(id) || id <= 0) {
@@ -52,12 +55,15 @@ export async function deleteMedia(id: number): Promise<FormState> {
       depth: 0,
       ...as,
     })
+    const uses = (await loadMediaDependents(payload, as)).get(id) ?? []
+    if (uses.length > 0) {
+      return {
+        ok: false,
+        message: mediaInUseMessage(media.filename ?? "The image", uses),
+      }
+    }
     await payload.delete({ collection: "media", id, ...as })
     revalidatePath("/admin/media")
-    // The Brand, SEO and Pages that used it now show without it.
-    revalidatePath("/admin/settings/brand")
-    revalidatePath("/admin/settings/seo")
-    revalidatePath("/", "layout")
     return { ok: true, message: `Deleted ${media.filename ?? "the image"}.` }
   } catch (error) {
     if (error instanceof NotFound) {
