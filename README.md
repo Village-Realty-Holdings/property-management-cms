@@ -1,21 +1,17 @@
-# shadcn/ui monorepo template
+# Property Management
 
-This is a Next.js monorepo template with shadcn/ui.
+## Local development
 
-## Adding components
-
-To add components to your app, run the following command at the root of your app (`cms` or `site`):
+Requires Node 20+, pnpm and Docker (with Compose).
 
 ```bash
-pnpm dlx shadcn@latest add button -c apps/cms
+pnpm install
+cp apps/site/.env.example apps/site/.env
+docker compose up -d --wait postgres
+docker compose exec postgres createdb -U postgres property_management_sites
+pnpm dev
 ```
 
-This will place the ui components in the `packages/ui/src/components` directory.
+Open http://localhost:3000/admin and choose **Dev sign-in**.
 
-## Using components
-
-To use the components in your app, import them from the `ui` package.
-
-```tsx
-import { Button } from "@workspace/ui/components/button"
-```
+This starts an empty Site. Demo content is optional: see `apps/site/scripts/seed.ts`.
