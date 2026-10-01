@@ -96,7 +96,11 @@ export function VisualEditorShell({
     canvasWindow: () => frameRef.current?.contentWindow ?? null,
   })
   return (
-    <div className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
+    // `relative` makes the shell the containing block of every absolutely
+    // positioned descendant (the `sr-only` labels in a scrolled panel): those
+    // otherwise sit against the page and stretch it, so the document scrolls
+    // past the shell into blank white.
+    <div className="relative flex h-svh min-h-0 flex-col overflow-hidden bg-background">
       <TopBar
         mode={mode}
         name={name}
