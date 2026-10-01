@@ -26,6 +26,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }))
 
 const pages = vi.hoisted(() => ({ savePage: vi.fn(), deletePage: vi.fn() }))
 vi.mock("../../actions/pages", () => pages)
+vi.mock("../../actions/media", () => ({ uploadMedia: vi.fn() }))
 vi.mock("../../actions/pagePicker", () => ({ searchPages: async () => [] }))
 const layoutActions = vi.hoisted(() => ({
   makeLayoutFromPageDocument: vi.fn(),
@@ -502,10 +503,9 @@ describe("<PageTab> SEO", () => {
   it("picks the share image from the Media", async () => {
     mount()
     const user = userEvent.setup()
-    await user.selectOptions(
-      within(panel()).getByLabelText("SEO image"),
-      "Beach"
-    )
+    await user.click(within(panel()).getByLabelText("SEO image"))
+    const dialog = await screen.findByRole("dialog")
+    await user.click(within(dialog).getByRole("button", { name: "Beach" }))
     await user.click(button(topBar(), "Save"))
     await waitFor(() => expect(pages.savePage).toHaveBeenCalled())
     expect(pages.savePage.mock.calls[0]![0].document.seo.image).toBe(7)

@@ -30,7 +30,7 @@ const revalidatePath = vi.hoisted(() => vi.fn())
 vi.mock("../session", () => ({ requireStaff: async () => session.current }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 
-import { deleteMedia } from "./media"
+import { deleteMedia, uploadMedia } from "./media"
 
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -88,6 +88,33 @@ const exists = (id: number) =>
     .findByID({ collection: "media", id, depth: 0, ...access })
     .then(() => true)
     .catch(() => false)
+
+describe("uploadMedia", () => {
+  it("uploads the image and returns it as a picker option", async () => {
+    const formData = new FormData()
+    formData.set("file", new File([PNG], "sunset.png", { type: "image/png" }))
+    formData.set("alt", "Sunset")
+
+    const result = await uploadMedia({}, formData)
+
+    expect(result).toMatchObject({ ok: true })
+    expect(result.media?.label).toMatch(/^Sunset \(sunset.*\.png\)$/)
+    expect(result.media?.url).toBeTruthy()
+    expect(await exists(result.media!.id)).toBe(true)
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/media")
+  })
+
+  it("refuses an image without alt text", async () => {
+    const formData = new FormData()
+    formData.set("file", new File([PNG], "sunset.png", { type: "image/png" }))
+
+    const result = await uploadMedia({}, formData)
+
+    expect(result.ok).toBe(false)
+    expect(result.fieldErrors?.alt).toBeTruthy()
+    expect(result.media).toBeUndefined()
+  })
+})
 
 describe("deleteMedia", () => {
   it("deletes an image nothing uses and refreshes the screens that showed it", async () => {

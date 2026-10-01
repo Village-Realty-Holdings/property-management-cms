@@ -14,6 +14,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 
 // Only the icons on screen are loaded in the Site; the test needs a short,
 // known list it can search.
+vi.mock("../actions/media", () => ({ uploadMedia: vi.fn() }))
 vi.mock("lucide-react/dynamic", () => ({
   iconNames: ["wifi", "waves", "paw-print", "car"],
   DynamicIcon: ({ name }: { name: string }) => (
@@ -266,9 +267,11 @@ describe("<BlockPanel>", () => {
     it("picks an image from Media", async () => {
       const user = userEvent.setup()
       mount(hero)
-      await user.selectOptions(screen.getByLabelText("Image"), "7")
+      await user.click(screen.getByLabelText("Image"))
+      const dialog = await screen.findByRole("dialog")
+      await user.click(within(dialog).getByRole("button", { name: /Beach/ }))
       expect(block().image).toBe(7)
-      await user.selectOptions(screen.getByLabelText("Image"), "")
+      await user.click(screen.getByRole("button", { name: "Remove image" }))
       expect(block().image).toBeNull()
     })
 
