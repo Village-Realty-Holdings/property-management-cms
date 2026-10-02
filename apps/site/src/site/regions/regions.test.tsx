@@ -463,6 +463,23 @@ describe("a Container in a region", () => {
     expect(bands[2]!.querySelector("nav")).toBeTruthy()
   })
 
+  it("has no rule under a Header that ends in a Container, and keeps it under a row", () => {
+    const boxed = header([utilityStrip(), box([logo()])], withLogos)
+    expect(boxed.container.querySelector("header")!.className).not.toContain(
+      "border-b"
+    )
+    cleanup()
+    const row = header([box([logo()]), navigation()], withLogos)
+    expect(row.container.querySelector("header")!.className).toContain(
+      "border-b"
+    )
+    cleanup()
+    const plain = header([logo(), navigation()])
+    expect(plain.container.querySelector("header")!.className).toContain(
+      "border-b"
+    )
+  })
+
   it("puts its Blocks in the centre, and on a Primary band shows the light logo", () => {
     const { container } = header([box([logo({ size: "xlarge" })])], withLogos)
     const grid = container.querySelector("[data-container] > div")!

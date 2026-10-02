@@ -49,7 +49,8 @@ type Props =
  *
  * - **Header:** Utility strips stack above; the Logo, Navigation and Header
  *   actions follow in one row that wraps on a small screen. A Container is
- *   a band of its own, in its place among them.
+ *   a band of its own, in its place among them, and a Header that ends in
+ *   one has no rule under it.
  * - **Footer:** the Blocks stack in order, each a band on the Footer's
  *   surface (Footer columns, the Legal bar, and any Newsletter or Call to
  *   action, which keep their own background).
@@ -118,8 +119,16 @@ export function RegionBlocks({ region, blocks, context }: Props) {
     if (row && last?.row) last.items.push(item)
     else bands.push({ key: item.key, row, items: [item] })
   }
+  // A row is closed by a rule under the Header. A Container is a band with an
+  // edge of its own, so a Header that ends in one has no rule.
+  const ruled = bands[bands.length - 1]?.row !== false
   return (
-    <header className="border-b border-border bg-background text-foreground">
+    <header
+      className={cn(
+        "bg-background text-foreground",
+        ruled && "border-b border-border"
+      )}
+    >
       {strips.map((item) => (
         <Fragment key={item.key}>{item.node}</Fragment>
       ))}
