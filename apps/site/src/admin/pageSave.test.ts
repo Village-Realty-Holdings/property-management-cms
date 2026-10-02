@@ -357,7 +357,7 @@ describe("saving a Page with Containers", () => {
     })
     expect(result.ok).toBe(false)
     expect(result.message).toBe(
-      "Block 2, Block 1, Block 1, Block 2 is a Container inside 3 Containers, and Containers go 3 levels deep. Move it up a level, or remove it."
+      "Block 2, Container, Block 1, Container, Block 1, Container, Block 2 is a Container inside 3 Containers, and Containers go 3 levels deep. Move it up a level, or remove it."
     )
     expect((await publicPage("/too-deep")).totalDocs).toBe(0)
     const drafts = await t.payload.find({
@@ -382,7 +382,7 @@ describe("saving a Page with Containers", () => {
     expect(result).toEqual({
       ok: false,
       message:
-        "Block 2, Block 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.",
+        "Block 2, Container, Column 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.",
     })
   })
 
@@ -399,7 +399,7 @@ describe("saving a Page with Containers", () => {
     expect(result).toEqual({
       ok: false,
       message:
-        "Block 1, Block 1 is a “logo” Block, which a Container can't hold. Remove it.",
+        "Block 1, Container, Block 1 is a “logo” Block, which a Container can't hold. Remove it.",
     })
   })
 })

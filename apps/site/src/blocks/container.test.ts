@@ -155,9 +155,11 @@ describe("refusedBlock", () => {
       container([container([cta("ok"), container([container([])])])]),
     ]
     const refused = refusedBlock(blocks, pageBlocks)
-    expect(refused?.place).toBe("Block 2, Block 1, Block 2, Block 1")
+    expect(refused?.place).toBe(
+      "Block 2, Container, Block 1, Container, Block 2, Container, Block 1"
+    )
     expect(refused?.message).toMatch(
-      /^Block 2, Block 1, Block 2, Block 1 is a Container inside 3 Containers/
+      /^Block 2, Container, Block 1, Container, Block 2, Container, Block 1 is a Container inside 3 Containers/
     )
   })
 
@@ -169,7 +171,7 @@ describe("refusedBlock", () => {
       refusedBlock([container([hero("ok"), { blockType: "logo" }])], pageBlocks)
         ?.message
     ).toBe(
-      "Block 1, Block 2 is a “logo” Block, which a Container can't hold. Remove it."
+      "Block 1, Container, Block 2 is a “logo” Block, which a Container can't hold. Remove it."
     )
   })
 })
@@ -190,26 +192,30 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
       expect(
         refusedIn([hero("ok"), container([cta("ok"), features], { columns })])
       ).toEqual({
-        place: "Block 2, Block 2",
-        message: tooNarrow("Block 2, Block 2"),
+        place: "Block 2, Container, Column 2",
+        message: tooNarrow("Block 2, Container, Column 2"),
       })
       expect(
         refusedIn([container([sampleRow("searchHero")], { columns })])?.message
-      ).toBe(tooNarrow("Block 1, Block 1", "Search Hero"))
+      ).toBe(tooNarrow("Block 1, Container, Column 1", "Search Hero"))
     }
   )
 
   it("refuses it in a stack that sits in a column, at any depth", () => {
     expect(
       refusedIn([container([container([features])], { columns: "2" })])?.message
-    ).toBe(tooNarrow("Block 1, Block 1, Block 1"))
+    ).toBe(tooNarrow("Block 1, Container, Column 1, Container, Block 1"))
     expect(
       refusedIn([
         container([container([container([cta("ok"), features])])], {
           columns: "3",
         }),
       ])?.message
-    ).toBe(tooNarrow("Block 1, Block 1, Block 1, Block 2"))
+    ).toBe(
+      tooNarrow(
+        "Block 1, Container, Column 1, Container, Block 1, Container, Block 2"
+      )
+    )
   })
 
   it("takes the Blocks that fit a column there: Rich text, Button, Image, Call to action, Container", () => {

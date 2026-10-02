@@ -28,7 +28,7 @@ const labelOf = (blockType: unknown) =>
   String(blockType)
 
 /**
- * Why the Block at `index` of `rows` can't be stored in a list that takes
+ * Why the Block `row`, at `place`, can't be stored in a list that takes
  * `allowed`, or null when it can. Payload drops a Block type a list doesn't
  * take without saying so, so every list of Blocks refuses it by name instead.
  * A list that is `narrow` (in a Container with columns, or in a stack inside
@@ -36,7 +36,7 @@ const labelOf = (blockType: unknown) =>
  */
 function refusal(
   row: unknown,
-  index: number,
+  place: string,
   allowed: readonly Block[],
   holder: string,
   narrow: boolean
@@ -44,30 +44,34 @@ function refusal(
   const blockType = (row as Row)?.blockType
   if (!allowed.some((block) => block.slug === blockType)) {
     return blockType === CONTAINER
-      ? `${placeOf(index)} is a Container inside ${CONTAINER_LEVELS} Containers, and Containers go ${CONTAINER_LEVELS} levels deep. Move it up a level, or remove it.`
-      : `${placeOf(index)} is a “${String(blockType)}” Block, which ${holder} can't hold. Remove it.`
+      ? `${place} is a Container inside ${CONTAINER_LEVELS} Containers, and Containers go ${CONTAINER_LEVELS} levels deep. Move it up a level, or remove it.`
+      : `${place} is a “${String(blockType)}” Block, which ${holder} can't hold. Remove it.`
   }
   return narrow && !fitsNarrow(blockType)
-    ? `${placeOf(index)} is a “${labelOf(blockType)}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
+    ? `${place} is a “${labelOf(blockType)}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
     : null
 }
 
 /**
  * The first Block in `rows`, at any depth, that the list holding it doesn't
- * take: its place from the top ("Block 2, Block 1") and why. `allowed` are
- * the Blocks the list takes; a Container's own list is read from its config.
- * `narrow` says the list is already in a column.
+ * take: its place from the top ("Block 2, Container, Column 1", as the
+ * Visual Editor names it) and why. `allowed` are the Blocks the list takes;
+ * a Container's own list is read from its config. `narrow` says the list is
+ * already in a column, and `cell` names a place in it: a Block, or a Column
+ * of a Container with columns.
  */
 export function refusedBlock(
   rows: unknown,
   allowed: readonly Block[],
   holder = "a Page",
-  narrow = false
+  narrow = false,
+  cell: "Block" | "Column" = "Block"
 ): { place: string; message: string } | null {
   if (!Array.isArray(rows)) return null
   for (const [index, row] of rows.entries()) {
-    const message = refusal(row, index, allowed, holder, narrow)
-    if (message) return { place: placeOf(index), message }
+    const place = `${cell} ${index + 1}`
+    const message = refusal(row, place, allowed, holder, narrow)
+    if (message) return { place, message }
     const block = allowed.find((b) => b.slug === row.blockType)
     for (const field of block?.fields ?? []) {
       if (field.type !== "blocks") continue
@@ -75,12 +79,14 @@ export function refusedBlock(
         row[field.name],
         field.blocks,
         "a Container",
-        narrow || hasColumns(row)
+        narrow || hasColumns(row),
+        hasColumns(row) ? "Column" : "Block"
       )
       if (inner) {
+        const outer = `${place}, ${labelOf(row.blockType)}`
         return {
-          place: `${placeOf(index)}, ${inner.place}`,
-          message: `${placeOf(index)}, ${inner.message}`,
+          place: `${outer}, ${inner.place}`,
+          message: `${outer}, ${inner.message}`,
         }
       }
     }
@@ -114,7 +120,7 @@ export const takesOnly =
     if (!Array.isArray(rows)) return true
     const narrow = inColumns(options?.data, options?.path ?? [])
     for (const [index, row] of rows.entries()) {
-      const message = refusal(row, index, allowed, holder, narrow)
+      const message = refusal(row, placeOf(index), allowed, holder, narrow)
       if (message) return message
     }
     return true
