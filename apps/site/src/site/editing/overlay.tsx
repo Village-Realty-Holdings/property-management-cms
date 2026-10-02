@@ -388,7 +388,7 @@ export function CanvasOverlay({
         <button
           key={parentId}
           type="button"
-          aria-label="Add Block to Container"
+          aria-label="Add a Block to this Container"
           onClick={() =>
             send({ type: "insert-request", region, index: 0, parentId })
           }
@@ -422,7 +422,7 @@ export function CanvasOverlay({
         >
           <button
             type="button"
-            aria-label="Add Block"
+            aria-label="Add a Block to the Page"
             onClick={() =>
               send({ type: "insert-request", region: "page", index: 0 })
             }

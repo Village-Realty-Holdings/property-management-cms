@@ -201,11 +201,15 @@ describe("Container Blocks in the canvas", () => {
   it("adds a Block in an empty Container, in a column", async () => {
     await addBlock(
       page,
-      canvas(page).getByRole("button", { name: "Add Block to Container" }),
+      canvas(page).getByRole("button", {
+        name: "Add a Block to this Container",
+      }),
       "Button"
     )
     await expectHidden(
-      canvas(page).getByRole("button", { name: "Add Block to Container" }),
+      canvas(page).getByRole("button", {
+        name: "Add a Block to this Container",
+      }),
       "the Container is no longer empty"
     )
     await expect.poll(selectedLabel).toBe("Container › Container › Button")

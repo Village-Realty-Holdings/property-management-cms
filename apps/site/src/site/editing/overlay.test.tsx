@@ -429,9 +429,11 @@ describe("CanvasOverlay +", () => {
     expect(plusButtons()).toHaveLength(3)
   })
 
-  it("offers a + on an empty Page", () => {
+  it("offers a + on an empty Page, named from its visible words first", () => {
     const { send } = setup({ blocks: [] })
-    fireEvent.click(screen.getByRole("button", { name: "Add Block" }))
+    const add = screen.getByRole("button", { name: "Add a Block to the Page" })
+    expect(add.textContent?.trim()).toBe("Add a Block")
+    fireEvent.click(add)
     expect(send).toHaveBeenCalledWith({
       type: "insert-request",
       region: "page",
@@ -442,7 +444,7 @@ describe("CanvasOverlay +", () => {
   it("offers none on an empty Page that cannot be edited", () => {
     setup({ blocks: [], editable: ["header"] })
     expect(plusButtons()).toHaveLength(0)
-    expect(screen.queryByRole("button", { name: "Add Block" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Add a Block/ })).toBeNull()
   })
 })
 
@@ -685,8 +687,9 @@ describe("CanvasOverlay in Containers", () => {
         containerOf("top", []),
       ],
     })
+    // Named from its visible words first, so they can be spoken to it.
     const adds = screen.getAllByRole("button", {
-      name: "Add Block to Container",
+      name: "Add a Block to this Container",
     })
     expect(adds).toHaveLength(2)
     expect(adds[0]!.textContent?.trim()).toBe("Add a Block")
@@ -700,9 +703,7 @@ describe("CanvasOverlay in Containers", () => {
 
   it("offers none in an empty Container that cannot be edited", () => {
     setup({ blocks: [containerOf("c1", [])], editable: ["header"] })
-    expect(
-      screen.queryByRole("button", { name: "Add Block to Container" })
-    ).toBeNull()
+    expect(screen.queryByRole("button", { name: /^Add a Block/ })).toBeNull()
   })
 
   it("scrolls to a Block in a Container that becomes selected", () => {
