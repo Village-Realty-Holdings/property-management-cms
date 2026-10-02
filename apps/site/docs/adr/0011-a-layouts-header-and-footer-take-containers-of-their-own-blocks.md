@@ -6,6 +6,7 @@ Three things came with it, because the Container needed them to cover those case
 
 - **A horizontal alignment** on every Container, on Pages and Layouts: start, centre or end. At the start a Block fills its cell, as it always did. In the centre or at the end it is as wide as what it holds: a logo, a button, an image.
 - **The Logo goes in a Footer**, and has an Extra large size.
+- **The Utility strip can show the Brand's phone number**, with a phone icon, at its start, and no longer needs a line of text.
 - **The Brand has a Light logo.** A Logo in a Container on a Primary or Dark background shows it, when the Brand has one, and the Brand's logo otherwise. The Block does not choose: the surface it sits on does.
 
 ## How it is stored and checked
@@ -14,7 +15,7 @@ The Header and the Footer share one Container definition, holding every region B
 
 ## How it is drawn
 
-In a Footer, Blocks stack, and a Container is one more band. In a Header, Utility strips still stack above everything; after them the Blocks are read in order, a Container is a band of its own, and the Blocks between Containers share a row as before. A Header with no Container draws exactly as it did. A Header that ends in a Container has no rule under it: the rule closes a row, and a Container's band is its own edge.
+In a Footer, Blocks stack, and a Container is one more band. In a Header, Utility strips still stack above everything; after them the Blocks are read in order, a Container is a band of its own, and the Blocks between Containers share a row as before. A Header with no Container draws exactly as it did. A Header that ends in a row has a line under it, as before. A Container draws a line under its band only when its "Line below" setting says so, so a Header that ends in a Container has one or not as Staff choose.
 
 A region Block inside a Container is drawn for the Container's surface: the Logo picks its image, links and the Legal bar's words take the band's text colour, and a Block that is a bar on the region (the Legal bar, Footer columns) gives up its own padding and rule.
 

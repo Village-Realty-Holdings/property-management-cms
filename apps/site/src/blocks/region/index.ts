@@ -32,7 +32,19 @@ export const RegionContainer: Block = containerOf(
   inRegionContainer,
   1,
   REGION_INTERFACES,
-  "a Container in a Header or Footer"
+  "a Container in a Header or Footer",
+  [
+    {
+      name: "rule",
+      label: "Line below",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description:
+          "A thin line under this band, to set it apart from what follows.",
+      },
+    },
+  ]
 )
 
 /** The Blocks a Layout's Header takes. */

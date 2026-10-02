@@ -24,6 +24,9 @@ const card = "rounded-(--card-radius) p-6"
  * Primary band is the Brand's light logo and a Legal bar's words take the
  * band's colour.
  *
+ * A band can ask for a line below it ("Line below"), to set it apart from
+ * what follows; a Header that ends in a Container has no other.
+ *
  * With no Blocks it renders nothing on the Site, and a placeholder in the
  * Visual Editor.
  */
@@ -48,7 +51,8 @@ export function RegionContainer({
       role={nested ? "group" : undefined}
       className={cn(
         paints && surfaces[background],
-        nested ? paints && card : "py-6"
+        nested ? paints && card : "py-6",
+        !nested && block.rule && "border-b border-border"
       )}
     >
       <div className={cn(!nested && container)}>

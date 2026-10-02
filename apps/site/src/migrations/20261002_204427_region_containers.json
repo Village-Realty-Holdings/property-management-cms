@@ -11144,11 +11144,18 @@
           "primaryKey": true,
           "notNull": true
         },
+        "show_phone": {
+          "name": "show_phone",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "text": {
           "name": "text",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "block_name": {
           "name": "block_name",
@@ -12116,6 +12123,13 @@
           "notNull": false,
           "default": "'default'"
         },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "block_name": {
           "name": "block_name",
           "type": "varchar",
@@ -12263,6 +12277,13 @@
           "notNull": false,
           "default": "'default'"
         },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "block_name": {
           "name": "block_name",
           "type": "varchar",
@@ -12409,6 +12430,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'default'"
+        },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "block_name": {
           "name": "block_name",
@@ -13472,11 +13500,18 @@
           "primaryKey": true,
           "notNull": true
         },
+        "show_phone": {
+          "name": "show_phone",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "text": {
           "name": "text",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "_uuid": {
           "name": "_uuid",
@@ -14492,6 +14527,13 @@
           "notNull": false,
           "default": "'default'"
         },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "_uuid": {
           "name": "_uuid",
           "type": "varchar",
@@ -14645,6 +14687,13 @@
           "notNull": false,
           "default": "'default'"
         },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "_uuid": {
           "name": "_uuid",
           "type": "varchar",
@@ -14797,6 +14846,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'default'"
+        },
+        "rule": {
+          "name": "rule",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "_uuid": {
           "name": "_uuid",
@@ -18360,6 +18416,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "12a3c037-a38c-4a14-8bd7-c724c0443c99",
+  "id": "9f1feb8c-035f-4c83-8768-56fa60119475",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

@@ -60,6 +60,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum_layouts_blocks_container_3_justify" DEFAULT 'start',
   	"width" "enum_layouts_blocks_container_3_width" DEFAULT 'page' NOT NULL,
   	"background" "enum_layouts_blocks_container_3_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"block_name" varchar
   );
   
@@ -74,6 +75,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum_layouts_blocks_container_2_justify" DEFAULT 'start',
   	"width" "enum_layouts_blocks_container_2_width" DEFAULT 'page' NOT NULL,
   	"background" "enum_layouts_blocks_container_2_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"block_name" varchar
   );
   
@@ -88,6 +90,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum_layouts_blocks_container_justify" DEFAULT 'start',
   	"width" "enum_layouts_blocks_container_width" DEFAULT 'page' NOT NULL,
   	"background" "enum_layouts_blocks_container_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"block_name" varchar
   );
   
@@ -102,6 +105,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum__layouts_v_blocks_container_3_justify" DEFAULT 'start',
   	"width" "enum__layouts_v_blocks_container_3_width" DEFAULT 'page' NOT NULL,
   	"background" "enum__layouts_v_blocks_container_3_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"_uuid" varchar,
   	"block_name" varchar
   );
@@ -117,6 +121,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum__layouts_v_blocks_container_2_justify" DEFAULT 'start',
   	"width" "enum__layouts_v_blocks_container_2_width" DEFAULT 'page' NOT NULL,
   	"background" "enum__layouts_v_blocks_container_2_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"_uuid" varchar,
   	"block_name" varchar
   );
@@ -132,16 +137,21 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"justify" "enum__layouts_v_blocks_container_justify" DEFAULT 'start',
   	"width" "enum__layouts_v_blocks_container_width" DEFAULT 'page' NOT NULL,
   	"background" "enum__layouts_v_blocks_container_background" DEFAULT 'default',
+  	"rule" boolean DEFAULT false,
   	"_uuid" varchar,
   	"block_name" varchar
   );
   
+  ALTER TABLE "layouts_blocks_utility_strip" ALTER COLUMN "text" DROP NOT NULL;
+  ALTER TABLE "_layouts_v_blocks_utility_strip" ALTER COLUMN "text" DROP NOT NULL;
   ALTER TABLE "pages_blocks_container_3" ADD COLUMN "justify" "enum_pages_blocks_container_3_justify" DEFAULT 'start';
   ALTER TABLE "pages_blocks_container_2" ADD COLUMN "justify" "enum_pages_blocks_container_2_justify" DEFAULT 'start';
   ALTER TABLE "pages_blocks_container" ADD COLUMN "justify" "enum_pages_blocks_container_justify" DEFAULT 'start';
   ALTER TABLE "_pages_v_blocks_container_3" ADD COLUMN "justify" "enum__pages_v_blocks_container_3_justify" DEFAULT 'start';
   ALTER TABLE "_pages_v_blocks_container_2" ADD COLUMN "justify" "enum__pages_v_blocks_container_2_justify" DEFAULT 'start';
   ALTER TABLE "_pages_v_blocks_container" ADD COLUMN "justify" "enum__pages_v_blocks_container_justify" DEFAULT 'start';
+  ALTER TABLE "layouts_blocks_utility_strip" ADD COLUMN "show_phone" boolean DEFAULT false;
+  ALTER TABLE "_layouts_v_blocks_utility_strip" ADD COLUMN "show_phone" boolean DEFAULT false;
   ALTER TABLE "brand" ADD COLUMN "logo_light_id" integer;
   ALTER TABLE "layouts_blocks_container_3" ADD CONSTRAINT "layouts_blocks_container_3_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "layouts"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "layouts_blocks_container_2" ADD CONSTRAINT "layouts_blocks_container_2_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "layouts"("id") ON DELETE cascade ON UPDATE no action;
@@ -205,12 +215,16 @@ export async function down({
   ALTER TABLE "_layouts_v_blocks_logo" ALTER COLUMN "size" SET DEFAULT 'medium'::"enum__layouts_v_blocks_logo_size";
   ALTER TABLE "_layouts_v_blocks_logo" ALTER COLUMN "size" SET DATA TYPE "enum__layouts_v_blocks_logo_size" USING "size"::"enum__layouts_v_blocks_logo_size";
   DROP INDEX "brand_logo_light_idx";
+  ALTER TABLE "layouts_blocks_utility_strip" ALTER COLUMN "text" SET NOT NULL;
+  ALTER TABLE "_layouts_v_blocks_utility_strip" ALTER COLUMN "text" SET NOT NULL;
   ALTER TABLE "pages_blocks_container_3" DROP COLUMN "justify";
   ALTER TABLE "pages_blocks_container_2" DROP COLUMN "justify";
   ALTER TABLE "pages_blocks_container" DROP COLUMN "justify";
   ALTER TABLE "_pages_v_blocks_container_3" DROP COLUMN "justify";
   ALTER TABLE "_pages_v_blocks_container_2" DROP COLUMN "justify";
   ALTER TABLE "_pages_v_blocks_container" DROP COLUMN "justify";
+  ALTER TABLE "layouts_blocks_utility_strip" DROP COLUMN "show_phone";
+  ALTER TABLE "_layouts_v_blocks_utility_strip" DROP COLUMN "show_phone";
   ALTER TABLE "brand" DROP COLUMN "logo_light_id";
   DROP TYPE "enum_pages_blocks_container_3_justify";
   DROP TYPE "enum_pages_blocks_container_2_justify";

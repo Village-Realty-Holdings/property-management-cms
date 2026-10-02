@@ -424,6 +424,44 @@ describe("the Footer", () => {
   })
 })
 
+describe("the Utility strip's phone number", () => {
+  const strip = (over: Partial<UtilityStripBlock>): UtilityStripBlock => ({
+    blockType: "utilityStrip",
+    ...over,
+  })
+
+  it("is the Brand's, with an icon, at the start, as a link to call", () => {
+    const { container } = header([strip({ showPhone: true })])
+    const link = within(container).getByRole("link", {
+      name: "+44 20 7946 0000",
+    })
+    expect(hrefOf(link)).toBe("tel:+442079460000")
+    expect(link.querySelector("svg")).toBeTruthy()
+    expect(container.textContent).toBe("+44 20 7946 0000")
+  })
+
+  it("comes before the text, and the links stay at the end", () => {
+    const { container } = header([
+      strip({ ...utilityStrip(), showPhone: true }),
+    ])
+    const words = container.textContent!
+    expect(words.indexOf("+44 20 7946 0000")).toBe(0)
+    expect(words.indexOf("Free cancellation")).toBeGreaterThan(0)
+    expect(words.indexOf("Offers")).toBeGreaterThan(
+      words.indexOf("Free cancellation")
+    )
+  })
+
+  it("is left out when it is off, or the Brand has none", () => {
+    expect(header([strip({ showPhone: false })]).container.textContent).toBe("")
+    cleanup()
+    const noPhone = context({ brand: { ...brand, phone: null } })
+    expect(
+      header([strip({ showPhone: true })], noPhone).container.textContent
+    ).toBe("")
+  })
+})
+
 describe("a Container in a region", () => {
   const box = (
     children: object[],
@@ -463,11 +501,17 @@ describe("a Container in a region", () => {
     expect(bands[2]!.querySelector("nav")).toBeTruthy()
   })
 
-  it("has no rule under a Header that ends in a Container, and keeps it under a row", () => {
+  it("has a line under its band only when it asks for one", () => {
     const boxed = header([utilityStrip(), box([logo()])], withLogos)
-    expect(boxed.container.querySelector("header")!.className).not.toContain(
-      "border-b"
-    )
+    const head = boxed.container.querySelector("header")!
+    // The Header's own line closes a row, and this Header ends in a band.
+    expect(head.className).not.toContain("border-b")
+    expect(head.lastElementChild!.className).not.toContain("border-b")
+    cleanup()
+    const lined = header([box([logo()], { rule: true })], withLogos)
+    expect(
+      lined.container.querySelector("header")!.lastElementChild!.className
+    ).toContain("border-b")
     cleanup()
     const row = header([box([logo()]), navigation()], withLogos)
     expect(row.container.querySelector("header")!.className).toContain(

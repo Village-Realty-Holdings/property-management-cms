@@ -1,4 +1,4 @@
-import type { Block, BlocksField } from "payload"
+import type { Block, BlocksField, Field } from "payload"
 
 import { backgroundField } from "../fields/background"
 import { catalogueEntries, fitsNarrow } from "./catalogue"
@@ -173,11 +173,16 @@ export function containerOf(
   blocks: readonly Block[],
   level = 1,
   interfaceNames: readonly string[] = PAGE_INTERFACES,
-  holder = "a Container"
+  holder = "a Container",
+  /** Settings only this kind of Container has, shown after the background. */
+  extra: readonly Field[] = []
 ): Block {
   const children =
     level < CONTAINER_LEVELS
-      ? [...blocks, containerOf(blocks, level + 1, interfaceNames, holder)]
+      ? [
+          ...blocks,
+          containerOf(blocks, level + 1, interfaceNames, holder, extra),
+        ]
       : [...blocks]
   return {
     slug: CONTAINER,
@@ -248,6 +253,7 @@ export function containerOf(
         ],
       },
       backgroundField,
+      ...extra,
       {
         name: "children",
         label: "Blocks",

@@ -1037,9 +1037,13 @@ export interface HeaderActionsBlock {
  */
 export interface UtilityStripBlock {
   /**
+   * The Brand's phone number, with a phone icon, at the start of the strip. Guests can tap it to call.
+   */
+  showPhone?: boolean | null;
+  /**
    * A short line, such as an offer or a notice.
    */
-  text: string;
+  text?: string | null;
   links?:
     | {
         label: string;
@@ -1072,6 +1076,10 @@ export interface RegionContainerBlock {
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
   children?:
     | (
         | LogoBlock
@@ -1170,6 +1178,10 @@ export interface RegionContainerBlockLevel2 {
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
   children?:
     | (
         | LogoBlock
@@ -1200,6 +1212,10 @@ export interface RegionContainerBlockLevel3 {
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
   children?:
     | (
         | LogoBlock
@@ -2100,6 +2116,7 @@ export interface HeaderActionsBlockSelect<T extends boolean = true> {
  * via the `definition` "UtilityStripBlock_select".
  */
 export interface UtilityStripBlockSelect<T extends boolean = true> {
+  showPhone?: T;
   text?: T;
   links?:
     | T
@@ -2128,6 +2145,7 @@ export interface RegionContainerBlockSelect<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  rule?: T;
   children?:
     | T
     | {
@@ -2206,6 +2224,7 @@ export interface RegionContainerBlockLevel2Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  rule?: T;
   children?:
     | T
     | {
@@ -2232,6 +2251,7 @@ export interface RegionContainerBlockLevel3Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  rule?: T;
   children?:
     | T
     | {
