@@ -92,6 +92,8 @@ describe("Button", () => {
       const outline = classOf("outline", background)
       expect(outline).toContain("border-current")
       expect(outline).toContain("bg-transparent")
+      // Its edge is always there: a Solid Theme's button has none.
+      expect(outline).not.toContain("--btn-border-width")
       // No colour of its own: it reads as the text around it does.
       expect(outline).not.toMatch(/(^| )text-(?!sm)/)
     }

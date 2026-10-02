@@ -35,7 +35,8 @@ const solid =
 
 /**
  * The two tones drawn from the surface they sit on, so they read on any of
- * them. `outline` is the surface's text colour as an edge and a label.
+ * them. `outline` is the surface's text colour as an edge and a label; its
+ * edge is always drawn, whatever width the Theme gives its own button's.
  * `inverse` is that colour as the fill with the surface's colour as the
  * label, for a coloured surface, where the Theme's own button would be the
  * surface's colour or unreadable on it. Each is as readable as the surface's
@@ -45,7 +46,7 @@ const looks: Record<"outline", string> & {
   inverse: Record<BlockSurface, string>
 } = {
   outline:
-    "border-(length:--btn-border-width) border-current bg-transparent hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
+    "border-current bg-transparent hover:bg-current/10 hover:text-current dark:hover:bg-current/10",
   inverse: {
     primary: `bg-primary-foreground text-primary hover:bg-primary-foreground/90 hover:text-primary dark:hover:bg-primary-foreground/90 ${solid}`,
     accent: `bg-accent-foreground text-accent hover:bg-accent-foreground/90 hover:text-accent dark:hover:bg-accent-foreground/90 ${solid}`,
