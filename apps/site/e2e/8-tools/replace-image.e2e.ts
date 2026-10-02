@@ -68,8 +68,15 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (h) {
+    // The Page first: an image in use can't be deleted.
+    const request = h.staff.context.request
+    if (doc) await request.delete(`${ORIGIN}/api/pages/${doc.id}`)
+    for (const id of [before, after]) {
+      if (id) await request.delete(`${ORIGIN}/api/media/${id}`)
+    }
+  }
   await closeHarness(h)
-  // closeHarness closed the browser, so the Media are left to the schema drop.
 })
 
 /** Picks the image whose name has `alt` in the picker opened from `label`. */

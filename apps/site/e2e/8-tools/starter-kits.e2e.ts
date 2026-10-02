@@ -1,3 +1,4 @@
+import pg from "pg"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import {
@@ -7,7 +8,7 @@ import {
   type Harness,
 } from "../3-layouts/support/site"
 import { visit } from "../theme/support/browser"
-import { ORIGIN } from "../theme/support/env"
+import { databaseUrl, ORIGIN, SCHEMA } from "../theme/support/env"
 
 /**
  * Tools acceptance: Starter Kits.
@@ -31,6 +32,8 @@ type Found = { docs: (Json & { id: number })[] }
 let h: Harness
 let brand: Json
 let hadHome: boolean
+/** A Saved Theme of the Site's Theme, so the list has one marked "Live now". */
+let savedTheme: number | undefined
 
 const get = async <T>(path: string): Promise<T> =>
   (await h.staff.context.request.get(`${ORIGIN}${path}`)).json() as Promise<T>
@@ -42,19 +45,53 @@ beforeAll(async () => {
   h = await openHarness()
   brand = await get<Json>("/api/globals/brand?depth=0")
   hadHome = (await homePages()).docs.length > 0
+  // Earlier specs may leave a Theme that matches no built-in one.
+  const theme = await get<Json>("/api/globals/theme?depth=0")
+  if (theme.id) {
+    const record = ["id", "createdAt", "updatedAt", "globalType"]
+    const own = [...record, "updatedBy", "changeSummary", "note"]
+    const made = await h.staff.context.request.post(
+      `${ORIGIN}/api/saved-themes`,
+      {
+        data: {
+          name: NAME,
+          inputs: Object.fromEntries(
+            Object.entries(theme).filter(([key]) => !own.includes(key))
+          ),
+        },
+      }
+    )
+    expect(made.ok(), await made.text()).toBe(true)
+    savedTheme = ((await made.json()) as { doc: { id: number } }).doc.id
+  }
 })
 
 afterAll(async () => {
   if (h) {
     const request = h.staff.context.request
     // The Brand as it was, and the Home Page and Layout the kit added.
-    await request.post(`${ORIGIN}/api/globals/brand`, {
-      data: {
-        name: brand.name ?? "Awayday",
-        tagline: brand.tagline ?? null,
-        contact: brand.contact ?? {},
-      },
-    })
+    if (brand.id) {
+      await request.post(`${ORIGIN}/api/globals/brand`, {
+        data: {
+          name: brand.name,
+          tagline: brand.tagline ?? null,
+          contact: brand.contact ?? {},
+        },
+      })
+    } else {
+      // Nobody had saved the Brand, and a saved Brand can't lose its name
+      // again through the API: take the record away, as it was.
+      const client = new pg.Client({ connectionString: databaseUrl() })
+      await client.connect()
+      try {
+        await client.query(`DELETE FROM "${SCHEMA}"."brand"`)
+      } finally {
+        await client.end()
+      }
+    }
+    if (savedTheme) {
+      await request.delete(`${ORIGIN}/api/saved-themes/${savedTheme}`)
+    }
     if (!hadHome) {
       for (const page of (await homePages()).docs) {
         await request.delete(`${ORIGIN}/api/pages/${page.id}`)
