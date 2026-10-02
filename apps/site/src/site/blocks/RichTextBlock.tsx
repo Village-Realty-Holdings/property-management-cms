@@ -50,6 +50,7 @@ export function RichTextBlock({
       background={background}
       // The section is a region, so it needs a name: its heading, or its place.
       label={firstHeading(block.content) ?? `Section ${placeOf(context)}`}
+      context={context}
     >
       {editable ? (
         // Rich text is edited in place, with a floating toolbar. Content with

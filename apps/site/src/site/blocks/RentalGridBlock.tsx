@@ -28,6 +28,7 @@ export function RentalGridBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Rental grid"
+      context={context}
     >
       {heading && (
         <EditableText

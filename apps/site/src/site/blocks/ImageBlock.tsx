@@ -54,6 +54,7 @@ export function ImageBlock({
       background={surfaceOf(undefined, context)}
       // The section is a region, so it needs a name: what the image shows.
       label={caption || image.alt || `Section ${placeOf(context)}`}
+      context={context}
     >
       <figure className="flex flex-col gap-3">
         <div

@@ -51,6 +51,11 @@ const card = "rounded-(--card-radius) p-6 sm:p-8"
  * so the overlay finds and selects a Block at any depth, and its text is
  * edited in place as on the Page.
  *
+ * The Container on the Page is no landmark of its own: the Blocks in it that
+ * a heading names are the regions. One inside a Container, a card in a row
+ * of them, is a group, so assistive technology tells where a card begins and
+ * ends.
+ *
  * With no Blocks it renders nothing on the Site, and a placeholder in the
  * Visual Editor.
  */
@@ -71,6 +76,7 @@ export function ContainerBlock({
   const mark = { [CONTAINER_MARK]: "" }
   return (
     <div
+      role={nested ? "group" : undefined}
       className={cn(
         paints && surfaces[background],
         nested ? paints && card : sectionY

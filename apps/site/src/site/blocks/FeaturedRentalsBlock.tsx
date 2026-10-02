@@ -29,6 +29,7 @@ export function FeaturedRentalsBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Featured rentals"
+      context={context}
     >
       {heading && (
         <EditableText

@@ -218,15 +218,16 @@ describe("a Block inside a Container", () => {
   )
 
   it.each(inside.map((entry) => [entry.label, entry] as const))(
-    "%s renders from its sample in a one-column Container, as a named region, and passes axe",
+    "%s renders from its sample in a one-column Container, a region only when its own heading names it, and passes axe",
     async (_label, entry) => {
       const root = draw(containerOf([sampleFor(entry.blockType)]))
       const section = markOf(root).querySelector("section")
       expect(section).not.toBeNull()
-      expect(
-        section!.getAttribute("aria-labelledby") ??
-          section!.getAttribute("aria-label")
-      ).toBeTruthy()
+      // A label that stands in for a heading (a Button's, an Image's) names
+      // nothing here: a row of cards is not a landmark per Block.
+      expect(section!.getAttribute("aria-label")).toBeNull()
+      const heading = section!.getAttribute("aria-labelledby")
+      if (heading) expect(root.querySelector(`#${heading}`)).not.toBeNull()
       expect(await violations(root)).toEqual([])
     }
   )

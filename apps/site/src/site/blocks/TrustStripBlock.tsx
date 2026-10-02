@@ -42,6 +42,7 @@ export function TrustStripBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Trust strip"
+      context={context}
       className="flex flex-col gap-8"
     >
       {heading && (

@@ -45,7 +45,7 @@ export function ButtonBlock({
   }
   return (
     // The section is a region, so it needs a name: what the button says.
-    <BlockSection background={background} label={link.label}>
+    <BlockSection background={background} label={link.label} context={context}>
       <div className={cn("flex", aligns[block.align] ?? aligns.start)}>
         <BlockButton
           link={link}

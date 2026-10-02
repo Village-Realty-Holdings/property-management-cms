@@ -29,6 +29,7 @@ export function LargeGroupRentalsBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Large-group rentals"
+      context={context}
     >
       {heading && (
         <EditableText

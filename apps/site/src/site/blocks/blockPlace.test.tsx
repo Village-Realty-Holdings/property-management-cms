@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/react"
+import { cleanup, render, screen, within } from "@testing-library/react"
 import axe from "axe-core"
 import { afterEach, describe, expect, it } from "vitest"
 
@@ -10,6 +10,13 @@ import { sampleFor } from "./samples"
 import { blockId, isFirstOnPage, placeOf, type PageBlock } from "./types"
 
 afterEach(cleanup)
+
+/** A region's name: its label, or the text of what labels it. */
+const accessibleName = (region: HTMLElement) =>
+  region.getAttribute("aria-label") ??
+  document.getElementById(region.getAttribute("aria-labelledby") ?? "")
+    ?.textContent ??
+  ""
 
 type Child = NonNullable<ContainerBlockData["children"]>[number]
 
@@ -136,7 +143,7 @@ describe("a Page with the same Blocks at three depths", () => {
     ])
   })
 
-  it("names a Rich text with no heading by its place", () => {
+  it("names a Rich text with no heading by its place on the Page, and makes no region of it in a Container", () => {
     const text = {
       ...sampleFor("richText"),
       content: {
@@ -153,13 +160,39 @@ describe("a Page with the same Blocks at three depths", () => {
         },
       },
     } as unknown as PageBlock
-    const { container } = render(
-      <Blocks blocks={[text, containerOf([text, containerOf([text])])]} />
-    )
+    render(<Blocks blocks={[text, containerOf([text, containerOf([text])])]} />)
     expect(
-      [...container.querySelectorAll("section")].map((section) =>
-        section.getAttribute("aria-label")
-      )
-    ).toEqual(["Section 1", "Section 2.1", "Section 2.2.1"])
+      screen.getAllByRole("region").map((region) => accessibleName(region))
+    ).toEqual(["Section 1"])
+  })
+})
+
+describe("a row of cards", () => {
+  const card = () =>
+    containerOf([
+      sampleFor("image"),
+      sampleFor("richText"),
+      sampleFor("button"),
+    ])
+  const cards = { ...containerOf([card(), card()]), columns: "2" as const }
+  const cta = sampleFor("callToAction")
+
+  it("is no region per Block: a Block in a Container is one only when its own heading names it", () => {
+    render(<Blocks blocks={[cards, containerOf([cta])]} />)
+    const heading = (cta as { heading: string }).heading
+    expect(
+      screen.getAllByRole("region").map((region) => accessibleName(region))
+    ).toEqual([heading])
+  })
+
+  it("groups each card, a Container inside a Container", () => {
+    render(<Blocks blocks={[cards]} />)
+    const groups = screen.getAllByRole("group")
+    expect(groups).toHaveLength(2)
+    const { label } = (sampleFor("button") as { link: { label: string } }).link
+    for (const group of groups) {
+      expect(within(group).getByRole("link", { name: label })).toBeTruthy()
+      expect(within(group).getByRole("img")).toBeTruthy()
+    }
   })
 })

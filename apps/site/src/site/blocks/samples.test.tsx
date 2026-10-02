@@ -36,17 +36,21 @@ describe("the Block catalogue's samples", () => {
   })
 
   it.each(catalogueEntries.map((entry) => [entry.label, entry] as const))(
-    "%s renders from its sample, as a named region, and passes axe",
+    "%s renders from its sample, as a named region (a Container's are its Blocks), and passes axe",
     async (_label, entry) => {
       const sample = sampleFor(entry.blockType)
       expect(sample.blockType).toBe(entry.blockType)
       const { container } = render(<Block block={sample} index={1} />)
-      const section = container.querySelector("section")
-      expect(section, "a Block is a <section>").not.toBeNull()
-      expect(
-        section!.getAttribute("aria-labelledby") ??
-          section!.getAttribute("aria-label")
-      ).toBeTruthy()
+      if (entry.blockType === "container") {
+        expect(container.firstElementChild!.tagName).toBe("DIV")
+      } else {
+        const section = container.querySelector("section")
+        expect(section, "a Block is a <section>").not.toBeNull()
+        expect(
+          section!.getAttribute("aria-labelledby") ??
+            section!.getAttribute("aria-label")
+        ).toBeTruthy()
+      }
       expect(container.textContent!.trim().length).toBeGreaterThan(20)
       expect(await violations(container)).toEqual([])
     }

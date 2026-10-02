@@ -46,24 +46,31 @@ export function surfaceOf(
  * --section-y, its content held at page width. Inside a Container it is
  * none of those: the Container paints, pads and holds the width. The section
  * is a named region: by the heading it is `labelledBy`, or by a `label`.
+ *
+ * Inside a Container (`context` has its surface) a `label` names nothing: a
+ * Block there is a region only when its own heading names it, so a row of
+ * cards is not a landmark per image, text and button.
  */
 export function BlockSection({
   background,
   labelledBy,
   label,
+  context,
   className,
   children,
 }: {
   background?: string | null
   labelledBy?: string
   label?: string
+  context?: Pick<BlockContext, "surface">
   className?: string
   children: ReactNode
 }) {
+  const inContainer = context?.surface !== undefined
   return (
     <section
       aria-labelledby={labelledBy}
-      aria-label={labelledBy ? undefined : label}
+      aria-label={labelledBy || inContainer ? undefined : label}
       className={cn(surfaces[backgroundOf(background)], sectionY, embeddedBand)}
     >
       <div className={cn(container, embeddedBox, className)}>{children}</div>
