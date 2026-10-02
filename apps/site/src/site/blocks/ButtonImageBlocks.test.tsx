@@ -154,6 +154,23 @@ describe("Image", () => {
     }
   })
 
+  it("in the Visual Editor without an image is a box of its shape that says to choose one, so it can be seen and selected", () => {
+    for (const value of [null, 42]) {
+      const { container } = render(
+        <Block
+          block={{ ...image, image: value, aspect: "1x1" }}
+          index={1}
+          editing
+        />
+      )
+      const box = container.querySelector("[data-image-placeholder]")!
+      expect(box.textContent).toBe("Choose an image for this Block.")
+      expect(box.parentElement!.className).toContain("aspect-square")
+      expect(container.querySelector("img")).toBeNull()
+      cleanup()
+    }
+  })
+
   it.each([
     ["16x9", "aspect-video"],
     ["4x3", "aspect-4/3"],

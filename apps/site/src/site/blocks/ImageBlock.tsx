@@ -32,7 +32,9 @@ function sizeOf(value: ImageBlockData["image"]) {
  * Image: one Media image with its alt text, rounded by the Theme's card
  * radius, and an optional caption. It keeps its own shape, or is cropped to
  * 16:9, 4:3 or 1:1. An image whose size isn't known (an SVG) can't keep its
- * shape, and is drawn at 4:3. With no image it renders nothing.
+ * shape, and is drawn at 4:3. With no image it renders nothing on the Site;
+ * in the Visual Editor it is a box of its shape that says to choose one, so
+ * the Block can be seen and selected there.
  */
 export function ImageBlock({
   block,
@@ -42,9 +44,9 @@ export function ImageBlock({
   context: BlockContext
 }) {
   const image = imageOf(block.image)
-  if (!image) return null
+  if (!image && !context.editing) return null
   const caption = block.caption?.trim()
-  const size = block.aspect === "original" ? sizeOf(block.image) : null
+  const size = image && block.aspect === "original" ? sizeOf(block.image) : null
   const crop =
     block.aspect === "original"
       ? crops["4x3"]
@@ -53,7 +55,7 @@ export function ImageBlock({
     <BlockSection
       background={surfaceOf(undefined, context)}
       // The section is a region, so it needs a name: what the image shows.
-      label={caption || image.alt || `Section ${placeOf(context)}`}
+      label={caption || image?.alt || `Section ${placeOf(context)}`}
       context={context}
     >
       <figure className="flex flex-col gap-3">
@@ -63,7 +65,14 @@ export function ImageBlock({
             !size && crop
           )}
         >
-          {size ? (
+          {!image ? (
+            <p
+              data-image-placeholder=""
+              className="absolute inset-0 flex items-center justify-center rounded-(--card-radius) border border-dashed border-current/40 p-4 text-center text-sm"
+            >
+              Choose an image for this Block.
+            </p>
+          ) : size ? (
             <Image
               src={image.url}
               alt={image.alt}

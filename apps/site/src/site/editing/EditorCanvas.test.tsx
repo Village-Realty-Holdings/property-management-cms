@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { BRIDGE_CHANNEL, type CanvasDocument } from "../../admin/editor/bridge"
 import { combineFonts } from "../../fonts/available"
+import type { Media } from "../../payload-types"
 import { CLASSIC, HARBOUR } from "../../theme"
 import { resolveBrand } from "../brand"
 import { fixturesFor } from "../fixtures"
@@ -73,6 +74,41 @@ describe("EditorCanvas", () => {
     deliver(documentOf({ page: [hero("Edited heading")] }))
     expect(screen.queryByRole("heading", { name: "First heading" })).toBeNull()
     expect(screen.getByRole("heading", { name: "Edited heading" })).toBeTruthy()
+  })
+
+  it("draws the images the document names by Media id, at any depth, from the Site's Media", () => {
+    const media = {
+      id: 7,
+      alt: "A hot tub at a vacation rental",
+      url: "/media/hot-tub.jpg",
+      width: 1600,
+      height: 900,
+    } as Media
+    render(
+      <EditorCanvas
+        brand={brand}
+        fixtures={fixtures}
+        fonts={[]}
+        media={[media]}
+      />
+    )
+    deliver(
+      documentOf({
+        page: [
+          {
+            id: "c1",
+            blockType: "container",
+            columns: "2",
+            children: [
+              { id: "i1", blockType: "image", aspect: "16x9", image: 7 },
+            ],
+          },
+        ] as CanvasDocument["page"],
+      })
+    )
+    expect(
+      screen.getByRole("img", { name: "A hot tub at a vacation rental" })
+    ).toBeTruthy()
   })
 
   it("renders in editing mode, so plain text names its field", () => {

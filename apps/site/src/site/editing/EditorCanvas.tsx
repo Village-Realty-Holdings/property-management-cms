@@ -1,13 +1,15 @@
 "use client"
 
-import { useCallback, type MouseEvent } from "react"
+import { useCallback, useMemo, type MouseEvent } from "react"
 
 import {
   editableRegions,
   postToParent,
   type CanvasRequest,
 } from "../../admin/editor/bridge"
+import { pageBlocks } from "../../blocks"
 import type { AvailableFont } from "../../fonts/available"
+import type { Media } from "../../payload-types"
 import type { ThemeInputs } from "../../theme"
 import type { Brand } from "../brand"
 import { Blocks } from "../blocks"
@@ -18,6 +20,7 @@ import { CanvasSendContext } from "./canvasSend"
 import { CanvasOverlay } from "./overlay"
 import { useCanvasDocument } from "./useCanvasDocument"
 import { useForwardShortcuts } from "./useForwardShortcuts"
+import { withMedia } from "./withMedia"
 
 /**
  * The Visual Editor's canvas: the Site route in its editing mode. It draws
@@ -42,6 +45,10 @@ import { useForwardShortcuts } from "./useForwardShortcuts"
  * The editor's keyboard shortcuts work with focus in the canvas: the keys are
  * forwarded to the Admin (see useForwardShortcuts).
  *
+ * The Admin holds the Page as it is stored, with an image as a Media id.
+ * `media` is the Site's Media library, which the canvas puts in place of
+ * each id (see withMedia), so an image shows here as on the Site.
+ *
  * Links do not navigate: the Staff User edits a Page here, and the Admin
  * moves between Pages.
  */
@@ -49,11 +56,13 @@ export function EditorCanvas({
   brand,
   fixtures,
   fonts,
+  media = [],
   initialTheme,
 }: {
   brand: Brand
   fixtures: SiteFixtures
   fonts: readonly AvailableFont[]
+  media?: readonly Media[]
   /**
    * The unsaved Theme the canvas's URL carried (Theme mode moving to another
    * Page). It is drawn from the first paint, until the Admin's first document
@@ -67,6 +76,15 @@ export function EditorCanvas({
   }, [])
 
   useForwardShortcuts(send)
+
+  const library = useMemo(
+    () => new Map(media.map((doc) => [doc.id, doc])),
+    [media]
+  )
+  const page = useMemo(
+    () => (document ? withMedia(pageBlocks, document.page, library) : []),
+    [document, library]
+  )
 
   // The Theme being edited: the Admin's, once it has sent a document; until
   // then the one the URL carried.
@@ -109,11 +127,7 @@ export function EditorCanvas({
                 : undefined
           }
         >
-          <Blocks
-            blocks={document.page}
-            fixtures={fixtures}
-            editing={editing}
-          />
+          <Blocks blocks={page} fixtures={fixtures} editing={editing} />
         </LayoutFrame>
         <CanvasOverlay
           editable={editableRegions(document.mode)}
