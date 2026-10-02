@@ -124,8 +124,8 @@ const withImage: Record<
     block: (image) => ({ image, aspect: "original" }),
   },
   container: {
-    label: "Container",
-    where: "Hero 2: Image",
+    label: "Container, Block 2, Hero",
+    where: "Image",
     block: (image) => ({
       children: [
         { blockType: "richText" },
@@ -294,6 +294,88 @@ describe("mediaDependents: images in Blocks", () => {
   })
 })
 
+describe("mediaDependents: images in Blocks inside Containers", () => {
+  const container = (id: string, children: object[], columns = "1") => ({
+    id,
+    blockType: "container",
+    columns,
+    children,
+  })
+  const image = (id: string) => ({ id, blockType: "image", image: IMAGE })
+  const hero = (id: string) => ({
+    id,
+    blockType: "hero",
+    heading: "Welcome",
+    image: IMAGE,
+  })
+  const names = (blocks: object[], published?: object[]) =>
+    mediaDependents({
+      brand: {} as Brand,
+      seo: {} as Seo,
+      pages: [
+        {
+          ...page(1, "Home", { blocks: blocks as never }),
+          version: "draft",
+        },
+        ...(published
+          ? [
+              {
+                ...page(1, "Home", { blocks: published as never }),
+                version: "published" as const,
+              },
+            ]
+          : []),
+      ],
+    })
+      .get(IMAGE)
+      ?.map((d) => d.name)
+
+  it("names the nested place: the Container, then the column or the place in its stack", () => {
+    expect(
+      names([
+        { id: "t", blockType: "richText" },
+        container("c", [image("i"), { id: "r", blockType: "richText" }], "2"),
+        container("s", [{ id: "r2", blockType: "richText" }, image("i2")]),
+      ])
+    ).toEqual([
+      "Home, Block 2, Container, Column 1, Image (Image)",
+      "Home, Block 3, Container, Block 2, Image (Image)",
+    ])
+  })
+
+  it("names every Container on the way down, three levels deep", () => {
+    expect(
+      names([
+        container(
+          "a",
+          [
+            image("i"),
+            container("b", [
+              { id: "r", blockType: "richText" },
+              container("c", [hero("h"), image("i3")], "3"),
+            ]),
+          ],
+          "2"
+        ),
+      ])
+    ).toEqual([
+      "Home, Block 1, Container, Column 1, Image (Image)",
+      "Home, Block 1, Container, Column 2, Container, Block 2, Container, Column 1, Hero (Image)",
+      "Home, Block 1, Container, Column 2, Container, Block 2, Container, Column 2, Image (Image)",
+    ])
+  })
+
+  it("names a nested Block once for the Draft and the Published copy, and says when only one has it", () => {
+    const both = [container("c", [image("i")], "2")]
+    expect(names(both, both)).toEqual([
+      "Home, Block 1, Container, Column 1, Image (Image)",
+    ])
+    expect(names(both, [container("c", [], "2")])).toEqual([
+      "Home, Block 1, Container, Column 1, Image (Image, Draft only)",
+    ])
+  })
+})
+
 describe("mediaDependents: Brand, SEO and Pages' SEO images", () => {
   it("names the Brand logo, the SEO share image and the favicon", () => {
     const result = mediaDependents({
@@ -371,6 +453,67 @@ describe("pagesLinkingTo", () => {
       }),
     ])
     expect(result.map((d) => d.name)).toEqual(["About"])
+  })
+})
+
+describe("pagesLinkingTo: Buttons, and Blocks inside Containers", () => {
+  const container = (...children: object[]) => ({
+    blockType: "container",
+    columns: "1",
+    children,
+  })
+  const button = (href: string) => ({
+    blockType: "button",
+    link: { label: "Go", href },
+    style: "primary",
+    align: "start",
+  })
+  const linking = (blocks: object[]) =>
+    pagesLinkingTo("/stays", 99, [
+      page(1, "Home", { blocks: blocks as never }),
+    ]).map((d) => d.name)
+
+  it("finds a Button Block's link", () => {
+    expect(linking([button("/stays/")])).toEqual(["Home"])
+    expect(linking([button("/other")])).toEqual([])
+  })
+
+  it("finds a Button, a Hero's button and a Call to action's, in a Container at any depth", () => {
+    expect(linking([container(button("/stays"))])).toEqual(["Home"])
+    expect(
+      linking([
+        { blockType: "richText" },
+        container(container(container(button("/other"), button("/stays#top")))),
+      ])
+    ).toEqual(["Home"])
+    expect(
+      linking([
+        container(
+          container({
+            blockType: "hero",
+            heading: "x",
+            cta: { href: "/stays" },
+          })
+        ),
+      ])
+    ).toEqual(["Home"])
+    expect(
+      linking([
+        container({
+          blockType: "callToAction",
+          heading: "x",
+          style: "primary",
+          button: { href: "/stays" },
+        }),
+      ])
+    ).toEqual(["Home"])
+    expect(linking([container(container(button("/other")))])).toEqual([])
+  })
+
+  it("names a Page once, however many of its Blocks link there", () => {
+    expect(
+      linking([button("/stays"), container(button("/stays"), button("/stays"))])
+    ).toEqual(["Home"])
   })
 })
 

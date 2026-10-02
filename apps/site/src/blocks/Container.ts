@@ -19,7 +19,7 @@ const placeOf = (index: number) => `Block ${index + 1}`
 type Row = { blockType?: unknown; columns?: unknown } | null | undefined
 
 /** Whether `row` is a Container that puts its Blocks side by side. */
-const hasColumns = (row: Row) =>
+export const hasColumns = (row: Row) =>
   row?.blockType === CONTAINER && row.columns != null && row.columns !== "1"
 
 /** The Block's name as the Admin gives it, or its type when it has none. */

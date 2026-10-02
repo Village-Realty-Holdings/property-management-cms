@@ -1,5 +1,7 @@
 import type { Block, Field } from "payload"
 
+import { hasColumns } from "../blocks/Container"
+
 /**
  * Finds every Media image a document shows, by walking its data alongside the
  * Payload config of its fields: any `upload` (or `relationship`) field that
@@ -13,7 +15,9 @@ export type MediaUse = {
   mediaId: number
   /**
    * The Block holding it, when it is in one: its row id, and how to name it
-   * with its place in the top-level Blocks field ("Block 3, Amenities").
+   * with its place ("Block 3, Amenities"). A Block inside a Container is
+   * named from the Page down: "Block 2, Container, Column 1, Image" in a
+   * Container with columns, "Block 2, Container, Block 1, Image" in a stack.
    */
   block?: { id: string | null; label: string }
   /** Where in the Block, or in the document: "Image", "Amenity 2: Image". */
@@ -169,18 +173,16 @@ function walkFields(
           const slug = (row as { blockType?: string } | null)?.blockType
           const block = blocksOf(field).find((b) => b.slug === slug)
           if (!block) return
-          const label = blockLabel(block)
-          if (at.block) {
-            // A Block inside a Block: part of the place inside the outer one.
-            walkFields(
-              block.fields as LooseField[],
-              row,
-              { ...at, trail: [...at.trail, `${label} ${index + 1}`] },
-              found
-            )
-            return
-          }
           const id = (row as { id?: unknown }).id
+          // A Block inside a Block is named by its place in the outer one:
+          // "Block 2, Container, Column 1, Image".
+          const place = at.block
+            ? [
+                at.block.label,
+                ...at.trail,
+                `${hasColumns(record) ? "Column" : singularOf(field)} ${index + 1}`,
+              ].join(", ")
+            : `${singularOf(field)} ${index + 1}`
           walkFields(
             block.fields as LooseField[],
             row,
@@ -188,7 +190,7 @@ function walkFields(
               trail: [],
               block: {
                 id: typeof id === "string" ? id : null,
-                label: `${singularOf(field)} ${index + 1}, ${label}`,
+                label: `${place}, ${blockLabel(block)}`,
               },
             },
             found
