@@ -47,6 +47,7 @@ const INK = "#0f172a"
 const Z = 2147483000
 const LABEL_HEIGHT = 20
 const TOOLBAR_HEIGHT = 32
+const PLUS_SIZE = 24
 
 type Box = { left: number; top: number; width: number; height: number }
 
@@ -285,9 +286,20 @@ export function CanvasOverlay({
     )
 
   // A "+" for each edge of the Blocks in play; two Blocks that meet share one.
+  // Where a "+" of the selected Block would cover one of the hovered Block's
+  // (a Container and a Block in it whose edges meet), only the hovered one's
+  // is drawn: it is the one the pointer is on, and the two ask for different
+  // lists.
   const pluses = new Map<string, Plus>()
+  let hoveredPluses: Plus[] = []
+  const covers = (x: number, y: number) =>
+    hoveredPluses.some(
+      (plus) =>
+        Math.abs(plus.x - x) < PLUS_SIZE && Math.abs(plus.y - y) < PLUS_SIZE
+    )
   for (const block of [hovered, selected]) {
     if (!block) continue
+    if (block === selected) hoveredPluses = [...pluses.values()]
     const { box, region, parentId, index } = block
     const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 }
     const edges = besideAnother(block)
@@ -317,7 +329,8 @@ export function CanvasOverlay({
         ...(parentId === null ? {} : { parentId }),
       }
       const key = JSON.stringify(request)
-      if (!pluses.has(key)) pluses.set(key, { x, y, label, request })
+      if (pluses.has(key) || covers(x, y)) continue
+      pluses.set(key, { x, y, label, request })
     }
   }
   const emptyPage =
@@ -522,9 +535,9 @@ function PlusButton({
         position: "absolute",
         left: x,
         top: y,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+        width: PLUS_SIZE,
+        height: PLUS_SIZE,
+        borderRadius: PLUS_SIZE / 2,
         background: ACCENT,
         transform: "translate(-50%, -50%)",
       }}

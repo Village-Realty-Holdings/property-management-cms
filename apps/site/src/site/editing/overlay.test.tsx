@@ -79,6 +79,21 @@ const hover = (element: Element) => fireEvent.mouseOver(element)
 const toolbar = () => screen.queryByRole("toolbar", { name: "Block toolbar" })
 const plusButtons = () =>
   screen.queryAllByRole("button", { name: /^Add Block/ })
+/** Gives each Block a box in a stack, by id: its top and height. */
+function stack(
+  container: HTMLElement,
+  boxes: Record<string, [number, number]>
+) {
+  for (const [id, [top, height]] of Object.entries(boxes)) {
+    const own = container.querySelector(
+      `[data-block-id=${id}] > :first-child`
+    ) as HTMLElement
+    own.getBoundingClientRect = () => new DOMRect(0, top, 900, height)
+  }
+  act(() => {
+    window.dispatchEvent(new Event("resize"))
+  })
+}
 
 afterEach(cleanup)
 
@@ -407,7 +422,8 @@ describe("CanvasOverlay +", () => {
   })
 
   it("does not offer a second + where two Blocks meet", () => {
-    setup({ selectedId: "b1" })
+    const { container } = setup({ selectedId: "b1" })
+    stack(container, { b1: [0, 100], b2: [100, 100], b3: [200, 100] })
     hover(heading("Second"))
     // Above b1 (0), between b1 and b2 (1), below b2 (2).
     expect(plusButtons()).toHaveLength(3)
@@ -557,7 +573,8 @@ describe("CanvasOverlay in Containers", () => {
   })
 
   it("keeps a + of a Container's Block apart from the Page's at the same place", () => {
-    setup({ blocks: tree, selectedId: "b1" })
+    const { container } = setup({ blocks: tree, selectedId: "b1" })
+    stack(container, { b1: [0, 100], c1: [140, 300], x: [180, 60] })
     hover(link("Outer button"))
     // b1's two, and the Button's two: index 0 and 1 of c1 are not the Page's.
     expect(plusButtons()).toHaveLength(4)
@@ -593,6 +610,71 @@ describe("CanvasOverlay in Containers", () => {
       region: "page",
       index: 2,
       parentId: "c1",
+    })
+  })
+
+  describe("a Container and a Block in it whose edges meet", () => {
+    // outer > inner > [A, B], with no room between a Container's edge and
+    // its Blocks', as a Container with no background draws them.
+    const nested = [
+      containerOf("outer", [
+        containerOf("inner", [button("a", "A"), button("b", "B")]),
+      ]),
+    ]
+    const layOut = (container: HTMLElement) =>
+      stack(container, {
+        outer: [100, 200],
+        inner: [100, 200],
+        a: [100, 80],
+        b: [180, 120],
+      })
+    const at = (button: HTMLElement) =>
+      `${button.style.left},${button.style.top}`
+
+    it("offers the hovered Block's + where it meets the selected Container's", () => {
+      const { send, container } = setup({ blocks: nested, selectedId: "inner" })
+      layOut(container)
+      hover(link("A"))
+      const places = plusButtons().map(at)
+      expect(new Set(places).size).toBe(places.length)
+      const above = screen.getAllByRole("button", { name: "Add Block above" })
+      expect(above).toHaveLength(1)
+      fireEvent.click(above[0]!)
+      expect(send).toHaveBeenLastCalledWith({
+        type: "insert-request",
+        region: "page",
+        index: 0,
+        parentId: "inner",
+      })
+    })
+
+    it("offers the hovered Container's + where it meets its selected Block's", () => {
+      const { send, container } = setup({ blocks: nested, selectedId: "a" })
+      layOut(container)
+      hover(container.querySelector("[data-block-id=inner] > *")!)
+      const places = plusButtons().map(at)
+      expect(new Set(places).size).toBe(places.length)
+      fireEvent.click(screen.getByRole("button", { name: "Add Block above" }))
+      expect(send).toHaveBeenLastCalledWith({
+        type: "insert-request",
+        region: "page",
+        index: 0,
+        parentId: "outer",
+      })
+    })
+
+    it("offers the hovered Container's + over the selected one it fills", () => {
+      const { send, container } = setup({ blocks: nested, selectedId: "outer" })
+      layOut(container)
+      hover(container.querySelector("[data-block-id=inner] > *")!)
+      expect(plusButtons()).toHaveLength(2)
+      fireEvent.click(screen.getByRole("button", { name: "Add Block below" }))
+      expect(send).toHaveBeenLastCalledWith({
+        type: "insert-request",
+        region: "page",
+        index: 1,
+        parentId: "outer",
+      })
     })
   })
 
