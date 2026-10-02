@@ -10,7 +10,9 @@ import { VisualForm } from "./VisualForm"
 /**
  * Form: a heading, some text and a visual-only form with the fields the
  * Block lists. On submit it shows its success message and stores nothing.
- * Everything but the form is server-safe; the form is a client island.
+ * Everything but the form is server-safe; the form is a client island. It
+ * lays itself out by the room it has (`fit-*`), so it fits a Container's
+ * column.
  */
 export function FormBlock({
   block,
@@ -36,7 +38,7 @@ export function FormBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>

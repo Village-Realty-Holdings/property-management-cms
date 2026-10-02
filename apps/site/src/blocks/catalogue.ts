@@ -485,7 +485,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
-    fitsNarrow: false,
+    fitsNarrow: true,
   },
   button: {
     blockType: "button",

@@ -106,6 +106,8 @@ function valuesOf(form: HTMLFormElement): FormValues {
  * are right it shows the success message and nothing else. No request is
  * made and nothing is stored. Field ids come from the Block's position, not
  * `useId`, so the Visual Editor's canvas and the Site draw the same markup.
+ * Its fields go two to a row when the Block has the room (`fit-sm`), so it
+ * fits a Container's column.
  */
 export function VisualForm({
   fields,
@@ -149,7 +151,7 @@ export function VisualForm({
   }
 
   return (
-    <div className="max-w-3xl rounded-(--card-radius) bg-card p-4 text-card-foreground shadow-(--card-shadow) sm:p-6">
+    <div className="max-w-3xl rounded-(--card-radius) bg-card p-4 text-card-foreground shadow-(--card-shadow) fit-sm:p-6">
       {!sent && (
         <form
           noValidate
@@ -157,9 +159,9 @@ export function VisualForm({
           onChange={(event) => {
             if (attempted) check(event.currentTarget)
           }}
-          className="grid gap-5 sm:grid-cols-2"
+          className="grid gap-5 fit-sm:grid-cols-2"
         >
-          <p className="text-sm text-muted-foreground sm:col-span-2">
+          <p className="text-sm text-muted-foreground fit-sm:col-span-2">
             Fields marked with * are required.
           </p>
           {inputs.map((control) => {
@@ -179,7 +181,7 @@ export function VisualForm({
                 key={control.key}
                 className={cn(
                   "flex flex-col gap-2",
-                  control.wide && "sm:col-span-2"
+                  control.wide && "fit-sm:col-span-2"
                 )}
               >
                 <label
@@ -205,7 +207,7 @@ export function VisualForm({
               </div>
             )
           })}
-          <div className="sm:col-span-2">
+          <div className="fit-sm:col-span-2">
             <Button type="submit" variant="accent" size="lg">
               <EditableText field="submitLabel" context={context}>
                 {submitLabel}
