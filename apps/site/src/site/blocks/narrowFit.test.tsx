@@ -81,20 +81,26 @@ const columnsOf = (
 const viewportClass = /(^|:)(max-)?(sm|md|lg|xl|2xl):/
 
 /**
- * What may still read the viewport: the section's band and page-width box,
- * which a Container takes away, and a text field's font size from the shared
- * controls, which changes no layout.
+ * What may still read the viewport: a band's padding on the band and the
+ * page-width box's on the box, which a Container takes away, and a text
+ * field's font size from the shared controls, which changes no layout.
  */
-const allowed = new Set([
-  ...sectionY.split(" "),
-  ...container.split(" "),
-  "md:text-sm",
-])
+const wrappers = [sectionY, container].map((list) => list.split(" "))
+const controls = ["md:text-sm"]
 
 function viewportClasses(root: Element) {
-  return [...root.querySelectorAll("*")]
-    .flatMap((element) => [...element.classList])
-    .filter((name) => viewportClass.test(name) && !allowed.has(name))
+  return [...root.querySelectorAll("*")].flatMap((element) => {
+    const names = [...element.classList]
+    const wrapper = wrappers.find((list) =>
+      list.every((name) => names.includes(name))
+    )
+    return names.filter(
+      (name) =>
+        viewportClass.test(name) &&
+        !wrapper?.includes(name) &&
+        !controls.includes(name)
+    )
+  })
 }
 
 const narrow = catalogueEntries.filter((entry) => entry.fitsNarrow)

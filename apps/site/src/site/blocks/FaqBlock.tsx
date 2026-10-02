@@ -19,6 +19,8 @@ import { type BlockContext, blockId } from "./types"
  * also emits the same pairs as schema.org `FAQPage` JSON-LD, in the HTML the
  * server sends. Element ids come from the Block's position, not `useId`, so
  * the Visual Editor's canvas and the Site draw the same markup. Pairs missing their question or answer are left out of both.
+ * It lays itself out by the room it has (`fit-*`), so it fits a Container's
+ * column.
  */
 export function FaqBlock({
   block,
@@ -48,12 +50,12 @@ export function FaqBlock({
         field="heading"
         context={context}
         id={id}
-        className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+        className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
       >
         {heading}
       </EditableText>
       {items.length > 0 && (
-        <Accordion className="max-w-3xl rounded-(--card-radius) bg-card px-4 text-card-foreground shadow-(--card-shadow) sm:px-6">
+        <Accordion className="max-w-3xl rounded-(--card-radius) bg-card px-4 text-card-foreground shadow-(--card-shadow) fit-sm:px-6">
           {items.map(({ item, index }) => (
             <AccordionItem key={item.id ?? index} value={`faq-${index}`}>
               <AccordionTrigger
