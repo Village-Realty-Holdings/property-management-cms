@@ -54,6 +54,10 @@ _Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, start
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action. A Block sits on the Page itself or inside a Container.
 _Avoid_: Component, widget, section, element
 
+**Style** (of a Block):
+How a Block looks, apart from what it says: its background, one of the Theme's colours, and its text colour, worked out from the background or set to white or dark. The Block tab shows it under Style, beside Content.
+_Avoid_: Theme (the Theme is the whole Site's), design, appearance, overrides
+
 **Container**:
 A Block that holds other Blocks, as a stack or as columns side by side, and says where they sit across: at the start, in the centre or at the end. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band. A Layout's Header and Footer take Containers too, holding that region's own Blocks: a Header's Container never holds a Footer's Block.
 _Avoid_: Section, row, grid (as model names), wrapper, group
