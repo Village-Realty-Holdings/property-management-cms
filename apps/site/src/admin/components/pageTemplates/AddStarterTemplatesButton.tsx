@@ -11,7 +11,7 @@ import { InlineError, notify } from "../../kit"
 const FAILED = "Something went wrong. Please try again."
 
 /**
- * Adds the starter Page Templates (Home and Tuck-in) the Site doesn't have
+ * Adds the starter Page Templates (Home, Tuck-in and Guest feedback survey) the Site doesn't have
  * yet. A toast confirms; a failure shows inline.
  */
 export function AddStarterTemplatesButton({

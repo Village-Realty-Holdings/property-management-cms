@@ -9,6 +9,10 @@ Replace Text and Replace Image (the Admin's Tools) change one text, or one Media
 - **Page Templates are left alone unless the Staff User switches on "Include Page Templates"**, which is off each time the screen opens. What new Pages start from then changes only on purpose. A Page already made from a Page Template is its own copy, so it is always searched like any Page.
 - Rich text is matched one run at a time. A match that starts in plain text and ends in bold is not found, and the screen says so.
 
+## Links
+
+The Links Tool reads the same walk. A link is a text field marked `custom: LINK` (a button's link, a menu's URL, the Guest feedback survey's review link), a menu link that points at a Page, or a link in rich text. The list groups them by where they lead and checks the internal ones against the Pages: a path no Page has, or a Page that is not published, is a broken link. Links that leave the Site are listed and not requested. Replacing a URL is a replace like the other two, with the same preview, the same Draft-or-publish choice and the same Page Templates switch; it matches the URL exactly as stored. A menu link to a Page is not a URL and can't be replaced: it follows its Page.
+
 ## Drafts or publish
 
 | Page                                                  | Save as Drafts       | Publish now                                                                                                                                                    |
@@ -31,6 +35,6 @@ Each document is saved by itself. One that can't be saved (a required title left
 
 ## Consequences
 
-- A new text field that holds a value (a URL, an id) must be marked `NOT_PROSE`, or Replace Text will change it.
+- A new text field that holds a value (an id, a code) must be marked `NOT_PROSE`, and one that holds a link `LINK`, or Replace Text will change it and Links will not list it.
 - There is no undo button. A Page or Layout is put back from its history; the Brand and SEO, which keep no history, are put back by running the replace the other way.
 - Searching the Brand and SEO for text later is a one-line change (`settings: true`).

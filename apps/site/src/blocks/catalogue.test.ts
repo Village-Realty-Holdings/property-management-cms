@@ -81,6 +81,7 @@ describe("the Block catalogue", () => {
       "Newsletter",
       "FAQ",
       "Form",
+      "Guest feedback survey",
       "Button",
       "Image",
       "Container",

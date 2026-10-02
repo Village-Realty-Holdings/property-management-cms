@@ -8,6 +8,7 @@ import {
   ImagesIcon,
   LayoutDashboardIcon,
   LayoutTemplateIcon,
+  LinkIcon,
   PackageIcon,
   PaletteIcon,
   ReplaceIcon,
@@ -33,6 +34,7 @@ const icons: Record<NavIcon, LucideIcon> = {
   assets: TypeIcon,
   replaceText: ReplaceIcon,
   replaceImage: ImagesIcon,
+  links: LinkIcon,
   themes: SwatchBookIcon,
   starterKits: PackageIcon,
 }

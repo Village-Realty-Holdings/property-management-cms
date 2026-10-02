@@ -1,6 +1,6 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-postgres"
 
-import { setSiteSchema } from '../setSiteSchema'
+import { setSiteSchema } from "../setSiteSchema"
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await setSiteSchema(db, payload)
@@ -17,7 +17,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_pages_v_version_layout_version_layout_layout_idx" ON "_pages_v" USING btree ("version_layout_layout_id");`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({
+  db,
+  payload,
+  req,
+}: MigrateDownArgs): Promise<void> {
   await setSiteSchema(db, payload)
   await db.execute(sql`
    ALTER TABLE "pages" DROP CONSTRAINT "pages_layout_layout_id_layouts_id_fk";

@@ -9,6 +9,7 @@ import { FaqBlock } from "./FaqBlock"
 import { FeaturedRentalsBlock } from "./FeaturedRentalsBlock"
 import { FeaturesBlock } from "./FeaturesBlock"
 import { FormBlock } from "./FormBlock"
+import { GuestSurveyBlock } from "./GuestSurveyBlock"
 import { HeroBlock } from "./HeroBlock"
 import { ImageBlock } from "./ImageBlock"
 import { ImageTextBlock } from "./ImageTextBlock"
@@ -58,6 +59,7 @@ export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
   location: LocationBlock,
   faq: FaqBlock,
   form: FormBlock,
+  guestSurvey: GuestSurveyBlock,
   button: ButtonBlock,
   image: ImageBlock,
   container: ContainerBlock,

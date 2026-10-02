@@ -257,8 +257,8 @@ export async function reviewKitAs(
       steps.push({
         kind: "Layout",
         text: (await layoutExists(payload, access, page.layout.name))
-          ? `The Layout “${page.layout.name}” is already here and is used as it is.`
-          : `The Layout “${page.layout.name}” is added.`,
+          ? `“${page.layout.name}” is already here and is used as it is.`
+          : `“${page.layout.name}” is added.`,
       })
     }
     steps.push({

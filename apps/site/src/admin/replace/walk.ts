@@ -27,6 +27,8 @@ export type LooseField = Field & {
 export type Leaf = {
   field: LooseField
   value: unknown
+  /** The values beside it: the group, row or Block the field is in. */
+  siblings: Readonly<Record<string, unknown>>
   /**
    * The Block holding it, when it is in one: its row id, and how to name it
    * with its place ("Block 3, Amenities"). A Block inside a Container is
@@ -247,6 +249,7 @@ function rewrite(
             visit({
               field,
               value: out[field.name],
+              siblings: out,
               block: at.block,
               where: [...at.trail, labelOf(field)].join(": "),
             })

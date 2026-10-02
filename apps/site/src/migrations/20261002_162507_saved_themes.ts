@@ -1,6 +1,6 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-postgres"
 
-import { setSiteSchema } from '../setSiteSchema'
+import { setSiteSchema } from "../setSiteSchema"
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await setSiteSchema(db, payload)
@@ -21,7 +21,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_saved_themes_id_idx" ON "payload_locked_documents_rels" USING btree ("saved_themes_id");`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({
+  db,
+  payload,
+  req,
+}: MigrateDownArgs): Promise<void> {
   await setSiteSchema(db, payload)
   await db.execute(sql`
    ALTER TABLE "saved_themes" DISABLE ROW LEVEL SECURITY;

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
+import { linkReplacement } from "../links/screen"
 import { loadMediaReplacement } from "../replace/image"
 import {
   applyReplace,
@@ -90,6 +91,30 @@ export async function applyImageReplace(
 ): Promise<ReplaceResult> {
   const { payload, as } = await requireStaff()
   const loaded = await loadMediaReplacement(payload, as, input)
+  if (!loaded.ok) return refused(loaded.message)
+  const result = await applyReplace(payload, as, loaded.replacement, mode)
+  if (result.outcomes.length > 0) revalidateAfterReplace()
+  return result
+}
+
+export async function previewLinkReplace(
+  input: unknown
+): Promise<PreviewResult> {
+  const { payload, as } = await requireStaff()
+  const loaded = linkReplacement(input)
+  if (!loaded.ok) return loaded
+  return {
+    ok: true,
+    preview: await previewReplace(payload, as, loaded.replacement),
+  }
+}
+
+export async function applyLinkReplace(
+  input: unknown,
+  mode: ReplaceMode
+): Promise<ReplaceResult> {
+  const { payload, as } = await requireStaff()
+  const loaded = linkReplacement(input)
   if (!loaded.ok) return refused(loaded.message)
   const result = await applyReplace(payload, as, loaded.replacement, mode)
   if (result.outcomes.length > 0) revalidateAfterReplace()

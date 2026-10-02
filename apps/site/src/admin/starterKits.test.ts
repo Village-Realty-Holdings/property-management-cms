@@ -104,7 +104,7 @@ describe("the Tuck-in kit on a new Site", () => {
           text: "The Theme “Harbour” replaces your Site's Theme straight away. The one you have now stays in the Theme's history.",
           warning: true,
         },
-        { kind: "Layout", text: "The Layout “Tuck-in” is added." },
+        { kind: "Layout", text: "“Tuck-in Layout” is added." },
         {
           kind: "Page",
           text: "The Page “Home” at the Site's root (/) is added as a Draft, for you to edit and publish.",
@@ -141,7 +141,7 @@ describe("the Tuck-in kit on a new Site", () => {
       depth: 0,
       ...asStaff,
     })
-    expect(layout.name).toBe("Tuck-in")
+    expect(layout.name).toBe("Tuck-in Layout")
     expect(result.outcomes.at(-1)?.href).toBe(`/admin/pages/${home!.id}`)
 
     // The announcement names the company, the brand and its phone number.

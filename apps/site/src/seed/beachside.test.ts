@@ -101,10 +101,10 @@ describe("the Beachside seed", () => {
     expect(report.length).toBeGreaterThan(10)
 
     expect(await counts()).toMatchObject({
-      // Its four Pages and the two starter Page Templates.
-      pages: 6,
-      // Its own, and the Tuck-in starter's.
-      layouts: 2,
+      // Its four Pages and the three starter Page Templates.
+      pages: 7,
+      // Its own, and the Tuck-in and Guest feedback survey starters'.
+      layouts: 3,
       media: 7,
       fonts: 2,
       "font-files": 5,

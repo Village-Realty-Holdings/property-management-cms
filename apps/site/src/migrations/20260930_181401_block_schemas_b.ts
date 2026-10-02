@@ -1,6 +1,6 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-postgres"
 
-import { setSiteSchema } from '../setSiteSchema'
+import { setSiteSchema } from "../setSiteSchema"
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await setSiteSchema(db, payload)
@@ -464,7 +464,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_pages_v_blocks_form_path_idx" ON "_pages_v_blocks_form" USING btree ("_path");`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({
+  db,
+  payload,
+  req,
+}: MigrateDownArgs): Promise<void> {
   await setSiteSchema(db, payload)
   await db.execute(sql`
    DROP TABLE "pages_blocks_featured_rentals" CASCADE;

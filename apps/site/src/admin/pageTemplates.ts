@@ -97,6 +97,12 @@ export async function startersMissing(
   return totalDocs < STARTER_TEMPLATES.length
 }
 
+/** "A", "A and B", "A, B and C". */
+const list = (names: string[]) =>
+  names.length <= 1
+    ? (names[0] ?? "")
+    : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+
 /** Adds the starter Page Templates the Site doesn't have yet. */
 export async function addStarterTemplatesAs(
   payload: Payload,
@@ -111,7 +117,7 @@ export async function addStarterTemplatesAs(
       message:
         added.length === 0
           ? "The starter Page Templates are already here."
-          : `Added ${added.map((starter) => `“${starter.title}”`).join(" and ")}.`,
+          : `Added ${list(added.map((starter) => `“${starter.title}”`))}.`,
     }
   } catch (error) {
     return formStateFromError(error)

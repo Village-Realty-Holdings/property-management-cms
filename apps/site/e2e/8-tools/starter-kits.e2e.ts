@@ -97,7 +97,7 @@ afterAll(async () => {
         await request.delete(`${ORIGIN}/api/pages/${page.id}`)
       }
       const layouts = await get<Found>(
-        "/api/layouts?where[name][equals]=Tuck-in&depth=0"
+        "/api/layouts?where[name][equals]=Tuck-in%20Layout&depth=0"
       )
       for (const layout of layouts.docs) h.api.track("layout", layout.id)
     }

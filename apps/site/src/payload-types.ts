@@ -168,6 +168,7 @@ export interface Page {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | GuestSurveyBlock
         | ButtonBlock
         | ImageBlock
         | ContainerBlock
@@ -689,6 +690,62 @@ export interface FormBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuestSurveyBlock".
+ */
+export interface GuestSurveyBlock {
+  heading: string;
+  intro?: string | null;
+  /**
+   * A rating this high is asked for a public review. A lower one gets the feedback form.
+   */
+  reviewFrom: '4' | '5';
+  /**
+   * Replaces {phone} in the Sent and Not sent texts, as a link guests can call.
+   */
+  phone?: string | null;
+  positive: {
+    heading: string;
+    text?: string | null;
+    /**
+     * Where a happy guest leaves a review, such as your Google review link. Without one, the button is not shown.
+     */
+    reviewUrl?: string | null;
+    buttonLabel: string;
+    laterLabel: string;
+  };
+  thanks: {
+    heading: string;
+    text?: string | null;
+  };
+  negative: {
+    heading: string;
+    text?: string | null;
+    messageLabel: string;
+    /**
+     * The message is always asked. These are shown after it, in this order, and a guest may leave them empty.
+     */
+    formFields?: ('name' | 'email' | 'phone' | 'reservation' | 'property' | 'checkIn')[] | null;
+    /**
+     * Leave empty to show no checkbox.
+     */
+    consentLabel?: string | null;
+    submitLabel: string;
+  };
+  success: {
+    heading: string;
+    text?: string | null;
+  };
+  failure: {
+    heading: string;
+    text?: string | null;
+  };
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'guestSurvey';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ButtonBlock".
  */
 export interface ButtonBlock {
@@ -752,6 +809,7 @@ export interface ContainerBlock {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | GuestSurveyBlock
         | ButtonBlock
         | ImageBlock
         | ContainerBlockLevel2
@@ -793,6 +851,7 @@ export interface ContainerBlockLevel2 {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | GuestSurveyBlock
         | ButtonBlock
         | ImageBlock
         | ContainerBlockLevel3
@@ -834,6 +893,7 @@ export interface ContainerBlockLevel3 {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | GuestSurveyBlock
         | ButtonBlock
         | ImageBlock
       )[]
@@ -1253,6 +1313,7 @@ export interface PagesSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
         button?: T | ButtonBlockSelect<T>;
         image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockSelect<T>;
@@ -1625,6 +1686,56 @@ export interface FormBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuestSurveyBlock_select".
+ */
+export interface GuestSurveyBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  reviewFrom?: T;
+  phone?: T;
+  positive?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        reviewUrl?: T;
+        buttonLabel?: T;
+        laterLabel?: T;
+      };
+  thanks?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  negative?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        messageLabel?: T;
+        formFields?: T;
+        consentLabel?: T;
+        submitLabel?: T;
+      };
+  success?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  failure?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ButtonBlock_select".
  */
 export interface ButtonBlockSelect<T extends boolean = true> {
@@ -1683,6 +1794,7 @@ export interface ContainerBlockSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
         button?: T | ButtonBlockSelect<T>;
         image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockLevel2Select<T>;
@@ -1723,6 +1835,7 @@ export interface ContainerBlockLevel2Select<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
         button?: T | ButtonBlockSelect<T>;
         image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockLevel3Select<T>;
@@ -1763,6 +1876,7 @@ export interface ContainerBlockLevel3Select<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
         button?: T | ButtonBlockSelect<T>;
         image?: T | ImageBlockSelect<T>;
       };
