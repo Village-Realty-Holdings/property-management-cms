@@ -121,7 +121,11 @@ describe("Themes", () => {
   it("keeps the current Theme in the list under a name", async () => {
     const { page } = h.staff
     await visit(page, SCREEN)
-    await page.getByRole("button", { name: "Save current Theme" }).click()
+    // The header's button; the empty list offers the same action.
+    await page
+      .getByRole("button", { name: "Save current Theme" })
+      .first()
+      .click()
     const dialog = page.getByRole("dialog")
     await dialog.getByRole("button", { name: "Save" }).click()
     await dialog.getByText("Give the Theme a name.").waitFor()
