@@ -38,25 +38,36 @@ export function sampleWithQuery(
   return block as unknown as PageBlock
 }
 
+type Columns = BlockOf<"container">["columns"]
+
+const COLUMNS: readonly Columns[] = ["1", "2", "3", "4"]
+
+const first = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value
+
 /**
  * `block` as a catalogue page shows it inside a Container: with
- * `?container=<background>`, in a one-column Container on that background
- * (Default when it is not one). Without the parameter, `block` itself.
+ * `?container=<background>`, in a Container on that background (Default
+ * when it is not one), one column, or `?columns=2` to `4` with the Block in
+ * each. Without the parameter, `block` itself.
  */
 export function sampleInContainer(block: PageBlock, query: Query): PageBlock {
-  const raw = Array.isArray(query.container)
-    ? query.container[0]
-    : query.container
+  const raw = first(query.container)
   if (raw === undefined) return block
+  const asked = first(query.columns)
+  const columns = COLUMNS.find((n) => n === asked) ?? "1"
   const container: BlockOf<"container"> = {
     blockType: "container",
-    columns: "1",
+    columns,
     gap: "medium",
     align: "top",
     width: "page",
     background: backgroundOf(raw),
     // A sample is at most a Container of plain Blocks, so it fits a level down.
-    children: [block] as BlockOf<"container">["children"],
+    children: Array.from(
+      { length: Number(columns) },
+      () => block
+    ) as BlockOf<"container">["children"],
   }
   return container
 }

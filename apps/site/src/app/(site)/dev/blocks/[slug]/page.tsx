@@ -28,7 +28,7 @@ type Props = {
  * the Site's Theme, in a <main> like a Page's. The query sets what it shows:
  * `?background=`, `?variant=`, any sample field (`?count=3`),
  * `?container=<background>` to show the Block inside a one-column Container
- * on that background, and `?fixtures=<schema>` to read another Site's
+ * on that background (`&columns=2` to `4` for one in each column), and `?fixtures=<schema>` to read another Site's
  * fixtures instead of this one's.
  */
 export default async function BlockCataloguePage({

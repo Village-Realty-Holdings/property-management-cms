@@ -114,9 +114,35 @@ describe("sampleInContainer", () => {
     }
   })
 
+  it("fills each of the columns asked for with the Block", () => {
+    for (const columns of ["2", "3", "4"] as const) {
+      expect(
+        sampleInContainer(block, { container: "muted", columns })
+      ).toMatchObject({
+        columns,
+        background: "muted",
+        children: Array.from({ length: Number(columns) }, () => block),
+      })
+    }
+  })
+
+  it("is one column for any other number of columns", () => {
+    for (const columns of ["", "5", "two", ["2", "3"]]) {
+      expect(
+        sampleInContainer(block, { container: "default", columns })
+      ).toMatchObject({
+        columns: Array.isArray(columns) ? "2" : "1",
+        children: Array.isArray(columns) ? [block, block] : [block],
+      })
+    }
+  })
+
   it("is not a field of the sample, so the Block is left as it was", () => {
     expect(
-      sampleWithQuery(catalogue.callToAction, { container: "dark" })
+      sampleWithQuery(catalogue.callToAction, {
+        container: "dark",
+        columns: "2",
+      })
     ).toEqual(block)
   })
 })
