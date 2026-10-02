@@ -21,4 +21,4 @@ A Block inside a Container is the same component as at the top level. The Contai
 - A Container's background has to set the colours its children read (text, links, buttons), as a Block's own background does today.
 - The Visual Editor's document becomes a tree: state, outline, canvas and the bridge address a Block by id at any depth, not by its place in one list.
 - Each level's Container has its own table (`pages_blocks_container`, then `_2` and `_3`), and every other Block keeps its one table per collection: the row's `_path` says where it sits. Payload numbers the Container tables by nesting, so they don't move when a level's Blocks change; `dbName` can't pin them, because Payload keeps one table name per slug and the three levels would share the last one's. A test holds the names.
-- Layout regions (Header, Footer) do not get Containers.
+- Layout regions (Header, Footer) do not get Containers. (Reversed by ADR-0011: they take a Container of their own Blocks.)

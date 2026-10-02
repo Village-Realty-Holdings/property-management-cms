@@ -11,7 +11,7 @@ The one public website a deployment serves. Each deployment serves exactly one S
 _Avoid_: Tenant, client
 
 **Brand**:
-The Site's identity details: name, logo, tagline, contact details and social links.
+The Site's identity details: name, logo, tagline, contact details and social links. It can hold a second, light logo, which the Logo Block shows on a Primary or Dark band.
 _Avoid_: Site Brand, Site Settings, branding, config
 
 **SEO**:
@@ -55,7 +55,7 @@ A reusable, configurable section of a Page, such as a hero, a rich text section 
 _Avoid_: Component, widget, section, element
 
 **Container**:
-A Block that holds other Blocks, as a stack or as columns side by side. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band.
+A Block that holds other Blocks, as a stack or as columns side by side, and says where they sit across: at the start, in the centre or at the end. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band. A Layout's Header and Footer take Containers too, holding that region's own Blocks: a Header's Container never holds a Footer's Block.
 _Avoid_: Section, row, grid (as model names), wrapper, group
 
 **Guest feedback survey**:
