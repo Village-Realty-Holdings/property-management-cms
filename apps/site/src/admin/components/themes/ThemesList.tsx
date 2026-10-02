@@ -24,7 +24,13 @@ import {
   saveCurrentTheme,
 } from "../../actions/savedThemes"
 import type { FormState } from "../../formState"
-import { ConfirmDialog, InlineError, notify, PageHeader } from "../../kit"
+import {
+  ConfirmDialog,
+  EmptyState,
+  InlineError,
+  notify,
+  PageHeader,
+} from "../../kit"
 import { IMPORT_MAX_BYTES, NAME_MAX, type ThemeCard } from "../../savedThemes"
 import { describedBy, FormField } from "../FormBits"
 
@@ -106,7 +112,7 @@ export function ThemesList({ cards }: { cards: ThemeCard[] }) {
     <>
       <PageHeader
         title="Themes"
-        description="Looks you can apply to your Site: the built-in ones and the ones you save."
+        description="Themes you can apply to your Site: the built-in ones and the ones you save."
         action={
           <>
             <Button
@@ -154,10 +160,18 @@ export function ThemesList({ cards }: { cards: ThemeCard[] }) {
               {group.title}
             </h2>
             {group.cards.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                None yet. Save the current Theme to keep it here, or import a
-                Theme file.
-              </p>
+              <EmptyState
+                title="No Saved Themes yet"
+                description="Keep your Site’s Theme here under a name, or import a Theme file."
+                action={
+                  <Button
+                    type="button"
+                    onClick={() => setNaming({ kind: "save" })}
+                  >
+                    Save current Theme
+                  </Button>
+                }
+              />
             ) : (
               <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {group.cards.map((card) => (

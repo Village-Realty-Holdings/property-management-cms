@@ -197,6 +197,38 @@ describe("a kit on a Site that already has content", () => {
     expect(JSON.stringify(after?.blocks)).toContain("Lakeside Stays")
   })
 
+  it("sees a Published Page at the path while its Draft tries another", async () => {
+    const about = await t.payload.create({
+      collection: "pages",
+      data: { title: "Taken", path: "/taken", _status: "published" },
+      ...asStaff,
+    })
+    await t.payload.update({
+      collection: "pages",
+      id: about.id,
+      data: { path: "/moved", _status: "draft" },
+      draft: true,
+      ...asStaff,
+    })
+    const { STARTER_KITS } = await import("../starterKits")
+    const kit = STARTER_KITS.find((k) => k.id === "rental-site")!
+    const home = kit.pages[0]!
+    const path = home.path
+    home.path = "/taken"
+    try {
+      const review = await reviewKitAs(
+        t.payload,
+        asStaff,
+        answers({ kit: "rental-site", theme: "preset:meadow" })
+      )
+      expect(
+        review.ok && review.steps.find((s) => s.kind === "Page")?.text
+      ).toContain("is not added: “Taken” is already there")
+    } finally {
+      home.path = path
+    }
+  })
+
   it("leaves alone what the answers don't change", async () => {
     const live = (await readLiveTheme(t.payload)).savedAt
     const same = {

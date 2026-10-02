@@ -54,7 +54,7 @@ export type ReplaceRow = {
 
 export type ReplacePreview = {
   rows: ReplaceRow[]
-  /** Replacements across every row, in Drafts and live documents. */
+  /** Replacements across every row: in each, the copy with the most. */
   total: number
 }
 
@@ -274,7 +274,14 @@ export async function previewReplace(
 ): Promise<ReplacePreview> {
   const { pages, live } = await plan(payload, access, replacement)
   const rows = [...pages, ...live].map((item) => item.row)
-  return { rows, total: rows.reduce((sum, row) => sum + row.matches, 0) }
+  return {
+    rows,
+    // A Page whose Draft dropped the text still counts for its Published copy.
+    total: rows.reduce(
+      (sum, row) => sum + Math.max(row.matches, row.publishedMatches ?? 0),
+      0
+    ),
+  }
 }
 
 const failure = (error: unknown): string => {
@@ -338,7 +345,13 @@ async function applyToPage(
     await saveDraft(payload, access, page.id, page.latest.after.data)
   } catch (error) {
     // The Draft as it was is valid: it was saved once already.
-    await saveDraft(payload, access, page.id, page.latest.before)
+    try {
+      await saveDraft(payload, access, page.id, page.latest.before)
+    } catch {
+      throw new Error(
+        `Published, but the Draft could not be saved again. Its unpublished changes are in the Page's history: ${failure(error)}`
+      )
+    }
     throw new Error(
       `Published, but the Draft kept its old text: ${failure(error)}`
     )

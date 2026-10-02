@@ -81,7 +81,7 @@ const RENTAL_SITE: StarterKit = {
   name: "Rental site",
   blurb:
     "A Home Page for a rental brand: search, featured rentals, how it works, owners and testimonials.",
-  includes: ["A Home Page built from the Home template's Blocks"],
+  includes: ["A Home Page with the Blocks of the Home Page Template"],
   theme: "harbour",
   questions: [],
   pages: [{ title: "Home", path: "/", blocks: HOME_STARTER.blocks }],

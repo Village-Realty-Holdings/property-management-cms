@@ -407,7 +407,7 @@ export function StarterKitForm({
         {step === "Theme" && (
           <Section
             title="Theme"
-            description="The look your Site starts with. You can change it at any time."
+            description="The Theme your Site starts with. You can change it at any time."
           >
             <StepHeading ref={heading}>
               Step 4 of {STEPS.length}: Theme

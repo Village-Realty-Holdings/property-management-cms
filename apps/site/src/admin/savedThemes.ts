@@ -354,7 +354,12 @@ export async function importThemeAs(
         "That file isn't a Theme exported from an Awayday Site (or it is from a newer version).",
     }
   }
-  const problems = inputProblems(file.inputs)
+  const problems = [
+    ...Object.keys(file)
+      .filter((key) => !["awaydayTheme", "name", "inputs"].includes(key))
+      .map((key) => `“${key}” is not part of a Theme file.`),
+    ...inputProblems(file.inputs),
+  ]
   if (problems.length > 0) {
     return {
       ok: false,

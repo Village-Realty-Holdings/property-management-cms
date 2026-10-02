@@ -166,16 +166,21 @@ async function pathTaken(
   access: StaffAccess,
   path: string
 ): Promise<string | null> {
-  const { docs } = await payload.find({
-    collection: "pages",
-    where: { path: { equals: path } },
-    draft: true,
-    limit: 1,
-    depth: 0,
-    select: { title: true },
-    ...access,
-  })
-  return docs[0]?.title ?? null
+  // Either copy holds the path: a Published Page keeps its path while a Draft
+  // of it tries another.
+  for (const draft of [true, false]) {
+    const { docs } = await payload.find({
+      collection: "pages",
+      where: { path: { equals: path } },
+      draft,
+      limit: 1,
+      depth: 0,
+      select: { title: true },
+      ...access,
+    })
+    if (docs[0]) return docs[0].title
+  }
+  return null
 }
 
 async function layoutExists(

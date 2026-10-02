@@ -38,7 +38,7 @@ export function liveSummary(rows: readonly ReplaceRow[]): string {
     ...(layouts > 0 ? [plural(layouts, "Layout")] : []),
     ...rows
       .filter((row) => row.kind === "Brand" || row.kind === "SEO")
-      .map((row) => `the ${row.kind}`),
+      .map((row) => (row.kind === "Brand" ? "the Brand" : "SEO")),
   ]
   return parts.length <= 1
     ? (parts[0] ?? "")
@@ -75,6 +75,7 @@ export function ReplaceReview({
   const pages = preview.rows.filter((row) => !row.live)
   const live = preview.rows.filter((row) => row.live)
   const waiting = pages.some((row) => row.publishedMatches !== undefined)
+  const publishedOnly = pages.filter((row) => row.matches === 0).length
 
   if (preview.rows.length === 0) {
     return (
@@ -205,6 +206,8 @@ export function ReplaceReview({
                   <Label htmlFor={draftId}>Save as Drafts</Label>
                   <p className="text-muted-foreground">
                     The Site stays as it is until you publish each Page.
+                    {publishedOnly > 0 &&
+                      ` ${plural(publishedOnly, "Page has", "Pages have")} it only in the Published copy, and will not change.`}
                   </p>
                 </div>
               </div>
@@ -232,6 +235,20 @@ export function ReplaceReview({
               {live.length === 1 ? "it changes" : "they change"} on the Site
               straight away.
             </p>
+          )}
+          {live.length > 0 && (
+            <ul
+              aria-label="Changed on the Site straight away"
+              className="-mt-2 flex max-h-32 list-disc flex-col gap-0.5 overflow-y-auto pl-5 text-sm text-muted-foreground"
+            >
+              {live.map((row) => (
+                <li key={row.href}>
+                  {row.kind === row.title
+                    ? row.kind
+                    : `${row.kind}: ${row.title}`}
+                </li>
+              ))}
+            </ul>
           )}
           {error && <InlineError>{error}</InlineError>}
           <AlertDialogFooter>

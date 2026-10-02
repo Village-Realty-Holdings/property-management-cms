@@ -161,6 +161,33 @@ describe("a Published Page with changes not yet published", () => {
     })
   })
 
+  it("counts a Page whose Draft dropped the text, for its Published copy", async () => {
+    const page = await makePage("Dropped", "Omega stays", "published")
+    await t.payload.update({
+      collection: "pages",
+      id: page.id,
+      data: { blocks: [hero("Rewritten")], _status: "draft" },
+      draft: true,
+      ...asStaff,
+    })
+    const preview = await previewReplace(
+      t.payload,
+      asStaff,
+      swap("Omega", "Alef")
+    )
+    expect(preview).toMatchObject({
+      total: 1,
+      rows: [{ title: "Dropped", matches: 0, publishedMatches: 1 }],
+    })
+    // Saved as Drafts there is nothing to change; published now there is.
+    expect(
+      await applyReplace(t.payload, asStaff, swap("Omega", "Alef"), "draft")
+    ).toMatchObject({ message: "Nothing to replace.", outcomes: [] })
+    await applyReplace(t.payload, asStaff, swap("Omega", "Alef"), "publish")
+    expect(heading(await onSite(page.id))).toBe("Alef stays")
+    expect(heading(await draftOf(page.id))).toBe("Rewritten")
+  })
+
   it("saved as a Draft, changes the Draft only", async () => {
     const page = await pending("Waiting", "Iota")
     await applyReplace(t.payload, asStaff, swap("Iota", "Kappa"), "draft")

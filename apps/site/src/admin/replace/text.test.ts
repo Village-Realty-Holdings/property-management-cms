@@ -198,6 +198,27 @@ describe("replaceText", () => {
     })
   })
 
+  it("doesn't count text that is already the replacement", () => {
+    const page = { title: "Awayday and awayday" }
+    const { data, hits } = replace(page, {
+      find: "awayday",
+      replaceWith: "Awayday",
+    })
+    expect(data).toEqual({ title: "Awayday and Awayday" })
+    expect(hits).toEqual([{ block: undefined, where: "Title", count: 1 }])
+    const done = { title: "Awayday" }
+    expect(
+      replace(done, { find: "awayday", replaceWith: "Awayday" }).data
+    ).toBe(done)
+  })
+
+  it("leaves the tokens the Site fills in alone", () => {
+    const page = { title: "© {year} {name}. Your name here" }
+    expect(replace(page, { find: "name", replaceWith: "title" }).data).toEqual({
+      title: "© {year} {name}. Your title here",
+    })
+  })
+
   it("returns the document itself when nothing matches", () => {
     const page = { title: "Home", blocks: [{ blockType: "hero" }] }
     expect(replace(page).data).toBe(page)

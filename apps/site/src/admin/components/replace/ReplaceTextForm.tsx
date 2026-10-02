@@ -9,7 +9,7 @@ import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
 
 import { applyTextReplace, previewTextReplace } from "../../actions/replace"
-import { notify, PageHeader } from "../../kit"
+import { InlineError, notify, PageHeader } from "../../kit"
 import type { ReplacePreview, ReplaceResult } from "../../replace/run"
 import { FIND_MAX } from "../../replace/text"
 import { describedBy, FormField, Section } from "../FormBits"
@@ -28,7 +28,10 @@ export function ReplaceTextForm() {
   const [wholeWord, setWholeWord] = useState(false)
   const [includeTemplates, setIncludeTemplates] = useState(false)
   const [pending, setPending] = useState(false)
+  /** What is wrong with the text to find, shown on that field. */
   const [error, setError] = useState<string>()
+  /** A failure that isn't the form's: the request itself. */
+  const [failure, setFailure] = useState<string>()
   const [preview, setPreview] = useState<ReplacePreview>()
   const [result, setResult] = useState<ReplaceResult>()
 
@@ -52,13 +55,14 @@ export function ReplaceTextForm() {
     event.preventDefault()
     setPending(true)
     setError(undefined)
+    setFailure(undefined)
     setResult(undefined)
     try {
       const found = await previewTextReplace(query)
       if (found.ok) setPreview(found.preview)
       else setError(found.message)
     } catch {
-      setError("Something went wrong. Please try again.")
+      setFailure("Something went wrong. Please try again.")
     } finally {
       setPending(false)
     }
@@ -152,6 +156,7 @@ export function ReplaceTextForm() {
             </p>
           </Section>
         </form>
+        {failure && <InlineError>{failure}</InlineError>}
         {preview && !result && (
           <ReplaceReview
             preview={preview}

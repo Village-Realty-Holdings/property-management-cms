@@ -214,6 +214,9 @@ describe("exporting and importing", () => {
       })
     )
     expect(wrong.ok).toBe(false)
+    expect(
+      (await load(JSON.stringify({ ...file, script: "x" }))).message
+    ).toContain("“script” is not part of a Theme file.")
     expect(wrong.message).toContain("“extra” is not a Theme setting.")
     expect(wrong.message).toContain("Primary colour must be a hex colour")
     expect(wrong.message).toContain("Spacing must be one of:")

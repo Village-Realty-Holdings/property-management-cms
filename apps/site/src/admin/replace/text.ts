@@ -8,7 +8,7 @@ import { rewriteFields, type LooseField } from "./walk"
  * in its place. It reads `text` and `textarea` fields and the text of rich
  * text. A field marked `NOT_PROSE` (a path, a link's URL, an icon's name)
  * holds a value, not words, and is left alone, as are the URLs of rich text
- * links.
+ * links and the tokens the Site fills in ("{name}", "{year}").
  *
  * Rich text is matched one run at a time, so a match that starts in plain
  * text and ends in bold is not found.
@@ -71,6 +71,9 @@ export function parseTextQuery(input: unknown): Parsed {
 
 const WORD = "[\\p{L}\\p{N}_]"
 
+/** A runtime token in text, as in "© {year} {name}" and the SEO title pattern. */
+const TOKEN = /(\{[a-zA-Z]+\})/
+
 function matcher(query: TextQuery): RegExp {
   const literal = query.find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   const source = query.wholeWord ? `(?<!${WORD})${literal}(?!${WORD})` : literal
@@ -97,11 +100,20 @@ export function replaceText(
   const hits: Hit[] = []
 
   let count = 0
-  const inString = (value: string) =>
-    value.replace(pattern, () => {
+  const inWords = (value: string) =>
+    value.replace(pattern, (match) => {
+      // Already the replacement ("Awayday" found by "awayday"): not a change.
+      if (match === query.replaceWith) return match
       count++
       return query.replaceWith
     })
+  // A token the Site fills in when it draws the text ("{name}", "{year}") is
+  // not words: what is inside the braces is left alone.
+  const inString = (value: string) =>
+    value
+      .split(TOKEN)
+      .map((part, index) => (index % 2 === 1 ? part : inWords(part)))
+      .join("")
 
   /** Lexical JSON with the text of its text nodes replaced. */
   const inRichText = (node: unknown): unknown => {
