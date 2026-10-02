@@ -8,6 +8,7 @@ import { faqSample } from "./faq"
 import { featuredRentalsSample } from "./featuredRentals"
 import { featuresSample } from "./features"
 import { formSample } from "./form"
+import { guestSurveySample } from "./guestSurvey"
 import { heroSample } from "./hero"
 import { imageSample } from "./image"
 import { imageTextSample } from "./imageText"
@@ -49,6 +50,7 @@ export const samples: { [T in BlockType]: BlockOf<T> } = {
   location: locationSample,
   faq: faqSample,
   form: formSample,
+  guestSurvey: guestSurveySample,
   button: buttonSample,
   image: imageSample,
   container: containerSample,

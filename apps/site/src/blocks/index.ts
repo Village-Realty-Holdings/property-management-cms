@@ -9,6 +9,7 @@ import { Faq } from "./Faq"
 import { FeaturedRentals } from "./FeaturedRentals"
 import { Features } from "./Features"
 import { Form } from "./Form"
+import { GuestSurvey } from "./GuestSurvey"
 import { Hero } from "./Hero"
 import { Image } from "./Image"
 import { ImageText } from "./ImageText"
@@ -46,6 +47,7 @@ const contentBlocks: Block[] = [
   Location,
   Faq,
   Form,
+  GuestSurvey,
   Button,
   Image,
 ]

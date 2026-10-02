@@ -55,6 +55,7 @@ export const PAGE_BLOCKS = [
   "Location",
   "FAQ",
   "Form",
+  "Guest survey",
 ] as const
 
 /** Header-only Blocks (spec "Phase 3"). */

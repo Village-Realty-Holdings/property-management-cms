@@ -1,6 +1,6 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-postgres"
 
-import { setSiteSchema } from '../setSiteSchema'
+import { setSiteSchema } from "../setSiteSchema"
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await setSiteSchema(db, payload)
@@ -9,7 +9,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_pages_v" ADD COLUMN "version_is_template" boolean DEFAULT false;`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({
+  db,
+  payload,
+  req,
+}: MigrateDownArgs): Promise<void> {
   await setSiteSchema(db, payload)
   await db.execute(sql`
    ALTER TABLE "pages" DROP COLUMN "is_template";

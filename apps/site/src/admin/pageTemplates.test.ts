@@ -230,22 +230,25 @@ describe("a Page as a Page Template", () => {
 })
 
 describe("the starter Page Templates", () => {
-  it("are valid Draft Pages: Home and Tuck-in", async () => {
+  it("are valid Draft Pages: Home, Tuck-in and Guest survey", async () => {
     expect(await startersMissing(t.payload, asStaff)).toBe(true)
 
     const result = await addStarterTemplatesAs(t.payload, asStaff)
 
     expect(result).toEqual({
       ok: true,
-      message: "Added “Home template” and “Tuck-in template”.",
+      message:
+        "Added “Home template”, “Tuck-in template” and “Guest survey template”.",
     })
     expect(await startersMissing(t.payload, asStaff)).toBe(false)
     const rows = await loadPageTemplateRows(t.payload, asStaff)
     expect(rows.map((row) => row.name)).toEqual([
+      "Guest survey template",
       "Home template",
       "Tuck-in template",
     ])
-    expect(rows[0]!.blocks).toEqual([
+    expect(rows[0]!.blocks).toEqual(["Guest survey"])
+    expect(rows[1]!.blocks).toEqual([
       "Search Hero",
       "Featured rentals",
       "Steps",
@@ -255,14 +258,16 @@ describe("the starter Page Templates", () => {
       "Testimonials",
       "Call to action",
     ])
-    expect(rows[1]!.blocks).toEqual(["Container", "Container"])
+    expect(rows[2]!.blocks).toEqual(["Container", "Container"])
     const visitors = await t.payload.find({ collection: "pages", ...asVisitor })
     expect(visitors.docs).toEqual([])
   })
 
   it("gives Tuck-in its own Layout, which is not the default and is made once", async () => {
     await ensureStarterTemplates(t.payload, asStaff)
-    const tuckIn = (await loadPageTemplateRows(t.payload, asStaff))[1]!
+    const tuckIn = (await loadPageTemplateRows(t.payload, asStaff)).find(
+      (row) => row.name === "Tuck-in template"
+    )!
 
     const { docs: layouts } = await t.payload.find({
       collection: "layouts",
@@ -274,7 +279,17 @@ describe("the starter Page Templates", () => {
     ).toEqual([
       ["Main", true, []],
       ["Tuck-in", false, []],
+      ["Survey", false, []],
     ])
+    expect(layouts[2]!.header?.map((block) => block.blockType)).toEqual([
+      "logo",
+    ])
+    expect(layouts[2]!.footer?.[0]).toMatchObject({
+      blockType: "legalBar",
+      links: [
+        { label: "Privacy Policy", link: { type: "url", url: "/privacy" } },
+      ],
+    })
     expect(layouts[1]!.header?.map((block) => block.blockType)).toEqual([
       "logo",
       "headerActions",
@@ -309,7 +324,7 @@ describe("the starter Page Templates", () => {
     await t.payload.delete({ collection: "pages", id: tuckIn.id, ...asStaff })
     await ensureStarterTemplates(t.payload, asStaff)
     expect(await t.payload.count({ collection: "layouts" })).toMatchObject({
-      totalDocs: 2,
+      totalDocs: 3,
     })
   })
 
@@ -329,7 +344,9 @@ describe("the starter Page Templates", () => {
 
   it("are added once, and a changed one is left as it is", async () => {
     await ensureStarterTemplates(t.payload, asStaff)
-    const [home] = await loadPageTemplateRows(t.payload, asStaff)
+    const home = (await loadPageTemplateRows(t.payload, asStaff)).find(
+      (row) => row.name === "Home template"
+    )
     const page = await t.payload.findByID({
       collection: "pages",
       id: home!.id,
@@ -349,13 +366,14 @@ describe("the starter Page Templates", () => {
     expect(again.map((starter) => starter.action)).toEqual([
       "unchanged",
       "unchanged",
+      "unchanged",
     ])
     expect(await t.payload.count({ collection: "pages" })).toMatchObject({
       totalDocs: STARTER_TEMPLATES.length,
     })
     expect(
       (await loadPageTemplateRows(t.payload, asStaff)).map((row) => row.name)
-    ).toEqual(["Our Home", "Tuck-in template"])
+    ).toEqual(["Guest survey template", "Our Home", "Tuck-in template"])
     expect(await addStarterTemplatesAs(t.payload, asStaff)).toEqual({
       ok: true,
       message: "The starter Page Templates are already here.",

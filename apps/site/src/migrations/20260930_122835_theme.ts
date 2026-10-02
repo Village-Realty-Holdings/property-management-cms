@@ -1,6 +1,6 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-postgres"
 
-import { setSiteSchema } from '../setSiteSchema'
+import { setSiteSchema } from "../setSiteSchema"
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await setSiteSchema(db, payload)
@@ -91,7 +91,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "_theme_v_updated_at_idx" ON "_theme_v" USING btree ("updated_at");`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({
+  db,
+  payload,
+  req,
+}: MigrateDownArgs): Promise<void> {
   await setSiteSchema(db, payload)
   await db.execute(sql`
    DROP TABLE "theme" CASCADE;

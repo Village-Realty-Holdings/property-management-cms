@@ -107,7 +107,8 @@ describe("<AddStarterTemplatesButton>", () => {
   it("adds the starters and confirms with a toast", async () => {
     actions.addStarterTemplates.mockResolvedValue({
       ok: true,
-      message: "Added “Home template” and “Tuck-in template”.",
+      message:
+        "Added “Home template”, “Tuck-in template” and “Guest survey template”.",
     })
     const user = userEvent.setup()
     render(<AddStarterTemplatesButton />)
@@ -117,7 +118,7 @@ describe("<AddStarterTemplatesButton>", () => {
 
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith(
-        "Added “Home template” and “Tuck-in template”."
+        "Added “Home template”, “Tuck-in template” and “Guest survey template”."
       )
     )
   })

@@ -47,7 +47,7 @@ The Header and Footer that wrap a Page's content. One Layout is the Site's defau
 _Avoid_: Template, shell, chrome, master page
 
 **Page Template**:
-A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add two starters: Home, and Tuck-in (an announcement that a company has joined the brand).
+A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add three starters: Home, Tuck-in (an announcement that a company has joined the brand), and Guest survey (what a guest opens after a stay).
 _Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made), Starter Kit (that sets up a Site)
 
 **Block**:
