@@ -68,7 +68,7 @@ export function NewsletterForm({
       aria-label="Newsletter sign-up"
       className="flex w-full flex-col gap-3"
     >
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 fit-sm:flex-row">
         <label htmlFor={`${base}-email`} className="sr-only">
           Email address
         </label>
@@ -87,7 +87,7 @@ export function NewsletterForm({
           aria-invalid={problem ? true : undefined}
           aria-describedby={problem ? `${base}-problem` : undefined}
           className={cn(
-            "h-[calc(var(--btn-height)*1.125)] bg-background text-foreground sm:flex-1",
+            "h-[calc(var(--btn-height)*1.125)] bg-background text-foreground fit-sm:flex-1",
             surface && focusRings[surface]
           )}
         />

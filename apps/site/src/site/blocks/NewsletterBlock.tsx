@@ -9,8 +9,10 @@ import { type BlockContext, blockId } from "./types"
 
 /**
  * Newsletter: a heading, some text and a visual-only email form. The text
- * and the form sit side by side from `md` up and stack below it, which also
- * suits a Footer, where the Block arrives through the page Block registry.
+ * and the form sit side by side from `fit-md` up and stack below it, which
+ * also suits a Footer, where the Block arrives through the page Block
+ * registry. It lays itself out by the room it has (`fit-*`), so it fits a
+ * Container's column.
  */
 export function NewsletterBlock({
   block,
@@ -29,14 +31,14 @@ export function NewsletterBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={id}
     >
-      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+      <div className="grid items-center gap-8 fit-md:grid-cols-2 fit-md:gap-12">
         <div className="flex flex-col gap-3">
           <EditableText
             as="h2"
             field="heading"
             context={context}
             id={id}
-            className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+            className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
           >
             {heading}
           </EditableText>
@@ -46,7 +48,7 @@ export function NewsletterBlock({
               field="text"
               context={context}
               multiline
-              className="text-base text-pretty whitespace-pre-line sm:text-lg"
+              className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
             >
               {text}
             </EditableText>
