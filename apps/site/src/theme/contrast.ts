@@ -1,22 +1,23 @@
 import { AA_TEXT, AA_UI, BLACK, contrastRatio, mix } from "./colour"
-import { derivePalette, type TokenMap } from "./derive"
+import { derivePalette, forcedButtonText, type TokenMap } from "./derive"
 import { normalizeInputs, type ThemeInputs } from "./inputs"
 import { DEFAULT_INPUTS } from "./presets"
 
 /**
  * Contrast warnings. Text-bearing colours the Theme derives (button text,
  * links, muted text) always reach AA, so they never warn. What is left are the
- * colours a Staff User sets that the derivation cannot repair. Each warning
- * carries a concrete fix, and no warning blocks saving.
+ * colours a Staff User sets that the derivation cannot repair, and a button
+ * text colour set to White or Dark instead of derived. Each warning carries a
+ * concrete fix, and no warning blocks saving.
  */
 
 /** The inputs a fix can replace. */
-export type FixableInput = "text" | "primary"
+export type FixableInput = "text" | "primary" | "buttonText"
 
 export type ContrastFix = { field: FixableInput; value: string }
 
 export type ContrastWarning = {
-  id: "text-on-page" | "primary-outline-edge"
+  id: "text-on-page" | "primary-outline-edge" | "button-text"
   /** The input to change. */
   field: FixableInput
   message: string
@@ -57,6 +58,26 @@ function findWarnings(inputs: ThemeInputs): Finding[] {
         needed: AA_UI,
       })
   }
+
+  // A button label the Theme sets is used as it is: say when it is hard to
+  // read on a fill it sits on. Solid buttons fill with the primary colour;
+  // the accent button always fills with the accent.
+  const forced = forcedButtonText(inputs)
+  if (forced) {
+    const fills =
+      inputs.buttonStyle === "outline"
+        ? [inputs.accent]
+        : [inputs.primary, inputs.accent]
+    const ratio = Math.min(...fills.map((fill) => contrastRatio(forced, fill)))
+    if (ratio < AA_TEXT)
+      found.push({
+        id: "button-text",
+        field: "buttonText",
+        message: `${inputs.buttonText === "white" ? "White" : "Dark"} button text is hard to read on your button colours.`,
+        ratio,
+        needed: AA_TEXT,
+      })
+  }
   return found
 }
 
@@ -70,6 +91,9 @@ export function applyFix(inputs: ThemeInputs, fix: ContrastFix): ThemeInputs {
  * that clears the warning once the Theme is derived again.
  */
 function suggestFix(inputs: ThemeInputs, finding: Finding): ContrastFix {
+  // The derived colour always passes.
+  if (finding.field === "buttonText")
+    return { field: "buttonText", value: "auto" }
   const original = inputs[finding.field]
   for (let step = 1; step <= 100; step++) {
     const value = mix(original, BLACK, step / 100)
@@ -110,6 +134,7 @@ export const TEXT_PAIRS: readonly (readonly [string, string, string?])[] = [
   ["--muted-foreground", "--muted"],
   ["--link", "--background"],
   ["--link", "--muted"],
+  ["--btn-accent-fg", "--accent"],
   ["--btn-fg", "--btn-bg"],
   ["--btn-fg-hover", "--btn-bg-hover"],
   // The primary button on the accent panel (the inverted Call to action).

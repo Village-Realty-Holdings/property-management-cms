@@ -88,7 +88,7 @@ describe("Button", () => {
     (background) => {
       const accent = classOf("accent", background)
       expect(accent).toContain("bg-accent")
-      expect(accent).toContain("text-accent-foreground")
+      expect(accent).toContain("text-(--btn-accent-fg)")
       const outline = classOf("outline", background)
       expect(outline).toContain("border-current")
       expect(outline).toContain("bg-transparent")

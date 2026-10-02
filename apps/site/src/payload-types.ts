@@ -2494,6 +2494,10 @@ export interface Theme {
   buttonStyle: 'solid' | 'outline';
   buttonLetters: 'normal' | 'uppercase' | 'title';
   buttonWeight: 'regular' | 'medium' | 'bold';
+  /**
+   * Automatic picks white or your text colour, whichever is easier to read on the button. White and Dark are used as they are, even where they are hard to read.
+   */
+  buttonText: 'auto' | 'white' | 'dark';
   motion: 'none' | 'subtle' | 'lively';
   /**
    * Optional. Replaces the automatic summary of this save in the history.
@@ -2567,6 +2571,7 @@ export interface ThemeSelect<T extends boolean = true> {
   buttonStyle?: T;
   buttonLetters?: T;
   buttonWeight?: T;
+  buttonText?: T;
   motion?: T;
   note?: T;
   changeSummary?: T;

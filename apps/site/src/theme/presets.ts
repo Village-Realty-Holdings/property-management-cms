@@ -46,6 +46,7 @@ export const HARBOUR: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "uppercase",
     buttonWeight: "bold",
+    buttonText: "auto",
     motion: "subtle",
   },
 }
@@ -72,6 +73,7 @@ export const TERRACOTTA: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "normal",
     buttonWeight: "bold",
+    buttonText: "auto",
     motion: "subtle",
   },
 }
@@ -98,6 +100,7 @@ export const CLASSIC: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "normal",
     buttonWeight: "medium",
+    buttonText: "auto",
     motion: "lively",
   },
 }
@@ -124,6 +127,7 @@ export const MEADOW: ThemePreset = {
     buttonStyle: "outline",
     buttonLetters: "normal",
     buttonWeight: "bold",
+    buttonText: "auto",
     motion: "none",
   },
 }
@@ -155,6 +159,7 @@ export const WARREN_BEACH: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "normal",
     buttonWeight: "medium",
+    buttonText: "auto",
     motion: "subtle",
   },
   preferredFonts: { heading: "Source Sans 3", body: "Source Sans 3" },
@@ -187,6 +192,7 @@ export const AVADA: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "title",
     buttonWeight: "bold",
+    buttonText: "auto",
     motion: "subtle",
   },
   preferredFonts: { heading: "Montserrat", body: "Montserrat" },
@@ -226,6 +232,7 @@ export const BEACHSIDE: ThemePreset = {
     buttonStyle: "solid",
     buttonLetters: "normal",
     buttonWeight: "bold",
+    buttonText: "auto",
     motion: "lively",
   },
   preferredFonts: { heading: "Fraunces", body: "Nunito Sans" },

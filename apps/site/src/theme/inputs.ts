@@ -3,6 +3,7 @@ import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
   BUTTON_STYLES,
+  BUTTON_TEXTS,
   BUTTON_WEIGHTS,
   CARD_CORNERS,
   HEADING_CASES,
@@ -41,6 +42,11 @@ export type ThemeInputs = {
   buttonStyle: OptionValue<typeof BUTTON_STYLES>
   buttonLetters: OptionValue<typeof BUTTON_LETTERS>
   buttonWeight: OptionValue<typeof BUTTON_WEIGHTS>
+  /**
+   * The colour of a filled button's label. Automatic derives it to pass AA
+   * on the button; White and Dark use that colour whatever the contrast.
+   */
+  buttonText: OptionValue<typeof BUTTON_TEXTS>
   motion: OptionValue<typeof MOTIONS>
 }
 
@@ -65,6 +71,7 @@ export const INPUT_LABELS: Record<ThemeInputKey, string> = {
   buttonStyle: "Button style",
   buttonLetters: "Button letters",
   buttonWeight: "Button weight",
+  buttonText: "Button text",
   motion: "Motion",
 }
 
@@ -78,6 +85,8 @@ export const INPUT_HELP: Partial<Record<ThemeInputKey, string>> = {
   // emphasised call to action (Meadow's gold works because it stays a fill).
   buttonStyle:
     "Style applies to primary buttons. The accent button stays filled.",
+  buttonText:
+    "Automatic picks white or your text colour, whichever is easier to read on the button. White and Dark are used as they are, even where they are hard to read.",
 }
 
 const ENUM_KEYS = {
@@ -91,6 +100,7 @@ const ENUM_KEYS = {
   buttonStyle: valuesOf(BUTTON_STYLES),
   buttonLetters: valuesOf(BUTTON_LETTERS),
   buttonWeight: valuesOf(BUTTON_WEIGHTS),
+  buttonText: valuesOf(BUTTON_TEXTS),
   motion: valuesOf(MOTIONS),
 } as const
 
@@ -140,6 +150,9 @@ export function describeChanges(from: ThemeInputs, to: ThemeInputs): string[] {
     .map((key) => INPUT_LABELS[key])
 }
 
+/** Controls added after Themes could be exported. */
+const OPTIONAL_KEYS: readonly string[] = ["buttonText"]
+
 const HEX_EXAMPLE = "a hex colour, such as #283d6b"
 
 /**
@@ -177,6 +190,9 @@ export function inputProblems(raw: unknown): string[] {
   for (const key of Object.keys(ENUM_KEYS) as (keyof typeof ENUM_KEYS)[]) {
     const allowed: readonly string[] = ENUM_KEYS[key]
     const value = source[key]
+    // A Theme saved before a control existed doesn't have it: it gets the
+    // default, as a stored Theme does.
+    if (value === undefined && OPTIONAL_KEYS.includes(key)) continue
     if (typeof value !== "string" || !allowed.includes(value)) {
       problems.push(
         `${INPUT_LABELS[key]} must be one of: ${allowed.join(", ")}.`

@@ -68,6 +68,12 @@ export const BUTTON_LETTERS = options([
   { value: "title", label: "Title Case" },
 ])
 
+export const BUTTON_TEXTS = options([
+  { value: "auto", label: "Automatic", hint: "Whichever reads best" },
+  { value: "white", label: "White" },
+  { value: "dark", label: "Dark", hint: "Your text colour" },
+])
+
 export const BUTTON_WEIGHTS = options([
   { value: "regular", label: "Regular" },
   { value: "medium", label: "Medium" },

@@ -465,3 +465,55 @@ describe("structure", () => {
     )
   })
 })
+
+describe("button text", () => {
+  // All Seasons' blues: white fails AA on both (3.2 on the stronger one).
+  const blues = { primary: "#61c2ee", accent: "#3096e0", text: "#292929" }
+
+  it("is derived to pass AA when it is Automatic", () => {
+    const t = tokens({ ...blues, buttonText: "auto" })
+    expect(t["--btn-fg"]).toBe("#292929")
+    expect(t["--btn-accent-fg"]).toBe("#292929")
+    expect(
+      contrastRatio(t["--btn-accent-fg"]!, t["--accent"]!)
+    ).toBeGreaterThanOrEqual(AA)
+  })
+
+  it("is white on every filled button when the Theme says White, on hover too", () => {
+    const t = tokens({ ...blues, buttonText: "white" })
+    for (const token of [
+      "--btn-fg",
+      "--btn-fg-hover",
+      "--btn-accent-fg",
+      "--accent-hover-foreground",
+      "--btn-on-accent-fg",
+      "--btn-on-accent-fg-hover",
+    ]) {
+      expect(t[token], token).toBe("#ffffff")
+    }
+    // The fill darkens on hover, away from the white.
+    expect(contrastRatio("#ffffff", t["--accent-hover"]!)).toBeGreaterThan(
+      contrastRatio("#ffffff", t["--accent"]!)
+    )
+  })
+
+  it("is the text colour when the Theme says Dark", () => {
+    const t = tokens({ primary: "#0e5e6f", buttonText: "dark" })
+    expect(t["--btn-fg"]).toBe(HARBOUR.inputs.text)
+    expect(t["--btn-accent-fg"]).toBe(HARBOUR.inputs.text)
+  })
+
+  it("leaves text that isn't a button's as derived: a band, a panel, a strip", () => {
+    const auto = tokens({ ...blues, buttonText: "auto" })
+    const white = tokens({ ...blues, buttonText: "white" })
+    for (const token of ["--primary-foreground", "--accent-foreground"]) {
+      expect(white[token], token).toBe(auto[token])
+    }
+  })
+
+  it("leaves an outline button's label the link colour, and sets it on its filled hover", () => {
+    const t = tokens({ ...blues, buttonStyle: "outline", buttonText: "white" })
+    expect(t["--btn-fg"]).toBe(t["--link"])
+    expect(t["--btn-fg-hover"]).toBe("#ffffff")
+  })
+})

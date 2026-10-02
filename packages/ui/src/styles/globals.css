@@ -45,6 +45,7 @@
  *                                the same button as drawn on the accent colour
  *                                (the "onAccent" variant): Outline takes the
  *                                accent's text colour there
+ *               --btn-accent-fg  the accent variant's text
  *               --accent-hover, --accent-hover-foreground   the accent
  *                                variant's fill and text on hover
  *      Motion   --duration       how long a transition lasts (0ms for None)
@@ -244,6 +245,7 @@
   --btn-on-accent-border-color: transparent;
   --btn-on-accent-bg-hover: var(--btn-bg-hover);
   --btn-on-accent-fg-hover: var(--primary-foreground);
+  --btn-accent-fg: var(--accent-foreground);
   --accent-hover: color-mix(in srgb, var(--accent) 80%, var(--background));
   --accent-hover-foreground: var(--accent-foreground);
   --duration: 150ms;

@@ -19,7 +19,7 @@ How the Site and its Pages appear in search results and link previews: the Site'
 _Avoid_: Metadata, meta tags
 
 **Theme**:
-The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
+The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. It works out the colours that carry text so they are readable; a button's text can instead be set to white or dark, and the Theme editor warns when that is hard to read. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
 _Avoid_: Skin, styles, look and feel
 
 **Saved Theme**:

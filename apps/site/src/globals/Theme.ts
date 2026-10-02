@@ -15,6 +15,7 @@ import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
   BUTTON_STYLES,
+  BUTTON_TEXTS,
   BUTTON_WEIGHTS,
   CARD_CORNERS,
   HEADING_CASES,
@@ -187,6 +188,7 @@ export const Theme: GlobalConfig = {
     selectField("buttonStyle", BUTTON_STYLES),
     selectField("buttonLetters", BUTTON_LETTERS),
     selectField("buttonWeight", BUTTON_WEIGHTS),
+    selectField("buttonText", BUTTON_TEXTS),
     selectField("motion", MOTIONS),
     {
       name: "note",

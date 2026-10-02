@@ -18,7 +18,7 @@ const buttonVariants = cva(
       variant: {
         default: `border-(length:--btn-border-width) border-(--btn-border-color) bg-(--btn-bg) text-(--btn-fg) hover:bg-(--btn-bg-hover) hover:text-(--btn-fg-hover) ${solid}`,
         // The accent colour: the Site's second brand colour (a Theme input).
-        accent: `bg-accent text-accent-foreground hover:bg-(--accent-hover) hover:text-(--accent-hover-foreground) ${solid}`,
+        accent: `bg-accent text-(--btn-accent-fg) hover:bg-(--accent-hover) hover:text-(--accent-hover-foreground) ${solid}`,
         // The Theme's button as drawn on the accent colour (a Call to action
         // panel): an Outline label there takes the panel's text colour.
         onAccent: `border-(length:--btn-border-width) border-(--btn-on-accent-border-color) bg-(--btn-on-accent-bg) text-(--btn-on-accent-fg) hover:bg-(--btn-on-accent-bg-hover) hover:text-(--btn-on-accent-fg-hover) ${solid}`,
