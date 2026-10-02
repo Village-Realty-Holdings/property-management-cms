@@ -569,6 +569,164 @@ describe("Blocks in a Container", () => {
     expect(screen.getByText("Rich text removed.")).toBeTruthy()
   })
 
+  it("collapses and expands a Container with its button, hiding its Blocks", async () => {
+    mountNested()
+    const outer = () =>
+      screen.getAllByRole("treeitem", { name: "Container" })[0]!
+    expect(outer().getAttribute("aria-expanded")).toBe("true")
+    await userEvent.click(
+      within(outer()).getByRole("button", { name: "Collapse Container" })
+    )
+    expect(outer().getAttribute("aria-expanded")).toBe("false")
+    expect(itemNames(group("Page"))).toEqual(["Hero", "Container"])
+    // Collapsing is not a selection, and not an edit.
+    expect(value("selected")).toBe("none")
+    expect(value("can undo")).toBe("false")
+    await userEvent.click(
+      within(outer()).getByRole("button", { name: "Expand Container" })
+    )
+    expect(itemNames(group("Page"))).toEqual([
+      "Hero",
+      "Container",
+      "Rich text",
+      "Container",
+      "Call to action",
+    ])
+  })
+
+  it("keeps an inner Container's state when its outer one opens again", async () => {
+    mountNested()
+    const [outer, inner] = screen.getAllByRole("button", {
+      name: "Collapse Container",
+    })
+    await userEvent.click(inner!)
+    await userEvent.click(outer!)
+    await userEvent.click(
+      screen.getByRole("button", { name: "Expand Container" })
+    )
+    expect(itemNames(group("Page"))).toEqual([
+      "Hero",
+      "Container",
+      "Rich text",
+      "Container",
+    ])
+  })
+
+  it("has no toggle on an empty Container", () => {
+    render(
+      <EditorProvider
+        initial={{ ...(pageDoc() as PageDocument), blocks: [box("e1", [])] }}
+      >
+        <OutlinePanel />
+      </EditorProvider>
+    )
+    const row = screen.getByRole("treeitem", { name: "Container" })
+    expect(row.hasAttribute("aria-expanded")).toBe(false)
+    expect(within(row).queryByRole("button", { name: /Collapse|Expand/ })).toBe(
+      null
+    )
+  })
+
+  it("collapses, expands and walks in and out with the arrow keys", async () => {
+    mountNested()
+    const outer = () =>
+      screen.getAllByRole("treeitem", { name: "Container" })[0]!
+    outer().focus()
+    // Right on an open Container goes to its first Block, Left back up.
+    await userEvent.keyboard("{ArrowRight}")
+    expect(document.activeElement).toBe(
+      screen.getByRole("treeitem", { name: "Rich text" })
+    )
+    await userEvent.keyboard("{ArrowLeft}")
+    expect(document.activeElement).toBe(outer())
+    // Left on an open Container closes it, Right opens it again.
+    await userEvent.keyboard("{ArrowLeft}")
+    expect(outer().getAttribute("aria-expanded")).toBe("false")
+    expect(document.activeElement).toBe(outer())
+    await userEvent.keyboard("{ArrowRight}")
+    expect(outer().getAttribute("aria-expanded")).toBe("true")
+    expect(document.activeElement).toBe(outer())
+    // Left from a deeper Block goes to its own Container.
+    screen.getByRole("treeitem", { name: "Call to action" }).focus()
+    await userEvent.keyboard("{ArrowLeft}")
+    expect(document.activeElement).toBe(
+      screen.getAllByRole("treeitem", { name: "Container" })[1]
+    )
+    // Home and End go to the first and the last row.
+    await userEvent.keyboard("{End}")
+    expect(document.activeElement).toBe(
+      screen.getByRole("treeitem", { name: "Call to action" })
+    )
+    await userEvent.keyboard("{Home}")
+    expect(document.activeElement).toBe(
+      screen.getByRole("treeitem", { name: "Hero" })
+    )
+  })
+
+  it("opens the Containers around a Block selected elsewhere, and scrolls to it", async () => {
+    const scroll = vi.fn()
+    Element.prototype.scrollIntoView = scroll
+    function Pick() {
+      const { select } = useEditor()
+      return <button onClick={() => select("x1")}>pick x1</button>
+    }
+    render(
+      <EditorProvider initial={nestedDoc()}>
+        <OutlinePanel />
+        <Pick />
+      </EditorProvider>
+    )
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Collapse Container" })[0]!
+    )
+    expect(screen.queryByRole("treeitem", { name: "Call to action" })).toBe(
+      null
+    )
+    act(() => screen.getByText("pick x1").click())
+    const row = screen.getByRole("treeitem", { name: "Call to action" })
+    expect(row.getAttribute("aria-selected")).toBe("true")
+    expect(row.getAttribute("tabindex")).toBe("0")
+    expect(scroll.mock.contexts.at(-1)).toBe(row)
+    // Collapsing another Container later does not scroll again.
+    const calls = scroll.mock.calls.length
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Collapse Container" })[1]!
+    )
+    expect(scroll.mock.calls.length).toBe(calls)
+    Element.prototype.scrollIntoView = () => {}
+  })
+
+  it("puts a hidden selected Block's tab stop on a row that shows", async () => {
+    mountNested()
+    await userEvent.click(
+      screen.getByRole("treeitem", { name: "Call to action" })
+    )
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Collapse Container" })[0]!
+    )
+    const tabbable = within(group("Page"))
+      .getAllByRole("treeitem")
+      .filter((row) => row.getAttribute("tabindex") === "0")
+    expect(tabbable.map((row) => row.getAttribute("aria-label"))).toEqual([
+      "Container",
+    ])
+  })
+
+  it("has no axe violations, open or collapsed", async () => {
+    const { container } = mountNested()
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Collapse Container" })[1]!
+    )
+    const results = await axe.run(
+      { include: [container] },
+      {
+        rules: { "color-contrast": { enabled: false } },
+        runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+      }
+    )
+    expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
+  })
+
   it("has no axe violations", async () => {
     const { container } = mountNested()
     const results = await axe.run(

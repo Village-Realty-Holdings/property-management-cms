@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -28,6 +27,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import {
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   GripVertical,
   Lock,
@@ -63,7 +63,9 @@ import {
  * A Container's Blocks are listed under it, a level further in, and are
  * selected and moved within their Container the same way. A Container's row
  * has a "+" that adds a Block at the end of it, and each Block in a Container
- * a Remove button.
+ * a Remove button. A Container with Blocks collapses and expands, with its
+ * button or with the Left and Right arrow keys, as a tree does; selecting a
+ * Block elsewhere opens the Containers around it.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -136,6 +138,38 @@ export function moveForDrop(
   return from < 0 || to < 0 ? null : { from, to }
 }
 
+/** One row of the Outline: a Block and where it sits. */
+export type OutlineRow = {
+  id: string
+  block: BlockValues
+  /** 0 for a Block of the Region itself, 1 for one in a Container, and so on. */
+  depth: number
+  /** The Container it is in, or null for a Block of the Region itself. */
+  parentId: string | null
+  /** Its place in that list, and how many Blocks the list has. */
+  index: number
+  count: number
+}
+
+/**
+ * The rows of `blocks`, depth first: each Container is followed by its own
+ * Blocks, unless it is in `collapsed`.
+ */
+export function outlineRows(
+  blocks: readonly BlockValues[],
+  collapsed: ReadonlySet<string>,
+  depth = 0,
+  parentId: string | null = null
+): OutlineRow[] {
+  return blocks.flatMap((block, index) => {
+    const id = block.id ?? ""
+    const row = { id, block, depth, parentId, index, count: blocks.length }
+    return collapsed.has(id)
+      ? [row]
+      : [row, ...outlineRows(childrenOf(block), collapsed, depth + 1, id)]
+  })
+}
+
 // ── The panel ────────────────────────────────────────────────────────────────
 
 export function OutlinePanel({
@@ -164,6 +198,32 @@ export function OutlinePanel({
   const refocus = useRef<{ id: string; direction: "up" | "down" } | null>(null)
   /** The row to give focus to once a removal has re-rendered the rows. */
   const refocusRow = useRef<string | null>(null)
+  /** The Containers whose Blocks are hidden. */
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
+    () => new Set()
+  )
+  const [revealedFor, setRevealedFor] = useState<string | null>(null)
+
+  // A Block selected in the canvas may be in a collapsed Container: the
+  // Containers around it open in this render, so its row is there to scroll to.
+  if (selectedId !== revealedFor) {
+    setRevealedFor(selectedId)
+    const around =
+      selectedId === null
+        ? []
+        : (findBlock(doc, selectedId)?.ancestors ?? []).map((b) => b.id)
+    if (around.some((id) => id && collapsed.has(id))) {
+      setCollapsed(new Set([...collapsed].filter((id) => !around.includes(id))))
+    }
+  }
+
+  const toggle = (id: string, open: boolean) =>
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (open) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   const sensors = useSensors(
     // A few pixels of movement start a drag, so a plain click still selects.
@@ -239,6 +299,9 @@ export function OutlinePanel({
       ? blocksIn(doc, region)
       : (inherited?.[region as "header" | "footer"] ?? [])
 
+  const rowsOf = (region: Region) =>
+    outlineRows(blocksIn(doc, region), collapsed)
+
   const labelOf = (id: string | number) => {
     const found = findBlock(doc, String(id))
     return found && owned.includes(found.region)
@@ -312,18 +375,59 @@ export function OutlinePanel({
     }
   }
 
-  /** Arrow keys walk the rows; Enter or Space selects the focused one. */
+  /**
+   * The tree's keys: Up and Down walk the rows, Home and End go to the first
+   * and the last; Right opens a Container, then goes to its first Block; Left
+   * closes it, or goes to the Container a Block is in. Enter or Space on a
+   * row selects it (the row's own handler).
+   */
   const onTreeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
-    if (!(event.target instanceof HTMLElement)) return
-    if (event.target.getAttribute("role") !== "treeitem") return
+    const row = event.target
+    if (!(row instanceof HTMLElement)) return
+    if (row.getAttribute("role") !== "treeitem") return
     const rows = [
       ...event.currentTarget.querySelectorAll<HTMLElement>(
         '[role="treeitem"]:not([aria-disabled="true"])'
       ),
     ]
-    const at = rows.indexOf(event.target)
-    const next = rows[at + (event.key === "ArrowDown" ? 1 : -1)]
+    const at = rows.indexOf(row)
+    const expanded = row.getAttribute("aria-expanded")
+    const id = row.dataset.blockId ?? ""
+    let next: HTMLElement | undefined
+    switch (event.key) {
+      case "ArrowDown":
+        next = rows[at + 1]
+        break
+      case "ArrowUp":
+        next = rows[at - 1]
+        break
+      case "Home":
+        next = rows[0]
+        break
+      case "End":
+        next = rows.at(-1)
+        break
+      case "ArrowRight":
+        if (expanded === "false") {
+          event.preventDefault()
+          toggle(id, true)
+          return
+        }
+        if (expanded === "true") next = rows[at + 1]
+        break
+      case "ArrowLeft": {
+        if (expanded === "true") {
+          event.preventDefault()
+          toggle(id, false)
+          return
+        }
+        const parentId = row.dataset.parentId
+        if (parentId) next = rows.find((el) => el.dataset.blockId === parentId)
+        break
+      }
+      default:
+        return
+    }
     if (next) {
       event.preventDefault()
       next.focus()
@@ -335,14 +439,16 @@ export function OutlinePanel({
     onSelectBlock?.(id)
   }
 
-  // One row is in the tab order: the selected Block, else the first one.
-  const idsIn = (blocks: readonly BlockValues[]): string[] =>
-    blocks.flatMap((b) => [...(b.id ? [b.id] : []), ...idsIn(childrenOf(b))])
-  const ownedIds = owned.flatMap((region) => idsIn(blocksIn(doc, region)))
+  // One row is in the tab order: the selected Block, or the Container that
+  // hides it, else the first row.
+  const shownIds = owned.flatMap((region) => rowsOf(region).map((r) => r.id))
+  const selected = selectedId === null ? null : findBlock(doc, selectedId)
   const tabbableId =
-    selectedId !== null && ownedIds.includes(selectedId)
-      ? selectedId
-      : ownedIds[0]
+    (selected &&
+      [...selected.ancestors.map((b) => b.id), selected.block.id]
+        .filter((id): id is string => !!id && shownIds.includes(id))
+        .at(-1)) ||
+    shownIds[0]
 
   return (
     <div
@@ -353,6 +459,10 @@ export function OutlinePanel({
       {(["header", "page", "footer"] as const).map((region) => {
         const editable = owned.includes(region)
         const blocks = blocksOf(region)
+        const rows = editable ? rowsOf(region) : []
+        // Rows leave room for a Container's toggle when there is one, so the
+        // labels of a list line up.
+        const toggles = rows.some((row) => childrenOf(row.block).length > 0)
         const headingId = `outline-${region}`
         return (
           <div
@@ -402,7 +512,7 @@ export function OutlinePanel({
                   accessibility={{ announcements: announcements(region) }}
                 >
                   <SortableContext
-                    items={blocks.map((b) => b.id ?? "")}
+                    items={rows.map((row) => row.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <ul
@@ -410,33 +520,26 @@ export function OutlinePanel({
                       aria-label={`${REGION_LABEL[region]} Blocks`}
                       className="flex flex-col gap-1"
                     >
-                      {blocks.map((block, index) => (
-                        <Fragment key={block.id ?? index}>
-                          <SortableRow
-                            block={block}
-                            selected={block.id === selectedId}
-                            tabbable={block.id === tabbableId}
-                            isFirst={index === 0}
-                            isLast={index === blocks.length - 1}
-                            onSelect={choose}
-                            onMove={(direction) =>
-                              move(region, index, direction)
-                            }
-                            onAdd={addTo(region)}
-                          />
-                          <ChildRows
-                            parent={block}
-                            level={2}
-                            selectedId={selectedId}
-                            tabbableId={tabbableId}
-                            onSelect={choose}
-                            onMove={(parentId, from, direction) =>
-                              move(region, from, direction, parentId)
-                            }
-                            onAdd={addTo(region)}
-                            onRemove={remove}
-                          />
-                        </Fragment>
+                      {rows.map((row) => (
+                        <Row
+                          key={row.id}
+                          row={row}
+                          selected={row.id === selectedId}
+                          tabbable={row.id === tabbableId}
+                          expanded={
+                            childrenOf(row.block).length > 0
+                              ? !collapsed.has(row.id)
+                              : undefined
+                          }
+                          toggleSlot={toggles}
+                          onSelect={choose}
+                          onToggle={toggle}
+                          onMove={(direction) =>
+                            move(region, row.index, direction, row.parentId)
+                          }
+                          onAdd={addTo(region)}
+                          onRemove={remove}
+                        />
                       ))}
                     </ul>
                   </SortableContext>
@@ -557,6 +660,44 @@ function AddButton({
 }
 
 /**
+ * A Container's toggle, which shows or hides its Blocks; an empty space the
+ * same size on a row with nothing to toggle, when `slot` keeps one.
+ */
+function ToggleButton({
+  id,
+  label,
+  expanded,
+  slot,
+  onToggle,
+}: {
+  id: string
+  label: string
+  expanded: boolean | undefined
+  slot: boolean
+  onToggle: (id: string, open: boolean) => void
+}) {
+  if (expanded === undefined) {
+    return slot ? (
+      <span
+        aria-hidden
+        className="size-[calc(var(--btn-height)*0.75)] shrink-0"
+      />
+    ) : null
+  }
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-xs"
+      aria-label={`${expanded ? "Collapse" : "Expand"} ${label}`}
+      onClick={() => onToggle(id, !expanded)}
+    >
+      {expanded ? <ChevronDown aria-hidden /> : <ChevronRight aria-hidden />}
+    </Button>
+  )
+}
+
+/**
  * A click on the row selects it, but not one on its buttons: selecting opens
  * the Block tab, which would take the Outline, and focus, away mid-task.
  */
@@ -583,126 +724,44 @@ const selectKeys =
   }
 
 /**
- * The Blocks of the Container `parent`, one row each at `level`, each
- * followed by its own Blocks when it is a Container. They are listed flat
- * after the Container's row, so the rows of the Region stay one sortable
- * list; `aria-level` says how deep each is.
+ * One Block's row, at any depth. The rows of a Region are one flat list, a
+ * Container's Blocks right after it, so `aria-level` says how deep each is
+ * and the row is indented a step per level. A Block of the Region itself is
+ * dragged to reorder; one in a Container has a Remove button.
  */
-function ChildRows({
-  parent,
-  level,
-  selectedId,
-  tabbableId,
+function Row({
+  row,
+  selected,
+  tabbable,
+  expanded,
+  toggleSlot,
   onSelect,
+  onToggle,
   onMove,
   onAdd,
   onRemove,
 }: {
-  parent: BlockValues
-  level: number
-  selectedId: string | null
-  tabbableId: string | undefined
+  row: OutlineRow
+  selected: boolean
+  tabbable: boolean
+  /** Whether a Container's Blocks show; undefined for a row with none. */
+  expanded: boolean | undefined
+  toggleSlot: boolean
   onSelect: (id: string) => void
-  onMove: (parentId: string, from: number, direction: "up" | "down") => void
+  onToggle: (id: string, open: boolean) => void
+  onMove: (direction: "up" | "down") => void
   onAdd: (parent: BlockValues) => void
   onRemove: (id: string) => void
 }) {
-  const children = childrenOf(parent)
-  if (!parent.id) return null
-  const parentId = parent.id
-  return children.map((block, index) => {
-    const id = block.id ?? ""
-    const label = blockLabel(block)
-    const hintId = `outline-hint-${id}`
-    return (
-      <Fragment key={id || index}>
-        <li
-          role="treeitem"
-          aria-level={level}
-          aria-selected={id === selectedId}
-          aria-expanded={childrenOf(block).length > 0 ? true : undefined}
-          aria-label={label}
-          aria-describedby={blockHint(block) ? hintId : undefined}
-          data-block-id={id}
-          tabIndex={id === tabbableId ? 0 : -1}
-          onClick={selectOnClick(id, onSelect)}
-          onKeyDown={selectKeys(id, onSelect)}
-          // One step in per level, from the Region's own rows.
-          style={{ marginInlineStart: `${level - 1}rem` }}
-          className={cn(
-            ROW_CLASS,
-            "cursor-default",
-            id === selectedId && "border-primary bg-accent"
-          )}
-        >
-          <RowText block={block} hintId={hintId} />
-          <span className="flex shrink-0">
-            <MoveButton
-              id={id}
-              label={label}
-              direction="up"
-              disabled={index === 0}
-              onMove={(direction) => onMove(parentId, index, direction)}
-            />
-            <MoveButton
-              id={id}
-              label={label}
-              direction="down"
-              disabled={index === children.length - 1}
-              onMove={(direction) => onMove(parentId, index, direction)}
-            />
-            <AddButton block={block} onAdd={onAdd} />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label={`Remove ${label}`}
-              onClick={() => onRemove(id)}
-            >
-              <Trash2 aria-hidden />
-            </Button>
-          </span>
-        </li>
-        <ChildRows
-          parent={block}
-          level={level + 1}
-          selectedId={selectedId}
-          tabbableId={tabbableId}
-          onSelect={onSelect}
-          onMove={onMove}
-          onAdd={onAdd}
-          onRemove={onRemove}
-        />
-      </Fragment>
-    )
-  })
-}
-
-function SortableRow({
-  block,
-  selected,
-  tabbable,
-  isFirst,
-  isLast,
-  onSelect,
-  onMove,
-  onAdd,
-}: {
-  block: BlockValues
-  selected: boolean
-  tabbable: boolean
-  isFirst: boolean
-  isLast: boolean
-  onSelect: (id: string) => void
-  onMove: (direction: "up" | "down") => void
-  onAdd: (parent: BlockValues) => void
-}) {
-  const id = block.id ?? ""
+  const { id, block, depth } = row
+  const draggable = depth === 0
   const { setNodeRef, listeners, transform, transition, isDragging } =
-    useSortable({ id })
+    useSortable({ id, disabled: !draggable })
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
+    // One step in per level, from the Region's own rows.
+    marginInlineStart: depth > 0 ? `${depth}rem` : undefined,
   }
   const label = blockLabel(block)
   const hintId = `outline-hint-${id}`
@@ -712,26 +771,36 @@ function SortableRow({
       ref={setNodeRef}
       style={style}
       role="treeitem"
-      aria-level={1}
+      aria-level={depth + 1}
       aria-selected={selected}
-      aria-expanded={childrenOf(block).length > 0 ? true : undefined}
+      aria-expanded={expanded}
       aria-label={label}
       aria-describedby={blockHint(block) ? hintId : undefined}
       data-block-id={id}
+      data-parent-id={row.parentId ?? undefined}
       tabIndex={tabbable ? 0 : -1}
-      {...listeners}
+      {...(draggable ? listeners : {})}
       onClick={selectOnClick(id, onSelect)}
       onKeyDown={selectKeys(id, onSelect)}
       className={cn(
         ROW_CLASS,
-        "cursor-grab active:cursor-grabbing",
+        draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default",
         selected && "border-primary bg-accent",
         isDragging && "relative z-10 opacity-80 shadow-md"
       )}
     >
-      <GripVertical
-        aria-hidden
-        className="size-4 shrink-0 text-muted-foreground"
+      {draggable && (
+        <GripVertical
+          aria-hidden
+          className="size-4 shrink-0 text-muted-foreground"
+        />
+      )}
+      <ToggleButton
+        id={id}
+        label={label}
+        expanded={expanded}
+        slot={toggleSlot}
+        onToggle={onToggle}
       />
       <RowText block={block} hintId={hintId} />
       <span className="flex shrink-0">
@@ -739,17 +808,28 @@ function SortableRow({
           id={id}
           label={label}
           direction="up"
-          disabled={isFirst}
+          disabled={row.index === 0}
           onMove={onMove}
         />
         <MoveButton
           id={id}
           label={label}
           direction="down"
-          disabled={isLast}
+          disabled={row.index === row.count - 1}
           onMove={onMove}
         />
         <AddButton block={block} onAdd={onAdd} />
+        {depth > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`Remove ${label}`}
+            onClick={() => onRemove(id)}
+          >
+            <Trash2 aria-hidden />
+          </Button>
+        )}
       </span>
     </li>
   )
