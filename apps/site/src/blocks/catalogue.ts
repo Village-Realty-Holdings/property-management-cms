@@ -461,6 +461,24 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
     },
     takesBackground: true,
   },
+  container: {
+    blockType: "container",
+    slug: "container",
+    label: "Container",
+    group: "Content",
+    description: "Holds other Blocks, as a stack or as columns side by side.",
+    thumbnail: thumbnail("container"),
+    defaults: {
+      blockType: "container",
+      columns: "1",
+      gap: "medium",
+      align: "top",
+      width: "page",
+      background: "default",
+      children: [],
+    },
+    takesBackground: true,
+  },
 }
 
 /** The entries in the order the Admin offers them. */

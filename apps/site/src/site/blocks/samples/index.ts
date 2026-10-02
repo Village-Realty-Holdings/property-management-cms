@@ -2,6 +2,7 @@ import type { BlockOf, BlockType } from "../types"
 import { amenitiesSample } from "./amenities"
 import { blogTeaserSample } from "./blogTeaser"
 import { callToActionSample } from "./callToAction"
+import { containerSample } from "./container"
 import { faqSample } from "./faq"
 import { featuredRentalsSample } from "./featuredRentals"
 import { featuresSample } from "./features"
@@ -46,6 +47,7 @@ export const samples: { [T in BlockType]: BlockOf<T> } = {
   location: locationSample,
   faq: faqSample,
   form: formSample,
+  container: containerSample,
 }
 
 /** The sample for a Block type. */

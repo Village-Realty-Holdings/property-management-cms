@@ -118,6 +118,16 @@ const withImage: Record<
       ],
     }),
   },
+  container: {
+    label: "Container",
+    where: "Hero 2: Image",
+    block: (image) => ({
+      children: [
+        { blockType: "richText" },
+        { blockType: "hero", heading: "Welcome", image },
+      ],
+    }),
+  },
 }
 
 describe("which Blocks hold images", () => {

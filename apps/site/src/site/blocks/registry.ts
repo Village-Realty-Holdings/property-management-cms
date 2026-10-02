@@ -3,6 +3,7 @@ import { createElement } from "react"
 import { AmenitiesBlock } from "./AmenitiesBlock"
 import { BlogTeaserBlock } from "./BlogTeaserBlock"
 import { CallToActionBlock } from "./CallToActionBlock"
+import { ContainerBlock } from "./ContainerBlock"
 import { FaqBlock } from "./FaqBlock"
 import { FeaturedRentalsBlock } from "./FeaturedRentalsBlock"
 import { FeaturesBlock } from "./FeaturesBlock"
@@ -55,6 +56,7 @@ export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
   location: LocationBlock,
   faq: FaqBlock,
   form: FormBlock,
+  container: ContainerBlock,
 }
 
 /**
