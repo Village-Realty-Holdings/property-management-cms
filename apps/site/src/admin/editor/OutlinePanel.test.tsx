@@ -9,6 +9,7 @@ import { EditorProvider, useEditor } from "./EditorProvider"
 import {
   blockHint,
   dropOutcome,
+  nestOutcome,
   OutlinePanel,
   outlineRows,
 } from "./OutlinePanel"
@@ -392,6 +393,44 @@ describe("drag and drop", () => {
         "Containers go 3 levels deep, and this would put one inside 3 Containers.",
     })
   })
+
+  describe("without dragging", () => {
+    it("moves a Block into the Container just above it, last", () => {
+      expect(
+        nestOutcome(page([box("e", []), text("p", "P")]), "p", "in")
+      ).toEqual(moveTo("e", 0))
+      const doc = page([box("k", [text("p", "P")]), cta("q", "Q")])
+      expect(nestOutcome(doc, "q", "in")).toEqual(moveTo("k", 1))
+    })
+
+    it("has nowhere to go in when the Block above is not a Container, or there is none", () => {
+      expect(nestOutcome(nested(), "c1", "in")).toEqual({ kind: "none" })
+      expect(nestOutcome(nested(), "c2", "in")).toEqual({ kind: "none" })
+      expect(nestOutcome(nested(), "b1", "in")).toEqual({ kind: "none" })
+    })
+
+    it("moves a Block out of its Container, just after it", () => {
+      expect(nestOutcome(nested(), "x1", "out")).toEqual(moveTo("c1", 2))
+      expect(nestOutcome(nested(), "t1", "out")).toEqual(moveTo(null, 2))
+      expect(nestOutcome(nested(), "b1", "out")).toEqual({ kind: "none" })
+    })
+
+    it("refuses what a drop would refuse, with the reason", () => {
+      expect(
+        nestOutcome(page([box("c", [], "2"), hero("h", "H")]), "h", "in")
+      ).toEqual({
+        kind: "refused",
+        reason:
+          "A “Hero” Block needs the full width of the page and can't sit in a column.",
+      })
+      const deep = page([box("l1", [box("l2", [box("l3", []), box("k", [])])])])
+      expect(nestOutcome(deep, "k", "in")).toEqual({
+        kind: "refused",
+        reason:
+          "Containers go 3 levels deep, and this would put one inside 3 Containers.",
+      })
+    })
+  })
 })
 
 describe("the text hint", () => {
@@ -631,6 +670,110 @@ describe("Blocks in a Container", () => {
     await user.click(plus[2]!)
     expect(screen.queryByRole("option", { name: /^Container\b/ })).toBeNull()
     expect(screen.getByRole("option", { name: /^Hero\b/ })).toBeTruthy()
+  })
+
+  it("moves a Block out of its Container and back in from the keyboard, as undoable steps", async () => {
+    const user = userEvent.setup()
+    mountNested()
+    // The first Block of a Container, which Move up can't take out of it.
+    screen
+      .getByRole("button", { name: "Move Rich text out of its Container" })
+      .focus()
+    await user.keyboard("{Enter}")
+    expect(value("page order")).toBe("b1,c1,t1")
+    expect(childOrder()).toEqual(["c1:c2", "c2:x1"])
+    expect(value("can undo")).toBe("true")
+    expect(
+      screen.getByText("Rich text moved to position 3 of 3 in the Page.")
+    ).toBeTruthy()
+    // Focus stays on the row's buttons: the way back in.
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", {
+        name: "Move Rich text into the Container above",
+      })
+    )
+    await user.keyboard("{Enter}")
+    expect(value("page order")).toBe("b1,c1")
+    expect(childOrder()).toEqual(["c1:c2,t1", "c2:x1"])
+    expect(
+      screen.getByText("Rich text moved to position 2 of 2 in a Container.")
+    ).toBeTruthy()
+    // It is now under the inner Container, so the same button still works.
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", {
+        name: "Move Rich text into the Container above",
+      })
+    )
+  })
+
+  it("offers Move into only below a Container, and Move out only in one", () => {
+    mountNested()
+    const named = (pattern: RegExp) =>
+      screen
+        .queryAllByRole("button", { name: pattern })
+        .map((button) => button.getAttribute("aria-label"))
+    expect(named(/into the Container above$/)).toEqual([])
+    expect(named(/out of its Container$/)).toEqual([
+      "Move Rich text out of its Container",
+      "Move Container out of its Container",
+      "Move Call to action out of its Container",
+    ])
+  })
+
+  it("opens a collapsed Container a Block is moved into", async () => {
+    const user = userEvent.setup()
+    render(
+      <EditorProvider
+        initial={{
+          ...(pageDoc() as PageDocument),
+          blocks: [box("k", [text("p", "P")]), cta("q", "Q")],
+        }}
+      >
+        <OutlinePanel />
+      </EditorProvider>
+    )
+    await user.click(screen.getByRole("button", { name: "Collapse Container" }))
+    await user.click(
+      screen.getByRole("button", {
+        name: "Move Call to action into the Container above",
+      })
+    )
+    expect(itemNames(group("Page"))).toEqual([
+      "Container",
+      "Rich text",
+      "Call to action",
+    ])
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", {
+        name: "Move Call to action out of its Container",
+      })
+    )
+  })
+
+  it("refuses a move in that the Container's width forbids, and says why", async () => {
+    const user = userEvent.setup()
+    render(
+      <EditorProvider
+        initial={{
+          ...(pageDoc() as PageDocument),
+          blocks: [box("k", [text("p", "P")], "2"), hero("h", "H")],
+        }}
+      >
+        <OutlinePanel />
+        <Probe />
+      </EditorProvider>
+    )
+    await user.click(
+      screen.getByRole("button", {
+        name: "Move Hero into the Container above",
+      })
+    )
+    expect(value("page order")).toBe("k,h")
+    expect(value("can undo")).toBe("false")
+    const reason =
+      "A “Hero” Block needs the full width of the page and can't sit in a column."
+    expect(within(group("Page")).getByText(reason)).toBeTruthy()
+    expect(screen.getByText(`Hero was not moved. ${reason}`)).toBeTruthy()
   })
 
   it("removes a Block from its Container, as an undoable step", async () => {

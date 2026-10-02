@@ -27,7 +27,8 @@ import {
  * Container Blocks, Phase 4: the Outline drags a Block anywhere on the Page.
  * Down onto another Container's Block puts it in that Container; dragged to
  * the left it comes out of its Container; and a drop the place forbids
- * moves nothing and says why. What the Outline shows is what is saved.
+ * moves nothing and says why. A row's buttons make the same moves in and out
+ * from the keyboard. What the Outline shows is what is saved.
  *
  * The Page holds a Hero, a stacked Container A of two Buttons, a stacked
  * Container B of one, and a two-column Container C of one. Rows are told
@@ -194,6 +195,56 @@ describe("dragging in the Outline", () => {
     expect(await tree()).toEqual(before)
   })
 
+  it("moves a Block out of its Container and into another from the keyboard", async () => {
+    // Three, the only Block of B, which Move up can't take out of it.
+    await row(ids.three!)
+      .getByRole("button", { name: /out of its Container$/ })
+      .focus()
+    await page.keyboard.press("Enter")
+    await expect
+      .poll(tree)
+      .toEqual([
+        "hero:1",
+        "a:1",
+        "one:2",
+        "b:1",
+        "three:1",
+        "two:1",
+        "c:1",
+        "four:2",
+      ])
+    // Focus is on its way back in, to the end of the Container above it.
+    await page.keyboard.press("Enter")
+    await expect
+      .poll(tree)
+      .toEqual([
+        "hero:1",
+        "a:1",
+        "one:2",
+        "b:1",
+        "three:2",
+        "two:1",
+        "c:1",
+        "four:2",
+      ])
+    await row(ids.two!)
+      .getByRole("button", { name: /into the Container above$/ })
+      .focus()
+    await page.keyboard.press("Enter")
+    await expect
+      .poll(tree)
+      .toEqual([
+        "hero:1",
+        "a:1",
+        "one:2",
+        "b:1",
+        "three:2",
+        "two:2",
+        "c:1",
+        "four:2",
+      ])
+  })
+
   it("saves the Blocks where the Outline shows them", async () => {
     await barButton(page, "Save").click()
     await expectVisible(toast(page, /saved/i), "a toast confirms the save")
@@ -209,8 +260,7 @@ describe("dragging in the Outline", () => {
       .toEqual([
         [ids.hero, []],
         [ids.a, [ids.one]],
-        [ids.b, [ids.three]],
-        [ids.two, []],
+        [ids.b, [ids.three, ids.two]],
         [ids.c, [ids.four]],
       ])
   })

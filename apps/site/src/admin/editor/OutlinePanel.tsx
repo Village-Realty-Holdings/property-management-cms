@@ -33,6 +33,8 @@ import {
   ChevronRight,
   ChevronUp,
   GripVertical,
+  IndentDecrease,
+  IndentIncrease,
   Lock,
   Plus,
   Trash2,
@@ -76,7 +78,10 @@ import {
  * Dragging a row moves its Block anywhere in its region: up and down, and
  * into or out of a Container by dragging it right or left, as in an outliner.
  * A drop the Container's depth or width forbids (ADR-0007) moves nothing and
- * says why, in the panel and to a screen reader.
+ * says why, in the panel and to a screen reader. The same moves have buttons,
+ * for the keyboard and for anyone who can't drag: a row under a Container has
+ * Move into the Container above (to its end), and a row in a Container Move
+ * out of it (to just after it), refused with the same reasons.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -255,6 +260,40 @@ export function dropOutcome(
   return reason ? { kind: "refused", reason } : { kind: "move", list, index }
 }
 
+/**
+ * The same moves without a drag, for the keyboard and for anyone who can't
+ * drag: the Block `id` goes "in" to the end of the Container just above it,
+ * or "out" of its Container to just after it, as an outliner indents and
+ * outdents. Nothing when there is no such Container; a refusal that says why
+ * when the depth or the width of the place forbids the Block there.
+ */
+export function nestOutcome(
+  doc: EditorDocument,
+  id: string,
+  direction: "in" | "out"
+): DropOutcome {
+  const found = findBlock(doc, id)
+  if (!found) return { kind: "none" }
+  let list: BlockList
+  let index: number
+  if (direction === "in") {
+    const above = blocksOfList(doc, found)?.[found.index - 1]
+    if (!above?.id || (above.blockType as string) !== "container") {
+      return { kind: "none" }
+    }
+    list = { region: found.region, parentId: above.id }
+    index = childrenOf(above).length
+  } else {
+    const container =
+      found.parentId === null ? null : findBlock(doc, found.parentId)
+    if (!container) return { kind: "none" }
+    list = { region: found.region, parentId: container.parentId }
+    index = container.index + 1
+  }
+  const reason = placementProblem(doc, found.block, list)
+  return reason ? { kind: "refused", reason } : { kind: "move", list, index }
+}
+
 // ── The panel ────────────────────────────────────────────────────────────────
 
 export function OutlinePanel({
@@ -287,7 +326,7 @@ export function OutlinePanel({
   const [announcement, setAnnouncement] = useState("")
   const tree = useRef<HTMLDivElement>(null)
   /** The button to give focus back to once a move has re-rendered the rows. */
-  const refocus = useRef<{ id: string; direction: "up" | "down" } | null>(null)
+  const refocus = useRef<{ id: string; direction: MoveDirection } | null>(null)
   /** The row to give focus to once a removal has re-rendered the rows. */
   const refocusRow = useRef<string | null>(null)
   /** The Containers whose Blocks are hidden. */
@@ -360,8 +399,13 @@ export function OutlinePanel({
         ) ?? []),
       ].find((el) => el.dataset.blockId === target.id)
     const wanted = button(target.direction)
-    const other = button(target.direction === "up" ? "down" : "up")
-    ;(wanted && !wanted.disabled ? wanted : other)?.focus()
+    const other = button(OPPOSITE[target.direction])
+    // A Block moved in or out may have lost both buttons: then its row.
+    const row = [
+      ...(tree.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ??
+        []),
+    ].find((el) => el.dataset.blockId === target.id)
+    ;(wanted && !wanted.disabled ? wanted : (other ?? row))?.focus()
   }, [doc])
 
   // A Block selected in the canvas may be off screen in a long tree.
@@ -427,9 +471,32 @@ export function OutlinePanel({
     if (!block?.id || to < 0 || to >= blocks.length) return
     refocus.current = { id: block.id, direction }
     moveBlock(region, from, to, parentId)
+    setRefusal(null)
     setAnnouncement(
       `${blockLabel(block)} moved to position ${to + 1} of ${blocks.length}.`
     )
+  }
+
+  /**
+   * Moves a Block into the Container above it or out of its own, opening the
+   * Container it goes into so its row stays in view; a refusal says why, as a
+   * drop's does.
+   */
+  const nest = (region: Region, id: string, direction: "in" | "out") => {
+    const label = labelOf(id)
+    const outcome = nestOutcome(doc, id, direction)
+    if (outcome.kind === "move") {
+      refocus.current = { id, direction }
+      if (outcome.list.parentId) toggle(outcome.list.parentId, true)
+      setAnnouncement(
+        `${label} moved to ${where(id, outcome.list, outcome.index)}.`
+      )
+      moveBlockTo(id, outcome.list, outcome.index)
+      setRefusal(null)
+    } else if (outcome.kind === "refused") {
+      setRefusal({ region, reason: outcome.reason })
+      setAnnouncement(`${label} was not moved. ${outcome.reason}`)
+    }
   }
 
   /** Adds a Block at the end of the Container `parent`, through the picker. */
@@ -716,6 +783,13 @@ export function OutlinePanel({
                           onMove={(direction) =>
                             move(region, row.index, direction, row.parentId)
                           }
+                          nests={{
+                            in: nestOutcome(doc, row.id, "in").kind !== "none",
+                            out: row.depth > 0,
+                          }}
+                          onNest={(direction) =>
+                            nest(region, row.id, direction)
+                          }
                           onAdd={addTo(region)}
                           onRemove={remove}
                         />
@@ -763,14 +837,21 @@ export function OutlinePanel({
 const ROW_CLASS =
   "flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 
-/** What a row shows: the label and the hint, each on its own line. */
+/**
+ * What a row shows: the label and the hint, each on its own line. The label
+ * keeps its width, and a row short of room wraps its buttons instead; the
+ * hint takes what is left.
+ */
 function RowText({ block, hintId }: { block: BlockValues; hintId: string }) {
   const hint = blockHint(block)
   return (
-    <span className="flex min-w-0 flex-1 flex-col">
-      <span className="font-medium">{blockLabel(block)}</span>
+    <span className="flex flex-1 flex-col">
+      <span className="font-medium whitespace-nowrap">{blockLabel(block)}</span>
       {hint && (
-        <span id={hintId} className="truncate text-xs text-muted-foreground">
+        <span
+          id={hintId}
+          className="w-0 min-w-full truncate text-xs text-muted-foreground"
+        >
           {hint}
         </span>
       )}
@@ -820,6 +901,15 @@ function LockedRow({ block }: { block: BlockValues }) {
   )
 }
 
+type MoveDirection = "up" | "down" | "in" | "out"
+
+const OPPOSITE: Record<MoveDirection, MoveDirection> = {
+  up: "down",
+  down: "up",
+  in: "out",
+  out: "in",
+}
+
 /** A row's Move up or Move down button. */
 function MoveButton({
   id,
@@ -849,6 +939,44 @@ function MoveButton({
         <ChevronUp aria-hidden />
       ) : (
         <ChevronDown aria-hidden />
+      )}
+    </Button>
+  )
+}
+
+/**
+ * A row's Move into the Container above, or Move out of its Container: the
+ * moves a drag sideways makes, as buttons.
+ */
+function NestButton({
+  id,
+  label,
+  direction,
+  onNest,
+}: {
+  id: string
+  label: string
+  direction: "in" | "out"
+  onNest: (direction: "in" | "out") => void
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-xs"
+      aria-label={
+        direction === "in"
+          ? `Move ${label} into the Container above`
+          : `Move ${label} out of its Container`
+      }
+      data-move={direction}
+      data-block-id={id}
+      onClick={() => onNest(direction)}
+    >
+      {direction === "in" ? (
+        <IndentIncrease aria-hidden />
+      ) : (
+        <IndentDecrease aria-hidden />
       )}
     </Button>
   )
@@ -956,6 +1084,8 @@ function Row({
   onSelect,
   onToggle,
   onMove,
+  nests,
+  onNest,
   onAdd,
   onRemove,
 }: {
@@ -970,6 +1100,9 @@ function Row({
   onSelect: (id: string) => void
   onToggle: (id: string, open: boolean) => void
   onMove: (direction: "up" | "down") => void
+  /** Whether there is a Container above to move into, and one to move out of. */
+  nests: { in: boolean; out: boolean }
+  onNest: (direction: "in" | "out") => void
   onAdd: (parent: BlockValues) => void
   onRemove: (id: string) => void
 }) {
@@ -1024,7 +1157,7 @@ function Row({
         onToggle={onToggle}
       />
       <RowText block={block} hintId={hintId} />
-      <span className="flex shrink-0">
+      <span className="flex min-w-0 flex-wrap justify-end">
         <MoveButton
           id={id}
           label={label}
@@ -1039,6 +1172,12 @@ function Row({
           disabled={row.index === row.count - 1}
           onMove={onMove}
         />
+        {nests.in && (
+          <NestButton id={id} label={label} direction="in" onNest={onNest} />
+        )}
+        {nests.out && (
+          <NestButton id={id} label={label} direction="out" onNest={onNest} />
+        )}
         <AddButton block={block} onAdd={onAdd} />
         {depth > 0 && (
           <Button
