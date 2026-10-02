@@ -1,7 +1,7 @@
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { LegalBarBlock } from "../../payload-types"
-import { container } from "../blocks/types"
+import { container, embeddedBox } from "../blocks/types"
 import { linksOf } from "./links"
 import { focusOutline, RegionLink } from "./RegionLink"
 import type { RegionContext } from "./types"
@@ -33,10 +33,13 @@ export function LegalBar({
   const links = linksOf(block.links)
   if (!text && links.length === 0) return null
   return (
-    <div className="border-t border-border">
+    // In a Container it is a line of the Container's band, not a bar.
+    <div className="border-t border-border in-data-container:border-0">
       <div
         className={cn(
           container,
+          embeddedBox,
+          "in-data-container:py-0",
           "flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4 text-sm"
         )}
       >

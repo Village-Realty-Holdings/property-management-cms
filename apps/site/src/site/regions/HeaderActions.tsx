@@ -29,13 +29,16 @@ export function HeaderActions({
   const button = linkOf(block.button)
   const login = linkOf(block.login)
   if (!phone && !button && !login) return null
+  // In a Container on a Primary or Dark band the links take its text colour.
+  const onColour = context.surface === "primary" || context.surface === "dark"
   return (
     <div className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-2">
       {phone && (
         <a
           href={telHref(phone)}
           className={cn(
-            "inline-flex items-center gap-2 text-sm font-medium whitespace-nowrap text-foreground hover:underline",
+            "inline-flex items-center gap-2 text-sm font-medium whitespace-nowrap hover:underline",
+            !onColour && "text-foreground",
             focusOutline.page
           )}
         >
@@ -47,7 +50,8 @@ export function HeaderActions({
         <RegionLink
           href={login.href}
           className={cn(
-            "text-sm font-medium text-link underline-offset-4 hover:underline",
+            "text-sm font-medium underline-offset-4 hover:underline",
+            onColour ? "underline" : "text-link",
             focusOutline.page
           )}
         >

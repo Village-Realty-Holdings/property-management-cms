@@ -11,11 +11,14 @@ const sizes = {
   small: { image: "h-8", name: "text-xl" },
   medium: { image: "h-10", name: "text-2xl" },
   large: { image: "h-14", name: "text-3xl" },
+  xlarge: { image: "h-20 sm:h-24", name: "text-4xl" },
 } as const
 
 /**
  * The Site's logo from the Brand (never chosen here): the Brand's logo image,
- * or its name as a wordmark when it has none. It links home.
+ * or its name as a wordmark when it has none. It links home. In a Container
+ * on a Primary or Dark background it is the Brand's light logo, when there
+ * is one, and the wordmark takes the band's text colour.
  */
 export function Logo({
   block,
@@ -26,19 +29,23 @@ export function Logo({
 }) {
   const { brand } = context
   const size = sizes[block.size] ?? sizes.medium
+  const onColour = context.surface === "primary" || context.surface === "dark"
+  const logo = (onColour && brand.logoLight) || brand.logo
   return (
     <div className="flex min-w-0 flex-col">
       <RegionLink
         href="/"
         className={cn(
-          "inline-flex items-center gap-3 text-foreground",
-          focusOutline.page
+          "inline-flex items-center gap-3",
+          onColour
+            ? focusOutline.primary
+            : ["text-foreground", focusOutline.page]
         )}
       >
-        {brand.logo ? (
+        {logo ? (
           <Image
-            src={brand.logo.url}
-            alt={brand.logo.alt || brand.name}
+            src={logo.url}
+            alt={logo.alt || brand.name}
             // At the top of every page: the likeliest largest paint.
             preload
             width={160}
@@ -50,7 +57,9 @@ export function Logo({
         )}
       </RegionLink>
       {block.showTagline && brand.tagline && (
-        <span className="text-sm text-muted-foreground">{brand.tagline}</span>
+        <span className={cn("text-sm", !onColour && "text-muted-foreground")}>
+          {brand.tagline}
+        </span>
       )}
     </div>
   )

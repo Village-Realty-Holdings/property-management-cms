@@ -785,6 +785,10 @@ export interface ContainerBlock {
   columns: '1' | '2' | '3' | '4';
   gap: 'small' | 'medium' | 'large';
   align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   children?:
@@ -827,6 +831,10 @@ export interface ContainerBlockLevel2 {
   columns: '1' | '2' | '3' | '4';
   gap: 'small' | 'medium' | 'large';
   align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   children?:
@@ -869,6 +877,10 @@ export interface ContainerBlockLevel3 {
   columns: '1' | '2' | '3' | '4';
   gap: 'small' | 'medium' | 'large';
   align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   children?:
@@ -909,8 +921,10 @@ export interface ContainerBlockLevel3 {
 export interface Layout {
   id: number;
   name: string;
-  header?: (LogoBlock | NavigationBlock | HeaderActionsBlock | UtilityStripBlock)[] | null;
-  footer?: (FooterColumnsBlock | LegalBarBlock | NewsletterBlock | CallToActionBlock)[] | null;
+  header?: (LogoBlock | NavigationBlock | HeaderActionsBlock | UtilityStripBlock | RegionContainerBlock)[] | null;
+  footer?:
+    | (FooterColumnsBlock | LegalBarBlock | NewsletterBlock | CallToActionBlock | LogoBlock | RegionContainerBlock)[]
+    | null;
   /**
    * Pages at or under these paths use this Layout, like "/stays". The longest match wins. A path belongs to one Layout.
    */
@@ -938,7 +952,7 @@ export interface Layout {
  * via the `definition` "LogoBlock".
  */
 export interface LogoBlock {
-  size: 'small' | 'medium' | 'large';
+  size: 'small' | 'medium' | 'large' | 'xlarge';
   showTagline?: boolean | null;
   id?: string | null;
   blockName?: string | null;
@@ -1046,6 +1060,36 @@ export interface UtilityStripBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlock".
+ */
+export interface RegionContainerBlock {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+        | RegionContainerBlockLevel2
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FooterColumnsBlock".
  */
 export interface FooterColumnsBlock {
@@ -1111,6 +1155,65 @@ export interface LegalBarBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'legalBar';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel2".
+ */
+export interface RegionContainerBlockLevel2 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+        | RegionContainerBlockLevel3
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel3".
+ */
+export interface RegionContainerBlockLevel3 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1769,6 +1872,7 @@ export interface ContainerBlockSelect<T extends boolean = true> {
   columns?: T;
   gap?: T;
   align?: T;
+  justify?: T;
   width?: T;
   background?: T;
   children?:
@@ -1810,6 +1914,7 @@ export interface ContainerBlockLevel2Select<T extends boolean = true> {
   columns?: T;
   gap?: T;
   align?: T;
+  justify?: T;
   width?: T;
   background?: T;
   children?:
@@ -1851,6 +1956,7 @@ export interface ContainerBlockLevel3Select<T extends boolean = true> {
   columns?: T;
   gap?: T;
   align?: T;
+  justify?: T;
   width?: T;
   background?: T;
   children?:
@@ -1896,6 +2002,7 @@ export interface LayoutsSelect<T extends boolean = true> {
         navigation?: T | NavigationBlockSelect<T>;
         headerActions?: T | HeaderActionsBlockSelect<T>;
         utilityStrip?: T | UtilityStripBlockSelect<T>;
+        container?: T | RegionContainerBlockSelect<T>;
       };
   footer?:
     | T
@@ -1904,6 +2011,8 @@ export interface LayoutsSelect<T extends boolean = true> {
         legalBar?: T | LegalBarBlockSelect<T>;
         newsletter?: T | NewsletterBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+        logo?: T | LogoBlockSelect<T>;
+        container?: T | RegionContainerBlockSelect<T>;
       };
   paths?:
     | T
@@ -2010,6 +2119,32 @@ export interface UtilityStripBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlock_select".
+ */
+export interface RegionContainerBlockSelect<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        container?: T | RegionContainerBlockLevel2Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FooterColumnsBlock_select".
  */
 export interface FooterColumnsBlockSelect<T extends boolean = true> {
@@ -2056,6 +2191,57 @@ export interface LegalBarBlockSelect<T extends boolean = true> {
               url?: T;
             };
         id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel2_select".
+ */
+export interface RegionContainerBlockLevel2Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        container?: T | RegionContainerBlockLevel3Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel3_select".
+ */
+export interface RegionContainerBlockLevel3Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
       };
   id?: T;
   blockName?: T;
@@ -2199,6 +2385,10 @@ export interface Brand {
    * Shown in the Site's header.
    */
   logo?: (number | null) | Media;
+  /**
+   * The logo in white or a light colour, for a Primary or Dark band. Without one, the logo is used there too.
+   */
+  logoLight?: (number | null) | Media;
   contact?: {
     phone?: string | null;
     email?: string | null;
@@ -2302,6 +2492,7 @@ export interface BrandSelect<T extends boolean = true> {
   name?: T;
   tagline?: T;
   logo?: T;
+  logoLight?: T;
   contact?:
     | T
     | {

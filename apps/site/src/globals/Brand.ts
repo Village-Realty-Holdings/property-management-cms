@@ -43,6 +43,16 @@ export const Brand: GlobalConfig = {
       admin: { description: "Shown in the Site's header." },
     },
     {
+      name: "logoLight",
+      label: "Light logo",
+      type: "upload",
+      relationTo: "media",
+      admin: {
+        description:
+          "The logo in white or a light colour, for a Primary or Dark band. Without one, the logo is used there too.",
+      },
+    },
+    {
       name: "contact",
       type: "group",
       fields: [

@@ -12,7 +12,7 @@ import { CONTAINER_MARK, container, sectionY, type BlockContext } from "./types"
  * three or four go through two on the way. (Class names are written out so
  * Tailwind can see them.)
  */
-const columns: Record<ContainerBlockData["columns"], string> = {
+export const columns: Record<ContainerBlockData["columns"], string> = {
   "1": "",
   "2": "@sm:grid-cols-2",
   "3": "@sm:grid-cols-2 @3xl:grid-cols-3",
@@ -20,16 +20,30 @@ const columns: Record<ContainerBlockData["columns"], string> = {
 }
 
 /** The gap between cells, in steps of the Theme's --section-y. */
-const gaps: Record<ContainerBlockData["gap"], string> = {
+export const gaps: Record<ContainerBlockData["gap"], string> = {
   small: "gap-[calc(var(--section-y)*0.4)]",
   medium: "gap-[calc(var(--section-y)*0.8)]",
   large: "gap-[calc(var(--section-y)*1.2)]",
 }
 
-const aligns: Record<ContainerBlockData["align"], string> = {
+export const aligns: Record<ContainerBlockData["align"], string> = {
   top: "items-start",
   centre: "items-center",
   stretch: "items-stretch",
+}
+
+/**
+ * Where a Block sits in its cell, across. At the start a cell's Block fills
+ * the cell, as it always did. In the centre or at the end the Block is as
+ * wide as what it holds and sits there: a logo, a button, an image.
+ */
+export const justifies: Record<
+  NonNullable<ContainerBlockData["justify"]>,
+  string
+> = {
+  start: "",
+  centre: "justify-items-center",
+  end: "justify-items-end",
 }
 
 /** A Container that paints inside another one is a card on it. */
@@ -101,7 +115,8 @@ export function ContainerBlock({
                 "grid grid-cols-1",
                 columns[block.columns],
                 gaps[block.gap],
-                aligns[block.align]
+                aligns[block.align],
+                justifies[block.justify ?? "start"]
               )}
             >
               {children.map((child, index) => (
@@ -120,6 +135,9 @@ export function ContainerBlock({
                   // against. One whose Block renders nothing takes no room.
                   className={cn(
                     "@container min-w-0 empty:hidden",
+                    // A Block that sits at the centre or the end is as wide
+                    // as its content, up to the cell.
+                    (block.justify ?? "start") !== "start" && "max-w-full",
                     block.align === "stretch" && "*:h-full"
                   )}
                 >

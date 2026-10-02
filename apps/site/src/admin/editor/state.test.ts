@@ -871,7 +871,7 @@ describe("Blocks in Containers", () => {
     expect(childIds(insert("stack", hero("h")), "stack")).toEqual(["h"])
   })
 
-  it("refuses a place that isn't a Container, and a Container in the Header or Footer", () => {
+  it("refuses a place that isn't a Container, and takes a Container in the Header or Footer", () => {
     const state = nested()
     for (const parentId of ["a", "nope"]) {
       expect(
@@ -886,14 +886,42 @@ describe("Blocks in Containers", () => {
       ).toBe(state)
     }
     const layout = createEditorState(layoutDoc())
+    const withBox = run(layout, {
+      type: "insertBlock",
+      region: "header",
+      index: 0,
+      block: box("x", []),
+    })
+    expect(ids(withBox, "header")[0]).toBe("x")
+    // It holds the Header's Blocks, not the Footer's or a Page's.
+    const logo = { id: "l", blockType: "logo", size: "medium" } as never
+    const inBox = run(withBox, {
+      type: "insertBlock",
+      region: "header",
+      parentId: "x",
+      index: 0,
+      block: logo,
+    })
+    expect(inBox).not.toBe(withBox)
+    for (const blockType of ["legalBar", "utilityStrip", "hero"]) {
+      const block = { id: "n", blockType } as never
+      expect(
+        placementProblem(withBox.doc, block, {
+          region: "header",
+          parentId: "x",
+        }),
+        blockType
+      ).toMatch(/can't go in a Container in the Header/)
+    }
     expect(
-      run(layout, {
-        type: "insertBlock",
-        region: "header",
-        index: 0,
-        block: box("x", []),
-      })
-    ).toBe(layout)
+      placementProblem(
+        withBox.doc,
+        box("y", [{ id: "n", blockType: "legalBar" } as never]),
+        {
+          region: "header",
+        }
+      )
+    ).toMatch(/“.*” Block can't go in a Container in the Header/)
   })
 
   it("says why a Block can't go somewhere", () => {

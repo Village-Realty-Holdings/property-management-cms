@@ -8,6 +8,7 @@ import { HeaderActions } from "./HeaderActions"
 import { LegalBar } from "./LegalBar"
 import { Logo } from "./Logo"
 import { Navigation } from "./Navigation"
+import { RegionContainer } from "./RegionContainer"
 import type {
   OwnRegionBlockType,
   Region,
@@ -34,6 +35,7 @@ export const regionRegistry: {
   utilityStrip: UtilityStrip,
   footerColumns: FooterColumns,
   legalBar: LegalBar,
+  container: RegionContainer,
 }
 
 /**
@@ -47,7 +49,9 @@ export function renderRegionBlock(
   block: RegionBlock,
   context: RegionContext
 ) {
-  if (!regionTakes(region, block.blockType)) return null
+  // Inside a Container the Block has a surface: the Container's.
+  const inContainer = context.surface !== undefined
+  if (!regionTakes(region, block.blockType, inContainer)) return null
   if (Object.hasOwn(regionRegistry, block.blockType)) {
     const Component = regionRegistry[
       block.blockType as OwnRegionBlockType

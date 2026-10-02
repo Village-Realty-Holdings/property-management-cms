@@ -48,7 +48,8 @@ type Props =
  * this, so the Admin and the Site agree.
  *
  * - **Header:** Utility strips stack above; the Logo, Navigation and Header
- *   actions follow in one row that wraps on a small screen.
+ *   actions follow in one row that wraps on a small screen. A Container is
+ *   a band of its own, in its place among them.
  * - **Footer:** the Blocks stack in order, each a band on the Footer's
  *   surface (Footer columns, the Legal bar, and any Newsletter or Call to
  *   action, which keep their own background).
@@ -85,6 +86,7 @@ export function RegionBlocks({ region, blocks, context }: Props) {
         regionTakes(region, block.blockType)
           ? renderRegionBlock(region, block, {
               ...context,
+              region,
               index: regionIndexBase[region] + position,
             })
           : null,
@@ -106,23 +108,37 @@ export function RegionBlocks({ region, blocks, context }: Props) {
   }
 
   const strips = items.filter((item) => item.block.blockType === "utilityStrip")
-  const row = items.filter((item) => item.block.blockType !== "utilityStrip")
+  // The rest, in order: a Container is a band of its own, and the Blocks
+  // between Containers share a row.
+  const bands: { key: string; row: boolean; items: typeof items }[] = []
+  for (const item of items) {
+    if (item.block.blockType === "utilityStrip") continue
+    const row = item.block.blockType !== "container"
+    const last = bands[bands.length - 1]
+    if (row && last?.row) last.items.push(item)
+    else bands.push({ key: item.key, row, items: [item] })
+  }
   return (
     <header className="border-b border-border bg-background text-foreground">
       {strips.map((item) => (
         <Fragment key={item.key}>{item.node}</Fragment>
       ))}
-      {row.length > 0 && (
-        <div
-          className={cn(
-            container,
-            "flex flex-wrap items-center gap-x-6 gap-y-3 py-4"
-          )}
-        >
-          {row.map((item) => (
-            <Fragment key={item.key}>{item.node}</Fragment>
-          ))}
-        </div>
+      {bands.map((band) =>
+        band.row ? (
+          <div
+            key={band.key}
+            className={cn(
+              container,
+              "flex flex-wrap items-center gap-x-6 gap-y-3 py-4"
+            )}
+          >
+            {band.items.map((item) => (
+              <Fragment key={item.key}>{item.node}</Fragment>
+            ))}
+          </div>
+        ) : (
+          <Fragment key={band.key}>{band.items[0]!.node}</Fragment>
+        )
       )}
     </header>
   )

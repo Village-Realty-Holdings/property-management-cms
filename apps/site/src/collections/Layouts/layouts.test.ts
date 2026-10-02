@@ -378,10 +378,67 @@ describe("region Blocks", () => {
     expect(layout.footer?.map((b) => b.blockType)).toEqual(["legalBar"])
   })
 
-  it("does not keep a footer Block in the header", async () => {
-    const layout = await make("Main", {
-      header: [{ blockType: "legalBar", text: "x" }],
+  it("refuses a footer Block in the header, and says which", async () => {
+    await expect(
+      make("Main", { header: [{ blockType: "legalBar", text: "x" }] })
+    ).rejects.toMatchObject({
+      data: {
+        errors: [
+          {
+            path: "header",
+            message: "A “legalBar” Block can't be in a Header. Remove it.",
+          },
+        ],
+      },
     })
-    expect(layout.header).toEqual([])
+  })
+
+  it("takes a Container in the header and the footer, with the region's Blocks", async () => {
+    const box = (children: object[]) => ({
+      blockType: "container" as const,
+      columns: "1" as const,
+      gap: "medium" as const,
+      align: "centre" as const,
+      justify: "centre" as const,
+      width: "page" as const,
+      background: "primary" as const,
+      children,
+    })
+    const layout = await make("Boxed", {
+      header: [box([{ blockType: "logo", size: "xlarge" }])],
+      footer: [
+        box([
+          { blockType: "logo", size: "large" },
+          { blockType: "legalBar", text: "© {year}" },
+        ]),
+      ],
+    } as never)
+    expect(layout.header).toMatchObject([
+      {
+        blockType: "container",
+        justify: "centre",
+        children: [{ blockType: "logo", size: "xlarge" }],
+      },
+    ])
+    expect(
+      (
+        layout.footer?.[0] as { children: { blockType: string }[] }
+      ).children.map((child) => child.blockType)
+    ).toEqual(["logo", "legalBar"])
+
+    await expect(
+      make("Wrong", {
+        header: [box([{ blockType: "legalBar", text: "x" }])],
+      } as never)
+    ).rejects.toMatchObject({
+      data: {
+        errors: [
+          {
+            message:
+              "A “legalBar” Block can't be in a Container in a Header. Remove it.",
+          },
+        ],
+      },
+    })
   })
 })

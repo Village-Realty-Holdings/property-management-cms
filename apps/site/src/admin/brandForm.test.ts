@@ -85,6 +85,7 @@ describe("brand values and stored data", () => {
       name: "Warren Beach",
       tagline: "Sand between your toes",
       logo: 4,
+      logoLight: null,
       contact: {
         phone: "+1 555 010 0100",
         email: "hello@warren.test",

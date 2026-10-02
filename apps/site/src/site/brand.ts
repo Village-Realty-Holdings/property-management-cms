@@ -10,6 +10,8 @@ export type Brand = {
   name: string
   tagline: string | null
   logo: Image | null
+  /** The logo for a Primary or Dark band, when the Brand has one. */
+  logoLight?: Image | null
   phone: string | null
   email: string | null
   address: string | null
@@ -36,6 +38,7 @@ export function resolveBrand(brand: BrandGlobal | null): Brand {
     name: text(brand?.name) ?? DEFAULT_NAME,
     tagline: text(brand?.tagline),
     logo: imageOf(brand?.logo),
+    logoLight: imageOf(brand?.logoLight),
     phone: text(contact?.phone),
     email: text(contact?.email),
     address: text(contact?.address),

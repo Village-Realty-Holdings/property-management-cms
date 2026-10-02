@@ -4,7 +4,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FooterColumnsBlock } from "../../payload-types"
 import { EditableText } from "../blocks/Editable"
-import { container } from "../blocks/types"
+import { container, embeddedBox } from "../blocks/types"
 import { displayFont } from "../display"
 import { linksOf } from "./links"
 import { focusOutline, RegionLink } from "./RegionLink"
@@ -106,7 +106,8 @@ export function FooterColumns({
     <div
       className={cn(
         container,
-        "grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-x-8 gap-y-10 py-10"
+        embeddedBox,
+        "grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-x-8 gap-y-10 py-10 in-data-container:py-0"
       )}
     >
       {columns.map((column) => (
