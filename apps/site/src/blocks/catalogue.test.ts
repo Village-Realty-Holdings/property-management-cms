@@ -73,6 +73,7 @@ describe("the Block catalogue", () => {
     ).toEqual([
       "Rich text",
       "Call to action",
+      "Steps",
       "Features",
       "Stats",
       "Image + text",

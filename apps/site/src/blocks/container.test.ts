@@ -382,27 +382,27 @@ describe("a Page with Containers", () => {
         draft: true,
         ...asStaff,
       })
-    const steps = { ...catalogue.steps.defaults }
+    const testimonials = { ...catalogue.testimonials.defaults }
     await expect(
-      refused([container([cta("ok"), steps], { columns: "2" })])
+      refused([container([cta("ok"), testimonials], { columns: "2" })])
     ).rejects.toMatchObject({
       data: {
         errors: [
           {
             path: "blocks.0.children",
-            message: tooNarrow("Block 2", "Steps"),
+            message: tooNarrow("Block 2", "Testimonials"),
           },
         ],
       },
     })
     await expect(
-      refused([container([container([steps])], { columns: "3" })])
+      refused([container([container([testimonials])], { columns: "3" })])
     ).rejects.toMatchObject({
       data: {
         errors: [
           {
             path: "blocks.0.children.0.children",
-            message: tooNarrow("Block 1", "Steps"),
+            message: tooNarrow("Block 1", "Testimonials"),
           },
         ],
       },

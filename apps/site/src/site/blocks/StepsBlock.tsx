@@ -19,17 +19,18 @@ const discs = {
   dark: "bg-surface-dark-foreground text-surface-dark",
 } as const
 
-/** Columns at `lg`, by the number of steps shown. (Class names are written out so Tailwind can see them.) */
+/** Columns at `fit-lg`, by the number of steps shown. (Class names are written out so Tailwind can see them.) */
 const columns: Record<number, string> = {
-  1: "lg:grid-cols-1",
-  2: "lg:grid-cols-2",
-  3: "lg:grid-cols-3",
+  1: "fit-lg:grid-cols-1",
+  2: "fit-lg:grid-cols-2",
+  3: "fit-lg:grid-cols-3",
 }
 
 /**
  * Steps: three or four numbered steps, each with a title and text, in an
  * ordered list. A step with no title is left out and the rest are numbered
- * on; each keeps its place in the stored list for in-place editing.
+ * on; each keeps its place in the stored list for in-place editing. It lays
+ * itself out by the room it has (`fit-*`), so it fits a Container's column.
  */
 export function StepsBlock({
   block,
@@ -61,7 +62,7 @@ export function StepsBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>
@@ -71,7 +72,7 @@ export function StepsBlock({
             field="intro"
             context={context}
             multiline
-            className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
           >
             {intro}
           </EditableText>
@@ -80,8 +81,8 @@ export function StepsBlock({
       {steps.length > 0 && (
         <ol
           className={cn(
-            "grid list-none gap-x-8 gap-y-10 sm:grid-cols-2",
-            columns[steps.length] ?? "lg:grid-cols-4"
+            "grid list-none gap-x-8 gap-y-10 fit-sm:grid-cols-2",
+            columns[steps.length] ?? "fit-lg:grid-cols-4"
           )}
         >
           {steps.map((step, i) => (
