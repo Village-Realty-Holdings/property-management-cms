@@ -8,7 +8,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { focusRings, type BlockSurface } from "./BlockButton"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId, type BlockPlace } from "./types"
 
 const address = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -46,12 +46,12 @@ export function NewsletterForm({
   buttonLabel: string
   /** The coloured background the form sits on, when it is not the page. */
   surface?: Extract<BlockSurface, "primary" | "dark">
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
 }) {
   const [email, setEmail] = useState("")
   const [problem, setProblem] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-  const base = `block-${context.index}-newsletter`
+  const base = blockId(context, "newsletter")
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

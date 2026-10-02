@@ -5,7 +5,7 @@ import { RichTextEditing } from "../editing/RichTextEditing"
 import { canEditInPlace } from "../editing/canEditInPlace"
 import { hasText, RichText } from "../RichText"
 import { BlockSection, surfaceOf } from "./BlockSection"
-import type { BlockContext } from "./types"
+import { type BlockContext, placeOf } from "./types"
 
 type LexicalNode = { type?: string; text?: unknown; children?: LexicalNode[] }
 
@@ -49,7 +49,7 @@ export function RichTextBlock({
     <BlockSection
       background={background}
       // The section is a region, so it needs a name: its heading, or its place.
-      label={firstHeading(block.content) ?? `Section ${context.index + 1}`}
+      label={firstHeading(block.content) ?? `Section ${placeOf(context)}`}
     >
       {editable ? (
         // Rich text is edited in place, with a floating toolbar. Content with

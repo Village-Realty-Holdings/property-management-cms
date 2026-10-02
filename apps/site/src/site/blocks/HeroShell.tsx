@@ -12,6 +12,8 @@ import {
   embeddedBand,
   embeddedBox,
   type BlockContext,
+  blockId,
+  isFirstOnPage,
 } from "./types"
 
 /**
@@ -80,9 +82,9 @@ export function HeroShell({
   children?: ReactNode
   foot?: ReactNode
 }) {
-  const first = context.index === 0
+  const first = isFirstOnPage(context)
   const Heading = first ? "h1" : "h2"
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const eyebrowText = eyebrow?.trim()
   const subheadingText = subheading?.trim()
 

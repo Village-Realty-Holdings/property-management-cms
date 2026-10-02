@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react"
 
 import { EditingText } from "../editing/EditingText"
-import type { BlockContext } from "./types"
+import type { BlockContext, BlockPlace } from "./types"
 
 type Tag = Extract<
   ElementType,
@@ -20,7 +20,7 @@ type Props = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
    * ends the edit, which suits a heading, a label or a short line.
    */
   multiline?: boolean
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
   /**
    * The text, which may carry inline markup that leaves its `textContent`
    * whole (a Hero's styled accent word), so the canvas still reads the field.

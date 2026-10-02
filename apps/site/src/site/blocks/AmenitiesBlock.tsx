@@ -10,7 +10,7 @@ import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { IconList } from "./IconList"
 import { mosaicTiles } from "./mosaic"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 type Item = { index: number; label: string } & Pick<
   AmenitiesBlockData["items"][number],
@@ -91,7 +91,7 @@ export function AmenitiesBlock({
     }))
     .filter((item) => item.label)
   const tiles = mosaicTiles(items.length)
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

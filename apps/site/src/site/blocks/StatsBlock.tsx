@@ -4,7 +4,7 @@ import type { StatsBlock as StatsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /** Columns at `lg`, by the number of figures shown. (Class names are written out so Tailwind can see them.) */
 const columns: Record<number, string> = {
@@ -33,7 +33,7 @@ export function StatsBlock({
     const label = stat.label?.trim()
     return value && label ? [{ position, value, label, id: stat.id }] : []
   })
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

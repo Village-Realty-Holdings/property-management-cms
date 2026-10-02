@@ -64,6 +64,7 @@ export function ContainerBlock({
   const background = backgroundOf(block.background)
   const paints = !nested || background !== "default"
   const surface = paints ? background : context.surface
+  const within = [...(context.within ?? []), context.index]
   const mark = { [CONTAINER_MARK]: "" }
   return (
     <div
@@ -103,6 +104,7 @@ export function ContainerBlock({
                   {renderBlock(child, {
                     ...context,
                     index,
+                    within,
                     surface,
                     editing: false,
                   })}

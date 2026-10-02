@@ -20,7 +20,14 @@ export type BlockOf<T extends BlockType> = Extract<PageBlock, { blockType: T }>
  * Container, the surface the Container puts it on.
  */
 export type BlockContext = {
+  /** Its place in the list it is in, counting from 0. */
   index: number
+  /**
+   * The places of the Containers it is inside, from the Page down: `[1, 0]`
+   * for a Block in the first Block of the Page's second Block. Unset for a
+   * Block on the Page itself.
+   */
+  within?: readonly number[]
   fixtures: SiteFixtures
   editing: boolean
   /**
@@ -41,6 +48,33 @@ export type BlockComponent<B extends PageBlock = PageBlock> = (props: {
   block: B
   context: BlockContext
 }) => ReactNode
+
+/** Where a Block is: its place, and the Containers it is inside. */
+export type BlockPlace = Pick<BlockContext, "index" | "within">
+
+const pathOf = ({ index, within }: BlockPlace) => [...(within ?? []), index]
+
+/**
+ * An id for one of a Block's elements: "block-1-0-2-heading". It comes from
+ * the Block's path from the Page down, so the same Block at any depth never
+ * shares an id with another, and the Site and the Visual Editor's canvas
+ * draw the same markup.
+ */
+export const blockId = (context: BlockPlace, name: string) =>
+  `block-${pathOf(context).join("-")}-${name}`
+
+/**
+ * Whether the Block is the first on the Page, which holds the Page's h1 and
+ * preloads its image. The first Block of a Container is not.
+ */
+export const isFirstOnPage = (context: BlockPlace) =>
+  context.index === 0 && !context.within?.length
+
+/** The Block's place as people count it: "2", or "2.1.3" inside Containers. */
+export const placeOf = (context: BlockPlace) =>
+  pathOf(context)
+    .map((index) => index + 1)
+    .join(".")
 
 /** Page width and side padding shared by every Block section. */
 export const container = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"

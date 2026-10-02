@@ -8,7 +8,7 @@ import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { IconList } from "./IconList"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Image + text: an image on the left or right beside text, with an optional
@@ -32,7 +32,7 @@ export function ImageTextBlock({
     text: point.text,
     field: `points.${index}.text`,
   }))
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

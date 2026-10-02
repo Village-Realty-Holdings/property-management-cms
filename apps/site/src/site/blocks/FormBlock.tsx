@@ -4,7 +4,7 @@ import type { FormBlock as FormBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 import { VisualForm } from "./VisualForm"
 
 /**
@@ -21,7 +21,7 @@ export function FormBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const intro = block.intro?.trim()
 
   return (
@@ -59,7 +59,11 @@ export function FormBlock({
           block.successMessage?.trim() ||
           "Thank you. We have received your message and will be in touch soon."
         }
-        context={{ index: context.index, editing: context.editing }}
+        context={{
+          index: context.index,
+          within: context.within,
+          editing: context.editing,
+        }}
       />
     </BlockSection>
   )

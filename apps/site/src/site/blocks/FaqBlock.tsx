@@ -11,7 +11,7 @@ import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { faqPageJsonLd, jsonLdScript } from "./structuredData"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * FAQ: question and answer pairs in an accordion (one open at a time, by
@@ -29,7 +29,7 @@ export function FaqBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   // Keep each pair's position in the Block, so an edit in the Visual Editor
   // names the right field even when a blank pair is skipped.
   const items = (block.questions ?? []).flatMap((item, index) =>
@@ -57,7 +57,7 @@ export function FaqBlock({
           {items.map(({ item, index }) => (
             <AccordionItem key={item.id ?? index} value={`faq-${index}`}>
               <AccordionTrigger
-                id={`block-${context.index}-faq-${index}-question`}
+                id={blockId(context, `faq-${index}-question`)}
                 className="py-4 text-base"
               >
                 <EditableText
@@ -68,7 +68,7 @@ export function FaqBlock({
                 </EditableText>
               </AccordionTrigger>
               <AccordionContent
-                id={`block-${context.index}-faq-${index}-answer`}
+                id={blockId(context, `faq-${index}-answer`)}
                 className="text-base"
               >
                 <EditableText

@@ -15,7 +15,7 @@ import {
   type FormFieldName,
   type FormValues,
 } from "./formValidation"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId, type BlockPlace } from "./types"
 
 /** One input: its name in the form, its label, and how the browser fills it. */
 type Control = {
@@ -116,11 +116,11 @@ export function VisualForm({
   fields: readonly FormFieldName[]
   submitLabel: string
   successMessage: string
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
 }) {
   const shown = fields.length > 0 ? [...new Set(fields)] : DEFAULT_FIELDS
   const inputs = shown.flatMap((field) => controls[field] ?? [])
-  const id = (key: string) => `block-${context.index}-form-${key}`
+  const id = (key: string) => blockId(context, `form-${key}`)
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [attempted, setAttempted] = useState(false)

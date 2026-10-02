@@ -8,7 +8,7 @@ import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { maxStars, starsOf } from "./testimonials"
 import { TestimonialsCarousel } from "./TestimonialsCarousel"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 type Testimonial = NonNullable<TestimonialsBlockData["testimonials"]>[number]
 
@@ -63,7 +63,7 @@ export function TestimonialsBlock({
   const heading = block.heading?.trim()
   const testimonials = block.testimonials ?? []
   if (!heading || testimonials.length === 0) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const cards = testimonials.map((testimonial, i) => (
     <TestimonialCard key={testimonial.id ?? i} testimonial={testimonial} />
   ))

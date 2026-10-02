@@ -5,7 +5,7 @@ import { backgroundOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { isIconName } from "./icons"
-import type { BlockContext } from "./types"
+import type { BlockContext, BlockPlace } from "./types"
 
 /**
  * The icon's badge on each background: a chip in the Theme's own pair of
@@ -72,7 +72,7 @@ export function IconList({
   items: readonly IconListItem[]
   background?: string | null
   columns?: "one" | "grid"
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
   className?: string
 }) {
   const shown = items

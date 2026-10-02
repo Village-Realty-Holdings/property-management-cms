@@ -7,7 +7,7 @@ import { EditableText } from "./Editable"
 import { RentalCardGrid } from "./rentals/RentalCardGrid"
 import { RentalsEmpty } from "./rentals/RentalsEmpty"
 import { largeGroup } from "./rentals/select"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Large-group rentals: the Site's Rentals that sleep at least a given
@@ -22,7 +22,7 @@ export function LargeGroupRentalsBlock({
   context: BlockContext
 }) {
   const heading = block.heading?.trim()
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const rentals = largeGroup(context.fixtures.rentals, block.minSleeps)
   return (
     <BlockSection

@@ -6,7 +6,7 @@ import { BlockButton, linkOf, type BlockSurface } from "./BlockButton"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Owner band: a pitch to property owners, their benefits and a call to
@@ -33,7 +33,7 @@ export function OwnerBandBlock({
   const background = surfaceOf(block.background, context)
   const surface: BlockSurface | undefined =
     background === "primary" || background === "dark" ? background : undefined
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

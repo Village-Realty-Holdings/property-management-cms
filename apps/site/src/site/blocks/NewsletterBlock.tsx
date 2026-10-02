@@ -5,7 +5,7 @@ import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { NewsletterForm } from "./NewsletterForm"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Newsletter: a heading, some text and a visual-only email form. The text
@@ -23,7 +23,7 @@ export function NewsletterBlock({
   if (!heading) return null
   const text = block.text?.trim()
   const background = surfaceOf(block.background, context)
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

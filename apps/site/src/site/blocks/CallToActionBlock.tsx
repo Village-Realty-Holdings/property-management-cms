@@ -10,7 +10,7 @@ import {
 } from "./BlockButton"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
@@ -57,7 +57,7 @@ export function CallToActionBlock({
   const body = block.body?.trim()
   const button = linkOf(block.button)
   const style = styles[block.style] ?? styles.primary
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

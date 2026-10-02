@@ -9,7 +9,7 @@ import { imageOf } from "../brand"
 import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * A link that opens the address in a maps app. It is a plain link, not an
@@ -97,7 +97,7 @@ export function LocationBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const address = block.address?.trim() ?? ""
   const text = block.text?.trim()
   const mapImage = block.map === "image" ? imageOf(block.mapImage) : null

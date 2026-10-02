@@ -9,7 +9,7 @@ import { NativeSelect } from "@workspace/ui/components/native-select"
 import { Toaster } from "@workspace/ui/components/sonner"
 
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId, type BlockPlace } from "./types"
 
 const labelClass = "text-sm font-medium"
 
@@ -45,9 +45,9 @@ export function SearchHeroForm({
 }: {
   searchLabel: string
   locations: string[]
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
 }) {
-  const id = (field: string) => `block-${context.index}-search-${field}`
+  const id = (field: string) => blockId(context, `search-${field}`)
   const [checkIn, setCheckIn] = useState("")
 
   function submit(event: FormEvent<HTMLFormElement>) {

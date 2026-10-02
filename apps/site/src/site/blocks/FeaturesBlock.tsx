@@ -6,7 +6,7 @@ import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { IconBadge } from "./IconList"
 import { featureColumns } from "./mosaic"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Features: a grid of icon, title and text. The icon is a Lucide icon
@@ -31,7 +31,7 @@ export function FeaturesBlock({
       text: feature.text?.trim() ?? "",
     }))
     .filter((feature) => feature.title || feature.text)
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}

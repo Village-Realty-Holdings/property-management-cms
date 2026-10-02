@@ -13,7 +13,7 @@ import {
 } from "./BlockButton"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /** How many posts the teaser shows. */
 const POSTS_SHOWN = 3
@@ -112,7 +112,7 @@ export function BlogTeaserBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const posts = context.fixtures.posts.slice(0, POSTS_SHOWN)
   const background = onBackground[surfaceOf(block.background, context)]
   const allPosts = linkOf(block.allPostsLink)

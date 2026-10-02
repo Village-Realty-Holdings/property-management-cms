@@ -11,7 +11,7 @@ import {
   trustLogosOf,
   type TrustSurface,
 } from "./TrustItems"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Trust strip: text or stat items, or partner logos. The heading is
@@ -27,7 +27,7 @@ export function TrustStripBlock({
   context: BlockContext
 }) {
   const heading = block.heading?.trim()
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const logos = block.variant === "logos"
   const items = logos ? [] : trustItemsOf(block.items)
   const partners = logos ? trustLogosOf(block.logos) : []

@@ -8,7 +8,7 @@ import { RentalCardGrid } from "./rentals/RentalCardGrid"
 import { RentalCarousel } from "./rentals/RentalCarousel"
 import { RentalsEmpty } from "./rentals/RentalsEmpty"
 import { featured } from "./rentals/select"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Featured rentals: the Site's first few Rentals as cards, in a carousel or
@@ -22,7 +22,7 @@ export function FeaturedRentalsBlock({
   context: BlockContext
 }) {
   const heading = block.heading?.trim()
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const rentals = featured(context.fixtures.rentals, block.count)
   return (
     <BlockSection

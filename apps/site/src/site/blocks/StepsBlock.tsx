@@ -4,7 +4,7 @@ import type { StepsBlock as StepsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * The number's disc: the background's text colour as the fill and the
@@ -48,7 +48,7 @@ export function StepsBlock({
       : []
   })
   const disc = discs[surfaceOf(block.background, context)]
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
       background={surfaceOf(block.background, context)}
