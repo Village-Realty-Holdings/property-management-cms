@@ -99,12 +99,27 @@ function viewportClasses(root: Element) {
 
 const narrow = catalogueEntries.filter((entry) => entry.fitsNarrow)
 
+/** The other ways a Block lays itself out than its sample's. */
+const otherVariants: Record<string, Record<string, unknown>[]> = {
+  imageText: [{ imageSide: "right" }],
+  amenities: [{ variant: "icons" }],
+}
+
 describe("a Block that fits a narrow column", () => {
   it.each(narrow.map((entry) => [entry.label, entry] as const))(
     "%s lays itself out by the room it has, not the viewport's width",
     (_label, entry) => {
-      const sample = sampleFor(entry.blockType)
-      for (const block of [sample, columnsOf(sample, "3")]) {
+      const samples = [
+        sampleFor(entry.blockType),
+        ...(otherVariants[entry.blockType] ?? []).map((over) => ({
+          ...sampleFor(entry.blockType),
+          ...over,
+        })),
+      ]
+      for (const block of samples.flatMap((sample) => [
+        sample,
+        columnsOf(sample, "3"),
+      ])) {
         const { container: root } = render(
           <Block block={block} index={1} editing={false} />
         )

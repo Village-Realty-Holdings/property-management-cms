@@ -125,8 +125,8 @@ describe("Features", () => {
     const block = features({ features: features().features.slice(0, 4) })
     const { container } = render(<Block block={block} index={1} />)
     const grid = container.querySelector("ul")!
-    expect(grid.className).toContain("sm:grid-cols-2")
-    expect(grid.className).not.toContain("lg:grid-cols-3")
+    expect(grid.className).toContain("fit-sm:grid-cols-2")
+    expect(grid.className).not.toContain("fit-lg:grid-cols-3")
   })
 
   it("keeps a feature whose icon name is unknown, without the icon", async () => {
@@ -217,7 +217,9 @@ describe("Amenities", () => {
     })
     const { container } = render(<Block block={block} index={1} />)
     const tiles = within(container).getAllByRole("listitem")
-    expect(tiles.every((t) => t.className.includes("md:col-span-2"))).toBe(true)
+    expect(tiles.every((t) => t.className.includes("fit-md:col-span-2"))).toBe(
+      true
+    )
   })
 
   it("as a mosaic: a tile without a photo is the dark surface with its icon and label", async () => {

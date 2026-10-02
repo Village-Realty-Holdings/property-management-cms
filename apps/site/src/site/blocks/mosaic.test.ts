@@ -22,7 +22,7 @@ describe("mosaicTiles", () => {
 
   it("makes the first of every five large, so five items fill two rows", () => {
     const tiles = mosaicTiles(5)
-    expect(tiles[0]?.className).toContain("md:row-span-2")
+    expect(tiles[0]?.className).toContain("fit-md:row-span-2")
     expect(tiles[0]?.className).toContain("col-span-2")
     expect(tiles.slice(1).every((t) => t.className === "")).toBe(true)
   })
@@ -38,9 +38,11 @@ describe("mosaicTiles", () => {
   it("stretches the last tiles across the row when they would stand alone", () => {
     const one = mosaicTiles(1)[0]
     expect(one?.className).toContain("col-span-2")
-    expect(one?.className).toContain("md:col-span-4")
+    expect(one?.className).toContain("fit-md:col-span-4")
     const two = mosaicTiles(2)
-    expect(two.every((t) => t.className.includes("md:col-span-2"))).toBe(true)
+    expect(two.every((t) => t.className.includes("fit-md:col-span-2"))).toBe(
+      true
+    )
   })
 })
 
