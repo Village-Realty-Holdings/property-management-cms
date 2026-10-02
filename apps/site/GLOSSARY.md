@@ -26,6 +26,10 @@ _Avoid_: Skin, styles, look and feel
 A named copy of the Theme's settings that staff keep, to apply later or to move to another Site as a file. Saved Themes are listed with the built-in presets under Tools, Themes. The Site still has one Theme: applying a preset or a Saved Theme saves the Theme with those settings, live at once, and the Theme's history can put the earlier one back.
 _Avoid_: Theme (for one in the list that isn't applied), template, skin
 
+**Starter Kit**:
+What a new Site is set up from in one go: a suggested Theme and a first set of Pages with their Layout, filled in with the Brand and SEO details the form asks for. Kits are built in, such as Tuck-in. Applying one saves the Brand, SEO and Theme and adds its Pages as Drafts; it never replaces a Page that is already there.
+_Avoid_: Template (a Page Template is one Page to start a Page from), preset, seed, site template
+
 **Font**:
 A font family staff have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by staff, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
 A Font with no files is treated as missing: the Site shows the built-in stand-in instead, never a bare family name that would depend on the visitor's machine.
@@ -44,7 +48,7 @@ _Avoid_: Template, shell, chrome, master page
 
 **Page Template**:
 A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add two starters: Home, and Tuck-in (an announcement that a company has joined the brand).
-_Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made)
+_Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made), Starter Kit (that sets up a Site)
 
 **Block**:
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action. A Block sits on the Page itself or inside a Container.

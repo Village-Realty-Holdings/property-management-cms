@@ -13,7 +13,7 @@ describe("navGroups", () => {
       [null, ["Dashboard"]],
       ["Content", ["Layouts", "Pages", "Media"]],
       ["Settings", ["Brand", "SEO", "Theme", "Assets"]],
-      ["Tools", ["Replace Text", "Replace Image", "Themes"]],
+      ["Tools", ["Replace Text", "Replace Image", "Themes", "Starter Kits"]],
     ])
   })
 
@@ -30,6 +30,7 @@ describe("navGroups", () => {
       "/admin/tools/replace-text",
       "/admin/tools/replace-image",
       "/admin/tools/themes",
+      "/admin/tools/starter-kits",
     ])
   })
 })
