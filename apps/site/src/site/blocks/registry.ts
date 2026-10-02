@@ -2,6 +2,7 @@ import { createElement } from "react"
 
 import { AmenitiesBlock } from "./AmenitiesBlock"
 import { BlogTeaserBlock } from "./BlogTeaserBlock"
+import { ButtonBlock } from "./ButtonBlock"
 import { CallToActionBlock } from "./CallToActionBlock"
 import { ContainerBlock } from "./ContainerBlock"
 import { FaqBlock } from "./FaqBlock"
@@ -9,6 +10,7 @@ import { FeaturedRentalsBlock } from "./FeaturedRentalsBlock"
 import { FeaturesBlock } from "./FeaturesBlock"
 import { FormBlock } from "./FormBlock"
 import { HeroBlock } from "./HeroBlock"
+import { ImageBlock } from "./ImageBlock"
 import { ImageTextBlock } from "./ImageTextBlock"
 import { LargeGroupRentalsBlock } from "./LargeGroupRentalsBlock"
 import { LocationBlock } from "./LocationBlock"
@@ -56,6 +58,8 @@ export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
   location: LocationBlock,
   faq: FaqBlock,
   form: FormBlock,
+  button: ButtonBlock,
+  image: ImageBlock,
   container: ContainerBlock,
 }
 

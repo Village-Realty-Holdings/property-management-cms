@@ -69,10 +69,12 @@ describe("a Page with the same Blocks at three depths", () => {
     expect(ids.length).toBeGreaterThan(80)
     const repeated = ids.filter((id, i) => ids.indexOf(id) !== i)
     expect(repeated).toEqual([])
+    // The Container comes after every other Block, at each depth.
+    const c = everyBlock().length
     expect(ids).toContain("block-3-heading")
-    expect(ids).toContain("block-20-3-heading")
-    expect(ids).toContain("block-20-20-3-heading")
-    expect(ids).toContain("block-20-20-20-3-heading")
+    expect(ids).toContain(`block-${c}-3-heading`)
+    expect(ids).toContain(`block-${c}-${c}-3-heading`)
+    expect(ids).toContain(`block-${c}-${c}-${c}-3-heading`)
     for (const attribute of ["aria-labelledby", "aria-controls", "for"]) {
       for (const el of container.querySelectorAll(`[${attribute}]`)) {
         for (const id of el.getAttribute(attribute)!.split(" ")) {

@@ -11,6 +11,7 @@ import {
   BACKGROUNDS,
   BACKGROUND_TOKEN,
   PAGE_BLOCKS,
+  SMALL_BLOCKS,
   blockPath,
   horizontalOverflow,
   tokenColour,
@@ -27,7 +28,7 @@ import {
  * Container pads. And on each of the four backgrounds the Container is
  * painted with that background's Theme token and axe finds nothing against
  * WCAG 2.2 AA, so the text, links and buttons the Block draws there keep
- * their contrast.
+ * their contrast. The Button Block is checked in each of its three styles.
  */
 
 let browser: Browser
@@ -66,7 +67,9 @@ function boxes(page: Page) {
   })
 }
 
-describe.each(PAGE_BLOCKS.map((block) => [block.name] as const))(
+const BLOCKS = [...PAGE_BLOCKS, ...SMALL_BLOCKS]
+
+describe.each(BLOCKS.map((block) => [block.name] as const))(
   "the %s Block inside a Container",
   (name) => {
     it("fits its cell on a desktop and on a phone, and only the Container pads", async () => {
@@ -116,3 +119,28 @@ describe.each(PAGE_BLOCKS.map((block) => [block.name] as const))(
     )
   }
 )
+
+describe("the Button Block in each style", () => {
+  it.each(
+    (["primary", "accent", "outline"] as const).flatMap((style) =>
+      BACKGROUNDS.map((background) => [style, background] as const)
+    )
+  )(
+    "%s, in a Container on the %s background, passes axe",
+    async (style, background) => {
+      const { context, page } = await openSession(browser)
+      try {
+        await visit(
+          page,
+          await blockPath(browser, "Button", { container: background, style })
+        )
+        await expect(
+          page.locator("main [data-container] a").count()
+        ).resolves.toBe(1)
+        expect(await axeViolations(page)).toEqual([])
+      } finally {
+        await context.close()
+      }
+    }
+  )
+})

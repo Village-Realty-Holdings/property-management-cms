@@ -118,6 +118,11 @@ const withImage: Record<
       ],
     }),
   },
+  image: {
+    label: "Image",
+    where: "Image",
+    block: (image) => ({ image, aspect: "original" }),
+  },
   container: {
     label: "Container",
     where: "Hero 2: Image",

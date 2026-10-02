@@ -94,6 +94,16 @@ export const PAGE_BLOCKS: readonly BlockSpec[] = [
   { name: "Form", backgrounds: true },
 ]
 
+/**
+ * The small Blocks that came with the Container (Container Blocks, Phase 2).
+ * They have no background of their own: they sit on the page's, or on their
+ * Container's.
+ */
+export const SMALL_BLOCKS: readonly BlockSpec[] = [
+  { name: "Button", backgrounds: false },
+  { name: "Image", backgrounds: false },
+]
+
 /** A file-name-safe id for a Block: "Image + text" is "image-text". */
 export function blockFileId(name: string): string {
   return name
@@ -117,7 +127,7 @@ export async function catalogueLinks(
   try {
     await visit(page, CATALOGUE_PATH)
     const found = new Map<string, string>()
-    for (const { name } of PAGE_BLOCKS) {
+    for (const { name } of [...PAGE_BLOCKS, ...SMALL_BLOCKS]) {
       const link = page.getByRole("link", { name, exact: true })
       if ((await link.count()) !== 1) continue
       const href = await link.getAttribute("href")

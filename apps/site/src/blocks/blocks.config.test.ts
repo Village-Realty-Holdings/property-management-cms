@@ -2,6 +2,7 @@ import type { Block, Field } from "payload"
 import { describe, expect, it } from "vitest"
 
 import { backgrounds } from "../fields/background"
+import { validateHref } from "../fields/link"
 import { iconNames } from "../site/blocks/icons"
 import { CallToAction } from "./CallToAction"
 import { pageBlocks } from "."
@@ -488,5 +489,51 @@ describe("Form", () => {
     expect(loose(fields, "submitLabel").defaultValue).toBeTruthy()
     expect(isRequired(fields, "successMessage")).toBe(true)
     expect(loose(fields, "successMessage").defaultValue).toBeTruthy()
+  })
+})
+
+describe("Button", () => {
+  it("has a label and a link, validated like every link", () => {
+    const { fields } = bySlug("button")
+    expect(field(fields, "link.label").type).toBe("text")
+    const href = loose(fields, "link.href")
+    expect(href.validate).toBe(validateHref)
+    expect(href.validate("javascript:alert(1)")).toMatch(/Site path/)
+  })
+
+  it("is Primary, Accent or Outline, at the start, the centre or the end", () => {
+    const { fields } = bySlug("button")
+    const style = loose(fields, "style")
+    expect(optionValues(style)).toEqual(["primary", "accent", "outline"])
+    expect(style.defaultValue).toBe("primary")
+    expect(style.required).toBe(true)
+    const align = loose(fields, "align")
+    expect(optionValues(align)).toEqual(["start", "centre", "end"])
+    expect(align.defaultValue).toBe("start")
+    expect(align.required).toBe(true)
+  })
+})
+
+describe("Image", () => {
+  it("is a Media image with an optional caption, and no alt of its own", () => {
+    const { fields } = bySlug("image")
+    expect(field(fields, "image").type).toBe("upload")
+    expect(loose(fields, "image").relationTo).toBe("media")
+    expect(field(fields, "caption").type).toBe("text")
+    expect(isRequired(fields, "caption")).toBe(false)
+    expect(fields.some((f) => "name" in f && f.name === "alt")).toBe(false)
+  })
+
+  it("keeps its own shape, or is cropped to 16:9, 4:3 or 1:1", () => {
+    const aspect = loose(bySlug("image").fields, "aspect")
+    expect(optionValues(aspect)).toEqual(["original", "16x9", "4x3", "1x1"])
+    expect(aspect.options.map((o: { label: string }) => o.label)).toEqual([
+      "Original",
+      "16:9",
+      "4:3",
+      "1:1",
+    ])
+    expect(aspect.defaultValue).toBe("original")
+    expect(aspect.required).toBe(true)
   })
 })

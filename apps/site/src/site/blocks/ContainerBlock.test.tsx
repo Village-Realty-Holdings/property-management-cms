@@ -227,8 +227,11 @@ describe("a Block inside a Container", () => {
   it.each(inside.map((entry) => [entry.label, entry] as const))(
     "%s gives up its band and its side padding: only the Container pads",
     (_label, entry) => {
-      // A Hero's photo is its own: see the Heroes below.
-      const sample = { ...sampleFor(entry.blockType), image: null }
+      // A Hero's photo is its own: see the Heroes below. An Image is its image.
+      const sample =
+        entry.blockType === "image"
+          ? sampleFor("image")
+          : { ...sampleFor(entry.blockType), image: null }
       const root = draw(containerOf([sample]))
       const section = markOf(root).querySelector("section")!
       for (const name of embeddedBand.split(" "))

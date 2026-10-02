@@ -166,6 +166,8 @@ export interface Page {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | ButtonBlock
+        | ImageBlock
         | ContainerBlock
       )[]
     | null;
@@ -685,6 +687,39 @@ export interface FormBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock".
+ */
+export interface ButtonBlock {
+  link?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  style: 'primary' | 'accent' | 'outline';
+  align: 'start' | 'centre' | 'end';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'button';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock".
+ */
+export interface ImageBlock {
+  image?: (number | null) | Media;
+  /**
+   * Optional. Shown under the image.
+   */
+  caption?: string | null;
+  aspect: 'original' | '16x9' | '4x3' | '1x1';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContainerBlock".
  */
 export interface ContainerBlock {
@@ -715,6 +750,8 @@ export interface ContainerBlock {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | ButtonBlock
+        | ImageBlock
         | ContainerBlockLevel2
       )[]
     | null;
@@ -754,6 +791,8 @@ export interface ContainerBlockLevel2 {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | ButtonBlock
+        | ImageBlock
         | ContainerBlockLevel3
       )[]
     | null;
@@ -793,6 +832,8 @@ export interface ContainerBlockLevel3 {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | ButtonBlock
+        | ImageBlock
       )[]
     | null;
   id?: string | null;
@@ -1187,6 +1228,8 @@ export interface PagesSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockSelect<T>;
       };
   layout?:
@@ -1557,6 +1600,33 @@ export interface FormBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock_select".
+ */
+export interface ButtonBlockSelect<T extends boolean = true> {
+  link?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  style?: T;
+  align?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock_select".
+ */
+export interface ImageBlockSelect<T extends boolean = true> {
+  image?: T;
+  caption?: T;
+  aspect?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContainerBlock_select".
  */
 export interface ContainerBlockSelect<T extends boolean = true> {
@@ -1588,6 +1658,8 @@ export interface ContainerBlockSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockLevel2Select<T>;
       };
   id?: T;
@@ -1626,6 +1698,8 @@ export interface ContainerBlockLevel2Select<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
         container?: T | ContainerBlockLevel3Select<T>;
       };
   id?: T;
@@ -1664,6 +1738,8 @@ export interface ContainerBlockLevel3Select<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
       };
   id?: T;
   blockName?: T;
