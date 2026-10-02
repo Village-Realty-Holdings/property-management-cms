@@ -6,6 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { Switch } from "@workspace/ui/components/switch"
 
 import { applyTextReplace, previewTextReplace } from "../../actions/replace"
 import { notify, PageHeader } from "../../kit"
@@ -25,12 +26,19 @@ export function ReplaceTextForm() {
   const [replaceWith, setReplaceWith] = useState("")
   const [caseSensitive, setCaseSensitive] = useState(false)
   const [wholeWord, setWholeWord] = useState(false)
+  const [includeTemplates, setIncludeTemplates] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string>()
   const [preview, setPreview] = useState<ReplacePreview>()
   const [result, setResult] = useState<ReplaceResult>()
 
-  const query = { find, replaceWith, caseSensitive, wholeWord }
+  const query = {
+    find,
+    replaceWith,
+    caseSensitive,
+    wholeWord,
+    includeTemplates,
+  }
   const edit =
     <T,>(set: (value: T) => void) =>
     (value: T) => {
@@ -115,6 +123,27 @@ export function ReplaceTextForm() {
                   }
                 />
                 <Label htmlFor="whole-word">Whole words only</Label>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="include-templates"
+                checked={includeTemplates}
+                onCheckedChange={(checked) =>
+                  edit(setIncludeTemplates)(checked === true)
+                }
+                aria-describedby="include-templates-description"
+              />
+              <div>
+                <Label htmlFor="include-templates">
+                  Include Page Templates
+                </Label>
+                <p
+                  id="include-templates-description"
+                  className="text-sm text-muted-foreground"
+                >
+                  Off, Page Templates are left as they are.
+                </p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">

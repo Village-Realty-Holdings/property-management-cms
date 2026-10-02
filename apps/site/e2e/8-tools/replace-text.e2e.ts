@@ -2,6 +2,7 @@ import type { Page } from "playwright-core"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import { visit } from "../theme/support/browser"
+import { ORIGIN } from "../theme/support/env"
 import { blocks, type Doc } from "../3-layouts/support/api"
 import {
   accessibilityProblems,
@@ -21,6 +22,8 @@ import {
  * - Replacing asks first. Saved as Drafts, a Published Page stays as it is on
  *   the Site while a Layout, which has no Drafts, changes at once. Published
  *   now, the Page changes on the Site too.
+ * - Page Templates are left alone unless "Include Page Templates", which is
+ *   off to start with, is switched on.
  * - The whole flow works from the keyboard.
  */
 
@@ -30,6 +33,7 @@ let h: Harness
 let page1: Doc
 let page2: Doc
 let layout: Doc
+let template: Doc
 
 beforeAll(async () => {
   h = await openHarness()
@@ -45,6 +49,20 @@ beforeAll(async () => {
     name: "E2E tools layout",
     footer: [blocks.legalBar("© Quokka Rentals")],
   })
+  const made = await h.staff.context.request.post(
+    `${ORIGIN}/api/pages?draft=true`,
+    {
+      data: {
+        title: "E2E tools Quoll starter",
+        path: "/e2e-tools-starter",
+        isTemplate: true,
+        _status: "draft",
+      },
+    }
+  )
+  expect(made.ok(), await made.text()).toBe(true)
+  template = ((await made.json()) as { doc: Doc }).doc
+  h.api.track("page", template.id)
 })
 
 afterAll(async () => {
@@ -120,6 +138,24 @@ describe("Replace Text", () => {
     expect(layoutRow).toContain("Footer Block 1, Legal bar: Copyright text")
     expect(layoutRow).toContain("live on save")
     expect(await rowFor(page, "E2E tools Numbat lodge").count()).toBe(0)
+    expect(await accessibilityProblems(page)).toBe("")
+  })
+
+  it("leaves Page Templates out unless they are included", async () => {
+    const { page } = h.staff
+    await visit(page, SCREEN)
+    const include = page.getByRole("switch", { name: "Include Page Templates" })
+    expect(await include.isChecked()).toBe(false)
+    await page.getByLabel("Find", { exact: true }).fill("Quoll")
+    await page.getByRole("button", { name: "Preview" }).click()
+    await page.getByText("Nothing on the Site matches.").waitFor()
+
+    await include.click()
+    expect(await include.isChecked()).toBe(true)
+    await page.getByRole("button", { name: "Preview" }).click()
+    expect(
+      await rowFor(page, "E2E tools Quoll starter").textContent()
+    ).toContain("Page Template")
     expect(await accessibilityProblems(page)).toBe("")
   })
 

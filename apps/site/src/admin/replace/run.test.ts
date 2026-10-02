@@ -22,8 +22,11 @@ afterAll(async () => {
   await t?.teardown()
 })
 
-const swap = (find: string, replaceWith: string) =>
-  textReplacement({ find, replaceWith, caseSensitive: true, wholeWord: false })
+const swap = (find: string, replaceWith: string, templates = false) =>
+  textReplacement(
+    { find, replaceWith, caseSensitive: true, wholeWord: false },
+    { templates }
+  )
 
 const hero = (heading: string) => ({ blockType: "hero" as const, heading })
 
@@ -183,6 +186,61 @@ describe("a Published Page with changes not yet published", () => {
     expect(draft.title).toBe("Split (new)")
     expect(heading(draft)).toBe("Mu stays, rewritten")
     expect(draft._status).toBe("draft")
+  })
+})
+
+describe("a Page Template", () => {
+  const makeTemplate = (word: string) =>
+    t.payload.create({
+      collection: "pages",
+      data: {
+        title: `${word} starter`,
+        path: `/${word.toLowerCase()}-starter`,
+        blocks: [hero(`${word} stays`)],
+        isTemplate: true,
+        _status: "draft",
+      },
+      draft: true,
+      ...asStaff,
+    })
+
+  it("is left as it is, and isn't in the preview, unless asked", async () => {
+    const template = await makeTemplate("Upsilon")
+    const replacement = swap("Upsilon", "Phi")
+    expect(await previewReplace(t.payload, asStaff, replacement)).toEqual({
+      rows: [],
+      total: 0,
+    })
+    expect(
+      await applyReplace(t.payload, asStaff, replacement, "publish")
+    ).toMatchObject({ message: "Nothing to replace.", outcomes: [] })
+    const after = await draftOf(template.id)
+    expect(after.title).toBe("Upsilon starter")
+    expect(heading(after)).toBe("Upsilon stays")
+  })
+
+  it("is replaced when it is included, and stays unpublished", async () => {
+    const template = await makeTemplate("Chi")
+    const replacement = swap("Chi", "Psi", true)
+    const preview = await previewReplace(t.payload, asStaff, replacement)
+    expect(preview.rows).toMatchObject([
+      { kind: "Page Template", title: "Chi starter", matches: 2 },
+    ])
+    const result = await applyReplace(
+      t.payload,
+      asStaff,
+      replacement,
+      "publish"
+    )
+    expect(result).toMatchObject({
+      message: "Replaced in 1 Page Template.",
+      outcomes: [{ kind: "Page Template", message: "Draft saved" }],
+    })
+    const after = await draftOf(template.id)
+    expect(after.title).toBe("Psi starter")
+    expect(heading(after)).toBe("Psi stays")
+    expect(after.isTemplate).toBe(true)
+    expect(await onSite(template.id)).toBeNull()
   })
 })
 

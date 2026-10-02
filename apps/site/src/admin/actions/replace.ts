@@ -23,6 +23,10 @@ export type PreviewResult =
   | { ok: true; preview: ReplacePreview }
   | { ok: false; message: string }
 
+/** The screens' "Include Page Templates" switch: off unless it says on. */
+const includesTemplates = (input: unknown) =>
+  (input as { includeTemplates?: unknown } | null)?.includeTemplates === true
+
 const refused = (message: string): ReplaceResult => ({
   ok: false,
   message,
@@ -43,7 +47,11 @@ export async function previewTextReplace(
   if (!parsed.ok) return parsed
   return {
     ok: true,
-    preview: await previewReplace(payload, as, textReplacement(parsed.query)),
+    preview: await previewReplace(
+      payload,
+      as,
+      textReplacement(parsed.query, { templates: includesTemplates(input) })
+    ),
   }
 }
 
@@ -57,7 +65,7 @@ export async function applyTextReplace(
   const result = await applyReplace(
     payload,
     as,
-    textReplacement(parsed.query),
+    textReplacement(parsed.query, { templates: includesTemplates(input) }),
     mode
   )
   if (result.outcomes.length > 0) revalidateAfterReplace()

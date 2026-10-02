@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react"
 
 import { Button } from "@workspace/ui/components/button"
+import { Label } from "@workspace/ui/components/label"
+import { Switch } from "@workspace/ui/components/switch"
 
 import { applyImageReplace, previewImageReplace } from "../../actions/replace"
 import { InlineError, notify, PageHeader } from "../../kit"
@@ -21,14 +23,16 @@ const FORM = "replace-image"
 export function ReplaceImageForm({ media }: { media: MediaOption[] }) {
   const [from, setFrom] = useState<number | null>(null)
   const [to, setTo] = useState<number | null>(null)
+  const [includeTemplates, setIncludeTemplates] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string>()
   const [preview, setPreview] = useState<ReplacePreview>()
   const [result, setResult] = useState<ReplaceResult>()
 
-  const swap = { from, to }
+  const swap = { from, to, includeTemplates }
   const edit =
-    (set: (value: number | null) => void) => (value: number | null) => {
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
       set(value)
       setPreview(undefined)
       setResult(undefined)
@@ -84,6 +88,27 @@ export function ReplaceImageForm({ media }: { media: MediaOption[] }) {
                 onChange={edit(setTo)}
               />
             </FormField>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="include-templates"
+                checked={includeTemplates}
+                onCheckedChange={(checked) =>
+                  edit(setIncludeTemplates)(checked === true)
+                }
+                aria-describedby="include-templates-description"
+              />
+              <div>
+                <Label htmlFor="include-templates">
+                  Include Page Templates
+                </Label>
+                <p
+                  id="include-templates-description"
+                  className="text-sm text-muted-foreground"
+                >
+                  Off, Page Templates are left as they are.
+                </p>
+              </div>
+            </div>
             {error && <InlineError>{error}</InlineError>}
           </Section>
         </form>

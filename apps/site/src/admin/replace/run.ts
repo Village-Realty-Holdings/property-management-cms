@@ -16,6 +16,7 @@ import type { Hit, Rewritten } from "./text"
  *
  * A Page is changed in its Draft, or in its Published copy too, as the Staff
  * User chooses. Layouts, the Brand and SEO have no Drafts: they go live.
+ * Page Templates are left as they are unless the Staff User includes them.
  */
 
 /** What to replace: a rewrite of one document's data, and what to call it. */
@@ -25,6 +26,8 @@ export type Replacement = {
   summary: string
   /** Whether the Brand and SEO settings are searched too. */
   settings: boolean
+  /** Whether Page Templates are searched too. They are left alone unless asked. */
+  templates: boolean
 }
 
 export type ReplaceMode = "draft" | "publish"
@@ -169,6 +172,7 @@ async function plan(
 
   const pages: PagePlan[] = []
   for (const page of latest.docs) {
+    if (page.isTemplate && !replacement.templates) continue
     const copy = servedById.get(page.id)
     const isPublished = copy?._status === "published"
     // The Draft has moved on when the newest version isn't the Published one.

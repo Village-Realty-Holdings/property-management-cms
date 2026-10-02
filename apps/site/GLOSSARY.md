@@ -81,7 +81,7 @@ The Admin's grouping, below Settings, for jobs that act on the whole Site at onc
 _Avoid_: Utilities, system tools, other
 
 **Replace Text** / **Replace Image**:
-Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first. Pages are saved as Drafts or published, as the Staff User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
+Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first, and leaves Page Templates as they are unless asked to include them. Pages are saved as Drafts or published, as the Staff User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
 _Avoid_: Find and replace, search and replace, bulk edit
 
 **Visual Editor**:

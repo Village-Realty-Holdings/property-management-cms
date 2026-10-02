@@ -150,10 +150,14 @@ export function replaceText(
 }
 
 /** The query as a site-wide replace. The Brand and SEO are not searched. */
-export function textReplacement(query: TextQuery): Replacement {
+export function textReplacement(
+  query: TextQuery,
+  { templates = false }: { templates?: boolean } = {}
+): Replacement {
   return {
     rewrite: (fields, data) => replaceText(fields, data, query),
     summary: `Replace Text: “${query.find}” with “${query.replaceWith}”`,
     settings: false,
+    templates,
   }
 }

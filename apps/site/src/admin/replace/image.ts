@@ -56,7 +56,11 @@ export async function loadMediaReplacement(
   access: Access,
   input: unknown
 ): Promise<Loaded> {
-  const { from, to } = (input ?? {}) as { from?: unknown; to?: unknown }
+  const { from, to, includeTemplates } = (input ?? {}) as {
+    from?: unknown
+    to?: unknown
+    includeTemplates?: unknown
+  }
   if (!isId(from)) return { ok: false, message: "Choose the image to replace." }
   if (!isId(to))
     return { ok: false, message: "Choose the image to use instead." }
@@ -80,6 +84,7 @@ export async function loadMediaReplacement(
       rewrite: (fields, data) => replaceMedia(fields, data, { from, to }),
       summary: `Replace Image: “${name(from)}” with “${name(to)}”`,
       settings: true,
+      templates: includeTemplates === true,
     },
   }
 }

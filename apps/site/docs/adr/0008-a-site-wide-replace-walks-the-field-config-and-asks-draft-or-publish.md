@@ -6,15 +6,16 @@ Replace Text and Replace Image (the Admin's Tools) change one text, or one Media
 
 - **Replace Text** reads `text` and `textarea` fields and the text of rich text, in Pages (the title, the Blocks, the SEO fields) and in the Header and Footer of Layouts. A text field that holds a value instead of words (a path, a link's URL, an icon's name) is marked `custom: NOT_PROSE` in the config and is left alone. The URLs of rich text links are left alone too. The Brand and SEO settings are not searched: they are a handful of fields on two screens.
 - **Replace Image** reads every `upload` field that points at Media, in Pages, Layouts, the Brand and SEO. The image that was replaced stays in Media.
+- **Page Templates are left alone unless the Staff User switches on "Include Page Templates"**, which is off each time the screen opens. What new Pages start from then changes only on purpose. A Page already made from a Page Template is its own copy, so it is always searched like any Page.
 - Rich text is matched one run at a time. A match that starts in plain text and ends in bold is not found, and the screen says so.
 
 ## Drafts or publish
 
-| Page                                       | Save as Drafts       | Publish now                                                                                                                                                    |
-| ------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Published, nothing waiting                 | A new Draft          | Updated and published                                                                                                                                          |
-| Published, with changes waiting in a Draft | The Draft is updated | The Published copy is replaced and published by itself, then the Draft is saved again on top with its own replacement, so the waiting changes stay unpublished |
-| Never published, or a Page Template        | The Draft is updated | The Draft is updated; it stays unpublished                                                                                                                     |
+| Page                                                  | Save as Drafts       | Publish now                                                                                                                                                    |
+| ----------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Published, nothing waiting                            | A new Draft          | Updated and published                                                                                                                                          |
+| Published, with changes waiting in a Draft            | The Draft is updated | The Published copy is replaced and published by itself, then the Draft is saved again on top with its own replacement, so the waiting changes stay unpublished |
+| Never published, or a Page Template that was included | The Draft is updated | The Draft is updated; it stays unpublished                                                                                                                     |
 
 Layouts (ADR-0006), the Brand and SEO have no Drafts, so they change on the Site in either mode. The confirmation names them. A Layout's history records the replace as that save's summary.
 
