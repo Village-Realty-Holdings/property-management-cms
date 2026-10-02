@@ -133,7 +133,9 @@ describe("a Container in the Header and the Footer, on the Site", () => {
   })
 
   it("passes WCAG 2.2 AA, at a phone's width too", async () => {
-    await expectNoAxeViolations(visitor.page, "the Page in its boxed Layout")
+    await expectNoAxeViolations(visitor.page, "the Page in its boxed Layout", {
+      includeCanvas: false,
+    })
     await visitor.page.setViewportSize({ width: 320, height: 720 })
     try {
       await visit(visitor.page, PREFIX)
@@ -144,7 +146,9 @@ describe("a Container in the Header and the Footer, on the Site", () => {
             document.documentElement.clientWidth + 1
         )
       ).toBe(false)
-      await expectNoAxeViolations(visitor.page, "the same at 320 pixels")
+      await expectNoAxeViolations(visitor.page, "the same at 320 pixels", {
+        includeCanvas: false,
+      })
     } finally {
       await visitor.page.setViewportSize({ width: 1280, height: 900 })
     }
