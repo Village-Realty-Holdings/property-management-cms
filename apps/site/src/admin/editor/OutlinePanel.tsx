@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type MouseEvent,
 } from "react"
 import {
   closestCenter,
@@ -555,6 +556,21 @@ function AddButton({
   )
 }
 
+/**
+ * A click on the row selects it, but not one on its buttons: selecting opens
+ * the Block tab, which would take the Outline, and focus, away mid-task.
+ */
+const selectOnClick =
+  (id: string, onSelect: (id: string) => void) =>
+  (event: MouseEvent<HTMLElement>) => {
+    if (
+      event.target instanceof Element &&
+      event.target.closest("button") !== null
+    )
+      return
+    onSelect(id)
+  }
+
 /** Enter or Space on the row itself selects it; its buttons keep their own keys. */
 const selectKeys =
   (id: string, onSelect: (id: string) => void) =>
@@ -609,7 +625,7 @@ function ChildRows({
           aria-describedby={blockHint(block) ? hintId : undefined}
           data-block-id={id}
           tabIndex={id === tabbableId ? 0 : -1}
-          onClick={() => onSelect(id)}
+          onClick={selectOnClick(id, onSelect)}
           onKeyDown={selectKeys(id, onSelect)}
           // One step in per level, from the Region's own rows.
           style={{ marginInlineStart: `${level - 1}rem` }}
@@ -704,7 +720,7 @@ function SortableRow({
       data-block-id={id}
       tabIndex={tabbable ? 0 : -1}
       {...listeners}
-      onClick={() => onSelect(id)}
+      onClick={selectOnClick(id, onSelect)}
       onKeyDown={selectKeys(id, onSelect)}
       className={cn(
         ROW_CLASS,

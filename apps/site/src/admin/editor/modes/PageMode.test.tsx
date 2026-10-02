@@ -347,4 +347,37 @@ describe("<PageMode> Blocks", () => {
     const sent = actions.savePage.mock.calls[0]![0].document as PageDocument
     expect(sent.blocks[0]).toMatchObject({ id: "h1", heading: "Hello" })
   })
+
+  it("stays on the Outline when a row's buttons move or remove a Block", async () => {
+    const container = {
+      id: "c1",
+      blockType: "container",
+      columns: "1",
+      children: [
+        { id: "t1", blockType: "richText", markdown: "One" },
+        { id: "t2", blockType: "richText", markdown: "Two" },
+      ],
+    } as never
+    mount({ initial: { ...about, blocks: [...about.blocks, container] } })
+    const user = userEvent.setup()
+    const outline = screen.getByRole("tabpanel", { name: "Outline" })
+    await user.click(
+      within(outline).getAllByRole("button", {
+        name: "Move Rich text down",
+      })[0]!
+    )
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    await user.click(
+      within(outline).getAllByRole("button", { name: "Remove Rich text" })[0]!
+    )
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    expect(document.activeElement).toBe(
+      within(outline).getByRole("treeitem", { name: "Container" })
+    )
+    expect(within(outline).getByText("Rich text removed.")).toBeTruthy()
+  })
 })

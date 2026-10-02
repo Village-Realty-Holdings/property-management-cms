@@ -545,6 +545,30 @@ describe("Blocks in a Container", () => {
     expect(screen.queryByRole("button", { name: "Remove Hero" })).toBeNull()
   })
 
+  it("leaves the Outline open when a row's own buttons are used, so focus and the announcement stay", async () => {
+    const user = userEvent.setup()
+    // The editor opens the Block tab, unmounting the Outline, on a selection.
+    const onSelectBlock = vi.fn()
+    mountNested({ onSelectBlock })
+    await user.click(screen.getByRole("button", { name: "Move Hero down" }))
+    await user.click(
+      screen.getByRole("button", { name: "Move Rich text down" })
+    )
+    await user.click(
+      screen.getAllByRole("button", {
+        name: "Add a Block to this Container",
+      })[1]!
+    )
+    await user.keyboard("{Escape}")
+    await user.click(screen.getByRole("button", { name: "Remove Rich text" }))
+    expect(onSelectBlock).not.toHaveBeenCalled()
+    expect(value("selected")).toBe("none")
+    expect(document.activeElement).toBe(
+      screen.getAllByRole("treeitem", { name: "Container" })[0]
+    )
+    expect(screen.getByText("Rich text removed.")).toBeTruthy()
+  })
+
   it("has no axe violations", async () => {
     const { container } = mountNested()
     const results = await axe.run(
