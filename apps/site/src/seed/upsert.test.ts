@@ -268,11 +268,12 @@ describe("a sample seed", () => {
       depth: 0,
     })
     expect(templates.docs.map((page) => [page.path, page._status])).toEqual([
+      ["/templates/guest-survey", "draft"],
       ["/templates/home", "draft"],
       ["/templates/tuck-in", "draft"],
     ])
     // Tuck-in is two Containers, each a Rich text with its Button.
-    const tuckIn = templates.docs[1]!.blocks!.map((block) => [
+    const tuckIn = templates.docs[2]!.blocks!.map((block) => [
       block.blockType,
       ...(block.blockType === "container"
         ? (block.children ?? []).map((child) => child.blockType)
