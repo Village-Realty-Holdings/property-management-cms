@@ -26,6 +26,12 @@ export function sampleWithQuery(
     const value = Array.isArray(raw) ? raw[0] : raw
     const field = key === "variant" ? entry.variantField : key
     if (value === undefined || !field || FIXED.has(field)) continue
+    // A sample says nothing of its text colour: every Block with a
+    // background has one, Automatic unless the query sets it.
+    if (field === "textColour" && Object.hasOwn(block, "background")) {
+      block[field] = value
+      continue
+    }
     if (!Object.hasOwn(block, field)) continue
     const current = block[field]
     if (typeof current === "string") {

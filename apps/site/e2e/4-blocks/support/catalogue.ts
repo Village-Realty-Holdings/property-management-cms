@@ -39,12 +39,20 @@ import { openSession, visit } from "../../theme/support/browser"
 
 export const CATALOGUE_PATH = "/dev/blocks"
 
-export type Background = "default" | "muted" | "primary" | "dark"
+export type Background =
+  | "default"
+  | "muted"
+  | "primary"
+  | "accent"
+  | "third"
+  | "dark"
 
 export const BACKGROUNDS: readonly Background[] = [
   "default",
   "muted",
   "primary",
+  "accent",
+  "third",
   "dark",
 ]
 
@@ -53,6 +61,9 @@ export const BACKGROUND_TOKEN: Record<Background, string> = {
   default: "--background",
   muted: "--muted",
   primary: "--primary",
+  accent: "--accent",
+  // A Theme with no third colour paints Third with its secondary.
+  third: "var(--third, var(--secondary))",
   dark: "--surface-dark",
 }
 
@@ -206,7 +217,9 @@ export function effectiveBackground(region: Locator): Promise<string> {
 export function tokenColour(page: Page, token: string): Promise<string> {
   return page.evaluate((name) => {
     const probe = document.createElement("div")
-    probe.style.backgroundColor = `var(${name})`
+    probe.style.backgroundColor = name.startsWith("var(")
+      ? name
+      : `var(${name})`
     document.body.appendChild(probe)
     const colour = getComputedStyle(probe).backgroundColor
     probe.remove()
