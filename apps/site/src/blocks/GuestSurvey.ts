@@ -2,7 +2,7 @@ import type { Block, Field } from "payload"
 
 import { backgroundField } from "../fields/background"
 import { validateHref } from "../fields/link"
-import { NOT_PROSE } from "../fields/prose"
+import { LINK } from "../fields/prose"
 
 /** A heading and a line of text for one step of the survey. */
 const step = (
@@ -89,7 +89,7 @@ export const GuestSurvey: Block = {
           label: "Review link",
           type: "text",
           validate: validateHref,
-          custom: NOT_PROSE,
+          custom: LINK,
           admin: {
             description:
               "Where a happy guest leaves a review, such as your Google review link. Without one, the button is not shown.",

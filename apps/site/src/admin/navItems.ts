@@ -9,6 +9,7 @@ export type NavIcon =
   | "assets"
   | "replaceText"
   | "replaceImage"
+  | "links"
   | "themes"
   | "starterKits"
 
@@ -63,6 +64,7 @@ export const navGroups: NavGroup[] = [
         href: "/admin/tools/replace-image",
         icon: "replaceImage",
       },
+      { label: "Links", href: "/admin/tools/links", icon: "links" },
       { label: "Themes", href: "/admin/tools/themes", icon: "themes" },
       {
         label: "Starter Kits",

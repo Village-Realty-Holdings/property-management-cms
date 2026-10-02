@@ -31,6 +31,7 @@ describe("<AdminNav>", () => {
       ["Assets", "/admin/settings/assets/fonts"],
       ["Replace Text", "/admin/tools/replace-text"],
       ["Replace Image", "/admin/tools/replace-image"],
+      ["Links", "/admin/tools/links"],
       ["Themes", "/admin/tools/themes"],
       ["Starter Kits", "/admin/tools/starter-kits"],
     ])

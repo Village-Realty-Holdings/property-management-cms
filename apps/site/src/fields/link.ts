@@ -1,6 +1,6 @@
 import type { GroupField } from "payload"
 
-import { NOT_PROSE } from "./prose"
+import { LINK } from "./prose"
 
 /**
  * A button or link: `{ label, href }`. `href` is a Site path ("/about") or
@@ -21,7 +21,7 @@ export function linkGroup(name: string, label?: string): GroupField {
             label: "Link",
             type: "text",
             validate: validateHref,
-            custom: NOT_PROSE,
+            custom: LINK,
             admin: { description: 'A Site path like "/about", or a full URL.' },
           },
         ],
