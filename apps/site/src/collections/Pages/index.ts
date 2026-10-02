@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload"
 import { publishedOrSignedIn, signedIn } from "../../access"
 import { pageBlocks } from "../../blocks"
 import { takesOnly } from "../../blocks/Container"
+import { NOT_PROSE } from "../../fields/prose"
 import { seoField } from "../../fields/seo"
 import { layoutField } from "./layoutField"
 import { refuseDeleteWhenLinked } from "./navigationGuard"
@@ -45,6 +46,7 @@ export const Pages: CollectionConfig = {
       required: true,
       unique: true,
       validate: validatePagePath,
+      custom: NOT_PROSE,
       hooks: { beforeValidate: [defaultPathFromTitle] },
       admin: {
         position: "sidebar",

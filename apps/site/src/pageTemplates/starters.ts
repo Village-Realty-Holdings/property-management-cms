@@ -181,6 +181,10 @@ const tuckIn: StarterTemplate = {
 
 export const STARTER_TEMPLATES: readonly StarterTemplate[] = [home, tuckIn]
 
+/** The starters by name, for the Starter Kits that begin a Site from them. */
+export const HOME_STARTER = home
+export const TUCK_IN_STARTER = tuckIn
+
 export type StarterResult = {
   path: string
   title: string
@@ -188,7 +192,7 @@ export type StarterResult = {
 }
 
 /** The Layout of that name, made from `layout` when the Site has none. */
-async function ensureLayout(
+export async function ensureLayout(
   payload: Payload,
   access: Access,
   layout: NonNullable<StarterTemplate["layout"]>

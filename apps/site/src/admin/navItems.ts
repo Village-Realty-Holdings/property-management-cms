@@ -7,6 +7,10 @@ export type NavIcon =
   | "seo"
   | "theme"
   | "assets"
+  | "replaceText"
+  | "replaceImage"
+  | "themes"
+  | "starterKits"
 
 export type NavItem = {
   label: string
@@ -18,7 +22,7 @@ export type NavItem = {
 
 export type NavGroup = { label: string | null; items: NavItem[] }
 
-/** The Admin sidebar: the Dashboard, then Content and Settings. */
+/** The Admin sidebar: the Dashboard, then Content, Settings and Tools. */
 export const navGroups: NavGroup[] = [
   {
     label: null,
@@ -43,6 +47,27 @@ export const navGroups: NavGroup[] = [
         href: "/admin/settings/assets/fonts",
         icon: "assets",
         section: "/admin/settings/assets",
+      },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      {
+        label: "Replace Text",
+        href: "/admin/tools/replace-text",
+        icon: "replaceText",
+      },
+      {
+        label: "Replace Image",
+        href: "/admin/tools/replace-image",
+        icon: "replaceImage",
+      },
+      { label: "Themes", href: "/admin/tools/themes", icon: "themes" },
+      {
+        label: "Starter Kits",
+        href: "/admin/tools/starter-kits",
+        icon: "starterKits",
       },
     ],
   },

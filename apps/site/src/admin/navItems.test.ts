@@ -6,13 +6,14 @@ const items = navGroups.flatMap((group) => group.items)
 const item = (label: string) => items.find((i) => i.label === label)!
 
 describe("navGroups", () => {
-  it("has the Dashboard, then Content and Settings, in the spec's order", () => {
+  it("has the Dashboard, then Content, Settings and Tools, in the spec's order", () => {
     expect(
       navGroups.map((g) => [g.label, g.items.map((i) => i.label)])
     ).toEqual([
       [null, ["Dashboard"]],
       ["Content", ["Layouts", "Pages", "Media"]],
       ["Settings", ["Brand", "SEO", "Theme", "Assets"]],
+      ["Tools", ["Replace Text", "Replace Image", "Themes", "Starter Kits"]],
     ])
   })
 
@@ -26,6 +27,10 @@ describe("navGroups", () => {
       "/admin/settings/seo",
       "/admin/theme",
       "/admin/settings/assets/fonts",
+      "/admin/tools/replace-text",
+      "/admin/tools/replace-image",
+      "/admin/tools/themes",
+      "/admin/tools/starter-kits",
     ])
   })
 })
