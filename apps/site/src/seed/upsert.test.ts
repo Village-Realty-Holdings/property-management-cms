@@ -249,7 +249,8 @@ describe("a sample seed", () => {
     expect(after.counts).toMatchObject({
       // The sample's two Pages and the two starter Page Templates.
       pages: 4,
-      layouts: 2,
+      // The sample's two, and the Tuck-in starter's.
+      layouts: 3,
       media: 1,
       fonts: 1,
       "font-files": 2,

@@ -32,12 +32,22 @@ beforeAll(async () => {
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
   asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  // The Site's default Layout, as every started Site has.
+  await t.payload.create({
+    collection: "layouts",
+    data: { name: "Main" },
+    ...asStaff,
+  })
 })
 
 afterEach(async () => {
   await t.payload.delete({
     collection: "pages",
     where: { id: { exists: true } },
+  })
+  await t.payload.delete({
+    collection: "layouts",
+    where: { name: { not_equals: "Main" } },
   })
 })
 
@@ -245,15 +255,44 @@ describe("the starter Page Templates", () => {
       "Testimonials",
       "Call to action",
     ])
-    expect(rows[1]!.blocks).toEqual([
-      "Hero",
-      "Rich text",
-      "Call to action",
-      "Rich text",
-      "Call to action",
-    ])
+    expect(rows[1]!.blocks).toEqual(["Rich text", "Rich text"])
     const visitors = await t.payload.find({ collection: "pages", ...asVisitor })
     expect(visitors.docs).toEqual([])
+  })
+
+  it("gives Tuck-in its own Layout, which is not the default and is made once", async () => {
+    await ensureStarterTemplates(t.payload, asStaff)
+    const tuckIn = (await loadPageTemplateRows(t.payload, asStaff))[1]!
+
+    const { docs: layouts } = await t.payload.find({
+      collection: "layouts",
+      sort: "id",
+      depth: 0,
+    })
+    expect(
+      layouts.map((layout) => [layout.name, layout.isDefault, layout.paths])
+    ).toEqual([
+      ["Main", true, []],
+      ["Tuck-in", false, []],
+    ])
+    expect(layouts[1]!.header?.map((block) => block.blockType)).toEqual([
+      "logo",
+      "headerActions",
+    ])
+    expect(layouts[1]!.footer?.map((block) => block.blockType)).toEqual([
+      "legalBar",
+    ])
+    // A New Page made from it wears that Layout, text across the page.
+    const start = await loadPageTemplateStart(t.payload, asStaff, tuckIn.id)
+    expect(start!.layout).toEqual({ mode: "layout", layoutId: layouts[1]!.id })
+    expect(start!.blocks).toMatchObject([{ width: "wide" }, { width: "wide" }])
+
+    // Deleting the Page Template and adding it again reuses the Layout.
+    await t.payload.delete({ collection: "pages", id: tuckIn.id, ...asStaff })
+    await ensureStarterTemplates(t.payload, asStaff)
+    expect(await t.payload.count({ collection: "layouts" })).toMatchObject({
+      totalDocs: 2,
+    })
   })
 
   it("make Pages that publish as they are", async () => {

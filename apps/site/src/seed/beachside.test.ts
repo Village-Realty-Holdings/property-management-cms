@@ -103,7 +103,8 @@ describe("the Beachside seed", () => {
     expect(await counts()).toMatchObject({
       // Its four Pages and the two starter Page Templates.
       pages: 6,
-      layouts: 1,
+      // Its own, and the Tuck-in starter's.
+      layouts: 2,
       media: 7,
       fonts: 2,
       "font-files": 5,
@@ -286,6 +287,8 @@ describe("the Beachside seed", () => {
   it("has a default Layout whose menu links to every other Page", async () => {
     const { docs: layouts } = await payload.find({
       collection: "layouts",
+      // Not the Tuck-in starter's Layout.
+      where: { isDefault: { equals: true } },
       depth: 0,
       pagination: false,
     })

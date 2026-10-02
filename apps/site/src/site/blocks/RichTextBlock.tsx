@@ -28,7 +28,7 @@ function firstHeading(content: unknown): string | null {
 const inverse =
   "[&_a]:text-inherit [&_a]:decoration-current [&_code]:text-foreground"
 
-/** Rich text: a free-form text section at reading width. */
+/** Rich text: a free-form text section, at reading width or across the page. */
 export function RichTextBlock({
   block,
   context,
@@ -42,6 +42,7 @@ export function RichTextBlock({
   const background = backgroundOf(block.background)
   const className = cn(
     "text-lg [&>:first-child]:mt-0",
+    block.width === "wide" && "max-w-none",
     (background === "primary" || background === "dark") && inverse
   )
   return (

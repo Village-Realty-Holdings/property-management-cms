@@ -1,7 +1,8 @@
 import type { Payload } from "payload"
 
 import { catalogue } from "../blocks/catalogue"
-import type { Page, User } from "../payload-types"
+import { saveLayout } from "../layouts/record"
+import type { Layout, Page, User } from "../payload-types"
 
 /**
  * The starter Page Templates: Pages (Drafts, marked as Page Templates) that a
@@ -9,8 +10,10 @@ import type { Page, User } from "../payload-types"
  * Staff edit, rename or delete them like any other.
  *
  *   Home      the structure of the seeded Sites' Home Pages
- *   Tuck-in   an announcement that a company has joined the brand, with what
- *             it means for owners and for guests (as on pclodge.com)
+ *   Tuck-in   an announcement that a company has joined the brand: a plain
+ *             page of text for owners and for guests (as on pclodge.com;
+ *             its two buttons wait for the Container Block, ADR-0007). It comes with its own Layout, "Tuck-in": the
+ *             logo and phone number above, a copyright line below, no menu.
  */
 
 type Blocks = NonNullable<Page["blocks"]>
@@ -21,7 +24,13 @@ type Access = {
   user: (User & { collection: "users" }) | null
 }
 
-export type StarterTemplate = { path: string; title: string; blocks: Blocks }
+export type StarterTemplate = {
+  path: string
+  title: string
+  blocks: Blocks
+  /** The Layout it picks, made with it when the Site has none of that name. */
+  layout?: Pick<Layout, "name" | "header" | "footer">
+}
 
 const node = (type: string, children: object[], extra: object = {}) => ({
   type,
@@ -41,7 +50,9 @@ const text = (value: string, bold = false) => ({
   mode: "normal",
   style: "",
 })
-const heading = (value: string) => node("heading", [text(value)], { tag: "h2" })
+const heading = (value: string, tag: "h1" | "h2" = "h2") =>
+  node("heading", [text(value)], { tag })
+const rule = () => ({ type: "horizontalrule", version: 1 })
 const paragraph = (value: string) =>
   node("paragraph", [text(value)], { textFormat: 0 })
 /** A bold title on its own line, then the text. */
@@ -51,9 +62,11 @@ const point = (title: string, body: string) =>
     [text(title, true), { type: "linebreak", version: 1 }, text(body)],
     { textFormat: 0 }
   )
-const richText = (...children: object[]): Blocks[number] => ({
+/** Text across the page. */
+const section = (...children: object[]): Blocks[number] => ({
   blockType: "richText",
   content: { root: node("root", children) } as unknown as RichText,
+  width: "wide",
   background: "default",
 })
 
@@ -78,14 +91,19 @@ const home: StarterTemplate = {
 const tuckIn: StarterTemplate = {
   path: "/templates/tuck-in",
   title: "Tuck-in template",
+  layout: {
+    name: "Tuck-in",
+    header: [
+      { blockType: "logo", size: "large", showTagline: false },
+      { blockType: "headerActions", showPhone: true },
+    ],
+    footer: [
+      { blockType: "legalBar", text: "© {year} {name}. All rights reserved." },
+    ],
+  },
   blocks: [
-    {
-      blockType: "hero",
-      heading: "[Company] Joins [Our Brand]!",
-      subheading:
-        "[Company] is now part of [Our Brand]. Owners and guests: here's what the change means for you.",
-    },
-    richText(
+    section(
+      heading("[Company] Joins [Our Brand]!", "h1"),
       heading("What Owners Can Expect"),
       paragraph(
         "[Our Brand] is thrilled to welcome [Company] to the family. This partnership is designed to elevate your ownership experience while building on the service and care you already know."
@@ -107,14 +125,8 @@ const tuckIn: StarterTemplate = {
       ),
       paragraph("We're excited to begin this new chapter with you.")
     ),
-    {
-      blockType: "callToAction",
-      heading: "Questions about your property?",
-      button: { label: "Learn More", href: "/owners" },
-      style: "primary",
-      background: "muted",
-    },
-    richText(
+    section(
+      rule(),
       heading("Welcome, Guests!"),
       paragraph(
         "[Company] is now part of the [Our Brand] family, and we're excited to welcome you to this next chapter."
@@ -136,13 +148,6 @@ const tuckIn: StarterTemplate = {
         "Have questions about an existing or future stay? Reach us at [phone number]."
       )
     ),
-    {
-      blockType: "callToAction",
-      heading: "Find your next stay",
-      button: { label: "Explore Our Properties", href: "/" },
-      style: "primary",
-      background: "default",
-    },
   ],
 }
 
@@ -154,26 +159,61 @@ export type StarterResult = {
   action: "created" | "unchanged"
 }
 
+/** The Layout of that name, made from `layout` when the Site has none. */
+async function ensureLayout(
+  payload: Payload,
+  access: Access,
+  layout: NonNullable<StarterTemplate["layout"]>
+): Promise<number> {
+  const { docs } = await payload.find({
+    collection: "layouts",
+    where: { name: { equals: layout.name } },
+    limit: 1,
+    depth: 0,
+    select: { name: true },
+    ...access,
+  })
+  if (docs[0]) return docs[0].id
+  if (!access.user) throw new Error("Sign in to add a Layout.")
+  const made = await saveLayout(payload, {
+    user: access.user,
+    // Never the default, and no paths: only the Pages that pick it use it.
+    data: { ...layout, paths: [], isDefault: false },
+  })
+  return made.id
+}
+
 /**
- * Adds each starter Page Template whose path no Page has yet, as a Draft. A
- * Page already at the path is left as it is, whatever it holds, so Staff's
- * changes to a starter survive and running this again changes nothing.
+ * Adds each starter Page Template whose path no Page has yet, as a Draft,
+ * with the Layout it picks. A Page already at the path is left as it is,
+ * whatever it holds, so Staff's changes to a starter survive and running this
+ * again changes nothing.
  */
 export async function ensureStarterTemplates(
   payload: Payload,
   access: Access
 ): Promise<StarterResult[]> {
   const results: StarterResult[] = []
-  for (const { path, title, blocks } of STARTER_TEMPLATES) {
+  for (const { path, title, blocks, layout } of STARTER_TEMPLATES) {
     const { totalDocs } = await payload.count({
       collection: "pages",
       where: { path: { equals: path } },
       ...access,
     })
     if (totalDocs === 0) {
+      const layoutId = layout && (await ensureLayout(payload, access, layout))
       await payload.create({
         collection: "pages",
-        data: { path, title, blocks, isTemplate: true, _status: "draft" },
+        data: {
+          path,
+          title,
+          blocks,
+          isTemplate: true,
+          _status: "draft",
+          ...(layoutId
+            ? { layout: { mode: "specific" as const, layout: layoutId } }
+            : {}),
+        },
         draft: true,
         depth: 0,
         ...access,

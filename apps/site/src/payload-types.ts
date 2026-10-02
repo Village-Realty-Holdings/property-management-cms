@@ -323,6 +323,7 @@ export interface RichTextBlock {
     };
     [k: string]: unknown;
   };
+  width?: ('reading' | 'wide') | null;
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
@@ -1141,6 +1142,7 @@ export interface SearchHeroBlockSelect<T extends boolean = true> {
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
   content?: T;
+  width?: T;
   background?: T;
   id?: T;
   blockName?: T;

@@ -219,6 +219,8 @@ describe("the Warren Beach seed", () => {
   it("makes a default Layout whose Navigation links to the Pages", async () => {
     const layouts = await payload.find({
       collection: "layouts",
+      // Not the Tuck-in starter's Layout.
+      where: { isDefault: { equals: true } },
       depth: 0,
       pagination: false,
     })
