@@ -12,8 +12,10 @@ import { type BlockContext, blockId } from "./types"
 
 /**
  * Image + text: an image on the left or right beside text, with an optional
- * icon list and caption. On a phone the image stacks above the text
- * whichever side it is on. With no image the text takes the full width.
+ * icon list and caption. With little room (a phone, or a Container's
+ * column: it lays itself out by the room it has, `fit-*`) the image stacks
+ * above the text whichever side it is on. With no image the text takes the
+ * full width.
  */
 export function ImageTextBlock({
   block,
@@ -40,15 +42,15 @@ export function ImageTextBlock({
     >
       <div
         className={cn(
-          "grid items-center gap-8 md:gap-12 lg:gap-16",
-          image && "md:grid-cols-2"
+          "grid items-center gap-8 fit-md:gap-12 fit-lg:gap-16",
+          image && "fit-md:grid-cols-2"
         )}
       >
         {image && (
           <figure
             className={cn(
               "flex flex-col gap-3",
-              block.imageSide === "right" && "md:order-last"
+              block.imageSide === "right" && "fit-md:order-last"
             )}
           >
             <div className="relative aspect-4/3 overflow-hidden rounded-(--card-radius) shadow-(--card-shadow)">
@@ -75,7 +77,7 @@ export function ImageTextBlock({
             field="heading"
             context={context}
             id={id}
-            className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+            className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
           >
             {heading}
           </EditableText>
@@ -84,7 +86,7 @@ export function ImageTextBlock({
               as="p"
               field="text"
               context={context}
-              className="text-base text-pretty whitespace-pre-line sm:text-lg"
+              className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
             >
               {text}
             </EditableText>

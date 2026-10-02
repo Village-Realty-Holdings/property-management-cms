@@ -345,7 +345,7 @@ describe("Image + text", () => {
     expect(icons(container)).toHaveLength(3)
   })
 
-  it("puts the image on the left or the right from the tablet up, and above the text on a phone", () => {
+  it("puts the image on the left or the right from a tablet's width up, and above the text on a phone", () => {
     const left = render(
       <Block block={imageText({ imageSide: "left" })} index={1} />
     ).container
@@ -354,11 +354,13 @@ describe("Image + text", () => {
     const right = render(
       <Block block={imageText({ imageSide: "right" })} index={1} />
     ).container
-    expect(right.querySelector("figure")!.className).toContain("md:order-last")
-    // Stacked on mobile: the image comes first in the source, one column until md.
+    expect(right.querySelector("figure")!.className).toContain(
+      "fit-md:order-last"
+    )
+    // Stacked on mobile: the image comes first in the source, one column until fit-md.
     const grid = right.querySelector("figure")!.parentElement!
     expect(grid.firstElementChild).toBe(right.querySelector("figure"))
-    expect(grid.className).toContain("md:grid-cols-2")
+    expect(grid.className).toContain("fit-md:grid-cols-2")
     expect(grid.className).not.toMatch(/(^|\s)grid-cols-2/)
   })
 
