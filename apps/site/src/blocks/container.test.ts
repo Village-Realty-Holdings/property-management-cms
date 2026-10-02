@@ -127,10 +127,10 @@ const tree = () => [
   ),
 ]
 
-const features = { blockType: "features", heading: "Why stay with us" }
+const rentalGrid = { blockType: "rentalGrid", heading: "All our homes" }
 
 /** Why a Block that needs the page's full width can't sit at `place`. */
-const tooNarrow = (place: string, label = "Features") =>
+const tooNarrow = (place: string, label = "Rental grid") =>
   `${place} is a “${label}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
 
 type Row = { blockType: string; heading?: string; children?: Row[] | null }
@@ -180,8 +180,10 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
   const refusedIn = (blocks: unknown[]) => refusedBlock(blocks, pageBlocks)
 
   it("takes it on the Page and in a stack", () => {
-    expect(refusedIn([features, container([features, hero("ok")])])).toBeNull()
-    expect(refusedIn([container([container([container([features])])])])).toBe(
+    expect(
+      refusedIn([rentalGrid, container([rentalGrid, hero("ok")])])
+    ).toBeNull()
+    expect(refusedIn([container([container([container([rentalGrid])])])])).toBe(
       null
     )
   })
@@ -190,7 +192,7 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
     "refuses it in a Container of %s columns, by its label",
     (columns) => {
       expect(
-        refusedIn([hero("ok"), container([cta("ok"), features], { columns })])
+        refusedIn([hero("ok"), container([cta("ok"), rentalGrid], { columns })])
       ).toEqual({
         place: "Block 2, Container, Column 2",
         message: tooNarrow("Block 2, Container, Column 2"),
@@ -203,11 +205,12 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
 
   it("refuses it in a stack that sits in a column, at any depth", () => {
     expect(
-      refusedIn([container([container([features])], { columns: "2" })])?.message
+      refusedIn([container([container([rentalGrid])], { columns: "2" })])
+        ?.message
     ).toBe(tooNarrow("Block 1, Container, Column 1, Container, Block 1"))
     expect(
       refusedIn([
-        container([container([container([cta("ok"), features])])], {
+        container([container([container([cta("ok"), rentalGrid])])], {
           columns: "3",
         }),
       ])?.message

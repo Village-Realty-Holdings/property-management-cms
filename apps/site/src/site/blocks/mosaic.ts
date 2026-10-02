@@ -46,10 +46,12 @@ export function mosaicTiles(count: number): MosaicTile[] {
 
 /**
  * The Features grid's columns: two features, or four, sit two to a row from
- * the tablet up; the rest go three to a row from the desktop up.
+ * a tablet's width up; the rest go three to a row from a desktop's. The
+ * width is the room the Block has (`fit-*`): the viewport's on the Page, its
+ * cell's in a Container.
  */
 export function featureColumns(count: number): string {
   return count === 2 || count === 4
-    ? "sm:grid-cols-2"
-    : "sm:grid-cols-2 lg:grid-cols-3"
+    ? "fit-sm:grid-cols-2"
+    : "fit-sm:grid-cols-2 fit-lg:grid-cols-3"
 }

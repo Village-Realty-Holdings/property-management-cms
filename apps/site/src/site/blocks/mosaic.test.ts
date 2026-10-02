@@ -46,13 +46,15 @@ describe("mosaicTiles", () => {
 
 describe("featureColumns", () => {
   it("lays two or four features out in two columns, so no row stands alone", () => {
-    expect(featureColumns(2)).toBe("sm:grid-cols-2")
-    expect(featureColumns(4)).toBe("sm:grid-cols-2")
+    expect(featureColumns(2)).toBe("fit-sm:grid-cols-2")
+    expect(featureColumns(4)).toBe("fit-sm:grid-cols-2")
   })
 
-  it("lays the others out in three from the desktop up", () => {
+  it("lays the others out in three from the desktop's width up", () => {
     for (const count of [1, 3, 5, 6, 9]) {
-      expect(featureColumns(count)).toBe("sm:grid-cols-2 lg:grid-cols-3")
+      expect(featureColumns(count)).toBe(
+        "fit-sm:grid-cols-2 fit-lg:grid-cols-3"
+      )
     }
   })
 })

@@ -72,6 +72,62 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/*
+ * The Site's Blocks lay themselves out by the room they have (ADR-0007): on
+ * the Page that is the viewport's width, the same query as sm: to xl:, so a
+ * Block looks as it did with them; inside a Container (under its
+ * data-container mark) it is the width of the Block's cell, which is a
+ * container.
+ */
+@custom-variant fit-sm {
+  &:not(:where([data-container] *)) {
+    @media (width >= 40rem) {
+      @slot;
+    }
+  }
+  :where([data-container]) & {
+    @container (width >= 40rem) {
+      @slot;
+    }
+  }
+}
+@custom-variant fit-md {
+  &:not(:where([data-container] *)) {
+    @media (width >= 48rem) {
+      @slot;
+    }
+  }
+  :where([data-container]) & {
+    @container (width >= 48rem) {
+      @slot;
+    }
+  }
+}
+@custom-variant fit-lg {
+  &:not(:where([data-container] *)) {
+    @media (width >= 64rem) {
+      @slot;
+    }
+  }
+  :where([data-container]) & {
+    @container (width >= 64rem) {
+      @slot;
+    }
+  }
+}
+@custom-variant fit-xl {
+  &:not(:where([data-container] *)) {
+    @media (width >= 80rem) {
+      @slot;
+    }
+  }
+  :where([data-container]) & {
+    @container (width >= 80rem) {
+      @slot;
+    }
+  }
+}
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../site-views/src/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";

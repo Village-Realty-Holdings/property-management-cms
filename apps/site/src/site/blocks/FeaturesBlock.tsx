@@ -11,7 +11,8 @@ import { type BlockContext, blockId } from "./types"
 /**
  * Features: a grid of icon, title and text. The icon is a Lucide icon
  * picked by name; one that is no longer on the list leaves the feature as
- * its title and text.
+ * its title and text. It lays itself out by the room it has (the `fit-*`
+ * breakpoints), so it fits a Container's column as well as the Page.
  */
 export function FeaturesBlock({
   block,
@@ -36,7 +37,7 @@ export function FeaturesBlock({
     <BlockSection
       background={surfaceOf(block.background, context)}
       labelledBy={id}
-      className="flex flex-col gap-10 sm:gap-12"
+      className="flex flex-col gap-10 fit-sm:gap-12"
     >
       <div className="flex max-w-2xl flex-col gap-3">
         <EditableText
@@ -44,7 +45,7 @@ export function FeaturesBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>
@@ -53,7 +54,7 @@ export function FeaturesBlock({
             as="p"
             field="intro"
             context={context}
-            className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
           >
             {intro}
           </EditableText>

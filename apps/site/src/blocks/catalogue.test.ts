@@ -70,9 +70,16 @@ describe("the Block catalogue", () => {
       catalogueEntries
         .filter((entry) => entry.fitsNarrow)
         .map((entry) => entry.label)
-    ).toEqual(["Rich text", "Call to action", "Button", "Image", "Container"])
+    ).toEqual([
+      "Rich text",
+      "Call to action",
+      "Features",
+      "Button",
+      "Image",
+      "Container",
+    ])
     expect(fitsNarrow("richText")).toBe(true)
-    expect(fitsNarrow("features")).toBe(false)
+    expect(fitsNarrow("searchHero")).toBe(false)
     // A type the catalogue doesn't have is not this rule's to refuse.
     expect(fitsNarrow("gone")).toBe(true)
   })
