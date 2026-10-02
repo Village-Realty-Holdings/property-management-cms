@@ -34,9 +34,26 @@ const REVIEW = "https://example.com/review"
 
 let h: Harness
 let doc: Doc
+/** The Page Templates and Layouts the Site had before this spec. */
+let had: { pages: Set<number>; layouts: Set<number> }
+
+const TEMPLATES =
+  "/api/pages?where[isTemplate][equals]=true&draft=true&limit=100&depth=0"
+const LAYOUTS = "/api/layouts?limit=100&depth=0"
+
+async function ids(path: string): Promise<number[]> {
+  const found = (await (
+    await h.staff.context.request.get(`${ORIGIN}${path}`)
+  ).json()) as { docs: Doc[] }
+  return found.docs.map((item) => item.id)
+}
 
 beforeAll(async () => {
   h = await openHarness()
+  had = {
+    pages: new Set(await ids(TEMPLATES)),
+    layouts: new Set(await ids(LAYOUTS)),
+  }
   const made = await h.staff.context.request.post(
     `${ORIGIN}/api/pages?draft=false`,
     {
@@ -87,6 +104,15 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  if (h && had) {
+    // The starters this spec added, and the Layouts that came with them.
+    for (const id of await ids(TEMPLATES)) {
+      if (!had.pages.has(id)) h.api.track("page", id)
+    }
+    for (const id of await ids(LAYOUTS)) {
+      if (!had.layouts.has(id)) h.api.track("layout", id)
+    }
+  }
   await closeHarness(h)
 })
 
