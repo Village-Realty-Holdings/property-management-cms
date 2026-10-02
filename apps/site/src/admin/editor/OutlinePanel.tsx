@@ -12,12 +12,15 @@ import {
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
+  MeasuringStrategy,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type Announcements,
   type DragEndEvent,
+  type DragMoveEvent,
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -48,14 +51,17 @@ import {
   blocksOfList,
   childrenOf,
   findBlock,
+  placementProblem,
+  type BlockList,
+  type EditorDocument,
   type Region,
 } from "./state"
 
 /**
  * The Outline: the Header, Page and Footer Block tree of the document being
  * edited. A row names the Block (its catalogue label) with a text hint, and
- * selecting it selects the Block. Blocks reorder within their region by drag
- * or, from the keyboard, with each row's Move up and Move down buttons.
+ * selecting it selects the Block. Blocks reorder by drag or, from the
+ * keyboard, with each row's Move up and Move down buttons (within their list).
  *
  * Each region the document owns has a "+" that opens the Block picker to add
  * a Block at the end of it.
@@ -66,6 +72,11 @@ import {
  * a Remove button. A Container with Blocks collapses and expands, with its
  * button or with the Left and Right arrow keys, as a tree does; selecting a
  * Block elsewhere opens the Containers around it.
+ *
+ * Dragging a row moves its Block anywhere in its region: up and down, and
+ * into or out of a Container by dragging it right or left, as in an outliner.
+ * A drop the Container's depth or width forbids (ADR-0007) moves nothing and
+ * says why, in the panel and to a screen reader.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -123,21 +134,6 @@ export function blockHint(block: BlockValues): string {
     : hint
 }
 
-/**
- * The move a drop makes within `blocks`: null when the Block was dropped on
- * itself, outside the list, or either end is not in this list (another region).
- */
-export function moveForDrop(
-  blocks: readonly BlockValues[],
-  activeId: string,
-  overId: string | null
-): { from: number; to: number } | null {
-  if (overId === null || activeId === overId) return null
-  const from = blocks.findIndex((block) => block.id === activeId)
-  const to = blocks.findIndex((block) => block.id === overId)
-  return from < 0 || to < 0 ? null : { from, to }
-}
-
 /** One row of the Outline: a Block and where it sits. */
 export type OutlineRow = {
   id: string
@@ -149,6 +145,8 @@ export type OutlineRow = {
   /** Its place in that list, and how many Blocks the list has. */
   index: number
   count: number
+  /** A Container whose Blocks show, so a Block can be put in it here. */
+  open: boolean
 }
 
 /**
@@ -163,11 +161,98 @@ export function outlineRows(
 ): OutlineRow[] {
   return blocks.flatMap((block, index) => {
     const id = block.id ?? ""
-    const row = { id, block, depth, parentId, index, count: blocks.length }
+    const open =
+      (block.blockType as string) === "container" && !collapsed.has(id)
+    const row = {
+      id,
+      block,
+      depth,
+      parentId,
+      index,
+      count: blocks.length,
+      open,
+    }
     return collapsed.has(id)
       ? [row]
       : [row, ...outlineRows(childrenOf(block), collapsed, depth + 1, id)]
   })
+}
+
+/** How far a row is indented per level, in pixels: 1rem. */
+const INDENT = 16
+
+/** What dropping a dragged row does. */
+export type DropOutcome =
+  | { kind: "none" }
+  | { kind: "refused"; reason: string }
+  | { kind: "move"; list: BlockList; index: number }
+
+/**
+ * Where the row `activeId` lands when dropped over the row `overId`, dragged
+ * `offset` levels sideways (left is negative). `rows` are the rows shown
+ * while it is dragged, without its own Blocks.
+ *
+ * As in an outliner, the row goes where `overId` was, and its depth is the
+ * one it was dragged to, within what that place allows: no deeper than one
+ * level under the row above it (when that is an open Container), and no
+ * shallower than the row below it. Its Container is then the nearest row
+ * above it one level up.
+ */
+function dropPlace(
+  rows: readonly OutlineRow[],
+  activeId: string,
+  overId: string,
+  offset: number
+): { parentId: string | null; index: number; depth: number } | null {
+  const from = rows.findIndex((row) => row.id === activeId)
+  const to = rows.findIndex((row) => row.id === overId)
+  if (from < 0 || to < 0) return null
+  const active = rows[from]!
+  // The rows without it: it goes in at `to`, between `previous` and `next`.
+  const others = rows.filter((row) => row.id !== activeId)
+  const before = others.slice(0, to)
+  const previous = before.at(-1)
+  const next = others[to]
+  const deepest = previous ? previous.depth + (previous.open ? 1 : 0) : 0
+  const shallowest = next?.depth ?? 0
+  const depth = Math.min(Math.max(active.depth + offset, shallowest), deepest)
+  const parentId =
+    depth === 0
+      ? null
+      : ([...before].reverse().find((row) => row.depth === depth - 1)?.id ??
+        null)
+  return {
+    parentId,
+    index: before.filter((row) => row.parentId === parentId).length,
+    depth,
+  }
+}
+
+/**
+ * What dropping the row `activeId` over `overId` in `region` does: a move to
+ * its new place, nothing when that is where it was (or it was dropped
+ * outside the list), or a refusal that says why, when the depth or the width
+ * of the place forbids the Block there.
+ */
+export function dropOutcome(
+  doc: EditorDocument,
+  region: Region,
+  rows: readonly OutlineRow[],
+  activeId: string,
+  overId: string | null,
+  offset: number
+): DropOutcome {
+  const found = findBlock(doc, activeId)
+  const place =
+    overId === null ? null : dropPlace(rows, activeId, overId, offset)
+  if (!found || !place) return { kind: "none" }
+  const { parentId, index } = place
+  if (parentId === found.parentId && index === found.index) {
+    return { kind: "none" }
+  }
+  const list = { region, parentId }
+  const reason = placementProblem(doc, found.block, list)
+  return reason ? { kind: "refused", reason } : { kind: "move", list, index }
 }
 
 // ── The panel ────────────────────────────────────────────────────────────────
@@ -190,8 +275,15 @@ export function OutlinePanel({
    */
   onSelectBlock?: (id: string) => void
 }) {
-  const { doc, selectedId, select, moveBlock, removeBlock, onInsertRequest } =
-    useEditor()
+  const {
+    doc,
+    selectedId,
+    select,
+    moveBlock,
+    moveBlockTo,
+    removeBlock,
+    onInsertRequest,
+  } = useEditor()
   const [announcement, setAnnouncement] = useState("")
   const tree = useRef<HTMLDivElement>(null)
   /** The button to give focus back to once a move has re-rendered the rows. */
@@ -203,6 +295,17 @@ export function OutlinePanel({
     () => new Set()
   )
   const [revealedFor, setRevealedFor] = useState<string | null>(null)
+  /** The row being dragged, the row it is over, and how many levels sideways. */
+  const [drag, setDrag] = useState<{
+    id: string
+    overId: string | null
+    offset: number
+  } | null>(null)
+  /** Why the last drop was refused, in its Region, until the next drag. */
+  const [refusal, setRefusal] = useState<{
+    region: Region
+    reason: string
+  } | null>(null)
 
   // A Block selected in the canvas may be in a collapsed Container: the
   // Containers around it open in this render, so its row is there to scroll to.
@@ -299,8 +402,12 @@ export function OutlinePanel({
       ? blocksIn(doc, region)
       : (inherited?.[region as "header" | "footer"] ?? [])
 
+  // A Container being dragged takes its Blocks with it, so they are hidden.
   const rowsOf = (region: Region) =>
-    outlineRows(blocksIn(doc, region), collapsed)
+    outlineRows(
+      blocksIn(doc, region),
+      drag ? new Set([...collapsed, drag.id]) : collapsed
+    )
 
   const labelOf = (id: string | number) => {
     const found = findBlock(doc, String(id))
@@ -308,14 +415,6 @@ export function OutlinePanel({
       ? blockLabel(found.block)
       : "Block"
   }
-  const position = (region: Region, id: string | number | undefined) => {
-    const blocks = blocksIn(doc, region)
-    return {
-      place: blocks.findIndex((b) => b.id === id) + 1,
-      of: blocks.length,
-    }
-  }
-
   const move = (
     region: Region,
     from: number,
@@ -349,31 +448,76 @@ export function OutlinePanel({
     setAnnouncement(`${blockLabel(found.block)} removed.`)
   }
 
-  const onDragEnd = (region: Region) => (event: DragEndEvent) => {
-    const drop = moveForDrop(
-      blocksIn(doc, region),
-      String(event.active.id),
-      event.over ? String(event.over.id) : null
-    )
-    if (drop) moveBlock(region, drop.from, drop.to)
+  /** Where a drop's `move` puts the Block `id`, said for a screen reader. */
+  const where = (id: string, list: BlockList, index: number) => {
+    const size =
+      (blocksOfList(doc, list)?.length ?? 0) +
+      (findBlock(doc, id)?.parentId === (list.parentId ?? null) ? 0 : 1)
+    const inside = list.parentId
+      ? "a Container"
+      : `the ${REGION_LABEL[list.region]}`
+    return `position ${index + 1} of ${size} in ${inside}`
   }
 
-  const announcements = (region: Region): Announcements => {
-    const where = (id: string | number | undefined) => {
-      const { place, of } = position(region, id)
-      return `position ${place} of ${of}`
-    }
-    return {
-      onDragStart: ({ active }) => `Picked up ${labelOf(active.id)}.`,
-      onDragOver: ({ active, over }) =>
-        over ? `${labelOf(active.id)} is over ${where(over.id)}.` : undefined,
-      onDragEnd: ({ active, over }) =>
-        over
-          ? `${labelOf(active.id)} dropped at ${where(over.id)}.`
-          : `${labelOf(active.id)} was not moved.`,
-      onDragCancel: ({ active }) => `${labelOf(active.id)} was not moved.`,
+  /** What dropping the dragged row now would do. */
+  const outcomeIn = (
+    region: Region,
+    id: string,
+    overId: string | null,
+    offset: number
+  ) => dropOutcome(doc, region, rowsOf(region), id, overId, offset)
+
+  const levels = (event: DragMoveEvent) => Math.round(event.delta.x / INDENT)
+
+  const onDragMove = (event: DragMoveEvent) => {
+    const overId = event.over ? String(event.over.id) : null
+    const offset = levels(event)
+    setDrag((current) =>
+      current && (current.overId !== overId || current.offset !== offset)
+        ? { ...current, overId, offset }
+        : current
+    )
+  }
+
+  const onDragEnd = (region: Region) => (event: DragEndEvent) => {
+    const id = String(event.active.id)
+    const label = labelOf(id)
+    const outcome = outcomeIn(
+      region,
+      id,
+      event.over ? String(event.over.id) : null,
+      levels(event)
+    )
+    setDrag(null)
+    if (outcome.kind === "move") {
+      moveBlockTo(id, outcome.list, outcome.index)
+      setAnnouncement(
+        `${label} moved to ${where(id, outcome.list, outcome.index)}.`
+      )
+    } else if (outcome.kind === "refused") {
+      setRefusal({ region, reason: outcome.reason })
+      setAnnouncement(`${label} was not moved. ${outcome.reason}`)
+    } else {
+      setAnnouncement(`${label} was not moved.`)
     }
   }
+
+  const announcements = (region: Region): Announcements => ({
+    onDragStart: ({ active }) => `Picked up ${labelOf(active.id)}.`,
+    onDragOver: ({ active, over }) => {
+      if (!over || !drag) return undefined
+      const id = String(active.id)
+      const outcome = outcomeIn(region, id, String(over.id), drag.offset)
+      return outcome.kind === "move"
+        ? `${labelOf(id)} is over ${where(id, outcome.list, outcome.index)}.`
+        : outcome.kind === "refused"
+          ? `${labelOf(id)} can't go here. ${outcome.reason}`
+          : `${labelOf(id)} is where it was.`
+    },
+    // The drop says what it did in the panel's own status.
+    onDragEnd: () => undefined,
+    onDragCancel: ({ active }) => `${labelOf(active.id)} was not moved.`,
+  })
 
   /**
    * The tree's keys: Up and Down walk the rows, Home and End go to the first
@@ -463,6 +607,23 @@ export function OutlinePanel({
         // Rows leave room for a Container's toggle when there is one, so the
         // labels of a list line up.
         const toggles = rows.some((row) => childrenOf(row.block).length > 0)
+        // While a row of this Region is dragged: the level it would land at,
+        // and why it can't, when it can't.
+        const dragged =
+          drag && rows.some((row) => row.id === drag.id) ? drag : null
+        const landing =
+          dragged && dragged.overId !== null
+            ? dropPlace(rows, dragged.id, dragged.overId, dragged.offset)
+            : null
+        const pending = dragged
+          ? outcomeIn(region, dragged.id, dragged.overId, dragged.offset)
+          : null
+        const problem =
+          pending?.kind === "refused"
+            ? pending.reason
+            : !dragged && refusal?.region === region
+              ? refusal.reason
+              : null
         const headingId = `outline-${region}`
         return (
           <div
@@ -508,7 +669,17 @@ export function OutlinePanel({
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
+                  // Rows come and go mid-drag: a dragged Container's Blocks hide.
+                  measuring={{
+                    droppable: { strategy: MeasuringStrategy.Always },
+                  }}
+                  onDragStart={({ active }) => {
+                    setRefusal(null)
+                    setDrag({ id: String(active.id), overId: null, offset: 0 })
+                  }}
+                  onDragMove={onDragMove}
                   onDragEnd={onDragEnd(region)}
+                  onDragCancel={() => setDrag(null)}
                   accessibility={{ announcements: announcements(region) }}
                 >
                   <SortableContext
@@ -528,7 +699,15 @@ export function OutlinePanel({
                           tabbable={row.id === tabbableId}
                           expanded={
                             childrenOf(row.block).length > 0
-                              ? !collapsed.has(row.id)
+                              ? row.open
+                              : undefined
+                          }
+                          landing={
+                            row.id === dragged?.id
+                              ? {
+                                  depth: landing?.depth ?? row.depth,
+                                  refused: pending?.kind === "refused",
+                                }
                               : undefined
                           }
                           toggleSlot={toggles}
@@ -543,6 +722,17 @@ export function OutlinePanel({
                       ))}
                     </ul>
                   </SortableContext>
+                  {/* The row under the pointer is a copy, so the row in the
+                      list can show the level it would land at: dnd-kit takes
+                      a move of the dragged row's own box off the pointer's. */}
+                  <DragOverlay dropAnimation={null}>
+                    {dragged && (
+                      <DraggedRow
+                        block={findBlock(doc, dragged.id)?.block}
+                        refused={pending?.kind === "refused"}
+                      />
+                    )}
+                  </DragOverlay>
                 </DndContext>
               ) : (
                 <ul
@@ -555,6 +745,9 @@ export function OutlinePanel({
                   ))}
                 </ul>
               ))}
+
+            {/* Under the list, so that showing it mid-drag moves no row. */}
+            {problem && <p className="text-xs text-destructive">{problem}</p>}
           </div>
         )
       })}
@@ -582,6 +775,30 @@ function RowText({ block, hintId }: { block: BlockValues; hintId: string }) {
         </span>
       )}
     </span>
+  )
+}
+
+/** The copy of a dragged row that follows the pointer. */
+function DraggedRow({
+  block,
+  refused,
+}: {
+  block: BlockValues | undefined
+  refused: boolean
+}) {
+  if (!block) return null
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        ROW_CLASS,
+        "cursor-grabbing shadow-md",
+        refused && "border-destructive"
+      )}
+    >
+      <GripVertical className="size-4 shrink-0 text-muted-foreground" />
+      <RowText block={block} hintId="outline-hint-dragged" />
+    </div>
   )
 }
 
@@ -726,14 +943,15 @@ const selectKeys =
 /**
  * One Block's row, at any depth. The rows of a Region are one flat list, a
  * Container's Blocks right after it, so `aria-level` says how deep each is
- * and the row is indented a step per level. A Block of the Region itself is
- * dragged to reorder; one in a Container has a Remove button.
+ * and the row is indented a step per level. Any row can be dragged; one in a
+ * Container has a Remove button.
  */
 function Row({
   row,
   selected,
   tabbable,
   expanded,
+  landing,
   toggleSlot,
   onSelect,
   onToggle,
@@ -746,6 +964,8 @@ function Row({
   tabbable: boolean
   /** Whether a Container's Blocks show; undefined for a row with none. */
   expanded: boolean | undefined
+  /** While the row is dragged: the level it would land at, and whether it may. */
+  landing?: { depth: number; refused: boolean }
   toggleSlot: boolean
   onSelect: (id: string) => void
   onToggle: (id: string, open: boolean) => void
@@ -754,14 +974,15 @@ function Row({
   onRemove: (id: string) => void
 }) {
   const { id, block, depth } = row
-  const draggable = depth === 0
   const { setNodeRef, listeners, transform, transition, isDragging } =
-    useSortable({ id, disabled: !draggable })
+    useSortable({ id })
+  // One step in per level, from the Region's own rows; the dragged row's
+  // place in the list shows the level it would land at.
+  const indent = landing?.depth ?? depth
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    // One step in per level, from the Region's own rows.
-    marginInlineStart: depth > 0 ? `${depth}rem` : undefined,
+    marginInlineStart: indent > 0 ? `${indent * INDENT}px` : undefined,
   }
   const label = blockLabel(block)
   const hintId = `outline-hint-${id}`
@@ -779,22 +1000,22 @@ function Row({
       data-block-id={id}
       data-parent-id={row.parentId ?? undefined}
       tabIndex={tabbable ? 0 : -1}
-      {...(draggable ? listeners : {})}
+      {...listeners}
       onClick={selectOnClick(id, onSelect)}
       onKeyDown={selectKeys(id, onSelect)}
       className={cn(
         ROW_CLASS,
-        draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+        "cursor-grab active:cursor-grabbing",
         selected && "border-primary bg-accent",
-        isDragging && "relative z-10 opacity-80 shadow-md"
+        // Where the dragged row would land, at that level.
+        isDragging && "border-dashed opacity-60",
+        landing?.refused && "border-destructive"
       )}
     >
-      {draggable && (
-        <GripVertical
-          aria-hidden
-          className="size-4 shrink-0 text-muted-foreground"
-        />
-      )}
+      <GripVertical
+        aria-hidden
+        className="size-4 shrink-0 text-muted-foreground"
+      />
       <ToggleButton
         id={id}
         label={label}

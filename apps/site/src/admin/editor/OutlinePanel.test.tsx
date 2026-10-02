@@ -6,7 +6,12 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 
 import type { BlockValues } from "../pageForm"
 import { EditorProvider, useEditor } from "./EditorProvider"
-import { blockHint, moveForDrop, OutlinePanel } from "./OutlinePanel"
+import {
+  blockHint,
+  dropOutcome,
+  OutlinePanel,
+  outlineRows,
+} from "./OutlinePanel"
 import type { EditorDocument, PageDocument } from "./state"
 
 const hero = (id: string, heading: string): BlockValues => ({
@@ -280,18 +285,112 @@ describe("locked regions", () => {
 })
 
 describe("drag and drop", () => {
-  const blocks = [hero("a", "A"), text("b", "B"), cta("c", "C")]
-
-  it("moves the dragged Block to where it was dropped", () => {
-    expect(moveForDrop(blocks, "a", "c")).toEqual({ from: 0, to: 2 })
-    expect(moveForDrop(blocks, "c", "a")).toEqual({ from: 2, to: 0 })
+  const box = (id: string, children: BlockValues[], columns = "1") =>
+    ({
+      id,
+      blockType: "container",
+      columns,
+      children,
+    }) as unknown as BlockValues
+  const page = (blocks: BlockValues[]): EditorDocument => ({
+    ...(pageDoc() as PageDocument),
+    blocks,
+  })
+  /** The rows while `activeId` is dragged: its own Blocks are hidden. */
+  const dragRows = (doc: EditorDocument, activeId: string, collapsed = []) =>
+    outlineRows((doc as PageDocument).blocks, new Set([...collapsed, activeId]))
+  const drop = (
+    doc: EditorDocument,
+    activeId: string,
+    overId: string | null,
+    offset = 0,
+    collapsed: string[] = []
+  ) =>
+    dropOutcome(
+      doc,
+      "page",
+      dragRows(doc, activeId, collapsed as never),
+      activeId,
+      overId,
+      offset
+    )
+  // Hero b1, then a two-column Container c1 holding a Rich text t1 and a
+  // stacked Container c2, which holds a Call to action x1.
+  const nested = () =>
+    page([
+      hero("b1", "Welcome"),
+      box("c1", [text("t1", "Left"), box("c2", [cta("x1", "Book")])], "2"),
+    ])
+  const moveTo = (parentId: string | null, index: number) => ({
+    kind: "move",
+    list: { region: "page", parentId },
+    index,
   })
 
-  it("does nothing for a drop on itself, outside the list or from elsewhere", () => {
-    expect(moveForDrop(blocks, "a", "a")).toBeNull()
-    expect(moveForDrop(blocks, "a", null)).toBeNull()
-    expect(moveForDrop(blocks, "a", "elsewhere")).toBeNull()
-    expect(moveForDrop(blocks, "elsewhere", "a")).toBeNull()
+  it("reorders a Region's own Blocks", () => {
+    const doc = page([hero("a", "A"), text("b", "B"), cta("c", "C")])
+    expect(drop(doc, "a", "c")).toEqual(moveTo(null, 2))
+    expect(drop(doc, "c", "a")).toEqual(moveTo(null, 0))
+  })
+
+  it("does nothing for a drop where the Block was, or outside the list", () => {
+    expect(drop(nested(), "t1", "t1")).toEqual({ kind: "none" })
+    expect(drop(nested(), "t1", null)).toEqual({ kind: "none" })
+    expect(drop(nested(), "t1", "elsewhere")).toEqual({ kind: "none" })
+  })
+
+  it("moves a Block within its Container", () => {
+    const doc = page([box("c", [text("p", "P"), cta("q", "Q")])])
+    expect(drop(doc, "p", "q")).toEqual(moveTo("c", 1))
+  })
+
+  it("moves a Block into a Container: below an open one's row, it is that Container's first", () => {
+    expect(drop(nested(), "t1", "c2")).toEqual(moveTo("c2", 0))
+  })
+
+  it("moves a Block out of its Containers when dragged to the left", () => {
+    // Where it is, one step left: into c1, after c2.
+    expect(drop(nested(), "x1", "x1", -1)).toEqual(moveTo("c1", 2))
+    // Two steps, or more: onto the Page, last.
+    expect(drop(nested(), "x1", "x1", -2)).toEqual(moveTo(null, 2))
+    expect(drop(nested(), "x1", "x1", -5)).toEqual(moveTo(null, 2))
+  })
+
+  it("moves a Block between Containers", () => {
+    const doc = page([box("l", [text("p", "P")]), box("r", [cta("q", "Q")])])
+    expect(drop(doc, "p", "q")).toEqual(moveTo("r", 1))
+    expect(drop(doc, "q", "p")).toEqual(moveTo("l", 0))
+  })
+
+  it("goes into an empty Container when dragged to the right under it", () => {
+    const doc = page([box("e", []), text("p", "P")])
+    expect(drop(doc, "p", "p")).toEqual({ kind: "none" })
+    expect(drop(doc, "p", "p", 1)).toEqual(moveTo("e", 0))
+  })
+
+  it("does not go into a collapsed Container", () => {
+    const doc = page([box("k", [text("p", "P")]), cta("q", "Q")])
+    expect(drop(doc, "q", "q", 1, ["k"])).toEqual({ kind: "none" })
+  })
+
+  it("refuses a Block that needs the page's width in a column, with the reason", () => {
+    expect(drop(nested(), "b1", "t1")).toEqual({
+      kind: "refused",
+      reason:
+        "A “Hero” Block needs the full width of the page and can't sit in a column.",
+    })
+  })
+
+  it("refuses a fourth level of Containers, with the reason", () => {
+    const doc = page([
+      box("l1", [box("l2", [box("l3", [text("t", "T")])])]),
+      box("k", [text("u", "U")]),
+    ])
+    expect(drop(doc, "k", "t")).toEqual({
+      kind: "refused",
+      reason:
+        "Containers go 3 levels deep, and this would put one inside 3 Containers.",
+    })
   })
 })
 
