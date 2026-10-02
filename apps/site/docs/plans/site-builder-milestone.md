@@ -81,6 +81,7 @@ Prototype code is a reference, not a base. Rewrite it properly: add tests, handl
   - **Dashboard**
   - **Content:** Layouts, Pages, Media
   - **Settings:** Brand, SEO, Theme, Assets
+  - **Tools:** Replace Text, Replace Image (added by the Tools milestone, ADR-0008)
   - at the foot, View Site, the Staff User, and sign out
 - **The Dashboard, at the Admin root (`/admin`):**
   - a Site card: logo, name, domain, View Site
