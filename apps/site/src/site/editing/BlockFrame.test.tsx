@@ -86,6 +86,96 @@ describe("Blocks in editing mode", () => {
   })
 })
 
+describe("Blocks in a Container, in editing mode", () => {
+  const button = (id: string, label: string) =>
+    ({
+      id,
+      blockType: "button",
+      link: { label, href: "/contact" },
+      style: "primary",
+      align: "start",
+    }) as unknown as PageBlock
+  const containerOf = (id: string, children: PageBlock[], columns = "1") =>
+    ({
+      id,
+      blockType: "container",
+      columns,
+      gap: "medium",
+      align: "stretch",
+      width: "page",
+      background: "default",
+      children,
+    }) as unknown as PageBlock
+  const tree = [
+    hero("a", "One"),
+    containerOf("c1", [
+      button("x", "First"),
+      containerOf("c2", [button("y", "Second"), button("z", "Third")], "2"),
+    ]),
+  ]
+  const nested = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-block-id]")].map((frame) => [
+      frame.getAttribute("data-block-id"),
+      frame.getAttribute("data-block-parent"),
+      frame.getAttribute("data-block-index"),
+    ])
+
+  it("frames the Blocks it holds, at every depth, with their Container and their place in it", () => {
+    const { container } = render(
+      <Blocks blocks={tree} fixtures={fixtures} editing />
+    )
+    expect(nested(container)).toEqual([
+      ["a", null, "0"],
+      ["c1", null, "1"],
+      ["x", "c1", "0"],
+      ["c2", "c1", "1"],
+      ["y", "c2", "0"],
+      ["z", "c2", "1"],
+    ])
+    for (const id of ["x", "c2", "y", "z"]) {
+      const frame = container.querySelector(`[data-block-id=${id}]`)!
+      expect(frame.getAttribute("data-block-region")).toBe("page")
+    }
+  })
+
+  it("frames each on its cell, so it lays out as on the Site", () => {
+    const site = render(<Blocks blocks={tree} fixtures={fixtures} />)
+    const cells = [...site.container.querySelectorAll("[data-container]")].map(
+      (mark) => mark.firstElementChild!.firstElementChild!.className
+    )
+    cleanup()
+    const { container } = render(
+      <Blocks blocks={tree} fixtures={fixtures} editing />
+    )
+    expect(
+      ["x", "y"].map(
+        (id) => container.querySelector(`[data-block-id=${id}]`)!.className
+      )
+    ).toEqual(cells)
+    // Stretched cells stretch the Block itself, not a wrapper around it.
+    expect(
+      container.querySelector("[data-block-id=y]")!.firstElementChild!.tagName
+    ).toBe("SECTION")
+  })
+
+  it("draws the Blocks it holds for editing, so their text is edited in place", () => {
+    const { container } = render(
+      <Blocks blocks={tree} fixtures={fixtures} editing />
+    )
+    const label = container.querySelector(
+      "[data-block-id=y] [data-editable-field='link.label']"
+    )!
+    expect(label.textContent).toBe("Second")
+    expect(label.getAttribute("contenteditable")).toBe("plaintext-only")
+  })
+
+  it("adds nothing when not editing", () => {
+    const { container } = render(<Blocks blocks={tree} fixtures={fixtures} />)
+    expect(container.querySelector("[data-block-id]")).toBeNull()
+    expect(container.querySelector("[data-editable-field]")).toBeNull()
+  })
+})
+
 describe("region Blocks in editing mode", () => {
   const header = [
     { id: "h1", blockType: "utilityStrip", text: "One" },

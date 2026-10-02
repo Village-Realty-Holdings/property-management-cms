@@ -1,6 +1,6 @@
 import type { Page } from "../../../payload-types"
 import { emptyBlock, type BlockValues, type HeroValues } from "../../pageForm"
-import type { LayoutChoice, PageDocument } from "../state"
+import { childrenOf, type LayoutChoice, type PageDocument } from "../state"
 
 /**
  * A Page as the Visual Editor holds it, and back to what Payload stores.
@@ -50,14 +50,19 @@ export function pageDocumentFromPage(page: Page): PageDocument {
   }
 }
 
+/** `block` as stored: without an id the editor made up, at any depth. */
+function storedBlock(block: BlockValues): Record<string, unknown> {
+  const stored: Record<string, unknown> = { ...block }
+  if (isEditorId(stored.id)) delete stored.id
+  if (block.blockType === ("container" as string)) {
+    stored.children = childrenOf(block).map(storedBlock)
+  }
+  return stored
+}
+
 /** The data to store for `doc`. */
 export function pageDataFromDocument(doc: PageDocument) {
-  const blocks = doc.blocks.map((block) => {
-    if (!isEditorId(block.id)) return block
-    return Object.fromEntries(
-      Object.entries(block).filter(([key]) => key !== "id")
-    )
-  })
+  const blocks = doc.blocks.map(storedBlock)
   const layout =
     doc.layout.mode === "none"
       ? ({ mode: "none" } as const)

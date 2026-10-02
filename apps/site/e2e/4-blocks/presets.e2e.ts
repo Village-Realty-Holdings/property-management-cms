@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import type { Browser } from "playwright-core"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { fixturesFor } from "../../src/site/fixtures"
 import {
   CLASSIC,
   HARBOUR,
@@ -21,6 +22,7 @@ import {
   styleMismatches,
   visit,
 } from "../theme/support/browser"
+import { SCHEMA } from "../theme/support/env"
 import { openScratchSite, type ScratchSite } from "../theme/support/site"
 import {
   PAGE_BLOCKS,
@@ -28,6 +30,7 @@ import {
   blockPath,
   blockRegion,
 } from "./support/catalogue"
+import { keepsScreenshot } from "./support/screenshots"
 
 /**
  * Phase 4 acceptance: every Block renders from Theme tokens and passes AA,
@@ -40,7 +43,8 @@ import {
  * Block's own heading must be set in the Theme's display face (font,
  * weight, case and tracking from `--font-display` and `--display-*`). The
  * Block is screenshotted to docs/screenshots/4-blocks/<preset>/<block>.png,
- * the set the spec asks to attach to the PR. Finally, each Block must look
+ * the set the spec asks to attach to the PR (a Rental or Blog Block only
+ * when the Site has fixtures to show). Finally, each Block must look
  * different under Classic and Harbour: a Block that ignores the Theme would
  * not change.
  */
@@ -111,9 +115,11 @@ describe.each(PRESETS.map((preset) => [preset.name, preset] as const))(
             animations: "disabled",
             caret: "hide",
           })
-          const folder = path.join(SCREENSHOT_DIR, preset.id)
-          mkdirSync(folder, { recursive: true })
-          writeFileSync(path.join(folder, `${blockFileId(name)}.png`), image)
+          if (keepsScreenshot(name, fixturesFor(SCHEMA))) {
+            const folder = path.join(SCREENSHOT_DIR, preset.id)
+            mkdirSync(folder, { recursive: true })
+            writeFileSync(path.join(folder, `${blockFileId(name)}.png`), image)
+          }
           shots[preset.id]![name] = image
         } finally {
           await context.close()

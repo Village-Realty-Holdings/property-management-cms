@@ -4,8 +4,8 @@ import type { RichTextBlock as RichTextBlockData } from "../../payload-types"
 import { RichTextEditing } from "../editing/RichTextEditing"
 import { canEditInPlace } from "../editing/canEditInPlace"
 import { hasText, RichText } from "../RichText"
-import { backgroundOf, BlockSection } from "./BlockSection"
-import type { BlockContext } from "./types"
+import { BlockSection, surfaceOf } from "./BlockSection"
+import { type BlockContext, placeOf } from "./types"
 
 type LexicalNode = { type?: string; text?: unknown; children?: LexicalNode[] }
 
@@ -28,7 +28,7 @@ function firstHeading(content: unknown): string | null {
 const inverse =
   "[&_a]:text-inherit [&_a]:decoration-current [&_code]:text-foreground"
 
-/** Rich text: a free-form text section at reading width. */
+/** Rich text: a free-form text section, at reading width or across the page. */
 export function RichTextBlock({
   block,
   context,
@@ -39,16 +39,18 @@ export function RichTextBlock({
   // In the Visual Editor an empty Block is still there to be typed into.
   const editable = context.editing && canEditInPlace(block.content)
   if (!editable && !hasText(block.content)) return null
-  const background = backgroundOf(block.background)
+  const background = surfaceOf(block.background, context)
   const className = cn(
     "text-lg [&>:first-child]:mt-0",
+    block.width === "wide" && "max-w-none",
     (background === "primary" || background === "dark") && inverse
   )
   return (
     <BlockSection
       background={background}
       // The section is a region, so it needs a name: its heading, or its place.
-      label={firstHeading(block.content) ?? `Section ${context.index + 1}`}
+      label={firstHeading(block.content) ?? `Section ${placeOf(context)}`}
+      context={context}
     >
       {editable ? (
         // Rich text is edited in place, with a floating toolbar. Content with
@@ -56,7 +58,6 @@ export function RichTextBlock({
         <RichTextEditing
           field="content"
           content={block.content}
-          context={context}
           className={className}
         />
       ) : (

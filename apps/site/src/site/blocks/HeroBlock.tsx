@@ -1,6 +1,6 @@
 import type { HeroBlock as HeroBlockData } from "../../payload-types"
 import { imageOf } from "../brand"
-import { BlockButton, linkOf } from "./BlockButton"
+import { BlockButton, linkOf, type BlockSurface } from "./BlockButton"
 import { HeroShell } from "./HeroShell"
 import type { BlockContext } from "./types"
 import { TrustItems, trustItemsOf } from "./TrustItems"
@@ -23,6 +23,15 @@ export function HeroBlock({
   const cta = linkOf(block.cta)
   const image = imageOf(block.image)
   const strip = trustItemsOf(block.trustStrip)
+  // What the button and the strip sit on: the photo's dark shade, else the
+  // Hero's own primary colour, else (inside a Container) the Container's.
+  const surface: BlockSurface | undefined = image
+    ? "dark"
+    : context.surface === undefined || context.surface === "primary"
+      ? "primary"
+      : context.surface === "dark"
+        ? "dark"
+        : undefined
 
   return (
     <HeroShell
@@ -36,7 +45,7 @@ export function HeroBlock({
         strip.length > 0 && (
           <TrustItems
             items={strip}
-            surface={image ? "dark" : "primary"}
+            surface={surface ?? "page"}
             label="Highlights"
             inset
           />
@@ -48,7 +57,7 @@ export function HeroBlock({
           <BlockButton
             link={cta}
             tone="accent"
-            surface={image ? "dark" : "primary"}
+            surface={surface}
             editable={{ field: "cta.label", context }}
           />
         </div>

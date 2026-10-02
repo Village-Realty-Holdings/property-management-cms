@@ -2,9 +2,9 @@
 export type MosaicTile = {
   /** Grid classes (written out in full so Tailwind can see them). */
   className: string
-  /** The cells it covers in the phone's 2-column grid. */
+  /** The cells it covers in the 2-column grid of a phone or a narrow column. */
   phone: number
-  /** The cells it covers in the tablet's 4-column grid. */
+  /** The cells it covers in the 4-column grid from a tablet's width (`fit-md`) up. */
   tablet: number
 }
 
@@ -14,8 +14,8 @@ const cell = (className = "", phone = 1, tablet = 1): MosaicTile => ({
   tablet,
 })
 
-/** The first of five: a full row on a phone, two rows by two columns from the tablet. */
-const large = () => cell("col-span-2 md:row-span-2", 2, 4)
+/** The first of five: a full row on a phone, two rows by two columns from a tablet's width. */
+const large = () => cell("col-span-2 fit-md:row-span-2", 2, 4)
 
 /**
  * The tiles of a mosaic of `count` items: the first of every five is large,
@@ -29,10 +29,13 @@ export function mosaicTiles(count: number): MosaicTile[] {
   }
   switch (count % 5) {
     case 1:
-      tiles.push(cell("col-span-2 md:col-span-4", 2, 4))
+      tiles.push(cell("col-span-2 fit-md:col-span-4", 2, 4))
       break
     case 2:
-      tiles.push(cell("md:col-span-2", 1, 2), cell("md:col-span-2", 1, 2))
+      tiles.push(
+        cell("fit-md:col-span-2", 1, 2),
+        cell("fit-md:col-span-2", 1, 2)
+      )
       break
     case 3:
       tiles.push(cell("col-span-2", 2, 2), cell(), cell())
@@ -46,10 +49,12 @@ export function mosaicTiles(count: number): MosaicTile[] {
 
 /**
  * The Features grid's columns: two features, or four, sit two to a row from
- * the tablet up; the rest go three to a row from the desktop up.
+ * a tablet's width up; the rest go three to a row from a desktop's. The
+ * width is the room the Block has (`fit-*`): the viewport's on the Page, its
+ * cell's in a Container.
  */
 export function featureColumns(count: number): string {
   return count === 2 || count === 4
-    ? "sm:grid-cols-2"
-    : "sm:grid-cols-2 lg:grid-cols-3"
+    ? "fit-sm:grid-cols-2"
+    : "fit-sm:grid-cols-2 fit-lg:grid-cols-3"
 }

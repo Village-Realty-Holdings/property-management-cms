@@ -1,5 +1,5 @@
 import { BLOCK_TYPES } from "../../pageForm"
-import type { PageDocument } from "../state"
+import { childrenOf, placeName, type PageDocument } from "../state"
 
 /** Why a save failed, as the Server Action reports it. */
 export type SaveProblem = {
@@ -23,6 +23,9 @@ function blockName(blockType: string): string {
   return known ? known.label : sentence(words(blockType))
 }
 
+/** The field a Container keeps its Blocks in. */
+const CHILDREN = "children"
+
 const PAGE_FIELDS: Record<string, string> = {
   title: "Title",
   path: "Path",
@@ -32,6 +35,28 @@ const PAGE_FIELDS: Record<string, string> = {
 }
 
 function where(path: string, doc: PageDocument): string {
+  // A Block in a Container: named by its place from the Page down, then by
+  // its own name, as the Outline and Media in use name it.
+  const nested = /^blocks\.(\d+)((?:\.children\.\d+)+)(?:\.(.+))?$/.exec(path)
+  if (nested) {
+    const [first, ...inner] = [
+      nested[1]!,
+      ...nested[2]!.split(".children.").slice(1),
+    ].map(Number)
+    let block: PageDocument["blocks"][number] | undefined = doc.blocks[first!]
+    for (const index of inner) block = block && childrenOf(block)[index]
+    const place = placeName(doc, {
+      region: "page",
+      path: ["blocks", first!, ...inner.flatMap((index) => [CHILDREN, index])],
+    })
+    return [
+      place,
+      block && blockName(block.blockType),
+      nested[3] && words(nested[3]),
+    ]
+      .filter(Boolean)
+      .join(", ")
+  }
   const block = /^blocks\.(\d+)(?:\.(.+))?$/.exec(path)
   if (block) {
     const index = Number(block[1])

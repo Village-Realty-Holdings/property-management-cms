@@ -208,7 +208,7 @@ describe("keyboard shortcuts", () => {
       "Save",
       "Undo",
       "Redo",
-      "Deselect the Block",
+      "Select the Container around the Block, or deselect it",
       "Remove the selected Block",
     ]) {
       expect(within(popover).getByText(label)).toBeTruthy()

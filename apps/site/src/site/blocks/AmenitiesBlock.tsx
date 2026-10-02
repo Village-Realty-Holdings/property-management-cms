@@ -5,12 +5,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { AmenitiesBlock as AmenitiesBlockData } from "../../payload-types"
 import { imageOf } from "../brand"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { IconList } from "./IconList"
 import { mosaicTiles } from "./mosaic"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 type Item = { index: number; label: string } & Pick<
   AmenitiesBlockData["items"][number],
@@ -70,7 +70,8 @@ function Tile({
 
 /**
  * Amenities: a photo-tile mosaic or an icon list. The mosaic is the default
- * for a variant the Site no longer has.
+ * for a variant the Site no longer has. Both lay themselves out by the room
+ * the Block has (`fit-*`), so it fits a Container's column.
  */
 export function AmenitiesBlock({
   block,
@@ -91,12 +92,12 @@ export function AmenitiesBlock({
     }))
     .filter((item) => item.label)
   const tiles = mosaicTiles(items.length)
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
-      className="flex flex-col gap-10 sm:gap-12"
+      className="flex flex-col gap-10 fit-sm:gap-12"
     >
       <div className="flex max-w-2xl flex-col gap-3">
         <EditableText
@@ -104,7 +105,7 @@ export function AmenitiesBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>
@@ -113,7 +114,7 @@ export function AmenitiesBlock({
             as="p"
             field="intro"
             context={context}
-            className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
           >
             {intro}
           </EditableText>
@@ -123,7 +124,7 @@ export function AmenitiesBlock({
         (block.variant === "icons" ? (
           <IconList
             columns="grid"
-            background={block.background}
+            background={surfaceOf(block.background, context)}
             context={context}
             items={items.map((item) => ({
               icon: item.icon,
@@ -134,7 +135,7 @@ export function AmenitiesBlock({
         ) : (
           <ul
             role="list"
-            className="grid auto-rows-[11rem] grid-cols-2 gap-3 sm:auto-rows-[13rem] sm:gap-4 md:grid-cols-4"
+            className="grid auto-rows-[11rem] grid-cols-2 gap-3 fit-sm:auto-rows-[13rem] fit-sm:gap-4 fit-md:grid-cols-4"
           >
             {items.map((item, position) => (
               <Tile

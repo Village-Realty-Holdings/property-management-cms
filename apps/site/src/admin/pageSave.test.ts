@@ -313,3 +313,93 @@ describe("deleting a Page", () => {
     ).toBeTruthy()
   })
 })
+
+describe("saving a Page with Containers", () => {
+  const container = (children: unknown[]) => ({
+    blockType: "container",
+    columns: "1",
+    gap: "medium",
+    align: "top",
+    width: "page",
+    children,
+  })
+  const hero = { ...(emptyBlock("hero") as HeroValues), heading: "Inside" }
+  const blocksOf = (blocks: unknown[]) => blocks as PageDocument["blocks"]
+
+  it("stores three levels and hands the tree back", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Nested",
+        path: "/nested",
+        blocks: blocksOf([container([container([container([hero])])])]),
+      }),
+    })
+    expect(result.ok).toBe(true)
+    const stored = JSON.stringify(result.document?.blocks)
+    expect(stored.match(/"blockType":"container"/g)).toHaveLength(3)
+    expect(stored).toContain('"heading":"Inside"')
+  })
+
+  it("refuses a fourth level with a message naming the Block, and stores nothing", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Too deep",
+        path: "/too-deep",
+        blocks: blocksOf([
+          hero,
+          container([container([container([hero, container([hero])])])]),
+        ]),
+      }),
+    })
+    expect(result.ok).toBe(false)
+    expect(result.message).toBe(
+      "Block 2, Container, Block 1, Container, Block 1, Container, Block 2 is a Container inside 3 Containers, and Containers go 3 levels deep. Move it up a level, or remove it."
+    )
+    expect((await publicPage("/too-deep")).totalDocs).toBe(0)
+    const drafts = await t.payload.find({
+      collection: "pages",
+      where: { path: { equals: "/too-deep" } },
+      draft: true,
+      ...asStaff,
+    })
+    expect(drafts.totalDocs).toBe(0)
+  })
+
+  it("refuses a Block that needs the page's full width in a Container with columns, naming its place", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Too narrow",
+        path: "/too-narrow",
+        blocks: blocksOf([hero, { ...container([hero]), columns: "2" }]),
+      }),
+    })
+    expect(result).toEqual({
+      ok: false,
+      message:
+        "Block 2, Container, Column 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the Container, or set the Container to 1 column at Page width.",
+    })
+  })
+
+  it("refuses a Block a Container doesn't take, by its type", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Wrong Block",
+        path: "/wrong-block",
+        blocks: blocksOf([container([{ blockType: "logo" }])]),
+      }),
+    })
+    expect(result).toEqual({
+      ok: false,
+      message:
+        "Block 1, Container, Block 1 is a “logo” Block, which a Container can't hold. Remove it.",
+    })
+  })
+})

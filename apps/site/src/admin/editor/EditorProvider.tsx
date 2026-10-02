@@ -17,8 +17,10 @@ import {
   createEditorState,
   editorReducer,
   isEditorDirty,
+  listPlace,
   type EditorAction,
   type EditorDocument,
+  type BlockList,
   type EditorState,
   type Region,
 } from "./state"
@@ -34,18 +36,36 @@ export type EditorApi = {
   canRedo: boolean
   dispatch: (action: EditorAction) => void
   setField: (path: string, value: unknown) => void
-  insertBlock: (region: Region, index: number, block: BlockValues) => void
-  moveBlock: (region: Region, from: number, to: number) => void
+  /** Puts `block` at `index` in the Region, or in its Container `parentId`. */
+  insertBlock: (
+    region: Region,
+    index: number,
+    block: BlockValues,
+    parentId?: string | null
+  ) => void
+  /** Reorders the Region's Blocks, or those of its Container `parentId`. */
+  moveBlock: (
+    region: Region,
+    from: number,
+    to: number,
+    parentId?: string | null
+  ) => void
+  /** Moves the Block `id` to `index` in `list`, which can be another one. */
+  moveBlockTo: (id: string, list: BlockList, index: number) => void
   duplicateBlock: (id: string) => void
   removeBlock: (id: string) => void
   select: (id: string) => void
   /**
    * A "+" was pressed, in the canvas or the Outline: a Block is wanted at
-   * `index` in `region`. It opens the Block picker, which inserts the chosen
-   * Block there and selects it, unless the provider was given its own
-   * `onInsertRequest`.
+   * `index` in `region`, or in its Container `parentId`. It opens the Block
+   * picker, which inserts the chosen Block there and selects it, unless the
+   * provider was given its own `onInsertRequest`.
    */
-  onInsertRequest: (region: Region, index: number) => void
+  onInsertRequest: (
+    region: Region,
+    index: number,
+    parentId?: string | null
+  ) => void
   deselect: () => void
   undo: () => void
   redo: () => void
@@ -67,7 +87,7 @@ export function EditorProvider({
 }: {
   initial: EditorDocument
   /** What a "+" does, in place of opening the Block picker. */
-  onInsertRequest?: (region: Region, index: number) => void
+  onInsertRequest?: EditorApi["onInsertRequest"]
   children: ReactNode
 }) {
   const [state, dispatch] = useReducer(
@@ -79,7 +99,10 @@ export function EditorProvider({
   const onInsertRequest = useMemo(
     () =>
       customInsertRequest ??
-      ((region: Region, index: number) => setPicking({ region, index })),
+      ((region: Region, index: number, parentId?: string | null) =>
+        setPicking(
+          parentId == null ? { region, index } : { region, index, parentId }
+        )),
     [customInsertRequest]
   )
 
@@ -93,10 +116,12 @@ export function EditorProvider({
       canRedo: canRedo(state),
       dispatch,
       setField: (path, value) => dispatch({ type: "setField", path, value }),
-      insertBlock: (region, index, block) =>
-        dispatch({ type: "insertBlock", region, index, block }),
-      moveBlock: (region, from, to) =>
-        dispatch({ type: "moveBlock", region, from, to }),
+      insertBlock: (region, index, block, parentId) =>
+        dispatch({ type: "insertBlock", region, parentId, index, block }),
+      moveBlock: (region, from, to, parentId) =>
+        dispatch({ type: "moveBlock", region, parentId, from, to }),
+      moveBlockTo: (id, list, index) =>
+        dispatch({ type: "moveBlockTo", id, ...list, index }),
       duplicateBlock: (id) => dispatch({ type: "duplicateBlock", id }),
       removeBlock: (id) => dispatch({ type: "removeBlock", id }),
       select: (id) => dispatch({ type: "select", id }),
@@ -115,6 +140,11 @@ export function EditorProvider({
       {children}
       <BlockPicker
         target={picking}
+        inside={
+          picking?.parentId == null
+            ? undefined
+            : (listPlace(state.doc, picking) ?? undefined)
+        }
         onClose={() => setPicking(null)}
         onInsert={api.insertBlock}
       />

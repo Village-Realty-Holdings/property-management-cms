@@ -29,16 +29,36 @@ const pageDoc = (): EditorDocument =>
     seo: { title: "", description: "", image: null },
   }) as unknown as EditorDocument
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <EditorProvider initial={pageDoc()}>{children}</EditorProvider>
-)
+/** A Page with a Block in a Container in a Container. */
+const nestedDoc = (): EditorDocument =>
+  ({
+    ...(pageDoc() as object),
+    blocks: [
+      {
+        id: "c1",
+        blockType: "container",
+        columns: "1",
+        children: [
+          {
+            id: "c2",
+            blockType: "container",
+            columns: "2",
+            children: [{ id: "y", blockType: "richText", content: null }],
+          },
+        ],
+      },
+    ],
+  }) as unknown as EditorDocument
 
 let onSave: Mock<() => void>
 let onPick: Mock<() => void>
 let canvas: Window
 let iframe: HTMLIFrameElement
 
-function setup(over: { canSave?: boolean } = {}) {
+function setup(over: { canSave?: boolean; doc?: EditorDocument } = {}) {
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <EditorProvider initial={over.doc ?? pageDoc()}>{children}</EditorProvider>
+  )
   return renderHook(
     () => {
       useEditorShortcuts({
@@ -161,6 +181,17 @@ describe("useEditorShortcuts", () => {
       const { result } = setup()
       act(() => result.current.select("a"))
       expect(result.current.selectedId).toBe("a")
+      press("Escape")
+      expect(result.current.selectedId).toBeNull()
+    })
+
+    it("Esc on a Block in a Container selects the Container, one level at a time", () => {
+      const { result } = setup({ doc: nestedDoc() })
+      act(() => result.current.select("y"))
+      press("Escape")
+      expect(result.current.selectedId).toBe("c2")
+      press("Escape")
+      expect(result.current.selectedId).toBe("c1")
       press("Escape")
       expect(result.current.selectedId).toBeNull()
     })

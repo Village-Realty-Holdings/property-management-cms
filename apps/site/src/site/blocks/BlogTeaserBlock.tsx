@@ -11,9 +11,9 @@ import {
   type BlockButtonTone,
   type BlockSurface,
 } from "./BlockButton"
-import { backgroundOf, BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /** How many posts the teaser shows. */
 const POSTS_SHOWN = 3
@@ -112,12 +112,15 @@ export function BlogTeaserBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const posts = context.fixtures.posts.slice(0, POSTS_SHOWN)
-  const background = onBackground[backgroundOf(block.background)]
+  const background = onBackground[surfaceOf(block.background, context)]
   const allPosts = linkOf(block.allPostsLink)
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
       <div className="flex flex-col gap-8 sm:gap-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
           <EditableText

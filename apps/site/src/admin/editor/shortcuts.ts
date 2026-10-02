@@ -27,7 +27,11 @@ export const SHORTCUT_HELP: readonly {
   { shortcut: "save", keys: "Ctrl S", label: "Save" },
   { shortcut: "undo", keys: "Ctrl Z", label: "Undo" },
   { shortcut: "redo", keys: "Ctrl Shift Z", label: "Redo" },
-  { shortcut: "deselect", keys: "Esc", label: "Deselect the Block" },
+  {
+    shortcut: "deselect",
+    keys: "Esc",
+    label: "Select the Container around the Block, or deselect it",
+  },
   { shortcut: "remove", keys: "Delete", label: "Remove the selected Block" },
 ]
 

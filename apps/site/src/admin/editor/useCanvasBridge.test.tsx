@@ -212,6 +212,29 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(ids(result.current)).toEqual(["b2", "b1", "b3"])
   })
 
+  it("moves a Block in a Container within its Container", () => {
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        {
+          id: "c1",
+          blockType: "container",
+          children: [block("x"), block("y")],
+        },
+      ],
+    } as unknown as EditorDocument
+    const { result } = setup(documentOf("One"), { doc })
+    ask({ type: "move", id: "y", direction: "up" })
+    expect(ids(result.current)).toEqual(["b1", "c1"])
+    const container = (
+      result.current.doc as unknown as {
+        blocks: { children?: { id: string }[] }[]
+      }
+    ).blocks[1]!
+    expect(container.children!.map((b) => b.id)).toEqual(["y", "x"])
+  })
+
   it("does not move the first Block up or the last one down", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
     ask({ type: "move", id: "b1", direction: "up" })
@@ -262,6 +285,45 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(onInsertRequest).not.toHaveBeenCalled()
   })
 
+  it("asks the editor for an insert in the Container the canvas named", () => {
+    const onInsertRequest = vi.fn()
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        { id: "c1", blockType: "container", children: [block("x")] },
+        { id: "empty", blockType: "container", children: [] },
+      ],
+    } as unknown as EditorDocument
+    setup(documentOf("One"), { doc, onInsertRequest })
+    ask({ type: "insert-request", region: "page", index: 1, parentId: "c1" })
+    expect(onInsertRequest).toHaveBeenCalledExactlyOnceWith("page", 1, "c1")
+    ask({
+      type: "insert-request",
+      region: "page",
+      index: 0,
+      parentId: "empty",
+    })
+    expect(onInsertRequest).toHaveBeenLastCalledWith("page", 0, "empty")
+  })
+
+  it("does not ask for an insert in a Container that is not there, or past its end", () => {
+    const onInsertRequest = vi.fn()
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        { id: "c1", blockType: "container", children: [block("x")] },
+      ],
+    } as unknown as EditorDocument
+    setup(documentOf("One"), { doc, onInsertRequest })
+    ask({ type: "insert-request", region: "page", index: 2, parentId: "c1" })
+    ask({ type: "insert-request", region: "page", index: 0, parentId: "gone" })
+    // A Block that is not a Container holds no Blocks.
+    ask({ type: "insert-request", region: "page", index: 0, parentId: "b1" })
+    expect(onInsertRequest).not.toHaveBeenCalled()
+  })
+
   it("opens the Block picker on insert-request, changing nothing until a Block is chosen", () => {
     Element.prototype.scrollIntoView ??= () => {}
     const { result } = setup(documentOf("One"))
@@ -288,8 +350,7 @@ describe("useCanvasBridge: text edited in place", () => {
   const edit = (over: object) =>
     ask({
       type: "edit-text",
-      region: "page",
-      index: 1,
+      id: "b2",
       fieldPath: "heading",
       value: "Hello",
       ...over,
@@ -324,29 +385,64 @@ describe("useCanvasBridge: text edited in place", () => {
     expect(result.current.canUndo).toBe(false)
   })
 
-  it("edits a Layout's Header and Footer Blocks by their place in the region", () => {
+  it("edits a Layout's Header and Footer Blocks", () => {
     const { result } = setup(documentOf("One"), { doc: layoutDoc() })
-    edit({ region: "header", index: 0, fieldPath: "text", value: "Changed" })
+    edit({ id: "h1", fieldPath: "text", value: "Changed" })
     expect(
       (result.current.doc as unknown as { header: { text: string }[] })
         .header[0]?.text
     ).toBe("Changed")
   })
 
-  it("ignores an edit for a Block or a region the document does not have", () => {
+  it("edits a Block in a Container, at any depth, as one undo step per run", () => {
+    const { result } = setup(documentOf("One"), {
+      doc: {
+        ...(pageDoc("b1") as object),
+        blocks: [
+          block("b1"),
+          {
+            id: "c1",
+            blockType: "container",
+            children: [
+              {
+                id: "c2",
+                blockType: "container",
+                children: [block("deep", "Old")],
+              },
+            ],
+          },
+        ],
+      } as unknown as EditorDocument,
+    })
+    edit({ id: "deep", value: "N" })
+    edit({ id: "deep", value: "New" })
+    const deep = () =>
+      (
+        result.current.doc as unknown as {
+          blocks: { children: { children: { heading: string }[] }[] }[]
+        }
+      ).blocks[1]!.children[0]!.children[0]!.heading
+    expect(deep()).toBe("New")
+    act(() => result.current.undo())
+    expect(deep()).toBe("Old")
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("ignores an edit for a Block the document does not have", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
-    edit({ index: 4 })
-    edit({ region: "header", index: 0 })
+    edit({ id: "gone" })
+    // A Header Block, while a Page is edited.
+    edit({ id: "h1" })
     expect(headings(result.current)).toEqual(["b1"])
     expect(result.current.canUndo).toBe(false)
   })
 
   it("ignores an edit of a field the Block does not have, or of another kind", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
-    edit({ index: 0, fieldPath: "nope" })
-    edit({ index: 0, fieldPath: "blockType" })
-    edit({ index: 0, fieldPath: "heading", value: lexical("x") })
-    edit({ index: 0, fieldPath: "__proto__.polluted" })
+    edit({ id: "b1", fieldPath: "nope" })
+    edit({ id: "b1", fieldPath: "blockType" })
+    edit({ id: "b1", fieldPath: "heading", value: lexical("x") })
+    edit({ id: "b1", fieldPath: "__proto__.polluted" })
     expect(headings(result.current)).toEqual(["b1"])
     expect(result.current.canUndo).toBe(false)
   })
@@ -358,7 +454,7 @@ describe("useCanvasBridge: text edited in place", () => {
         blocks: [{ id: "r1", blockType: "richText", content: lexical("Old") }],
       } as unknown as EditorDocument,
     })
-    edit({ index: 0, fieldPath: "content", value: lexical("New") })
+    edit({ id: "r1", fieldPath: "content", value: lexical("New") })
     expect(
       (
         result.current.doc as unknown as {
@@ -367,9 +463,9 @@ describe("useCanvasBridge: text edited in place", () => {
       ).blocks[0]?.content
     ).toEqual(lexical("New"))
 
-    edit({ index: 0, fieldPath: "content", value: "a string" })
+    edit({ id: "r1", fieldPath: "content", value: "a string" })
     edit({
-      index: 0,
+      id: "r1",
       fieldPath: "content",
       value: {
         root: {

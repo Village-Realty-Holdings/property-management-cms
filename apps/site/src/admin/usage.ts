@@ -180,6 +180,38 @@ function normalisePath(href: string): string | null {
   return path.length > 1 ? path.replace(/\/+$/, "") : path
 }
 
+type Link = { href?: string | null } | null
+
+/** A Block as far as its links go: what `linksOf` reads of it. */
+type LinkingBlock = {
+  blockType: string
+  cta?: Link
+  button?: Link
+  link?: Link
+  children?: readonly LinkingBlock[] | null
+}
+
+/**
+ * Where the buttons of `blocks` link to: a Hero's, a Call to action's and a
+ * Button's, on the Page and in Containers at any depth.
+ */
+function linksOf(blocks: readonly LinkingBlock[] | null | undefined): string[] {
+  return (blocks ?? []).flatMap((block) => {
+    switch (block.blockType) {
+      case "hero":
+        return block.cta?.href ?? []
+      case "callToAction":
+        return block.button?.href ?? []
+      case "button":
+        return block.link?.href ?? []
+      case "container":
+        return linksOf(block.children)
+      default:
+        return []
+    }
+  })
+}
+
 /** The other Pages with a button that links to `path`. */
 export function pagesLinkingTo(
   path: string,
@@ -192,15 +224,9 @@ export function pagesLinkingTo(
   return pages
     .filter((page) => page.id !== ownId)
     .filter((page) =>
-      (page.blocks ?? []).some((block) => {
-        const href =
-          block.blockType === "hero"
-            ? block.cta?.href
-            : block.blockType === "callToAction"
-              ? block.button?.href
-              : null
-        return href != null && normalisePath(href) === target
-      })
+      linksOf(page.blocks as LinkingBlock[] | null | undefined).some(
+        (href) => normalisePath(href) === target
+      )
     )
     .filter((page) => !seen.has(page.id) && seen.add(page.id))
     .map((page) => ({

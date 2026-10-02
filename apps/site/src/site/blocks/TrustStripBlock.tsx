@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { TrustStripBlock as TrustStripBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection, backgroundOf } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import {
   TrustItems,
@@ -11,7 +11,7 @@ import {
   trustLogosOf,
   type TrustSurface,
 } from "./TrustItems"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Trust strip: text or stat items, or partner logos. The heading is
@@ -27,21 +27,22 @@ export function TrustStripBlock({
   context: BlockContext
 }) {
   const heading = block.heading?.trim()
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const logos = block.variant === "logos"
   const items = logos ? [] : trustItemsOf(block.items)
   const partners = logos ? trustLogosOf(block.logos) : []
   if (!heading && items.length === 0 && partners.length === 0) return null
 
-  const background = backgroundOf(block.background)
+  const background = surfaceOf(block.background, context)
   const surface: TrustSurface =
     background === "primary" || background === "dark" ? background : "page"
 
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Trust strip"
+      context={context}
       className="flex flex-col gap-8"
     >
       {heading && (

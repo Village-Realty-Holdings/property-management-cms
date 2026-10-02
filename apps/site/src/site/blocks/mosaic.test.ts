@@ -22,7 +22,7 @@ describe("mosaicTiles", () => {
 
   it("makes the first of every five large, so five items fill two rows", () => {
     const tiles = mosaicTiles(5)
-    expect(tiles[0]?.className).toContain("md:row-span-2")
+    expect(tiles[0]?.className).toContain("fit-md:row-span-2")
     expect(tiles[0]?.className).toContain("col-span-2")
     expect(tiles.slice(1).every((t) => t.className === "")).toBe(true)
   })
@@ -38,21 +38,25 @@ describe("mosaicTiles", () => {
   it("stretches the last tiles across the row when they would stand alone", () => {
     const one = mosaicTiles(1)[0]
     expect(one?.className).toContain("col-span-2")
-    expect(one?.className).toContain("md:col-span-4")
+    expect(one?.className).toContain("fit-md:col-span-4")
     const two = mosaicTiles(2)
-    expect(two.every((t) => t.className.includes("md:col-span-2"))).toBe(true)
+    expect(two.every((t) => t.className.includes("fit-md:col-span-2"))).toBe(
+      true
+    )
   })
 })
 
 describe("featureColumns", () => {
   it("lays two or four features out in two columns, so no row stands alone", () => {
-    expect(featureColumns(2)).toBe("sm:grid-cols-2")
-    expect(featureColumns(4)).toBe("sm:grid-cols-2")
+    expect(featureColumns(2)).toBe("fit-sm:grid-cols-2")
+    expect(featureColumns(4)).toBe("fit-sm:grid-cols-2")
   })
 
-  it("lays the others out in three from the desktop up", () => {
+  it("lays the others out in three from the desktop's width up", () => {
     for (const count of [1, 3, 5, 6, 9]) {
-      expect(featureColumns(count)).toBe("sm:grid-cols-2 lg:grid-cols-3")
+      expect(featureColumns(count)).toBe(
+        "fit-sm:grid-cols-2 fit-lg:grid-cols-3"
+      )
     }
   })
 })

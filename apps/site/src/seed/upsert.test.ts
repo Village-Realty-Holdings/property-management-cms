@@ -249,7 +249,8 @@ describe("a sample seed", () => {
     expect(after.counts).toMatchObject({
       // The sample's two Pages and the two starter Page Templates.
       pages: 4,
-      layouts: 2,
+      // The sample's two, and the Tuck-in starter's.
+      layouts: 3,
       media: 1,
       fonts: 1,
       "font-files": 2,
@@ -269,6 +270,17 @@ describe("a sample seed", () => {
     expect(templates.docs.map((page) => [page.path, page._status])).toEqual([
       ["/templates/home", "draft"],
       ["/templates/tuck-in", "draft"],
+    ])
+    // Tuck-in is two Containers, each a Rich text with its Button.
+    const tuckIn = templates.docs[1]!.blocks!.map((block) => [
+      block.blockType,
+      ...(block.blockType === "container"
+        ? (block.children ?? []).map((child) => child.blockType)
+        : []),
+    ])
+    expect(tuckIn).toEqual([
+      ["container", "richText", "button"],
+      ["container", "richText", "button"],
     ])
     const home = await payload.find({
       collection: "pages",

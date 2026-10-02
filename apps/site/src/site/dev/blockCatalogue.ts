@@ -1,5 +1,6 @@
 import type { CatalogueEntry } from "../../blocks/catalogue"
-import type { PageBlock } from "../blocks/types"
+import { backgroundOf } from "../blocks/BlockSection"
+import type { BlockOf, PageBlock } from "../blocks/types"
 import { sampleFor } from "../blocks/samples"
 
 export type Query = Record<string, string | string[] | undefined>
@@ -12,7 +13,8 @@ const FIXED = new Set(["blockType", "id", "blockName"])
  * fields overridden by the page's query (`?background=dark`,
  * `?count=3`). Only plain values the sample already has can be set, and a
  * number field takes a number. `?variant=` sets the Block's own variant
- * field (`entry.variantField`). `?fixtures=` is for the page, not the Block.
+ * field (`entry.variantField`). `?fixtures=` and `?container=` are for the
+ * page, not the Block.
  */
 export function sampleWithQuery(
   entry: CatalogueEntry,
@@ -34,4 +36,38 @@ export function sampleWithQuery(
     }
   }
   return block as unknown as PageBlock
+}
+
+type Columns = BlockOf<"container">["columns"]
+
+const COLUMNS: readonly Columns[] = ["1", "2", "3", "4"]
+
+const first = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value
+
+/**
+ * `block` as a catalogue page shows it inside a Container: with
+ * `?container=<background>`, in a Container on that background (Default
+ * when it is not one), one column, or `?columns=2` to `4` with the Block in
+ * each. Without the parameter, `block` itself.
+ */
+export function sampleInContainer(block: PageBlock, query: Query): PageBlock {
+  const raw = first(query.container)
+  if (raw === undefined) return block
+  const asked = first(query.columns)
+  const columns = COLUMNS.find((n) => n === asked) ?? "1"
+  const container: BlockOf<"container"> = {
+    blockType: "container",
+    columns,
+    gap: "medium",
+    align: "top",
+    width: "page",
+    background: backgroundOf(raw),
+    // A sample is at most a Container of plain Blocks, so it fits a level down.
+    children: Array.from(
+      { length: Number(columns) },
+      () => block
+    ) as BlockOf<"container">["children"],
+  }
+  return container
 }

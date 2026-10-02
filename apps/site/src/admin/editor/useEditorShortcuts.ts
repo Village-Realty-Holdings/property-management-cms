@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 
 import { readCanvasMessage } from "./bridge"
 import { useEditor } from "./EditorProvider"
+import { findBlock } from "./state"
 import {
   isChord,
   isInOverlay,
@@ -20,7 +21,9 @@ import {
  *  - Ctrl-S calls `onSave`, the mode's primary save, when `canSave`; the
  *    browser's own save dialog never opens;
  *  - Ctrl-Z and Ctrl-Shift-Z undo and redo;
- *  - Esc deselects the Block, and Delete removes it;
+ *  - Esc goes up one level: from a Block in a Container to the Container,
+ *    and from a Block of the Page or a region to nothing selected;
+ *  - Delete removes the selected Block;
  *
  * with Cmd in place of Ctrl on macOS. Delete and Esc do nothing while text is
  * being typed (an input, or an in-place text edit), where they belong to the
@@ -66,9 +69,14 @@ export function useEditorShortcuts({
         case "redo":
           editor.redo()
           return
-        case "deselect":
-          editor.deselect()
+        case "deselect": {
+          const parentId =
+            editor.selectedId &&
+            findBlock(editor.doc, editor.selectedId)?.parentId
+          if (parentId) editor.select(parentId)
+          else editor.deselect()
           return
+        }
         case "remove":
           // Only the selected Block; the reducer ignores one the document
           // does not have.

@@ -166,6 +166,9 @@ export interface Page {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlock
       )[]
     | null;
   layout?: {
@@ -323,6 +326,7 @@ export interface RichTextBlock {
     };
     [k: string]: unknown;
   };
+  width?: ('reading' | 'wide') | null;
   background?: ('default' | 'muted' | 'primary' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
@@ -680,6 +684,161 @@ export interface FormBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'form';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock".
+ */
+export interface ButtonBlock {
+  link?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  style: 'primary' | 'accent' | 'outline';
+  align: 'start' | 'centre' | 'end';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'button';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock".
+ */
+export interface ImageBlock {
+  image?: (number | null) | Media;
+  /**
+   * Optional. Shown under the image.
+   */
+  caption?: string | null;
+  aspect: 'original' | '16x9' | '4x3' | '1x1';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlock".
+ */
+export interface ContainerBlock {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlockLevel2
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel2".
+ */
+export interface ContainerBlockLevel2 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlockLevel3
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel3".
+ */
+export interface ContainerBlockLevel3 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | ButtonBlock
+        | ImageBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1069,6 +1228,9 @@ export interface PagesSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockSelect<T>;
       };
   layout?:
     | T
@@ -1141,6 +1303,7 @@ export interface SearchHeroBlockSelect<T extends boolean = true> {
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
   content?: T;
+  width?: T;
   background?: T;
   id?: T;
   blockName?: T;
@@ -1432,6 +1595,152 @@ export interface FormBlockSelect<T extends boolean = true> {
   submitLabel?: T;
   successMessage?: T;
   background?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock_select".
+ */
+export interface ButtonBlockSelect<T extends boolean = true> {
+  link?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  style?: T;
+  align?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock_select".
+ */
+export interface ImageBlockSelect<T extends boolean = true> {
+  image?: T;
+  caption?: T;
+  aspect?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlock_select".
+ */
+export interface ContainerBlockSelect<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockLevel2Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel2_select".
+ */
+export interface ContainerBlockLevel2Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockLevel3Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel3_select".
+ */
+export interface ContainerBlockLevel3Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  width?: T;
+  background?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+      };
   id?: T;
   blockName?: T;
 }

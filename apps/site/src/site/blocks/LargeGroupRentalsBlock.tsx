@@ -2,12 +2,12 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { LargeGroupRentalsBlock as LargeGroupRentalsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { RentalCardGrid } from "./rentals/RentalCardGrid"
 import { RentalsEmpty } from "./rentals/RentalsEmpty"
 import { largeGroup } from "./rentals/select"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * Large-group rentals: the Site's Rentals that sleep at least a given
@@ -22,13 +22,14 @@ export function LargeGroupRentalsBlock({
   context: BlockContext
 }) {
   const heading = block.heading?.trim()
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const rentals = largeGroup(context.fixtures.rentals, block.minSleeps)
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Large-group rentals"
+      context={context}
     >
       {heading && (
         <EditableText

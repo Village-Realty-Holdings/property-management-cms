@@ -1,5 +1,7 @@
 import { NotFound, type Payload } from "payload"
 
+import { pageBlocks } from "../blocks"
+import { refusedBlock } from "../blocks/Container"
 import { TEMPLATE_IS_NOT_PUBLISHED } from "../collections/Pages"
 
 import { derivePageStatus, type PageStatus } from "./dashboard/pageStatus"
@@ -55,6 +57,10 @@ export async function savePageAs(
   if (document.isTemplate && intent === "publish") {
     return { ok: false, message: TEMPLATE_IS_NOT_PUBLISHED }
   }
+  // Payload would drop a Block its list doesn't take (a fourth-level
+  // Container) and save the rest, so say which Block it is and save nothing.
+  const refused = refusedBlock(document.blocks, pageBlocks)
+  if (refused) return { ok: false, message: refused.message }
   try {
     // A Page Template stays off the Site: a live Page is unpublished first.
     if (document.isTemplate && id && intent === "draft") {

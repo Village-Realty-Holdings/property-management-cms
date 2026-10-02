@@ -22,6 +22,7 @@ vi.mock("lucide-react/dynamic", () => ({
   ),
 }))
 
+import { containerOf } from "../../blocks/Container"
 import { Form } from "../../blocks/Form"
 import { Hero } from "../../blocks/Hero"
 import { Navigation } from "../../blocks/region/Navigation"
@@ -729,6 +730,71 @@ describe("<BlockPanel>", () => {
       expect(
         screen.getByRole("form", { name: "Testimonials settings" })
       ).toBeTruthy()
+    })
+  })
+
+  describe("Blocks in a Container", () => {
+    const withContainer = [...blocks, containerOf([Hero, RichText])]
+    const container = {
+      id: "c1",
+      blockType: "container",
+      columns: "2",
+      gap: "medium",
+      align: "top",
+      width: "page",
+      background: "default",
+      children: [
+        { id: "x1", blockType: "richText" },
+        { ...hero, id: "x2", heading: "Inside" },
+      ],
+    }
+    function SelectId({ id }: { id: string }) {
+      const { select } = useEditor()
+      useEffect(() => select(id), [select, id])
+      return null
+    }
+    const mountNested = (id: string) =>
+      render(
+        <EditorProvider
+          initial={{
+            kind: "page",
+            title: "Home",
+            path: "/",
+            layout: { mode: "default" },
+            blocks: [container as unknown as BlockValues],
+            seo: { title: "", description: "", image: null },
+          }}
+        >
+          <SelectId id={id} />
+          <BlockPanel blocks={withContainer} media={media} pages={pages} />
+          <Probe />
+        </EditorProvider>
+      )
+
+    it("shows a Block's own settings and where it is, and edits it there", async () => {
+      const user = userEvent.setup()
+      mountNested("x2")
+      expect(screen.getByRole("form", { name: "Hero settings" })).toBeTruthy()
+      expect(screen.getByText("In Block 1, Container, Column 2")).toBeTruthy()
+      const heading = screen.getByLabelText("Heading", { exact: true })
+      expect((heading as HTMLInputElement).value).toBe("Inside")
+      await user.type(heading, "!")
+      const children = block().children as Record<string, unknown>[]
+      expect(children[1]!.heading).toBe("Inside!")
+      expect(children[0]).toEqual({ id: "x1", blockType: "richText" })
+    })
+
+    it("shows a Container's own settings, and points to the Outline for its Blocks", () => {
+      mountNested("c1")
+      const form = screen.getByRole("form", { name: "Container settings" })
+      expect(
+        (within(form).getByLabelText("Columns") as HTMLSelectElement).value
+      ).toBe("2")
+      expect(within(form).getByLabelText("Gap")).toBeTruthy()
+      expect(within(form).getByLabelText("Background")).toBeTruthy()
+      expect(within(form).getByText(/2 Blocks.*Outline/)).toBeTruthy()
+      expect(within(form).queryByText(/can't be edited/)).toBeNull()
+      expect(within(form).queryByText(/^In Block/)).toBeNull()
     })
   })
 

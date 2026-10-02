@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload"
 
 import { publishedOrSignedIn, signedIn } from "../../access"
 import { pageBlocks } from "../../blocks"
+import { takesOnly } from "../../blocks/Container"
 import { seoField } from "../../fields/seo"
 import { layoutField } from "./layoutField"
 import { refuseDeleteWhenLinked } from "./navigationGuard"
@@ -58,6 +59,7 @@ export const Pages: CollectionConfig = {
       type: "blocks",
       labels: { singular: "Block", plural: "Blocks" },
       blocks: pageBlocks,
+      validate: takesOnly(pageBlocks, "a Page"),
     },
     layoutField(),
     seoField(),

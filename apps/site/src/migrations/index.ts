@@ -7,6 +7,9 @@ import * as migration_20260930_180319_block_schemas_a from './20260930_180319_bl
 import * as migration_20260930_181401_block_schemas_b from './20260930_181401_block_schemas_b';
 import * as migration_20260930_184444_media_attribution from './20260930_184444_media_attribution';
 import * as migration_20261001_230649_page_is_template from './20261001_230649_page_is_template';
+import * as migration_20261002_000500_rich_text_width from './20261002_000500_rich_text_width';
+import * as migration_20261002_005526_container_blocks from './20261002_005526_container_blocks';
+import * as migration_20261002_012541_button_image_blocks from './20261002_012541_button_image_blocks';
 
 export const migrations = [
   {
@@ -52,6 +55,21 @@ export const migrations = [
   {
     up: migration_20261001_230649_page_is_template.up,
     down: migration_20261001_230649_page_is_template.down,
-    name: '20261001_230649_page_is_template'
+    name: '20261001_230649_page_is_template',
+  },
+  {
+    up: migration_20261002_000500_rich_text_width.up,
+    down: migration_20261002_000500_rich_text_width.down,
+    name: '20261002_000500_rich_text_width',
+  },
+  {
+    up: migration_20261002_005526_container_blocks.up,
+    down: migration_20261002_005526_container_blocks.down,
+    name: '20261002_005526_container_blocks',
+  },
+  {
+    up: migration_20261002_012541_button_image_blocks.up,
+    down: migration_20261002_012541_button_image_blocks.down,
+    name: '20261002_012541_button_image_blocks'
   },
 ];

@@ -5,7 +5,7 @@ import { backgroundOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { isIconName } from "./icons"
-import type { BlockContext } from "./types"
+import type { BlockContext, BlockPlace } from "./types"
 
 /**
  * The icon's badge on each background: a chip in the Theme's own pair of
@@ -60,7 +60,7 @@ export type IconListItem = {
  * text Block and the icon variant of Amenities. An item with no text is
  * left out; an icon that is unset or no longer on the list leaves the item
  * as text alone. `columns` lays the items out one per row (`one`) or as a
- * grid that widens with the screen (`grid`).
+ * grid that widens with the room the Block has (`grid`, by `fit-*`).
  */
 export function IconList({
   items,
@@ -72,7 +72,7 @@ export function IconList({
   items: readonly IconListItem[]
   background?: string | null
   columns?: "one" | "grid"
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
   className?: string
 }) {
   const shown = items
@@ -84,7 +84,7 @@ export function IconList({
       role="list"
       className={cn(
         "grid gap-x-8 gap-y-4",
-        columns === "grid" && "sm:grid-cols-2 lg:grid-cols-3",
+        columns === "grid" && "fit-sm:grid-cols-2 fit-lg:grid-cols-3",
         className
       )}
     >
