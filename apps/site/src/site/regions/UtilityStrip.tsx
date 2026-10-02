@@ -3,6 +3,7 @@ import { Phone } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { UtilityStripBlock } from "../../payload-types"
+import { backgroundOf, surfaces } from "../blocks/BlockSection"
 import { EditableText } from "../blocks/Editable"
 import { container } from "../blocks/types"
 import { telHref } from "../theme"
@@ -26,8 +27,14 @@ export function UtilityStrip({
   const links = linksOf(block.links)
   const phone = block.showPhone ? context.brand.phone : null
   if (!text && !phone && links.length === 0) return null
+  // Default is the strip's own look: the Theme's primary colour.
+  const background = backgroundOf(block.background)
   return (
-    <div className="bg-primary text-primary-foreground">
+    <div
+      className={
+        background === "default" ? surfaces.primary : surfaces[background]
+      }
+    >
       <div
         className={cn(
           container,
@@ -41,7 +48,7 @@ export function UtilityStrip({
                 href={telHref(phone)}
                 className={cn(
                   "inline-flex items-center gap-2 font-semibold whitespace-nowrap hover:underline",
-                  focusOutline.primary
+                  focusOutline.current
                 )}
               >
                 <Phone aria-hidden className="size-3.5" />
@@ -63,7 +70,7 @@ export function UtilityStrip({
                   href={link.href}
                   className={cn(
                     "underline underline-offset-4 hover:no-underline",
-                    focusOutline.primary
+                    focusOutline.current
                   )}
                 >
                   {link.label}

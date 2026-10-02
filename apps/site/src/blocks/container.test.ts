@@ -74,7 +74,12 @@ describe("the Container in the config", () => {
       ["align", "top", ["top", "centre", "stretch"]],
       ["justify", "start", ["start", "centre", "end"]],
       ["width", "page", ["page", "reading"]],
-      ["background", "default", ["default", "muted", "primary", "dark"]],
+      [
+        "background",
+        "default",
+        ["default", "muted", "primary", "accent", "third", "dark"],
+      ],
+      ["textColour", "auto", ["auto", "white", "dark"]],
     ])
     for (const level of rest) expect(level).toEqual(first)
   })

@@ -1,6 +1,6 @@
 import type { Block, BlocksField, Field } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { catalogueEntries, fitsNarrow } from "./catalogue"
 
 /** How many Containers deep a Page goes (apps/site ADR-0007). */
@@ -252,7 +252,7 @@ export function containerOf(
           { label: "Reading width", value: "reading" },
         ],
       },
-      backgroundField,
+      ...surfaceFields,
       ...extra,
       {
         name: "children",

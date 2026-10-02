@@ -1,6 +1,7 @@
 import { createElement } from "react"
 
 import { renderBlock } from "../blocks/registry"
+import { withBlockStyle } from "../blocks/style"
 import type { PageBlock } from "../blocks/types"
 import { regionTakes } from "./catalogue"
 import { FooterColumns } from "./FooterColumns"
@@ -56,7 +57,11 @@ export function renderRegionBlock(
     const Component = regionRegistry[
       block.blockType as OwnRegionBlockType
     ] as RegionComponent
-    return createElement(Component, { block, context })
+    return withBlockStyle(
+      createElement(Component, { block, context }),
+      block,
+      context
+    )
   }
   return renderBlock(block as PageBlock, context)
 }

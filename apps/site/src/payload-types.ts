@@ -330,7 +330,11 @@ export interface RichTextBlock {
     [k: string]: unknown;
   };
   width?: ('reading' | 'wide') | null;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'richText';
@@ -350,7 +354,11 @@ export interface CallToActionBlock {
     href?: string | null;
   };
   style: 'primary' | 'secondary' | 'inverted' | 'dark';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'callToAction';
@@ -366,7 +374,11 @@ export interface FeaturedRentalsBlock {
    */
   count: number;
   variant: 'carousel' | 'grid';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'featuredRentals';
@@ -381,7 +393,11 @@ export interface LargeGroupRentalsBlock {
    * Shows the Rentals that sleep at least this many guests.
    */
   minSleeps: number;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'largeGroupRentals';
@@ -396,7 +412,11 @@ export interface RentalGridBlock {
    * How many Rentals each page shows.
    */
   pageSize: number;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'rentalGrid';
@@ -413,7 +433,11 @@ export interface StepsBlock {
     text: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'steps';
@@ -434,7 +458,11 @@ export interface FeaturesBlock {
     text: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'features';
@@ -459,7 +487,11 @@ export interface AmenitiesBlock {
     icon?: string | null;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'amenities';
@@ -478,7 +510,11 @@ export interface StatsBlock {
     label: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'stats';
@@ -509,7 +545,11 @@ export interface ImageTextBlock {
         id?: string | null;
       }[]
     | null;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageText';
@@ -534,7 +574,11 @@ export interface TestimonialsBlock {
     rating: number;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'testimonials';
@@ -573,7 +617,11 @@ export interface TrustStripBlock {
         id?: string | null;
       }[]
     | null;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'trustStrip';
@@ -596,7 +644,11 @@ export interface OwnerBandBlock {
      */
     href?: string | null;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'ownerBand';
@@ -610,7 +662,11 @@ export interface NewsletterBlock {
   text?: string | null;
   emailPlaceholder?: string | null;
   buttonLabel: string;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'newsletter';
@@ -631,7 +687,11 @@ export interface BlogTeaserBlock {
      */
     href?: string | null;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'blogTeaser';
@@ -649,7 +709,11 @@ export interface LocationBlock {
    * A picture of the map. Its alt text is read out for it.
    */
   mapImage?: (number | null) | Media;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'location';
@@ -665,7 +729,11 @@ export interface FaqBlock {
     answer: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'faq';
@@ -683,7 +751,11 @@ export interface FormBlock {
   formFields: ('name' | 'email' | 'phone' | 'message' | 'propertyAddress' | 'dates')[];
   submitLabel: string;
   successMessage: string;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'form';
@@ -739,7 +811,11 @@ export interface GuestSurveyBlock {
     heading: string;
     text?: string | null;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'guestSurvey';
@@ -790,7 +866,11 @@ export interface ContainerBlock {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   children?:
     | (
         | HeroBlock
@@ -836,7 +916,11 @@ export interface ContainerBlockLevel2 {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   children?:
     | (
         | HeroBlock
@@ -882,7 +966,11 @@ export interface ContainerBlockLevel3 {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   children?:
     | (
         | HeroBlock
@@ -1058,6 +1146,11 @@ export interface UtilityStripBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'utilityStrip';
@@ -1075,7 +1168,11 @@ export interface RegionContainerBlock {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   /**
    * A thin line under this band, to set it apart from what follows.
    */
@@ -1133,6 +1230,11 @@ export interface FooterColumnsBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'footerColumns';
@@ -1160,6 +1262,11 @@ export interface LegalBarBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'legalBar';
@@ -1177,7 +1284,11 @@ export interface RegionContainerBlockLevel2 {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   /**
    * A thin line under this band, to set it apart from what follows.
    */
@@ -1211,7 +1322,11 @@ export interface RegionContainerBlockLevel3 {
    */
   justify?: ('start' | 'centre' | 'end') | null;
   width: 'page' | 'reading';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   /**
    * A thin line under this band, to set it apart from what follows.
    */
@@ -1510,6 +1625,7 @@ export interface RichTextBlockSelect<T extends boolean = true> {
   content?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1528,6 +1644,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
       };
   style?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1540,6 +1657,7 @@ export interface FeaturedRentalsBlockSelect<T extends boolean = true> {
   count?: T;
   variant?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1551,6 +1669,7 @@ export interface LargeGroupRentalsBlockSelect<T extends boolean = true> {
   heading?: T;
   minSleeps?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1562,6 +1681,7 @@ export interface RentalGridBlockSelect<T extends boolean = true> {
   heading?: T;
   pageSize?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1580,6 +1700,7 @@ export interface StepsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1599,6 +1720,7 @@ export interface FeaturesBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1619,6 +1741,7 @@ export interface AmenitiesBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1636,6 +1759,7 @@ export interface StatsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1657,6 +1781,7 @@ export interface ImageTextBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1677,6 +1802,7 @@ export interface TestimonialsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1703,6 +1829,7 @@ export interface TrustStripBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1726,6 +1853,7 @@ export interface OwnerBandBlockSelect<T extends boolean = true> {
         href?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1739,6 +1867,7 @@ export interface NewsletterBlockSelect<T extends boolean = true> {
   emailPlaceholder?: T;
   buttonLabel?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1755,6 +1884,7 @@ export interface BlogTeaserBlockSelect<T extends boolean = true> {
         href?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1769,6 +1899,7 @@ export interface LocationBlockSelect<T extends boolean = true> {
   map?: T;
   mapImage?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1786,6 +1917,7 @@ export interface FaqBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1800,6 +1932,7 @@ export interface FormBlockSelect<T extends boolean = true> {
   submitLabel?: T;
   successMessage?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1850,6 +1983,7 @@ export interface GuestSurveyBlockSelect<T extends boolean = true> {
         text?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1891,6 +2025,7 @@ export interface ContainerBlockSelect<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   children?:
     | T
     | {
@@ -1933,6 +2068,7 @@ export interface ContainerBlockLevel2Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   children?:
     | T
     | {
@@ -1975,6 +2111,7 @@ export interface ContainerBlockLevel3Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   children?:
     | T
     | {
@@ -2131,6 +2268,8 @@ export interface UtilityStripBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -2145,6 +2284,7 @@ export interface RegionContainerBlockSelect<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   rule?: T;
   children?:
     | T
@@ -2188,6 +2328,8 @@ export interface FooterColumnsBlockSelect<T extends boolean = true> {
         hours?: T;
         id?: T;
       };
+  background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -2210,6 +2352,8 @@ export interface LegalBarBlockSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -2224,6 +2368,7 @@ export interface RegionContainerBlockLevel2Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   rule?: T;
   children?:
     | T
@@ -2251,6 +2396,7 @@ export interface RegionContainerBlockLevel3Select<T extends boolean = true> {
   justify?: T;
   width?: T;
   background?: T;
+  textColour?: T;
   rule?: T;
   children?:
     | T

@@ -296,6 +296,72 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/*
+ * Block style (apps/site ADR-0013). A Block on the Accent or Third
+ * background, or with its text colour set, is wrapped in an element that
+ * carries the choice (`data-surface`, `data-text`). Inside it the colour
+ * variables that text, links, rules and focus rings read take the surface's
+ * values, so no Block needs a case for it. A card or a chip inside (anything
+ * that paints the card, page or popover colour) gets the page's values back.
+ * The `--base-*` variables hold those: declared on the root, they keep the
+ * root's value all the way down.
+ */
+:root {
+  --base-foreground: var(--foreground);
+  --base-muted-foreground: var(--muted-foreground);
+  --base-link: var(--link);
+  --base-border: var(--border);
+  --base-ring: var(--ring);
+  --base-primary: var(--primary);
+  --base-primary-foreground: var(--primary-foreground);
+}
+[data-surface="accent"] {
+  --surface-text: var(--accent-foreground);
+}
+[data-surface="third"] {
+  --surface-text: var(--third-foreground, var(--secondary-foreground));
+}
+[data-surface] {
+  --foreground: var(--surface-text);
+  --muted-foreground: var(--surface-text);
+  --link: var(--surface-text);
+  --ring: var(--surface-text);
+  --border: color-mix(in srgb, var(--surface-text) 30%, transparent);
+}
+/* An accent button on the Accent background would vanish: it is the primary. */
+[data-surface="accent"] [data-slot="button"].bg-accent {
+  background-color: var(--base-primary);
+  color: var(--base-primary-foreground);
+}
+[data-text="white"] {
+  --block-text: #ffffff;
+}
+[data-text="dark"] {
+  --block-text: var(--base-foreground);
+}
+[data-text] {
+  --foreground: var(--block-text);
+  --muted-foreground: var(--block-text);
+  --link: var(--block-text);
+  --ring: var(--block-text);
+  --primary-foreground: var(--block-text);
+  --secondary-foreground: var(--block-text);
+  --accent-foreground: var(--block-text);
+  --third-foreground: var(--block-text);
+  --surface-dark-foreground: var(--block-text);
+  --surface-text: var(--block-text);
+  --border: color-mix(in srgb, var(--block-text) 30%, transparent);
+  color: var(--block-text);
+}
+:is([data-surface], [data-text]) :is(.bg-card, .bg-background, .bg-popover) {
+  --foreground: var(--base-foreground);
+  --muted-foreground: var(--base-muted-foreground);
+  --link: var(--base-link);
+  --border: var(--base-border);
+  --ring: var(--base-ring);
+  --primary-foreground: var(--base-primary-foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

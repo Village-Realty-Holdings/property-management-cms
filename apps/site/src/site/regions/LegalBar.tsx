@@ -2,6 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { LegalBarBlock } from "../../payload-types"
 import { container, embeddedBox } from "../blocks/types"
+import { band } from "./band"
 import { linksOf } from "./links"
 import { focusOutline, RegionLink } from "./RegionLink"
 import type { RegionContext } from "./types"
@@ -34,7 +35,12 @@ export function LegalBar({
   if (!text && links.length === 0) return null
   return (
     // In a Container it is a line of the Container's band, not a bar.
-    <div className="border-t border-border in-data-container:border-0">
+    <div
+      className={cn(
+        "border-t border-border in-data-container:border-0",
+        band(block.background, context)
+      )}
+    >
       <div
         className={cn(
           container,
@@ -52,7 +58,7 @@ export function LegalBar({
                   href={link.href}
                   className={cn(
                     "underline-offset-4 hover:underline",
-                    focusOutline.secondary
+                    focusOutline.current
                   )}
                 >
                   {link.label}

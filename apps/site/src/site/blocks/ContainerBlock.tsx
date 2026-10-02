@@ -135,6 +135,8 @@ export function ContainerBlock({
                   // against. One whose Block renders nothing takes no room.
                   className={cn(
                     "min-w-0 empty:hidden",
+                    // A Block's style wrapper with nothing in it is empty too.
+                    "has-[>[data-block-style]:only-child:empty]:hidden",
                     // A cell is the width its Block measures itself against,
                     // unless the Block is as wide as what it holds: a size
                     // container has no width of its own to shrink to.

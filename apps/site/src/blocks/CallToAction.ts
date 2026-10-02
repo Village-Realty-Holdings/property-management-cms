@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { linkGroup } from "../fields/link"
 
 /** A short pitch with one button. */
@@ -24,6 +24,6 @@ export const CallToAction: Block = {
         { label: "Dark surface", value: "dark" },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

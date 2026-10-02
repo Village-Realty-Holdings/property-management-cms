@@ -17,6 +17,8 @@ const badges: Record<Background, string> = {
   default: "bg-primary text-primary-foreground",
   muted: "bg-primary text-primary-foreground",
   primary: "bg-primary-foreground text-primary",
+  accent: "bg-primary text-primary-foreground",
+  third: "bg-primary text-primary-foreground",
   dark: "bg-surface-dark-foreground text-surface-dark",
 }
 

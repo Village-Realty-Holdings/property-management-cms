@@ -20,6 +20,8 @@ export const surfaces: Record<Background, string> = {
   default: "bg-background text-foreground",
   muted: "bg-muted text-foreground",
   primary: "bg-primary text-primary-foreground",
+  accent: "bg-accent text-accent-foreground",
+  third: "bg-third text-third-foreground",
   dark: "bg-surface-dark text-surface-dark-foreground",
 }
 

@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /** The Site's first few Rentals, as cards in a carousel or a grid. */
 export const FeaturedRentals: Block = {
@@ -29,6 +29,6 @@ export const FeaturedRentals: Block = {
         { label: "Grid", value: "grid" },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

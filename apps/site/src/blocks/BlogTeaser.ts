@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { linkGroup } from "../fields/link"
 
 /** The Site's first three blog posts as cards, each linking out. */
@@ -14,6 +14,6 @@ export const BlogTeaser: Block = {
       ...linkGroup("allPostsLink", "Link to all posts"),
       admin: { description: "Optional. Shown when it has a label and a link." },
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

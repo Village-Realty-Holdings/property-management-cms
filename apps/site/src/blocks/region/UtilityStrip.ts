@@ -1,5 +1,6 @@
 import type { Block } from "payload"
 
+import { surfaceFields } from "../../fields/background"
 import { navLinkFields } from "../../fields/navLink"
 
 /**
@@ -28,5 +29,7 @@ export const UtilityStrip: Block = {
       admin: { description: "A short line, such as an offer or a notice." },
     },
     { name: "links", type: "array", maxRows: 4, fields: navLinkFields() },
+    // Default is the strip's own look: the Theme's primary colour.
+    ...surfaceFields,
   ],
 }

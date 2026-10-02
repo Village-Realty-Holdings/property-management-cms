@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /**
  * A visual-only form. On submit it shows its success message and stores
@@ -45,6 +45,6 @@ export const Form: Block = {
       defaultValue:
         "Thank you. We have received your message and will be in touch soon.",
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

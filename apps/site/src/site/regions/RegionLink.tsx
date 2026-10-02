@@ -12,6 +12,9 @@ export const focusOutline = {
   page: "outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring",
   primary:
     "outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary-foreground",
+  /** In the text colour of whatever it sits on. */
+  current:
+    "outline-offset-2 focus-visible:outline-2 focus-visible:outline-current",
   secondary:
     "outline-offset-2 focus-visible:outline-2 focus-visible:outline-secondary-foreground",
 } as const
