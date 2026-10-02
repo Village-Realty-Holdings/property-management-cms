@@ -9,6 +9,7 @@ import {
   catalogueEntries,
   blockGroups,
   entryBySlug,
+  fitsNarrow,
 } from "./catalogue"
 import { pageBlocks } from "."
 
@@ -62,6 +63,18 @@ describe("the Block catalogue", () => {
         catalogue[block.slug as keyof typeof catalogue].takesBackground
       ).toBe(hasField)
     }
+  })
+
+  it("says which Blocks fit a column narrower than the page", () => {
+    expect(
+      catalogueEntries
+        .filter((entry) => entry.fitsNarrow)
+        .map((entry) => entry.label)
+    ).toEqual(["Rich text", "Call to action", "Button", "Image", "Container"])
+    expect(fitsNarrow("richText")).toBe(true)
+    expect(fitsNarrow("features")).toBe(false)
+    // A type the catalogue doesn't have is not this rule's to refuse.
+    expect(fitsNarrow("gone")).toBe(true)
   })
 
   it("finds an entry by its slug", () => {

@@ -369,6 +369,23 @@ describe("saving a Page with Containers", () => {
     expect(drafts.totalDocs).toBe(0)
   })
 
+  it("refuses a Block that needs the page's full width in a Container with columns, naming its place", async () => {
+    const result = await savePageAs(t.payload, asStaff, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({
+        title: "Too narrow",
+        path: "/too-narrow",
+        blocks: blocksOf([hero, { ...container([hero]), columns: "2" }]),
+      }),
+    })
+    expect(result).toEqual({
+      ok: false,
+      message:
+        "Block 2, Block 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.",
+    })
+  })
+
   it("refuses a Block a Container doesn't take, by its type", async () => {
     const result = await savePageAs(t.payload, asStaff, {
       id: null,

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { ContainerBlock, User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
+import { catalogue } from "./catalogue"
 import { CONTAINER_LEVELS, refusedBlock } from "./Container"
 import { pageBlocks } from "."
 
@@ -94,6 +95,9 @@ const cta = (heading: string) => ({
 
 const hero = (heading: string) => ({ blockType: "hero" as const, heading })
 
+/** A Block of a type, as far as the rules about where it goes read it. */
+const sampleRow = (blockType: string) => ({ blockType })
+
 /** A Container holding `children`. */
 const container = (children: unknown[], over: object = {}) =>
   ({
@@ -112,15 +116,22 @@ const tree = () => [
       container([
         hero("Level 2, first"),
         container([cta("Level 3, first"), cta("Level 3, second")], {
+          columns: "2",
           gap: "large",
         }),
         cta("Level 2, last"),
       ]),
       cta("Level 1, last"),
     ],
-    { columns: "2", background: "dark" }
+    { align: "stretch", background: "dark" }
   ),
 ]
+
+const features = { blockType: "features", heading: "Why stay with us" }
+
+/** Why a Block that needs the page's full width can't sit at `place`. */
+const tooNarrow = (place: string, label = "Features") =>
+  `${place} is a “${label}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
 
 type Row = { blockType: string; heading?: string; children?: Row[] | null }
 
@@ -163,6 +174,58 @@ describe("refusedBlock", () => {
   })
 })
 
+describe("refusedBlock, for a Block that needs the page's full width", () => {
+  const refusedIn = (blocks: unknown[]) => refusedBlock(blocks, pageBlocks)
+
+  it("takes it on the Page and in a stack", () => {
+    expect(refusedIn([features, container([features, hero("ok")])])).toBeNull()
+    expect(refusedIn([container([container([container([features])])])])).toBe(
+      null
+    )
+  })
+
+  it.each(["2", "3", "4"] as const)(
+    "refuses it in a Container of %s columns, by its label",
+    (columns) => {
+      expect(
+        refusedIn([hero("ok"), container([cta("ok"), features], { columns })])
+      ).toEqual({
+        place: "Block 2, Block 2",
+        message: tooNarrow("Block 2, Block 2"),
+      })
+      expect(
+        refusedIn([container([sampleRow("searchHero")], { columns })])?.message
+      ).toBe(tooNarrow("Block 1, Block 1", "Search Hero"))
+    }
+  )
+
+  it("refuses it in a stack that sits in a column, at any depth", () => {
+    expect(
+      refusedIn([container([container([features])], { columns: "2" })])?.message
+    ).toBe(tooNarrow("Block 1, Block 1, Block 1"))
+    expect(
+      refusedIn([
+        container([container([container([cta("ok"), features])])], {
+          columns: "3",
+        }),
+      ])?.message
+    ).toBe(tooNarrow("Block 1, Block 1, Block 1, Block 2"))
+  })
+
+  it("takes the Blocks that fit a column there: Rich text, Button, Image, Call to action, Container", () => {
+    const fitting = ["richText", "button", "image", "callToAction"].map(
+      sampleRow
+    )
+    expect(
+      refusedIn([
+        container([...fitting, container(fitting, { columns: "4" })], {
+          columns: "2",
+        }),
+      ])
+    ).toBeNull()
+  })
+})
+
 describe("a Page with Containers", () => {
   let t: TestPayload
   let payload: Payload
@@ -189,9 +252,9 @@ describe("a Page with Containers", () => {
     const read = await payload.findByID({ collection: "pages", id: page.id })
     expect(shapeOf(read.blocks as Row[])).toEqual(shapeOf(tree() as Row[]))
     const first = read.blocks![1] as ContainerBlock
-    expect(first).toMatchObject({ columns: "2", background: "dark" })
+    expect(first).toMatchObject({ align: "stretch", background: "dark" })
     const second = first.children![1] as ContainerBlock
-    expect(second.children![1]).toMatchObject({ gap: "large" })
+    expect(second.children![1]).toMatchObject({ columns: "2", gap: "large" })
   })
 
   it("keeps the tree in a Draft saved over the Published version, and the Published one as it was", async () => {
@@ -296,6 +359,84 @@ describe("a Page with Containers", () => {
         ],
       },
     })
+  })
+
+  it("refuses a Block that needs the page's full width in columns, and in a stack inside them, as a Draft too", async () => {
+    const refused = (blocks: unknown[]) =>
+      payload.create({
+        collection: "pages",
+        data: {
+          title: "Narrow",
+          path: "/narrow",
+          blocks: blocks as ContainerBlock[],
+        },
+        draft: true,
+        ...asStaff,
+      })
+    const steps = { ...catalogue.steps.defaults }
+    await expect(
+      refused([container([cta("ok"), steps], { columns: "2" })])
+    ).rejects.toMatchObject({
+      data: {
+        errors: [
+          {
+            path: "blocks.0.children",
+            message: tooNarrow("Block 2", "Steps"),
+          },
+        ],
+      },
+    })
+    await expect(
+      refused([container([container([steps])], { columns: "3" })])
+    ).rejects.toMatchObject({
+      data: {
+        errors: [
+          {
+            path: "blocks.0.children.0.children",
+            message: tooNarrow("Block 1", "Steps"),
+          },
+        ],
+      },
+    })
+    const found = await payload.find({
+      collection: "pages",
+      where: { path: { equals: "/narrow" } },
+      draft: true,
+    })
+    expect(found.totalDocs).toBe(0)
+  })
+
+  it("takes that Block in a stack, and Blocks that fit in columns", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: {
+        title: "Fits",
+        path: "/fits",
+        blocks: [
+          container([{ ...catalogue.steps.defaults }]),
+          container(
+            [
+              { ...catalogue.button.defaults },
+              { ...catalogue.image.defaults },
+              container([{ ...catalogue.richText.defaults }]),
+            ],
+            { columns: "3" }
+          ),
+        ],
+      },
+      ...asStaff,
+    })
+    expect(shapeOf(page.blocks as Row[])).toEqual([
+      ["container", [["steps", "How it works"]]],
+      [
+        "container",
+        [
+          ["button", undefined],
+          ["image", undefined],
+          ["container", [["richText", undefined]]],
+        ],
+      ],
+    ])
   })
 
   it("stores each level's Containers in its own table, named by its level", async () => {
