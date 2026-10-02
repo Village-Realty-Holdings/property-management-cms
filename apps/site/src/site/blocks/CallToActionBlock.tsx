@@ -63,51 +63,49 @@ export function CallToActionBlock({
       background={surfaceOf(block.background, context)}
       labelledBy={id}
     >
-      {/* The card lays itself out by its own width, so it fits a Container's
-          column as well as the page (ADR-0007). */}
-      <div className="@container">
-        <div
-          className={cn(
-            "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 @xl:px-10 @xl:py-12 @2xl:flex-row @2xl:items-center @2xl:justify-between @2xl:gap-12 @4xl:px-14",
-            "shadow-(--card-shadow)",
-            style.panel
-          )}
-        >
-          <div className="flex max-w-2xl flex-col gap-3">
-            <EditableText
-              as="h2"
-              field="heading"
-              context={context}
-              id={id}
-              className={cn(
-                displayFont,
-                "text-3xl leading-[1.05] text-balance @xl:text-4xl"
-              )}
-            >
-              {heading}
-            </EditableText>
-            {body && (
-              <EditableText
-                as="p"
-                field="body"
-                context={context}
-                multiline
-                className="text-base text-pretty whitespace-pre-line @xl:text-lg"
-              >
-                {body}
-              </EditableText>
+      {/* The card lays itself out by the room it has (fit-*), so it fits a
+          Container's column as well as the page (ADR-0007). */}
+      <div
+        className={cn(
+          "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 fit-sm:px-10 fit-sm:py-12 fit-md:flex-row fit-md:items-center fit-md:justify-between fit-md:gap-12 fit-lg:px-14",
+          "shadow-(--card-shadow)",
+          style.panel
+        )}
+      >
+        <div className="flex max-w-2xl flex-col gap-3">
+          <EditableText
+            as="h2"
+            field="heading"
+            context={context}
+            id={id}
+            className={cn(
+              displayFont,
+              "text-3xl leading-[1.05] text-balance fit-sm:text-4xl"
             )}
-          </div>
-          {button && (
-            <BlockButton
-              link={button}
-              tone={style.button}
-              surface={style.surface}
-              editable={{ field: "button.label", context }}
-              className="self-start @2xl:self-auto"
-            />
+          >
+            {heading}
+          </EditableText>
+          {body && (
+            <EditableText
+              as="p"
+              field="body"
+              context={context}
+              multiline
+              className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
+            >
+              {body}
+            </EditableText>
           )}
         </div>
+        {button && (
+          <BlockButton
+            link={button}
+            tone={style.button}
+            surface={style.surface}
+            editable={{ field: "button.label", context }}
+            className="self-start fit-md:self-auto"
+          />
+        )}
       </div>
     </BlockSection>
   )

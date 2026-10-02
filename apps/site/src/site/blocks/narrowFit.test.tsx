@@ -135,3 +135,24 @@ describe("a Block that fits a narrow column", () => {
     }
   )
 })
+
+/** Classes that take a container's width: `@sm:` to `@7xl:`, and `@max-` forms. */
+const containerClass = /(^|:)@(max-)?(3xs|2xs|xs|sm|md|lg|xl|[2-7]xl):/
+
+describe("a Block on the Page", () => {
+  // The Container's own columns are counted against its width, by design.
+  const blocks = narrow.filter((entry) => entry.blockType !== "container")
+
+  it.each(blocks.map((entry) => [entry.label, entry] as const))(
+    "%s switches where the viewport's breakpoints are, with fit-*, not by a container query of its own",
+    (_label, entry) => {
+      const { container: root } = render(
+        <Block block={sampleFor(entry.blockType)} index={1} editing={false} />
+      )
+      const found = [...root.querySelectorAll("*")].flatMap((element) =>
+        [...element.classList].filter((name) => containerClass.test(name))
+      )
+      expect(found).toEqual([])
+    }
+  )
+})
