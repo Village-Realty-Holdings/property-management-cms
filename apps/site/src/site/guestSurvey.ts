@@ -1,7 +1,7 @@
 import type { GuestSurveyBlock } from "../payload-types"
 
 /**
- * The Guest survey's rules, with no browser and no server in them, so the
+ * The Guest feedback survey's rules, with no browser and no server in them, so the
  * Block's form and the route that receives it check an answer the same way.
  */
 

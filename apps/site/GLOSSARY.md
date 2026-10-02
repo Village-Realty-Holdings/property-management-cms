@@ -47,7 +47,7 @@ The Header and Footer that wrap a Page's content. One Layout is the Site's defau
 _Avoid_: Template, shell, chrome, master page
 
 **Page Template**:
-A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add three starters: Home, Tuck-in (an announcement that a company has joined the brand), and Guest survey (what a guest opens after a stay).
+A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add three starters: Home, Tuck-in (an announcement that a company has joined the brand), and Guest feedback survey (what a guest opens after a stay).
 _Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made), Starter Kit (that sets up a Site)
 
 **Block**:
@@ -58,7 +58,7 @@ _Avoid_: Component, widget, section, element
 A Block that holds other Blocks, as a stack or as columns side by side. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band.
 _Avoid_: Section, row, grid (as model names), wrapper, group
 
-**Guest survey**:
+**Guest feedback survey**:
 A Block that asks a guest how their stay was, out of five stars. A high rating is asked for a public review; a lower one gets a feedback form, and what the guest writes is passed to the guest care team. The Site keeps none of it.
 _Avoid_: Review form, NPS, rating widget, feedback Block
 

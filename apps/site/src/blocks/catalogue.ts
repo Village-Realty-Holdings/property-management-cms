@@ -489,12 +489,12 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
   },
   guestSurvey: {
     blockType: "guestSurvey",
-    slug: "guest-survey",
-    label: "Guest survey",
+    slug: "guest-feedback-survey",
+    label: "Guest feedback survey",
     group: "Forms",
     description:
       "A star rating, then a review request or a feedback form for guest care.",
-    thumbnail: thumbnail("guest-survey"),
+    thumbnail: thumbnail("guest-feedback-survey"),
     defaults: {
       blockType: "guestSurvey",
       heading: "How was your stay?",

@@ -14,7 +14,7 @@ const feedback = {
 describe("where feedback goes", () => {
   it("is the Workflows platform's run endpoint for the feedback workflow", () => {
     expect(feedbackEndpoint({ WORKFLOWS_URL: "https://flows.test/" })).toBe(
-      "https://flows.test/api/run/guest-survey-feedback"
+      "https://flows.test/api/run/guest-feedback-survey"
     )
     expect(
       feedbackEndpoint({
@@ -46,7 +46,7 @@ describe("delivering feedback", () => {
       ok: true,
     })
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe("https://flows.test/api/run/guest-survey-feedback")
+    expect(url).toBe("https://flows.test/api/run/guest-feedback-survey")
     expect(init.method).toBe("POST")
     expect(JSON.parse(init.body as string)).toEqual(feedback)
   })

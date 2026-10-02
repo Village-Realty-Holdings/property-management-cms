@@ -6,7 +6,7 @@ import { getBrand } from "@/site/queries"
 const MAX_BYTES = 10_000
 
 /**
- * Receives the Guest survey Block's feedback form and passes it to the guest
+ * Receives the Guest feedback survey Block's feedback form and passes it to the guest
  * care team (src/site/guestFeedback.ts). Open to visitors, so everything is
  * checked again here and nothing is stored on the Site. The `website` field
  * is a trap no person sees: a submission that fills it is answered as sent

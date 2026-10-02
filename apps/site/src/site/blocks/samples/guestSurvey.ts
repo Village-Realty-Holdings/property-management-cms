@@ -1,6 +1,6 @@
 import type { BlockOf } from "../types"
 
-/** A Guest survey with every field filled. */
+/** A Guest feedback survey with every field filled. */
 export const guestSurveySample: BlockOf<"guestSurvey"> = {
   blockType: "guestSurvey",
   heading: "How was your stay with Seaglass?",

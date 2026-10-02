@@ -13,7 +13,7 @@ import { visit } from "../theme/support/browser"
 import { ORIGIN } from "../theme/support/env"
 
 /**
- * Guest survey acceptance: the Block, as a guest meets it on a Published
+ * Guest feedback survey acceptance: the Block, as a guest meets it on a Published
  * Page.
  *
  * - The rating is five stars under the Page's h1. A click chooses and moves
@@ -25,7 +25,7 @@ import { ORIGIN } from "../theme/support/env"
  *   step, which keeps the answers and offers to try again.
  * - The route refuses answers that are wrong, and drops a script's.
  * - Every step passes WCAG 2.2 AA and reflows at 320 CSS pixels.
- * - The Site adds the Guest survey Page Template, with its Survey Layout.
+ * - The Site adds the Guest feedback survey Page Template, with its Survey Layout.
  */
 
 const RUN = Date.now()
@@ -93,7 +93,7 @@ afterAll(async () => {
 const h1 = (page: Page) => page.getByRole("heading", { level: 1 })
 const star = (page: Page, name: string) => page.getByRole("radio", { name })
 
-describe("the Guest survey, as a guest", () => {
+describe("the Guest feedback survey, as a guest", () => {
   it("starts with five stars under the Page's h1", async () => {
     const { page } = h.visitor
     await visit(page, PATH)
@@ -229,17 +229,17 @@ describe("the route that receives feedback", () => {
   })
 })
 
-describe("the Guest survey Page Template", () => {
+describe("the Guest feedback survey Page Template", () => {
   it("is added with the starters, with its Survey Layout", async () => {
     const { page } = h.staff
     await visit(page, "/admin/pages/templates")
     const add = page.getByRole("button", { name: "Add starter templates" })
     if ((await add.count()) > 0) {
       await add.first().click()
-      await page.getByText("Guest survey template").first().waitFor()
+      await page.getByText("Guest feedback survey template").first().waitFor()
     }
     expect(
-      await page.getByText("Guest survey template").count()
+      await page.getByText("Guest feedback survey template").count()
     ).toBeGreaterThan(0)
     const layouts = (await (
       await h.staff.context.request.get(

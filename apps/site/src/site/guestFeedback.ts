@@ -7,10 +7,10 @@ import type { GuestFeedback } from "./guestSurvey"
  * that is comes from the server's environment, never from the Page:
  *
  *   WORKFLOWS_URL            the platform's origin
- *   GUEST_FEEDBACK_WORKFLOW  the workflow's id (default: guest-survey-feedback)
+ *   GUEST_FEEDBACK_WORKFLOW  the workflow's id (default: guest-feedback-survey)
  */
 
-export const DEFAULT_WORKFLOW = "guest-survey-feedback"
+export const DEFAULT_WORKFLOW = "guest-feedback-survey"
 
 /** How long the platform has to answer before the guest is told to retry. */
 const TIMEOUT_MS = 8000

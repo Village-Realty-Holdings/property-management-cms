@@ -30,7 +30,7 @@ const step = (
 export const reviewFrom = ["4", "5"] as const
 
 /**
- * A guest survey: a rating out of five stars, then one of two paths. A high
+ * A guest feedback survey: a rating out of five stars, then one of two paths. A high
  * rating is asked for a public review, at a link. A lower one gets a feedback
  * form, whose answers are sent to the guest care team (see
  * src/site/guestFeedback.ts). Each step's words are the Block's.
@@ -38,7 +38,10 @@ export const reviewFrom = ["4", "5"] as const
 export const GuestSurvey: Block = {
   slug: "guestSurvey",
   interfaceName: "GuestSurveyBlock",
-  labels: { singular: "Guest survey", plural: "Guest surveys" },
+  labels: {
+    singular: "Guest feedback survey",
+    plural: "Guest feedback surveys",
+  },
   fields: [
     {
       name: "heading",

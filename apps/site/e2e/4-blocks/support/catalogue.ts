@@ -92,7 +92,7 @@ export const PAGE_BLOCKS: readonly BlockSpec[] = [
   { name: "Location", backgrounds: true },
   { name: "FAQ", backgrounds: true },
   { name: "Form", backgrounds: true },
-  { name: "Guest survey", backgrounds: true },
+  { name: "Guest feedback survey", backgrounds: true },
 ]
 
 /**

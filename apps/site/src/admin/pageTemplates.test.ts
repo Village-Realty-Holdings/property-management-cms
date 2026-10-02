@@ -230,7 +230,7 @@ describe("a Page as a Page Template", () => {
 })
 
 describe("the starter Page Templates", () => {
-  it("are valid Draft Pages: Home, Tuck-in and Guest survey", async () => {
+  it("are valid Draft Pages: Home, Tuck-in and Guest feedback survey", async () => {
     expect(await startersMissing(t.payload, asStaff)).toBe(true)
 
     const result = await addStarterTemplatesAs(t.payload, asStaff)
@@ -238,16 +238,16 @@ describe("the starter Page Templates", () => {
     expect(result).toEqual({
       ok: true,
       message:
-        "Added “Home template”, “Tuck-in template” and “Guest survey template”.",
+        "Added “Home template”, “Tuck-in template” and “Guest feedback survey template”.",
     })
     expect(await startersMissing(t.payload, asStaff)).toBe(false)
     const rows = await loadPageTemplateRows(t.payload, asStaff)
     expect(rows.map((row) => row.name)).toEqual([
-      "Guest survey template",
+      "Guest feedback survey template",
       "Home template",
       "Tuck-in template",
     ])
-    expect(rows[0]!.blocks).toEqual(["Guest survey"])
+    expect(rows[0]!.blocks).toEqual(["Guest feedback survey"])
     expect(rows[1]!.blocks).toEqual([
       "Search Hero",
       "Featured rentals",
@@ -373,7 +373,11 @@ describe("the starter Page Templates", () => {
     })
     expect(
       (await loadPageTemplateRows(t.payload, asStaff)).map((row) => row.name)
-    ).toEqual(["Guest survey template", "Our Home", "Tuck-in template"])
+    ).toEqual([
+      "Guest feedback survey template",
+      "Our Home",
+      "Tuck-in template",
+    ])
     expect(await addStarterTemplatesAs(t.payload, asStaff)).toEqual({
       ok: true,
       message: "The starter Page Templates are already here.",

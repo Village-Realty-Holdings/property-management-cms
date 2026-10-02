@@ -70,7 +70,7 @@ export function siteEnv(): NodeJS.ProcessEnv {
     ENTRA_TENANT_ID: "",
     ENTRA_CLIENT_ID: "",
     ENTRA_CLIENT_SECRET: "",
-    // No Workflows platform: the Guest survey's feedback can't be passed on,
+    // No Workflows platform: the Guest feedback survey's feedback can't be passed on,
     // whatever the machine's .env says.
     WORKFLOWS_URL: "",
     PORT: String(PORT),

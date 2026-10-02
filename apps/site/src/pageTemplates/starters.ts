@@ -15,7 +15,7 @@ import type { Layout, Page, User } from "../payload-types"
  *             text across the page with its button under it (ADR-0007). It
  *             comes with its own Layout, "Tuck-in Layout": the logo and phone number
  *             above, a copyright line below, no menu.
- *   Guest survey
+ *   Guest feedback survey
  *             what a guest opens after a stay: a rating out of five stars,
  *             then a request for a review or a feedback form (the Guest
  *             survey Block). It comes with its own Layout, "Survey Layout": the
@@ -185,8 +185,8 @@ const tuckIn: StarterTemplate = {
 }
 
 const guestSurvey: StarterTemplate = {
-  path: "/templates/guest-survey",
-  title: "Guest survey template",
+  path: "/templates/guest-feedback-survey",
+  title: "Guest feedback survey template",
   layout: {
     name: "Survey Layout",
     header: [{ blockType: "logo", size: "large", showTagline: false }],

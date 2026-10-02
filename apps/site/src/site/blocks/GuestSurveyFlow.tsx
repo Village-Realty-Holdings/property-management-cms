@@ -92,7 +92,7 @@ async function send(body: object): Promise<boolean> {
 }
 
 /**
- * The Guest survey's flow, the part of the Block that needs the browser. A
+ * The Guest feedback survey's flow, the part of the Block that needs the browser. A
  * guest picks a rating out of five stars. A high one is asked for a review,
  * at the Block's link, or skips it; a lower one gets the feedback form, which
  * is sent to guest care and answered with the Sent or the Not sent step.

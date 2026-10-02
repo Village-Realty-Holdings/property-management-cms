@@ -11,7 +11,7 @@ Replace Text and Replace Image (the Admin's Tools) change one text, or one Media
 
 ## Links
 
-The Links Tool reads the same walk. A link is a text field marked `custom: LINK` (a button's link, a menu's URL, the Guest survey's review link), a menu link that points at a Page, or a link in rich text. The list groups them by where they lead and checks the internal ones against the Pages: a path no Page has, or a Page that is not published, is a broken link. Links that leave the Site are listed and not requested. Replacing a URL is a replace like the other two, with the same preview, the same Draft-or-publish choice and the same Page Templates switch; it matches the URL exactly as stored. A menu link to a Page is not a URL and can't be replaced: it follows its Page.
+The Links Tool reads the same walk. A link is a text field marked `custom: LINK` (a button's link, a menu's URL, the Guest feedback survey's review link), a menu link that points at a Page, or a link in rich text. The list groups them by where they lead and checks the internal ones against the Pages: a path no Page has, or a Page that is not published, is a broken link. Links that leave the Site are listed and not requested. Replacing a URL is a replace like the other two, with the same preview, the same Draft-or-publish choice and the same Page Templates switch; it matches the URL exactly as stored. A menu link to a Page is not a URL and can't be replaced: it follows its Page.
 
 ## Drafts or publish
 

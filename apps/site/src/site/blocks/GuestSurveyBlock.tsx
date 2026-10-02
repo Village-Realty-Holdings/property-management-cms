@@ -4,7 +4,7 @@ import { GuestSurveyFlow } from "./GuestSurveyFlow"
 import { type BlockContext, blockId, isFirstOnPage } from "./types"
 
 /**
- * Guest survey: a rating out of five stars, then a request for a review or a
+ * Guest feedback survey: a rating out of five stars, then a request for a review or a
  * feedback form for guest care. The section is server-safe; the flow inside
  * it is a client island. It lays itself out by the room it has (`fit-*`), so
  * it fits a Container's column.

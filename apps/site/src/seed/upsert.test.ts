@@ -249,7 +249,7 @@ describe("a sample seed", () => {
     expect(after.counts).toMatchObject({
       // The sample's two Pages and the three starter Page Templates.
       pages: 5,
-      // The sample's two, and the Tuck-in and Guest survey starters'.
+      // The sample's two, and the Tuck-in and Guest feedback survey starters'.
       layouts: 4,
       media: 1,
       fonts: 1,
@@ -268,7 +268,7 @@ describe("a sample seed", () => {
       depth: 0,
     })
     expect(templates.docs.map((page) => [page.path, page._status])).toEqual([
-      ["/templates/guest-survey", "draft"],
+      ["/templates/guest-feedback-survey", "draft"],
       ["/templates/home", "draft"],
       ["/templates/tuck-in", "draft"],
     ])
