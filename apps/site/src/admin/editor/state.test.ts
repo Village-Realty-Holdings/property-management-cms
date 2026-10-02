@@ -11,6 +11,7 @@ import {
   findBlock,
   isEditorDirty,
   placementProblem,
+  placeName,
   type EditorAction,
   type EditorDocument,
   type EditorState,
@@ -1014,6 +1015,23 @@ describe("Blocks in Containers", () => {
     expect(
       (inner as unknown as { children: BlockValues[] }).children[0]!.id
     ).not.toBe("b1")
+  })
+
+  it("names a Block's place from the Region down, by column in a Container with columns", () => {
+    const state = createEditorState(
+      pageDoc([
+        hero("a"),
+        box("cols", [text("t"), box("s", [button("b")])], "2"),
+      ])
+    )
+    const place = (id: string) => {
+      const found = findBlock(state.doc, id)!
+      return placeName(state.doc, found)
+    }
+    expect(place("a")).toBe("Block 1")
+    expect(place("cols")).toBe("Block 2")
+    expect(place("t")).toBe("Block 2, Container, Column 1")
+    expect(place("b")).toBe("Block 2, Container, Column 2, Container, Block 1")
   })
 
   it("removes a Block from a Container, and a Container with its Blocks", () => {

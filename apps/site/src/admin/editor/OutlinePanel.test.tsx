@@ -392,3 +392,112 @@ describe("accessibility", () => {
     expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
   })
 })
+
+describe("Blocks in a Container", () => {
+  beforeAll(() => {
+    Element.prototype.scrollIntoView ??= () => {}
+  })
+  const box = (id: string, children: BlockValues[], columns = "1") =>
+    ({
+      id,
+      blockType: "container",
+      columns,
+      children,
+    }) as unknown as BlockValues
+  const nestedDoc = (): EditorDocument => ({
+    ...(pageDoc() as PageDocument),
+    blocks: [
+      hero("b1", "Welcome"),
+      box("c1", [text("t1", "Left"), box("c2", [cta("x1", "Book now")])], "2"),
+    ],
+  })
+  const childOrder = () => value("child order")!.split(";").filter(Boolean)
+  function ChildProbe() {
+    const { doc } = useEditor()
+    const walk = (blocks: BlockValues[]): string[] =>
+      blocks.flatMap((b) => {
+        const children = (b as { children?: BlockValues[] }).children
+        return children
+          ? [
+              `${b.id}:${children.map((c) => c.id).join(",")}`,
+              ...walk(children),
+            ]
+          : []
+      })
+    return (
+      <output aria-label="child order">
+        {doc.kind === "page" ? walk(doc.blocks).join(";") : ""}
+      </output>
+    )
+  }
+  const mountNested = (props: Parameters<typeof OutlinePanel>[0] = {}) =>
+    render(
+      <EditorProvider initial={nestedDoc()}>
+        <OutlinePanel {...props} />
+        <Probe />
+        <ChildProbe />
+      </EditorProvider>
+    )
+
+  it("lists a Container's Blocks under it, a level further in", () => {
+    mountNested()
+    const rows = within(group("Page")).getAllByRole("treeitem")
+    expect(
+      rows.map((row) => [
+        row.getAttribute("aria-label"),
+        row.getAttribute("aria-level"),
+      ])
+    ).toEqual([
+      ["Hero", "1"],
+      ["Container", "1"],
+      ["Rich text", "2"],
+      ["Container", "2"],
+      ["Call to action", "3"],
+    ])
+  })
+
+  it("selects a Block in a Container, with a click or from the keyboard", async () => {
+    const onSelectBlock = vi.fn()
+    mountNested({ onSelectBlock })
+    await userEvent.click(
+      screen.getByRole("treeitem", { name: "Call to action" })
+    )
+    expect(value("selected")).toBe("x1")
+    expect(onSelectBlock).toHaveBeenCalledWith("x1")
+    expect(
+      screen
+        .getByRole("treeitem", { name: "Call to action" })
+        .getAttribute("tabindex")
+    ).toBe("0")
+    await userEvent.keyboard("{ArrowUp}{ArrowUp}{Enter}")
+    expect(value("selected")).toBe("t1")
+  })
+
+  it("moves a Block within its Container with its buttons", async () => {
+    mountNested()
+    await userEvent.click(
+      screen.getByRole("button", { name: "Move Rich text down" })
+    )
+    expect(childOrder()).toEqual(["c1:c2,t1", "c2:x1"])
+    expect(value("page order")).toBe("b1,c1")
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Move Call to action up",
+        }) as HTMLButtonElement
+      ).disabled
+    ).toBe(true)
+  })
+
+  it("has no axe violations", async () => {
+    const { container } = mountNested()
+    const results = await axe.run(
+      { include: [container] },
+      {
+        rules: { "color-contrast": { enabled: false } },
+        runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+      }
+    )
+    expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
+  })
+})

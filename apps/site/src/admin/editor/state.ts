@@ -184,6 +184,29 @@ export function findBlock(doc: EditorDocument, id: string): FoundBlock | null {
   return null
 }
 
+/**
+ * A Block's place, named from its Region down: "Block 2" on the Page, "Block
+ * 2, Container, Column 1" in a Container with columns, "Block 2, Container,
+ * Block 1" in a stack. `path` is the Block's path in the document (a
+ * `FoundBlock`'s); a place no Block is at is still named by its numbers.
+ */
+export function placeName(
+  doc: EditorDocument,
+  { region, path }: Pick<FoundBlock, "region" | "path">
+): string {
+  const [first, ...rest] = path.filter(
+    (segment): segment is number => typeof segment === "number"
+  )
+  let block: BlockValues | undefined = blocksIn(doc, region)[first ?? 0]
+  const parts = [`Block ${(first ?? 0) + 1}`]
+  for (const index of rest) {
+    const cell = block && hasColumns(block) ? "Column" : "Block"
+    parts.push(block ? labelOf(block) : "Container", `${cell} ${index + 1}`)
+    block = block ? childrenOf(block)[index] : undefined
+  }
+  return parts.join(", ")
+}
+
 /** The Blocks of `list`, or null when the document has no such list. */
 export function blocksOfList(
   doc: EditorDocument,

@@ -1,13 +1,13 @@
 "use client"
 
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
-  type ReactNode,
 } from "react"
 import {
   closestCenter,
@@ -35,7 +35,13 @@ import { regionCatalogueByType } from "../../site/regions/catalogue"
 import type { RegionBlockType } from "../../site/regions/types"
 import { BLOCK_TYPES, type BlockValues } from "../pageForm"
 import { useEditor } from "./EditorProvider"
-import { blocksIn, type Region } from "./state"
+import {
+  blocksIn,
+  blocksOfList,
+  childrenOf,
+  findBlock,
+  type Region,
+} from "./state"
 
 /**
  * The Outline: the Header, Page and Footer Block tree of the document being
@@ -45,6 +51,9 @@ import { blocksIn, type Region } from "./state"
  *
  * Each region the document owns has a "+" that opens the Block picker to add
  * a Block at the end of it.
+ *
+ * A Container's Blocks are listed under it, a level further in, and are
+ * selected and moved within their Container the same way.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -206,11 +215,10 @@ export function OutlinePanel({
       : (inherited?.[region as "header" | "footer"] ?? [])
 
   const labelOf = (id: string | number) => {
-    for (const region of owned) {
-      const block = blocksIn(doc, region).find((b) => b.id === id)
-      if (block) return blockLabel(block)
-    }
-    return "Block"
+    const found = findBlock(doc, String(id))
+    return found && owned.includes(found.region)
+      ? blockLabel(found.block)
+      : "Block"
   }
   const position = (region: Region, id: string | number | undefined) => {
     const blocks = blocksIn(doc, region)
@@ -220,13 +228,18 @@ export function OutlinePanel({
     }
   }
 
-  const move = (region: Region, from: number, direction: "up" | "down") => {
-    const blocks = blocksIn(doc, region)
+  const move = (
+    region: Region,
+    from: number,
+    direction: "up" | "down",
+    parentId: string | null = null
+  ) => {
+    const blocks = blocksOfList(doc, { region, parentId }) ?? []
     const block = blocks[from]
     const to = direction === "up" ? from - 1 : from + 1
     if (!block?.id || to < 0 || to >= blocks.length) return
     refocus.current = { id: block.id, direction }
-    moveBlock(region, from, to)
+    moveBlock(region, from, to, parentId)
     setAnnouncement(
       `${blockLabel(block)} moved to position ${to + 1} of ${blocks.length}.`
     )
@@ -282,9 +295,9 @@ export function OutlinePanel({
   }
 
   // One row is in the tab order: the selected Block, else the first one.
-  const ownedIds = owned.flatMap((region) =>
-    blocksIn(doc, region).flatMap((b) => (b.id ? [b.id] : []))
-  )
+  const idsIn = (blocks: readonly BlockValues[]): string[] =>
+    blocks.flatMap((b) => [...(b.id ? [b.id] : []), ...idsIn(childrenOf(b))])
+  const ownedIds = owned.flatMap((region) => idsIn(blocksIn(doc, region)))
   const tabbableId =
     selectedId !== null && ownedIds.includes(selectedId)
       ? selectedId
@@ -357,16 +370,29 @@ export function OutlinePanel({
                       className="flex flex-col gap-1"
                     >
                       {blocks.map((block, index) => (
-                        <SortableRow
-                          key={block.id ?? index}
-                          block={block}
-                          selected={block.id === selectedId}
-                          tabbable={block.id === tabbableId}
-                          isFirst={index === 0}
-                          isLast={index === blocks.length - 1}
-                          onSelect={choose}
-                          onMove={(direction) => move(region, index, direction)}
-                        />
+                        <Fragment key={block.id ?? index}>
+                          <SortableRow
+                            block={block}
+                            selected={block.id === selectedId}
+                            tabbable={block.id === tabbableId}
+                            isFirst={index === 0}
+                            isLast={index === blocks.length - 1}
+                            onSelect={choose}
+                            onMove={(direction) =>
+                              move(region, index, direction)
+                            }
+                          />
+                          <ChildRows
+                            parent={block}
+                            level={2}
+                            selectedId={selectedId}
+                            tabbableId={tabbableId}
+                            onSelect={choose}
+                            onMove={(parentId, from, direction) =>
+                              move(region, from, direction, parentId)
+                            }
+                          />
+                        </Fragment>
                       ))}
                     </ul>
                   </SortableContext>
@@ -430,6 +456,131 @@ function LockedRow({ block }: { block: BlockValues }) {
   )
 }
 
+/** A row's Move up or Move down button. */
+function MoveButton({
+  id,
+  label,
+  direction,
+  disabled,
+  onMove,
+}: {
+  id: string
+  label: string
+  direction: "up" | "down"
+  disabled: boolean
+  onMove: (direction: "up" | "down") => void
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-xs"
+      aria-label={`Move ${label} ${direction}`}
+      data-move={direction}
+      data-block-id={id}
+      disabled={disabled}
+      onClick={() => onMove(direction)}
+    >
+      {direction === "up" ? (
+        <ChevronUp aria-hidden />
+      ) : (
+        <ChevronDown aria-hidden />
+      )}
+    </Button>
+  )
+}
+
+/** Enter or Space on the row itself selects it; its buttons keep their own keys. */
+const selectKeys =
+  (id: string, onSelect: (id: string) => void) =>
+  (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) return
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      onSelect(id)
+    }
+  }
+
+/**
+ * The Blocks of the Container `parent`, one row each at `level`, each
+ * followed by its own Blocks when it is a Container. They are listed flat
+ * after the Container's row, so the rows of the Region stay one sortable
+ * list; `aria-level` says how deep each is.
+ */
+function ChildRows({
+  parent,
+  level,
+  selectedId,
+  tabbableId,
+  onSelect,
+  onMove,
+}: {
+  parent: BlockValues
+  level: number
+  selectedId: string | null
+  tabbableId: string | undefined
+  onSelect: (id: string) => void
+  onMove: (parentId: string, from: number, direction: "up" | "down") => void
+}) {
+  const children = childrenOf(parent)
+  if (!parent.id) return null
+  const parentId = parent.id
+  return children.map((block, index) => {
+    const id = block.id ?? ""
+    const label = blockLabel(block)
+    const hintId = `outline-hint-${id}`
+    return (
+      <Fragment key={id || index}>
+        <li
+          role="treeitem"
+          aria-level={level}
+          aria-selected={id === selectedId}
+          aria-expanded={childrenOf(block).length > 0 ? true : undefined}
+          aria-label={label}
+          aria-describedby={blockHint(block) ? hintId : undefined}
+          data-block-id={id}
+          tabIndex={id === tabbableId ? 0 : -1}
+          onClick={() => onSelect(id)}
+          onKeyDown={selectKeys(id, onSelect)}
+          // One step in per level, from the Region's own rows.
+          style={{ marginInlineStart: `${level - 1}rem` }}
+          className={cn(
+            ROW_CLASS,
+            "cursor-default",
+            id === selectedId && "border-primary bg-accent"
+          )}
+        >
+          <RowText block={block} hintId={hintId} />
+          <span className="flex shrink-0">
+            <MoveButton
+              id={id}
+              label={label}
+              direction="up"
+              disabled={index === 0}
+              onMove={(direction) => onMove(parentId, index, direction)}
+            />
+            <MoveButton
+              id={id}
+              label={label}
+              direction="down"
+              disabled={index === children.length - 1}
+              onMove={(direction) => onMove(parentId, index, direction)}
+            />
+          </span>
+        </li>
+        <ChildRows
+          parent={block}
+          level={level + 1}
+          selectedId={selectedId}
+          tabbableId={tabbableId}
+          onSelect={onSelect}
+          onMove={onMove}
+        />
+      </Fragment>
+    )
+  })
+}
+
 function SortableRow({
   block,
   selected,
@@ -457,25 +608,6 @@ function SortableRow({
   const label = blockLabel(block)
   const hintId = `outline-hint-${id}`
 
-  const button = (
-    direction: "up" | "down",
-    disabled: boolean,
-    icon: ReactNode
-  ) => (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-xs"
-      aria-label={`Move ${label} ${direction}`}
-      data-move={direction}
-      data-block-id={id}
-      disabled={disabled}
-      onClick={() => onMove(direction)}
-    >
-      {icon}
-    </Button>
-  )
-
   return (
     <li
       ref={setNodeRef}
@@ -483,20 +615,14 @@ function SortableRow({
       role="treeitem"
       aria-level={1}
       aria-selected={selected}
+      aria-expanded={childrenOf(block).length > 0 ? true : undefined}
       aria-label={label}
       aria-describedby={blockHint(block) ? hintId : undefined}
       data-block-id={id}
       tabIndex={tabbable ? 0 : -1}
       {...listeners}
       onClick={() => onSelect(id)}
-      onKeyDown={(event) => {
-        // Only the row itself selects; its buttons keep their own keys.
-        if (event.target !== event.currentTarget) return
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          onSelect(id)
-        }
-      }}
+      onKeyDown={selectKeys(id, onSelect)}
       className={cn(
         ROW_CLASS,
         "cursor-grab active:cursor-grabbing",
@@ -510,8 +636,20 @@ function SortableRow({
       />
       <RowText block={block} hintId={hintId} />
       <span className="flex shrink-0">
-        {button("up", isFirst, <ChevronUp aria-hidden />)}
-        {button("down", isLast, <ChevronDown aria-hidden />)}
+        <MoveButton
+          id={id}
+          label={label}
+          direction="up"
+          disabled={isFirst}
+          onMove={onMove}
+        />
+        <MoveButton
+          id={id}
+          label={label}
+          direction="down"
+          disabled={isLast}
+          onMove={onMove}
+        />
       </span>
     </li>
   )

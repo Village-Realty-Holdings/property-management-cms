@@ -8,7 +8,7 @@ import { useEditor } from "./EditorProvider"
 import { FieldsProvider, pathKey, type PageOption } from "./fields/context"
 import { FieldList } from "./fields/FieldList"
 import { planWrite, type Segment } from "./fields/values"
-import { findBlock } from "./state"
+import { findBlock, placeName } from "./state"
 
 /**
  * The Block tab: the selected Block's settings, as a form made from the
@@ -58,6 +58,7 @@ export function BlockPanel({
       config={config}
       blockId={selectedId!}
       blockPath={found.path}
+      place={found.parentId === null ? null : placeName(doc, found)}
       values={found.block as unknown as Record<string, unknown>}
       media={media}
       pages={pages}
@@ -69,6 +70,7 @@ function BlockForm({
   config,
   blockId,
   blockPath,
+  place,
   values,
   media,
   pages,
@@ -76,6 +78,8 @@ function BlockForm({
   config: Block
   blockId: string
   blockPath: readonly Segment[]
+  /** Where a Block in a Container is, to say so; null for any other. */
+  place: string | null
   values: Record<string, unknown>
   media: readonly MediaOption[]
   pages: readonly PageOption[]
@@ -124,7 +128,10 @@ function BlockForm({
         onSubmit={(event) => event.preventDefault()}
         noValidate
       >
-        <h2 className="text-sm font-semibold">{label}</h2>
+        <div>
+          <h2 className="text-sm font-semibold">{label}</h2>
+          {place && <p className="text-xs text-muted-foreground">In {place}</p>}
+        </div>
         <FieldList fields={config.fields} path={[]} sibling={values} />
       </form>
     </FieldsProvider>

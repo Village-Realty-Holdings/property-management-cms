@@ -160,6 +160,17 @@ function FieldItem({
       )
     case "array":
       return <ArrayControl field={field} {...leaf} />
+    case "blocks": {
+      // A Container's Blocks are Blocks of their own, each selected and
+      // edited in turn.
+      const count = Array.isArray(value) ? value.length : 0
+      return (
+        <p className="text-sm text-muted-foreground">
+          {count === 1 ? "1 Block" : `${count} Blocks`} in here. Add, select and
+          remove them in the Outline.
+        </p>
+      )
+    }
     case "richText":
       return (
         <p className="text-sm text-muted-foreground">
