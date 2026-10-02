@@ -5,7 +5,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { AmenitiesBlock as AmenitiesBlockData } from "../../payload-types"
 import { imageOf } from "../brand"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import { IconList } from "./IconList"
@@ -94,7 +94,7 @@ export function AmenitiesBlock({
   const id = `block-${context.index}-heading`
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-10 sm:gap-12"
     >
@@ -123,7 +123,7 @@ export function AmenitiesBlock({
         (block.variant === "icons" ? (
           <IconList
             columns="grid"
-            background={block.background}
+            background={surfaceOf(block.background, context)}
             context={context}
             items={items.map((item) => ({
               icon: item.icon,

@@ -3,7 +3,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { OwnerBandBlock as OwnerBandBlockData } from "../../payload-types"
 import { displayFont } from "../display"
 import { BlockButton, linkOf, type BlockSurface } from "./BlockButton"
-import { BlockSection, backgroundOf } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { Icon } from "./Icon"
 import type { BlockContext } from "./types"
@@ -30,12 +30,15 @@ export function OwnerBandBlock({
     const text = benefit.text?.trim()
     return text ? [{ position, text, id: benefit.id }] : []
   })
-  const background = backgroundOf(block.background)
+  const background = surfaceOf(block.background, context)
   const surface: BlockSurface | undefined =
     background === "primary" || background === "dark" ? background : undefined
   const id = `block-${context.index}-heading`
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
       <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col items-start gap-4">
           <EditableText

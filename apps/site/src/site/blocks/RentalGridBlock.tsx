@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { RentalGridBlock as RentalGridBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { RentalGridBrowser } from "./rentals/RentalGridBrowser"
 import type { BlockContext } from "./types"
@@ -25,7 +25,7 @@ export function RentalGridBlock({
   const id = `block-${context.index}-heading`
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Rental grid"
     >

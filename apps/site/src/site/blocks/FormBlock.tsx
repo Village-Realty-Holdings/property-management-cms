@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FormBlock as FormBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import type { BlockContext } from "./types"
 import { VisualForm } from "./VisualForm"
@@ -26,7 +26,7 @@ export function FormBlock({
 
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-8"
     >

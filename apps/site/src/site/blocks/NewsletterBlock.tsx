@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { NewsletterBlock as NewsletterBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection, backgroundOf } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { NewsletterForm } from "./NewsletterForm"
 import type { BlockContext } from "./types"
@@ -22,10 +22,13 @@ export function NewsletterBlock({
   const heading = block.heading?.trim()
   if (!heading) return null
   const text = block.text?.trim()
-  const background = backgroundOf(block.background)
+  const background = surfaceOf(block.background, context)
   const id = `block-${context.index}-heading`
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
       <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
         <div className="flex flex-col gap-3">
           <EditableText

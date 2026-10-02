@@ -7,7 +7,12 @@ import type { Image as BrandImage } from "../brand"
 import { displayFont } from "../display"
 import { splitAccent } from "./accentWord"
 import { EditableText } from "./Editable"
-import { container, type BlockContext } from "./types"
+import {
+  container,
+  embeddedBand,
+  embeddedBox,
+  type BlockContext,
+} from "./types"
 
 /**
  * The Hero's heading text: with the accent word (when it is in the heading)
@@ -38,12 +43,23 @@ function AccentHeading({
   )
 }
 
+/** Inside a Container a Hero with no photo takes the Container's colours. */
+const embeddedColours = [embeddedBand, "in-data-container:text-inherit!"]
+
+/** Inside a Container a Hero's photo is a card: shorter, padded all round. */
+const embeddedPhoto =
+  "in-data-container:min-h-80! in-data-container:p-6! sm:in-data-container:p-8!"
+
 /**
  * What a Hero and a Search Hero share: the section, its image (a full-bleed
  * photo under a shade on the dark surface) or the primary colour with an
  * accent glow, and the eyebrow, heading and subheading. `children` is what
  * sits under the text (a button, a search); `foot` is fused to the section's
  * foot, full width (a trust strip).
+ *
+ * Inside a Container the Hero keeps its photo, as a card, and gives up the
+ * rest of its band: without a photo it is drawn on the Container's surface,
+ * in the Container's colours, with no padding of its own.
  */
 export function HeroShell({
   eyebrow,
@@ -76,8 +92,8 @@ export function HeroShell({
       className={cn(
         "relative isolate overflow-hidden",
         image
-          ? "bg-surface-dark text-surface-dark-foreground"
-          : "bg-primary text-primary-foreground"
+          ? "bg-surface-dark text-surface-dark-foreground in-data-container:rounded-(--card-radius)"
+          : ["bg-primary text-primary-foreground", embeddedColours]
       )}
     >
       {image ? (
@@ -98,7 +114,7 @@ export function HeroShell({
       ) : (
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -bottom-40 -z-10 size-[28rem] rounded-full bg-accent opacity-20 blur-3xl sm:size-[40rem]"
+          className="pointer-events-none absolute -right-24 -bottom-40 -z-10 size-[28rem] rounded-full bg-accent opacity-20 blur-3xl in-data-container:hidden sm:size-[40rem]"
         />
       )}
       <div
@@ -106,8 +122,15 @@ export function HeroShell({
           container,
           "flex flex-col gap-8",
           image
-            ? "min-h-[34rem] justify-end pt-[calc(var(--section-y)*3.2)] pb-[calc(var(--section-y)*1.4)] sm:min-h-[40rem] sm:pb-[calc(var(--section-y)*2)]"
-            : "pt-[calc(var(--section-y)*1.6)] pb-[calc(var(--section-y)*1.4)] sm:pt-[calc(var(--section-y)*2.4)] sm:pb-[calc(var(--section-y)*2)]"
+            ? [
+                "min-h-[34rem] justify-end pt-[calc(var(--section-y)*3.2)] pb-[calc(var(--section-y)*1.4)] sm:min-h-[40rem] sm:pb-[calc(var(--section-y)*2)]",
+                embeddedPhoto,
+              ]
+            : [
+                "pt-[calc(var(--section-y)*1.6)] pb-[calc(var(--section-y)*1.4)] sm:pt-[calc(var(--section-y)*2.4)] sm:pb-[calc(var(--section-y)*2)]",
+                embeddedBox,
+                "in-data-container:py-0!",
+              ]
         )}
       >
         <div className="flex flex-col gap-4">
@@ -155,8 +178,8 @@ export function HeroShell({
         <div
           className={
             image
-              ? "border-t border-surface-dark-foreground/20 bg-surface-dark text-surface-dark-foreground"
-              : "border-t border-primary-foreground/20"
+              ? "border-t border-surface-dark-foreground/20 bg-surface-dark text-surface-dark-foreground in-data-container:px-6 sm:in-data-container:px-8"
+              : "border-t border-primary-foreground/20 in-data-container:border-current/20"
           }
         >
           {foot}

@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FeaturesBlock as FeaturesBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { IconBadge } from "./IconList"
 import { featureColumns } from "./mosaic"
@@ -34,7 +34,7 @@ export function FeaturesBlock({
   const id = `block-${context.index}-heading`
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-10 sm:gap-12"
     >
@@ -71,7 +71,7 @@ export function FeaturesBlock({
             <li key={feature.index} className="flex flex-col items-start gap-4">
               <IconBadge
                 name={feature.icon}
-                background={block.background}
+                background={surfaceOf(block.background, context)}
                 className="size-12"
               />
               <div className="flex flex-col gap-2">

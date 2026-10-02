@@ -4,7 +4,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { TestimonialsBlock as TestimonialsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { maxStars, starsOf } from "./testimonials"
 import { TestimonialsCarousel } from "./TestimonialsCarousel"
@@ -69,7 +69,7 @@ export function TestimonialsBlock({
   ))
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="grid gap-10"
     >

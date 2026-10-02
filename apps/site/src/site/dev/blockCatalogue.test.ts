@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest"
 
 import { catalogue, type CatalogueEntry } from "../../blocks/catalogue"
 import type { PageBlock } from "../blocks/types"
-import { sampleWithQuery, type Query } from "./blockCatalogue"
+import {
+  sampleInContainer,
+  sampleWithQuery,
+  type Query,
+} from "./blockCatalogue"
 
 describe("sampleWithQuery", () => {
   it("is the Block's sample when nothing is asked for", () => {
@@ -79,5 +83,40 @@ describe("sampleWithQuery", () => {
         fixtures: "avada",
       })
     ).toMatchObject({ heading: "One" })
+  })
+})
+
+describe("sampleInContainer", () => {
+  const block = sampleWithQuery(catalogue.callToAction, {})
+
+  it("is the Block itself when no Container is asked for", () => {
+    expect(sampleInContainer(block, { background: "dark" })).toBe(block)
+  })
+
+  it("puts the Block in a one-column Container on the background asked for", () => {
+    expect(sampleInContainer(block, { container: "dark" })).toEqual({
+      blockType: "container",
+      columns: "1",
+      gap: "medium",
+      align: "top",
+      width: "page",
+      background: "dark",
+      children: [block],
+    })
+  })
+
+  it("uses the Default background for anything else", () => {
+    for (const container of ["", "neon", ["muted", "dark"]]) {
+      expect(sampleInContainer(block, { container })).toMatchObject({
+        blockType: "container",
+        background: Array.isArray(container) ? "muted" : "default",
+      })
+    }
+  })
+
+  it("is not a field of the sample, so the Block is left as it was", () => {
+    expect(
+      sampleWithQuery(catalogue.callToAction, { container: "dark" })
+    ).toEqual(block)
   })
 })

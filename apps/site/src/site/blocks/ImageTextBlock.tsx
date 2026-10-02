@@ -5,7 +5,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { ImageTextBlock as ImageTextBlockData } from "../../payload-types"
 import { imageOf } from "../brand"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { IconList } from "./IconList"
 import type { BlockContext } from "./types"
@@ -34,7 +34,10 @@ export function ImageTextBlock({
   }))
   const id = `block-${context.index}-heading`
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
       <div
         className={cn(
           "grid items-center gap-8 md:gap-12 lg:gap-16",
@@ -88,7 +91,7 @@ export function ImageTextBlock({
           )}
           <IconList
             items={points}
-            background={block.background}
+            background={surfaceOf(block.background, context)}
             context={context}
           />
         </div>

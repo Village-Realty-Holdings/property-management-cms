@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FeaturedRentalsBlock as FeaturedRentalsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { RentalCardGrid } from "./rentals/RentalCardGrid"
 import { RentalCarousel } from "./rentals/RentalCarousel"
@@ -26,7 +26,7 @@ export function FeaturedRentalsBlock({
   const rentals = featured(context.fixtures.rentals, block.count)
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Featured rentals"
     >

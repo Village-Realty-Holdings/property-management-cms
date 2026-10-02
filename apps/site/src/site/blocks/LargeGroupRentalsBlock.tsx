@@ -2,7 +2,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { LargeGroupRentalsBlock as LargeGroupRentalsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { RentalCardGrid } from "./rentals/RentalCardGrid"
 import { RentalsEmpty } from "./rentals/RentalsEmpty"
@@ -26,7 +26,7 @@ export function LargeGroupRentalsBlock({
   const rentals = largeGroup(context.fixtures.rentals, block.minSleeps)
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={heading ? id : undefined}
       label="Large-group rentals"
     >

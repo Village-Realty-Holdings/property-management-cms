@@ -4,7 +4,7 @@ import type { RichTextBlock as RichTextBlockData } from "../../payload-types"
 import { RichTextEditing } from "../editing/RichTextEditing"
 import { canEditInPlace } from "../editing/canEditInPlace"
 import { hasText, RichText } from "../RichText"
-import { backgroundOf, BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import type { BlockContext } from "./types"
 
 type LexicalNode = { type?: string; text?: unknown; children?: LexicalNode[] }
@@ -39,7 +39,7 @@ export function RichTextBlock({
   // In the Visual Editor an empty Block is still there to be typed into.
   const editable = context.editing && canEditInPlace(block.content)
   if (!editable && !hasText(block.content)) return null
-  const background = backgroundOf(block.background)
+  const background = surfaceOf(block.background, context)
   const className = cn(
     "text-lg [&>:first-child]:mt-0",
     block.width === "wide" && "max-w-none",

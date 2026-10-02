@@ -7,7 +7,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { LocationBlock as LocationBlockData } from "../../payload-types"
 import { imageOf } from "../brand"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import type { BlockContext } from "./types"
 
@@ -104,7 +104,7 @@ export function LocationBlock({
 
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12"
     >
@@ -148,7 +148,7 @@ export function LocationBlock({
             rel="noopener noreferrer"
             className={cn(
               buttonVariants({ variant: "accent", size: "lg" }),
-              focusRing[block.background ?? ""]
+              focusRing[surfaceOf(block.background, context)]
             )}
           >
             Get directions

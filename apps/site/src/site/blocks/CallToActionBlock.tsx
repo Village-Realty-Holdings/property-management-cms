@@ -8,7 +8,7 @@ import {
   type BlockButtonTone,
   type BlockSurface,
 } from "./BlockButton"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import type { BlockContext } from "./types"
 
@@ -59,7 +59,10 @@ export function CallToActionBlock({
   const style = styles[block.style] ?? styles.primary
   const id = `block-${context.index}-heading`
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
       <div
         className={cn(
           "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",

@@ -1,13 +1,55 @@
-import { Fragment } from "react"
+import { cn } from "@workspace/ui/lib/utils"
 
 import type { ContainerBlock as ContainerBlockData } from "../../payload-types"
+import { backgroundOf, surfaces } from "./BlockSection"
 import { renderBlock } from "./registry"
-import type { BlockContext } from "./types"
+import { CONTAINER_MARK, container, sectionY, type BlockContext } from "./types"
 
 /**
- * Container: the Blocks it holds, in order. A Block inside one is the same
- * component as on the Page. The Visual Editor shows them and can't edit them
- * there yet, so they are drawn as the Site draws them.
+ * The columns at full width. They are counted against the Container's own
+ * width, not the viewport's: one column below the `sm` container width, and
+ * three or four go through two on the way. (Class names are written out so
+ * Tailwind can see them.)
+ */
+const columns: Record<ContainerBlockData["columns"], string> = {
+  "1": "",
+  "2": "@sm:grid-cols-2",
+  "3": "@sm:grid-cols-2 @3xl:grid-cols-3",
+  "4": "@sm:grid-cols-2 @5xl:grid-cols-4",
+}
+
+/** The gap between cells, in steps of the Theme's --section-y. */
+const gaps: Record<ContainerBlockData["gap"], string> = {
+  small: "gap-[calc(var(--section-y)*0.4)]",
+  medium: "gap-[calc(var(--section-y)*0.8)]",
+  large: "gap-[calc(var(--section-y)*1.2)]",
+}
+
+const aligns: Record<ContainerBlockData["align"], string> = {
+  top: "items-start",
+  centre: "items-center",
+  stretch: "items-stretch",
+}
+
+/** A Container that paints inside another one is a card on it. */
+const card = "rounded-(--card-radius) p-6 sm:p-8"
+
+/**
+ * Container: the Blocks it holds, as a stack or as columns side by side.
+ *
+ * On the Page it is a band like any Block's section: its background, the
+ * Theme's vertical padding, its content at page width. Inside another
+ * Container it has no band: it paints only a background other than Default,
+ * as a card, and otherwise sits on the surface it was given.
+ *
+ * Each Block it holds is the same component as on the Page, in a cell of the
+ * grid. The wrapper marks them (`data-container`), which takes their own
+ * band away (see `embeddedBand`), and they are drawn for the Container's
+ * surface (`context.surface`). The Visual Editor shows them and can't edit
+ * them there yet, so they are drawn as the Site draws them.
+ *
+ * With no Blocks it renders nothing on the Site, and a placeholder in the
+ * Visual Editor.
  */
 export function ContainerBlock({
   block,
@@ -17,14 +59,59 @@ export function ContainerBlock({
   context: BlockContext
 }) {
   const children = block.children ?? []
-  if (children.length === 0) return null
+  if (children.length === 0 && !context.editing) return null
+  const nested = context.surface !== undefined
+  const background = backgroundOf(block.background)
+  const paints = !nested || background !== "default"
+  const surface = paints ? background : context.surface
+  const mark = { [CONTAINER_MARK]: "" }
   return (
-    <div>
-      {children.map((child, index) => (
-        <Fragment key={child.id ?? index}>
-          {renderBlock(child, { ...context, index, editing: false })}
-        </Fragment>
-      ))}
+    <div
+      className={cn(
+        paints && surfaces[background],
+        nested ? paints && card : sectionY
+      )}
+    >
+      <div className={cn(!nested && container)}>
+        <div
+          {...mark}
+          className={cn("@container", block.width === "reading" && "max-w-3xl")}
+        >
+          {children.length === 0 ? (
+            <p className="rounded-(--card-radius) border border-dashed border-current/40 px-4 py-8 text-center text-sm">
+              This Container is empty. Add a Block to it.
+            </p>
+          ) : (
+            <div
+              className={cn(
+                "grid grid-cols-1",
+                columns[block.columns],
+                gaps[block.gap],
+                aligns[block.align]
+              )}
+            >
+              {children.map((child, index) => (
+                <div
+                  key={child.id ?? index}
+                  // A cell is the width a Block inside it can measure itself
+                  // against. One whose Block renders nothing takes no room.
+                  className={cn(
+                    "@container min-w-0 empty:hidden",
+                    block.align === "stretch" && "*:h-full"
+                  )}
+                >
+                  {renderBlock(child, {
+                    ...context,
+                    index,
+                    surface,
+                    editing: false,
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
