@@ -10,10 +10,11 @@ import type { Layout, Page, User } from "../payload-types"
  * Staff edit, rename or delete them like any other.
  *
  *   Home      the structure of the seeded Sites' Home Pages
- *   Tuck-in   an announcement that a company has joined the brand: a plain
- *             page of text for owners and for guests (as on pclodge.com;
- *             its two buttons wait for the Container Block, ADR-0007). It comes with its own Layout, "Tuck-in": the
- *             logo and phone number above, a copyright line below, no menu.
+ *   Tuck-in   an announcement that a company has joined the brand, as on
+ *             pclodge.com: for owners, then for guests, each a Container of
+ *             text across the page with its button under it (ADR-0007). It
+ *             comes with its own Layout, "Tuck-in": the logo and phone number
+ *             above, a copyright line below, no menu.
  */
 
 type Blocks = NonNullable<Page["blocks"]>
@@ -62,12 +63,33 @@ const point = (title: string, body: string) =>
     [text(title, true), { type: "linebreak", version: 1 }, text(body)],
     { textFormat: 0 }
   )
+/** A Block a Container holds. */
+type Child = NonNullable<
+  Extract<Blocks[number], { blockType: "container" }>["children"]
+>[number]
 /** Text across the page. */
-const section = (...children: object[]): Blocks[number] => ({
+const section = (...children: object[]): Child => ({
   blockType: "richText",
   content: { root: node("root", children) } as unknown as RichText,
   width: "wide",
   background: "default",
+})
+/** A button at the start of its line, to a Site path. */
+const button = (label: string, href: string): Child => ({
+  blockType: "button",
+  link: { label, href },
+  style: "primary",
+  align: "start",
+})
+/** A stack of Blocks: a Container of one column. */
+const stack = (...children: Child[]): Blocks[number] => ({
+  blockType: "container",
+  columns: "1",
+  gap: "medium",
+  align: "top",
+  width: "page",
+  background: "default",
+  children,
 })
 
 const block = <T extends keyof typeof catalogue>(blockType: T) =>
@@ -102,51 +124,57 @@ const tuckIn: StarterTemplate = {
     ],
   },
   blocks: [
-    section(
-      heading("[Company] Joins [Our Brand]!", "h1"),
-      heading("What Owners Can Expect"),
-      paragraph(
-        "[Our Brand] is thrilled to welcome [Company] to the family. This partnership is designed to elevate your ownership experience while building on the service and care you already know."
+    stack(
+      section(
+        heading("[Company] Joins [Our Brand]!", "h1"),
+        heading("What Owners Can Expect"),
+        paragraph(
+          "[Our Brand] is thrilled to welcome [Company] to the family. This partnership is designed to elevate your ownership experience while building on the service and care you already know."
+        ),
+        paragraph(
+          "As an owner, you'll benefit from enhanced services, expanded marketing reach, and an unwavering focus on maximizing your property's revenue."
+        ),
+        point(
+          "Proven Property Management",
+          "Our dedicated operations team keeps your property guest-ready, protected, and performing at its best."
+        ),
+        point(
+          "More Visibility, More Bookings",
+          "Your property will be showcased across top channels to attract more qualified guests and generate stronger returns."
+        ),
+        point(
+          "Dedicated Owner Support",
+          "Work directly with our owner team, who provide personalized support, proactive communication, and guidance to keep your property well-maintained and consistently profitable."
+        ),
+        paragraph("We're excited to begin this new chapter with you.")
       ),
-      paragraph(
-        "As an owner, you'll benefit from enhanced services, expanded marketing reach, and an unwavering focus on maximizing your property's revenue."
-      ),
-      point(
-        "Proven Property Management",
-        "Our dedicated operations team keeps your property guest-ready, protected, and performing at its best."
-      ),
-      point(
-        "More Visibility, More Bookings",
-        "Your property will be showcased across top channels to attract more qualified guests and generate stronger returns."
-      ),
-      point(
-        "Dedicated Owner Support",
-        "Work directly with our owner team, who provide personalized support, proactive communication, and guidance to keep your property well-maintained and consistently profitable."
-      ),
-      paragraph("We're excited to begin this new chapter with you.")
+      button("Learn More", "/owners")
     ),
-    section(
-      rule(),
-      heading("Welcome, Guests!"),
-      paragraph(
-        "[Company] is now part of the [Our Brand] family, and we're excited to welcome you to this next chapter."
+    stack(
+      section(
+        rule(),
+        heading("Welcome, Guests!"),
+        paragraph(
+          "[Company] is now part of the [Our Brand] family, and we're excited to welcome you to this next chapter."
+        ),
+        point(
+          "What This Means for You",
+          "Your bookings are secure. All existing reservations are confirmed, and you'll continue to receive the reliable service you're used to."
+        ),
+        point(
+          "The Same Experience You Love",
+          "We share a commitment to exceptional guest experiences, so you can expect the same comfort, cleanliness, and hospitality."
+        ),
+        point(
+          "A Greater Selection of Stays",
+          "Choose from a wide variety of homes with the space, amenities, and style that fit your ideal vacation."
+        ),
+        point(
+          "We're Here to Help",
+          "Have questions about an existing or future stay? Reach us at [phone number]."
+        )
       ),
-      point(
-        "What This Means for You",
-        "Your bookings are secure. All existing reservations are confirmed, and you'll continue to receive the reliable service you're used to."
-      ),
-      point(
-        "The Same Experience You Love",
-        "We share a commitment to exceptional guest experiences, so you can expect the same comfort, cleanliness, and hospitality."
-      ),
-      point(
-        "A Greater Selection of Stays",
-        "Choose from a wide variety of homes with the space, amenities, and style that fit your ideal vacation."
-      ),
-      point(
-        "We're Here to Help",
-        "Have questions about an existing or future stay? Reach us at [phone number]."
-      )
+      button("Explore Our Properties", "/rentals")
     ),
   ],
 }

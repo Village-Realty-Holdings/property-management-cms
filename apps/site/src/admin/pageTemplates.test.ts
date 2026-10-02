@@ -255,7 +255,7 @@ describe("the starter Page Templates", () => {
       "Testimonials",
       "Call to action",
     ])
-    expect(rows[1]!.blocks).toEqual(["Rich text", "Rich text"])
+    expect(rows[1]!.blocks).toEqual(["Container", "Container"])
     const visitors = await t.payload.find({ collection: "pages", ...asVisitor })
     expect(visitors.docs).toEqual([])
   })
@@ -282,10 +282,28 @@ describe("the starter Page Templates", () => {
     expect(layouts[1]!.footer?.map((block) => block.blockType)).toEqual([
       "legalBar",
     ])
-    // A New Page made from it wears that Layout, text across the page.
+    // A New Page made from it wears that Layout: twice, a Container of text
+    // across the page with its button under it.
     const start = await loadPageTemplateStart(t.payload, asStaff, tuckIn.id)
     expect(start!.layout).toEqual({ mode: "layout", layoutId: layouts[1]!.id })
-    expect(start!.blocks).toMatchObject([{ width: "wide" }, { width: "wide" }])
+    expect(start!.blocks).toMatchObject([
+      {
+        blockType: "container",
+        columns: "1",
+        children: [
+          { blockType: "richText", width: "wide" },
+          { blockType: "button", link: { label: "Learn More" } },
+        ],
+      },
+      {
+        blockType: "container",
+        columns: "1",
+        children: [
+          { blockType: "richText", width: "wide" },
+          { blockType: "button", link: { label: "Explore Our Properties" } },
+        ],
+      },
+    ])
 
     // Deleting the Page Template and adding it again reuses the Layout.
     await t.payload.delete({ collection: "pages", id: tuckIn.id, ...asStaff })
