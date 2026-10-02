@@ -25,7 +25,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { ChevronDown, ChevronUp, GripVertical, Lock, Plus } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  Lock,
+  Plus,
+  Trash2,
+} from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
@@ -53,7 +60,9 @@ import {
  * a Block at the end of it.
  *
  * A Container's Blocks are listed under it, a level further in, and are
- * selected and moved within their Container the same way.
+ * selected and moved within their Container the same way. A Container's row
+ * has a "+" that adds a Block at the end of it, and each Block in a Container
+ * a Remove button.
  *
  * Regions the open document does not own are shown but locked: the Header and
  * Footer in Page mode (they come from the Page's Layout) and the Page in
@@ -146,11 +155,14 @@ export function OutlinePanel({
    */
   onSelectBlock?: (id: string) => void
 }) {
-  const { doc, selectedId, select, moveBlock, onInsertRequest } = useEditor()
+  const { doc, selectedId, select, moveBlock, removeBlock, onInsertRequest } =
+    useEditor()
   const [announcement, setAnnouncement] = useState("")
   const tree = useRef<HTMLDivElement>(null)
   /** The button to give focus back to once a move has re-rendered the rows. */
   const refocus = useRef<{ id: string; direction: "up" | "down" } | null>(null)
+  /** The row to give focus to once a removal has re-rendered the rows. */
+  const refocusRow = useRef<string | null>(null)
 
   const sensors = useSensors(
     // A few pixels of movement start a drag, so a plain click still selects.
@@ -160,6 +172,18 @@ export function OutlinePanel({
       activationConstraint: { delay: 200, tolerance: 6 },
     })
   )
+
+  useLayoutEffect(() => {
+    const row = refocusRow.current
+    if (row === null) return
+    refocusRow.current = null
+    ;[
+      ...(tree.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ??
+        []),
+    ]
+      .find((el) => el.dataset.blockId === row)
+      ?.focus()
+  }, [doc])
 
   useLayoutEffect(() => {
     const target = refocus.current
@@ -243,6 +267,22 @@ export function OutlinePanel({
     setAnnouncement(
       `${blockLabel(block)} moved to position ${to + 1} of ${blocks.length}.`
     )
+  }
+
+  /** Adds a Block at the end of the Container `parent`, through the picker. */
+  const addTo = (region: Region) => (parent: BlockValues) => {
+    if (parent.id) {
+      onInsertRequest(region, childrenOf(parent).length, parent.id)
+    }
+  }
+
+  /** Removes a Block from its Container; focus goes to the Container's row. */
+  const remove = (id: string) => {
+    const found = findBlock(doc, id)
+    if (!found) return
+    refocusRow.current = found.parentId
+    removeBlock(id)
+    setAnnouncement(`${blockLabel(found.block)} removed.`)
   }
 
   const onDragEnd = (region: Region) => (event: DragEndEvent) => {
@@ -381,6 +421,7 @@ export function OutlinePanel({
                             onMove={(direction) =>
                               move(region, index, direction)
                             }
+                            onAdd={addTo(region)}
                           />
                           <ChildRows
                             parent={block}
@@ -391,6 +432,8 @@ export function OutlinePanel({
                             onMove={(parentId, from, direction) =>
                               move(region, from, direction, parentId)
                             }
+                            onAdd={addTo(region)}
+                            onRemove={remove}
                           />
                         </Fragment>
                       ))}
@@ -490,6 +533,28 @@ function MoveButton({
   )
 }
 
+/** A Container row's "+": a Block at the end of the Container. */
+function AddButton({
+  block,
+  onAdd,
+}: {
+  block: BlockValues
+  onAdd: (parent: BlockValues) => void
+}) {
+  if ((block.blockType as string) !== "container") return null
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-xs"
+      aria-label="Add a Block to this Container"
+      onClick={() => onAdd(block)}
+    >
+      <Plus aria-hidden />
+    </Button>
+  )
+}
+
 /** Enter or Space on the row itself selects it; its buttons keep their own keys. */
 const selectKeys =
   (id: string, onSelect: (id: string) => void) =>
@@ -514,6 +579,8 @@ function ChildRows({
   tabbableId,
   onSelect,
   onMove,
+  onAdd,
+  onRemove,
 }: {
   parent: BlockValues
   level: number
@@ -521,6 +588,8 @@ function ChildRows({
   tabbableId: string | undefined
   onSelect: (id: string) => void
   onMove: (parentId: string, from: number, direction: "up" | "down") => void
+  onAdd: (parent: BlockValues) => void
+  onRemove: (id: string) => void
 }) {
   const children = childrenOf(parent)
   if (!parent.id) return null
@@ -566,6 +635,16 @@ function ChildRows({
               disabled={index === children.length - 1}
               onMove={(direction) => onMove(parentId, index, direction)}
             />
+            <AddButton block={block} onAdd={onAdd} />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`Remove ${label}`}
+              onClick={() => onRemove(id)}
+            >
+              <Trash2 aria-hidden />
+            </Button>
           </span>
         </li>
         <ChildRows
@@ -575,6 +654,8 @@ function ChildRows({
           tabbableId={tabbableId}
           onSelect={onSelect}
           onMove={onMove}
+          onAdd={onAdd}
+          onRemove={onRemove}
         />
       </Fragment>
     )
@@ -589,6 +670,7 @@ function SortableRow({
   isLast,
   onSelect,
   onMove,
+  onAdd,
 }: {
   block: BlockValues
   selected: boolean
@@ -597,6 +679,7 @@ function SortableRow({
   isLast: boolean
   onSelect: (id: string) => void
   onMove: (direction: "up" | "down") => void
+  onAdd: (parent: BlockValues) => void
 }) {
   const id = block.id ?? ""
   const { setNodeRef, listeners, transform, transition, isDragging } =
@@ -650,6 +733,7 @@ function SortableRow({
           disabled={isLast}
           onMove={onMove}
         />
+        <AddButton block={block} onAdd={onAdd} />
       </span>
     </li>
   )

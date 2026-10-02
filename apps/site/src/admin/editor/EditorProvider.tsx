@@ -17,6 +17,7 @@ import {
   createEditorState,
   editorReducer,
   isEditorDirty,
+  listPlace,
   type EditorAction,
   type EditorDocument,
   type BlockList,
@@ -139,6 +140,11 @@ export function EditorProvider({
       {children}
       <BlockPicker
         target={picking}
+        inside={
+          picking?.parentId == null
+            ? undefined
+            : (listPlace(state.doc, picking) ?? undefined)
+        }
         onClose={() => setPicking(null)}
         onInsert={api.insertBlock}
       />

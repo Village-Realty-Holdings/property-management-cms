@@ -489,6 +489,62 @@ describe("Blocks in a Container", () => {
     ).toBe(true)
   })
 
+  it("adds a Block to a Container with its +, offering only what fits there", async () => {
+    const user = userEvent.setup()
+    mountNested()
+    const plus = screen.getAllByRole("button", {
+      name: "Add a Block to this Container",
+    })
+    expect(plus).toHaveLength(2)
+    // The outer Container has columns: a Hero needs the page's width.
+    await user.click(plus[0]!)
+    expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
+    await user.click(screen.getByRole("option", { name: /^Button\b/ }))
+    const [outer] = childOrder()
+    const added = outer!.split(":")[1]!.split(",")[2]!
+    expect(outer).toMatch(/^c1:t1,c2,/)
+    expect(value("selected")).toBe(added)
+    expect(
+      screen
+        .getByRole("treeitem", { name: "Button" })
+        .getAttribute("aria-level")
+    ).toBe("2")
+  })
+
+  it("offers no Container in a Container three levels deep", async () => {
+    const user = userEvent.setup()
+    render(
+      <EditorProvider
+        initial={{
+          ...(pageDoc() as PageDocument),
+          blocks: [box("l1", [box("l2", [box("l3", [])])])],
+        }}
+      >
+        <OutlinePanel />
+      </EditorProvider>
+    )
+    const plus = screen.getAllByRole("button", {
+      name: "Add a Block to this Container",
+    })
+    await user.click(plus[1]!)
+    expect(screen.getByRole("option", { name: /^Container\b/ })).toBeTruthy()
+    await user.keyboard("{Escape}")
+    await user.click(plus[2]!)
+    expect(screen.queryByRole("option", { name: /^Container\b/ })).toBeNull()
+    expect(screen.getByRole("option", { name: /^Hero\b/ })).toBeTruthy()
+  })
+
+  it("removes a Block from its Container, as an undoable step", async () => {
+    mountNested()
+    await userEvent.click(
+      screen.getByRole("button", { name: "Remove Rich text" })
+    )
+    expect(childOrder()).toEqual(["c1:c2", "c2:x1"])
+    expect(value("can undo")).toBe("true")
+    // The Page's own Blocks keep the Outline they had: no Remove button.
+    expect(screen.queryByRole("button", { name: "Remove Hero" })).toBeNull()
+  })
+
   it("has no axe violations", async () => {
     const { container } = mountNested()
     const results = await axe.run(

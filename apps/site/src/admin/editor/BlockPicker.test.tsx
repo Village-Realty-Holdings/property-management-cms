@@ -75,6 +75,56 @@ describe("what each region offers", () => {
   })
 })
 
+describe("what a Container offers", () => {
+  const inside = (level: number, narrow: boolean) =>
+    pickerGroups("page", { level, narrow }).flatMap((group) =>
+      group.entries.map((entry) => entry.blockType)
+    )
+
+  it("offers every Page Block in a stack, Containers too until the third level", () => {
+    const all = catalogueEntries.map((e) => e.blockType).sort()
+    expect(inside(1, false).sort()).toEqual(all)
+    expect(inside(2, false)).toContain("container")
+    expect(inside(3, false).sort()).toEqual(
+      all.filter((type) => type !== "container")
+    )
+  })
+
+  it("offers only the Blocks that fit a column in a Container with columns", () => {
+    const fit = catalogueEntries
+      .filter((e) => e.fitsNarrow)
+      .map((e) => e.blockType)
+    expect(inside(1, true).sort()).toEqual([...fit].sort())
+    expect(inside(1, true)).not.toContain("hero")
+    expect(inside(3, true)).not.toContain("container")
+  })
+
+  it("says so in the dialog, and adds into the Container", async () => {
+    const user = userEvent.setup()
+    const onInsert = vi.fn()
+    render(
+      <BlockPicker
+        target={{ region: "page", index: 1, parentId: "c1" }}
+        inside={{ level: 1, narrow: true }}
+        onClose={vi.fn()}
+        onInsert={onInsert}
+      />
+    )
+    expect(
+      screen.getByRole("dialog", { name: "Add a Block to the Container" })
+    ).toBeTruthy()
+    expect(screen.getByText(/fit a column/)).toBeTruthy()
+    expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
+    await user.click(screen.getByRole("option", { name: /^Button\b/ }))
+    expect(onInsert).toHaveBeenCalledWith(
+      "page",
+      1,
+      expect.objectContaining({ blockType: "button" }),
+      "c1"
+    )
+  })
+})
+
 describe("filterGroups", () => {
   it("matches the label, the description and the group, any case", () => {
     const groups = pickerGroups("page")
