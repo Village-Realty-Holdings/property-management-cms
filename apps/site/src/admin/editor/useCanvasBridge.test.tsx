@@ -285,6 +285,45 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(onInsertRequest).not.toHaveBeenCalled()
   })
 
+  it("asks the editor for an insert in the Container the canvas named", () => {
+    const onInsertRequest = vi.fn()
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        { id: "c1", blockType: "container", children: [block("x")] },
+        { id: "empty", blockType: "container", children: [] },
+      ],
+    } as unknown as EditorDocument
+    setup(documentOf("One"), { doc, onInsertRequest })
+    ask({ type: "insert-request", region: "page", index: 1, parentId: "c1" })
+    expect(onInsertRequest).toHaveBeenCalledExactlyOnceWith("page", 1, "c1")
+    ask({
+      type: "insert-request",
+      region: "page",
+      index: 0,
+      parentId: "empty",
+    })
+    expect(onInsertRequest).toHaveBeenLastCalledWith("page", 0, "empty")
+  })
+
+  it("does not ask for an insert in a Container that is not there, or past its end", () => {
+    const onInsertRequest = vi.fn()
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        { id: "c1", blockType: "container", children: [block("x")] },
+      ],
+    } as unknown as EditorDocument
+    setup(documentOf("One"), { doc, onInsertRequest })
+    ask({ type: "insert-request", region: "page", index: 2, parentId: "c1" })
+    ask({ type: "insert-request", region: "page", index: 0, parentId: "gone" })
+    // A Block that is not a Container holds no Blocks.
+    ask({ type: "insert-request", region: "page", index: 0, parentId: "b1" })
+    expect(onInsertRequest).not.toHaveBeenCalled()
+  })
+
   it("opens the Block picker on insert-request, changing nothing until a Block is chosen", () => {
     Element.prototype.scrollIntoView ??= () => {}
     const { result } = setup(documentOf("One"))

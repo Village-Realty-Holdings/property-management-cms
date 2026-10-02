@@ -542,6 +542,87 @@ describe("CanvasOverlay in Containers", () => {
     expect(disabled("Move down")).toBe(true)
   })
 
+  it("offers a + above and below a Block in a stack, which asks for a Block in its Container", () => {
+    const { send } = setup({ blocks: tree })
+    hover(link("Inner button"))
+    expect(
+      plusButtons().map((button) => button.getAttribute("aria-label"))
+    ).toEqual(["Add Block above", "Add Block below"])
+    fireEvent.click(screen.getByRole("button", { name: "Add Block above" }))
+    fireEvent.click(screen.getByRole("button", { name: "Add Block below" }))
+    expect(send.mock.calls.map(([request]) => request)).toEqual([
+      { type: "insert-request", region: "page", index: 0, parentId: "c2" },
+      { type: "insert-request", region: "page", index: 1, parentId: "c2" },
+    ])
+  })
+
+  it("keeps a + of a Container's Block apart from the Page's at the same place", () => {
+    setup({ blocks: tree, selectedId: "b1" })
+    hover(link("Outer button"))
+    // b1's two, and the Button's two: index 0 and 1 of c1 are not the Page's.
+    expect(plusButtons()).toHaveLength(4)
+  })
+
+  it("offers a + before and after a Block beside another, at its sides", () => {
+    const { send, container } = setup({
+      blocks: [
+        containerOf("c1", [button("x", "Left"), button("y", "Right")], "2"),
+      ],
+    })
+    const place = (id: string, left: number) => {
+      const section = container.querySelector(
+        `[data-block-id=${id}] > :first-child`
+      ) as HTMLElement
+      section.getBoundingClientRect = () => new DOMRect(left, 100, 200, 80)
+    }
+    place("x", 0)
+    place("y", 240)
+    act(() => {
+      window.dispatchEvent(new Event("resize"))
+    })
+    hover(link("Right"))
+    const [before, after] = plusButtons()
+    expect(before!.getAttribute("aria-label")).toBe("Add Block before")
+    expect(after!.getAttribute("aria-label")).toBe("Add Block after")
+    expect(before!.style.left).toBe("240px")
+    expect(after!.style.left).toBe("440px")
+    expect(before!.style.top).toBe("140px")
+    fireEvent.click(after!)
+    expect(send).toHaveBeenCalledWith({
+      type: "insert-request",
+      region: "page",
+      index: 2,
+      parentId: "c1",
+    })
+  })
+
+  it("offers Add a Block in an empty Container, at any depth", () => {
+    const { send } = setup({
+      blocks: [
+        containerOf("c1", [button("x", "One"), containerOf("inner", [])]),
+        containerOf("top", []),
+      ],
+    })
+    const adds = screen.getAllByRole("button", {
+      name: "Add Block to Container",
+    })
+    expect(adds).toHaveLength(2)
+    expect(adds[0]!.textContent?.trim()).toBe("Add a Block")
+    fireEvent.click(adds[0]!)
+    fireEvent.click(adds[1]!)
+    expect(send.mock.calls.map(([request]) => request)).toEqual([
+      { type: "insert-request", region: "page", index: 0, parentId: "inner" },
+      { type: "insert-request", region: "page", index: 0, parentId: "top" },
+    ])
+  })
+
+  it("offers none in an empty Container that cannot be edited", () => {
+    setup({ blocks: [containerOf("c1", [])], editable: ["header"] })
+    expect(
+      screen.queryByRole("button", { name: "Add Block to Container" })
+    ).toBeNull()
+  })
+
   it("scrolls to a Block in a Container that becomes selected", () => {
     const spy = vi.fn()
     Element.prototype.scrollIntoView = spy

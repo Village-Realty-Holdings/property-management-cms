@@ -10,7 +10,7 @@ import {
   type CanvasDocument,
 } from "./bridge"
 import { useEditor, type EditorApi } from "./EditorProvider"
-import { blocksIn, findBlock, regionsOf } from "./state"
+import { blocksOfList, findBlock } from "./state"
 
 /**
  * Keeps the canvas showing `document`, and answers what the canvas asks for.
@@ -26,8 +26,8 @@ import { blocksIn, findBlock, regionsOf } from "./state"
  *
  * The canvas's other messages become editor actions, so each is one undo step
  * like the same change made in a panel: a click selects, the Block toolbar
- * moves, duplicates and deletes, and a "+" is an insert request, handed to the
- * editor's `onInsertRequest`. Text edited in place (`edit-text`) is a
+ * moves, duplicates and deletes, and a "+" is an insert request, in a region
+ * or in a Container, handed to the editor's `onInsertRequest`. Text edited in place (`edit-text`) is a
  * `setField` of that Block's field, found by its id at any depth, so typing
  * is one coalesced undo step. The
  * editor decides whether a request applies: a Block that is not in the
@@ -111,9 +111,12 @@ function apply(
       editor.removeBlock(action.id)
       return
     case "insert-request": {
-      if (!regionsOf(editor.doc).includes(action.region)) return
-      if (action.index > blocksIn(editor.doc, action.region).length) return
-      editor.onInsertRequest(action.region, action.index)
+      // A list the document has: the region's own, or a Container's in it.
+      const { region, index, parentId } = action
+      const blocks = blocksOfList(editor.doc, { region, parentId })
+      if (!blocks || index > blocks.length) return
+      if (parentId === undefined) editor.onInsertRequest(region, index)
+      else editor.onInsertRequest(region, index, parentId)
       return
     }
     case "key":

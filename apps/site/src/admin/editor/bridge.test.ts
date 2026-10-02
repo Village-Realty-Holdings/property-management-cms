@@ -157,6 +157,7 @@ describe("readCanvasMessage (the Admin reads the canvas)", () => {
     [{ type: "move", id: "b1", direction: "down" }],
     [{ type: "insert-request", region: "page", index: 0 }],
     [{ type: "insert-request", region: "footer", index: 3 }],
+    [{ type: "insert-request", region: "page", index: 2, parentId: "c1" }],
   ])("accepts the request %j", (request) => {
     expect(read({ channel: BRIDGE_CHANNEL, ...request })).toEqual(request)
   })
@@ -180,6 +181,14 @@ describe("readCanvasMessage (the Admin reads the canvas)", () => {
       { type: "insert-request", region: "page", index: 0.5 },
     ],
     ["insert with no index", { type: "insert-request", region: "page" }],
+    [
+      "insert in a Container with an empty id",
+      { type: "insert-request", region: "page", index: 0, parentId: "" },
+    ],
+    [
+      "insert in a Container with a number for an id",
+      { type: "insert-request", region: "page", index: 0, parentId: 3 },
+    ],
   ])("ignores a request that is malformed: %s", (_name, request) => {
     expect(read({ channel: BRIDGE_CHANNEL, ...request })).toBeNull()
   })

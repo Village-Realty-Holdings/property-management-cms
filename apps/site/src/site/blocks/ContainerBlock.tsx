@@ -82,7 +82,11 @@ export function ContainerBlock({
           className={cn("@container", block.width === "reading" && "max-w-3xl")}
         >
           {children.length === 0 ? (
-            <p className="rounded-(--card-radius) border border-dashed border-current/40 px-4 py-8 text-center text-sm">
+            <p
+              // The canvas's overlay puts its "Add a Block" here.
+              data-container-empty=""
+              className="rounded-(--card-radius) border border-dashed border-current/40 px-4 pt-8 pb-20 text-center text-sm"
+            >
               This Container is empty. Add a Block to it.
             </p>
           ) : (

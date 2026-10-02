@@ -28,8 +28,10 @@ import { BLOCK_SELECTOR } from "./BlockFrame"
  *    document;
  *  - the selected Block has a toolbar (move up and down in its own list,
  *    duplicate, delete), each a request to the Admin;
- *  - a "+" above and below the hovered and the selected Block, and one in an
- *    empty Page, asks the Admin for a Block at that place (`insert-request`).
+ *  - a "+" on each side of the hovered and the selected Block, and one in an
+ *    empty Page or Container, asks the Admin for a Block at that place, in
+ *    the Block's own list (`insert-request`). The "+" goes above and below a
+ *    Block in a stack, and before and after one with a Block beside it.
  *
  * Only Blocks of an `editable` region are touched: the rest (the Layout in
  * Page mode, the Page in Layout mode, everything in Theme mode) is locked, so
@@ -58,7 +60,13 @@ type Measured = {
   box: Box
 }
 
-type Geometry = { blocks: Measured[]; main: Box | null }
+/** An empty Container's placeholder (see ContainerBlock). */
+type Empty = { parentId: string; region: Region; box: Box }
+
+type Geometry = { blocks: Measured[]; empties: Empty[]; main: Box | null }
+
+/** What marks an empty Container's placeholder in the canvas. */
+const EMPTY_SELECTOR = "[data-container-empty]"
 
 const REGIONS: readonly Region[] = ["page", "header", "footer"]
 
@@ -111,9 +119,19 @@ function measure(): Geometry {
       blockType: el.dataset.blockType ?? "",
     })
   }
+  const empties: Empty[] = []
+  for (const el of document.querySelectorAll<HTMLElement>(EMPTY_SELECTOR)) {
+    const frame = closestBlock(el)
+    const region = frame?.dataset.blockRegion as Region
+    const parentId = frame?.dataset.blockId
+    const box = union([el.getBoundingClientRect()], window)
+    if (!parentId || !REGIONS.includes(region) || !box) continue
+    empties.push({ parentId, region, box })
+  }
   const main = document.querySelector("main")
   return {
     blocks,
+    empties,
     main: main ? union([main.getBoundingClientRect()], window) : null,
   }
 }
@@ -127,7 +145,7 @@ function closestBlock(target: EventTarget | null): HTMLElement | null {
     : null
 }
 
-const NOTHING: Geometry = { blocks: [], main: null }
+const NOTHING: Geometry = { blocks: [], empties: [], main: null }
 
 /**
  * The Blocks' boxes, kept current: measured when the overlay mounts, whenever
@@ -252,27 +270,54 @@ export function CanvasOverlay({
   const hovered = find(hoveredId)
   const selected = find(selectedId)
 
+  /** The Blocks in the same list as `block`: its region's, or its Container's. */
+  const siblings = (block: Measured) =>
+    blocks.filter(
+      (b) => b.region === block.region && b.parentId === block.parentId
+    )
+  /** Whether a Block of its list sits beside `block`: it is in a row of columns. */
+  const besideAnother = (block: Measured) =>
+    siblings(block).some(
+      (b) =>
+        b !== block &&
+        b.box.top < block.box.top + block.box.height &&
+        block.box.top < b.box.top + b.box.height
+    )
+
   // A "+" for each edge of the Blocks in play; two Blocks that meet share one.
-  const pluses = new Map<
-    string,
-    { at: Box; region: Region; index: number; label: string }
-  >()
+  const pluses = new Map<string, Plus>()
   for (const block of [hovered, selected]) {
-    if (!block || block.parentId !== null) continue
-    const { box, region, index } = block
-    const edges = [
-      { index, y: box.top, label: "Add Block above" },
-      { index: index + 1, y: box.top + box.height, label: "Add Block below" },
-    ]
-    for (const edge of edges) {
-      const key = `${region}:${edge.index}`
-      if (pluses.has(key)) continue
-      pluses.set(key, {
-        at: { ...box, top: edge.y, height: 0 },
+    if (!block) continue
+    const { box, region, parentId, index } = block
+    const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+    const edges = besideAnother(block)
+      ? [
+          { index, x: box.left, y: middle.y, label: "Add Block before" },
+          {
+            index: index + 1,
+            x: box.left + box.width,
+            y: middle.y,
+            label: "Add Block after",
+          },
+        ]
+      : [
+          { index, x: middle.x, y: box.top, label: "Add Block above" },
+          {
+            index: index + 1,
+            x: middle.x,
+            y: box.top + box.height,
+            label: "Add Block below",
+          },
+        ]
+    for (const { label, x, y, ...place } of edges) {
+      const request: InsertRequest = {
+        type: "insert-request",
         region,
-        index: edge.index,
-        label: edge.label,
-      })
+        index: place.index,
+        ...(parentId === null ? {} : { parentId }),
+      }
+      const key = JSON.stringify(request)
+      if (!pluses.has(key)) pluses.set(key, { x, y, label, request })
     }
   }
   const emptyPage =
@@ -280,12 +325,7 @@ export function CanvasOverlay({
     !geometry.blocks.some((b) => b.region === "page")
       ? geometry.main
       : null
-
-  /** The Blocks in the same list as `block`: its region's, or its Container's. */
-  const siblings = (block: Measured) =>
-    blocks.filter(
-      (b) => b.region === block.region && b.parentId === block.parentId
-    )
+  const empties = geometry.empties.filter((e) => editable.includes(e.region))
   /** A Block's name, after those of the Containers it is in. */
   const pathLabel = (block: Measured) => {
     const names = [labelOf(block.region, block.blockType)]
@@ -321,13 +361,39 @@ export function CanvasOverlay({
         <Frame block={selected} label={pathLabel(selected)} kind="selected" />
       )}
 
-      {[...pluses.values()].map(({ at, region, index, label }) => (
+      {[...pluses].map(([key, { x, y, label, request }]) => (
         <PlusButton
-          key={`${region}:${index}`}
-          at={at}
+          key={key}
+          x={x}
+          y={y}
           label={label}
-          onPress={() => send({ type: "insert-request", region, index })}
+          onPress={() => send(request)}
         />
+      ))}
+
+      {empties.map(({ parentId, region, box }) => (
+        <button
+          key={parentId}
+          type="button"
+          aria-label="Add Block to Container"
+          onClick={() =>
+            send({ type: "insert-request", region, index: 0, parentId })
+          }
+          style={{
+            ...controlStyle,
+            position: "absolute",
+            left: box.left + box.width / 2,
+            // In the room the placeholder leaves under its words.
+            top: box.top + box.height - 40,
+            transform: "translate(-50%, -50%)",
+            padding: "0 16px",
+            gap: 6,
+            height: 36,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <Plus size={16} aria-hidden /> Add a Block
+        </button>
       ))}
 
       {emptyPage && (
@@ -429,12 +495,19 @@ function Frame({
   )
 }
 
+/** A "+" centred on the point (x, y), and what it asks for. */
+type Plus = { x: number; y: number; label: string; request: InsertRequest }
+
+type InsertRequest = Extract<CanvasRequest, { type: "insert-request" }>
+
 function PlusButton({
-  at,
+  x,
+  y,
   label,
   onPress,
 }: {
-  at: Box
+  x: number
+  y: number
   label: string
   onPress: () => void
 }) {
@@ -447,8 +520,8 @@ function PlusButton({
       style={{
         ...controlStyle,
         position: "absolute",
-        left: at.left + at.width / 2,
-        top: at.top,
+        left: x,
+        top: y,
         width: 24,
         height: 24,
         borderRadius: 12,

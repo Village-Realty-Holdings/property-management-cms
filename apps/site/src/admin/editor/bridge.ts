@@ -23,7 +23,8 @@ import type { EditorDocument, Region } from "./state"
  *   canvas -> Admin    `duplicate`       ... Duplicate
  *   canvas -> Admin    `delete`          ... Delete
  *   canvas -> Admin    `insert-request`  a "+" was pressed: a Block is wanted
- *                                        at that place in that region
+ *                                        at that place in that region, or in
+ *                                        that Container
  *   canvas -> Admin    `edit-text`       text edited in place: a Block's field
  *                                        and its whole new value (a string, or
  *                                        rich text's Lexical JSON), once per
@@ -99,8 +100,16 @@ export type CanvasRequest =
   | { type: "move"; id: string; direction: "up" | "down" }
   | { type: "duplicate"; id: string }
   | { type: "delete"; id: string }
-  /** `index` is where the new Block goes in `region` (0 is before the first). */
-  | { type: "insert-request"; region: Region; index: number }
+  /**
+   * `index` is where the new Block goes in `region` (0 is before the first),
+   * or in the Container `parentId` there, when it names one.
+   */
+  | {
+      type: "insert-request"
+      region: Region
+      index: number
+      parentId?: string
+    }
   /**
    * A key pressed in the canvas that the Admin's shortcuts read: `key` as the
    * browser names it, `mod` for Ctrl or Cmd. The canvas forwards only what is
@@ -244,11 +253,13 @@ function readAction(data: Record<string, unknown>): CanvasAction | null {
     case "insert-request":
       return REGIONS.includes(data.region as Region) &&
         Number.isInteger(data.index) &&
-        (data.index as number) >= 0
+        (data.index as number) >= 0 &&
+        (data.parentId === undefined || isId(data.parentId))
         ? {
             type: "insert-request",
             region: data.region as Region,
             index: data.index as number,
+            ...(data.parentId === undefined ? {} : { parentId: data.parentId }),
           }
         : null
     case "key": {
