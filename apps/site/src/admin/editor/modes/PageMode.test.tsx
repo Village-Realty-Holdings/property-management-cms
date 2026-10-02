@@ -348,6 +348,35 @@ describe("<PageMode> Blocks", () => {
     expect(sent.blocks[0]).toMatchObject({ id: "h1", heading: "Hello" })
   })
 
+  it("selects a row with Space and keeps focus on it; Enter opens the Block tab with focus in it", async () => {
+    mount()
+    const user = userEvent.setup()
+    const outline = screen.getByRole("tabpanel", { name: "Outline" })
+    const hero = within(outline).getByRole("treeitem", { name: /Hero/ })
+    hero.focus()
+    await user.keyboard(" ")
+    expect(hero.getAttribute("aria-selected")).toBe("true")
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    expect(document.activeElement).toBe(hero)
+    await user.keyboard("{Enter}")
+    const panel = await screen.findByRole("tabpanel", { name: "Block" })
+    await waitFor(() =>
+      expect(panel.contains(document.activeElement)).toBe(true)
+    )
+  })
+
+  it("puts focus in the Block tab when a click on a row opens it", async () => {
+    mount()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole("treeitem", { name: /Hero/ }))
+    const panel = await screen.findByRole("tabpanel", { name: "Block" })
+    await waitFor(() =>
+      expect(panel.contains(document.activeElement)).toBe(true)
+    )
+  })
+
   it("stays on the Outline when a row's buttons move or remove a Block", async () => {
     const container = {
       id: "c1",

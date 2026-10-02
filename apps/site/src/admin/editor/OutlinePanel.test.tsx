@@ -905,6 +905,49 @@ describe("Blocks in a Container", () => {
     )
   })
 
+  it("is one tab stop: the row with focus and its own buttons, and the arrow keys walk on from a button", async () => {
+    mountNested()
+    const tree = within(group("Page")).getByRole("tree")
+    const tabbable = () =>
+      [...tree.querySelectorAll<HTMLElement>("li, button")].filter(
+        (el) => el.tabIndex >= 0 && !(el as HTMLButtonElement).disabled
+      )
+    const rowOf = (el: HTMLElement) => el.closest('[role="treeitem"]')
+    screen.getByRole("treeitem", { name: "Hero" }).focus()
+    await userEvent.keyboard("{ArrowDown}")
+    const outer = screen.getAllByRole("treeitem", { name: "Container" })[0]!
+    expect(document.activeElement).toBe(outer)
+    expect(tabbable()[0]).toBe(outer)
+    expect(tabbable().length).toBeGreaterThan(1)
+    expect(tabbable().every((el) => rowOf(el) === outer)).toBe(true)
+
+    await userEvent.tab()
+    const button = document.activeElement as HTMLElement
+    expect(button.tagName).toBe("BUTTON")
+    expect(rowOf(button)).toBe(outer)
+    await userEvent.keyboard("{ArrowDown}")
+    expect(document.activeElement).toBe(
+      screen.getByRole("treeitem", { name: "Rich text" })
+    )
+    await userEvent.keyboard("{Home}")
+    expect(document.activeElement).toBe(
+      screen.getByRole("treeitem", { name: "Hero" })
+    )
+  })
+
+  it("selects with Space and leaves the rest to the caller's Enter or click", async () => {
+    const onSelectBlock = vi.fn()
+    mountNested({ onSelectBlock })
+    const row = screen.getByRole("treeitem", { name: "Rich text" })
+    row.focus()
+    await userEvent.keyboard(" ")
+    expect(value("selected")).toBe("t1")
+    expect(onSelectBlock).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(row)
+    await userEvent.keyboard("{Enter}")
+    expect(onSelectBlock).toHaveBeenCalledWith("t1")
+  })
+
   it("opens the Containers around a Block selected elsewhere, and scrolls to it", async () => {
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll

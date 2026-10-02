@@ -334,6 +334,8 @@ export function OutlinePanel({
     () => new Set()
   )
   const [revealedFor, setRevealedFor] = useState<string | null>(null)
+  /** The row focus was last in, which holds the tree's one tab stop. */
+  const [focusedId, setFocusedId] = useState<string | null>(null)
   /** The row being dragged, the row it is over, and how many levels sideways. */
   const [drag, setDrag] = useState<{
     id: string
@@ -350,6 +352,8 @@ export function OutlinePanel({
   // Containers around it open in this render, so its row is there to scroll to.
   if (selectedId !== revealedFor) {
     setRevealedFor(selectedId)
+    // A new selection takes the tab stop.
+    setFocusedId(null)
     const around =
       selectedId === null
         ? []
@@ -589,13 +593,19 @@ export function OutlinePanel({
   /**
    * The tree's keys: Up and Down walk the rows, Home and End go to the first
    * and the last; Right opens a Container, then goes to its first Block; Left
-   * closes it, or goes to the Container a Block is in. Enter or Space on a
-   * row selects it (the row's own handler).
+   * closes it, or goes to the Container a Block is in. Up, Down, Home and End
+   * work from a row's buttons too, as from the row. Enter or Space on a row
+   * selects it (the row's own handler).
    */
   const onTreeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const row = event.target
-    if (!(row instanceof HTMLElement)) return
-    if (row.getAttribute("role") !== "treeitem") return
+    const target = event.target
+    if (!(target instanceof HTMLElement)) return
+    const onRow = target.getAttribute("role") === "treeitem"
+    if (!onRow && !WALK_KEYS.includes(event.key)) return
+    const row = onRow
+      ? target
+      : target.closest<HTMLElement>('[role="treeitem"]')
+    if (!row || !event.currentTarget.contains(row)) return
     const rows = [
       ...event.currentTarget.querySelectorAll<HTMLElement>(
         '[role="treeitem"]:not([aria-disabled="true"])'
@@ -650,11 +660,13 @@ export function OutlinePanel({
     onSelectBlock?.(id)
   }
 
-  // One row is in the tab order: the selected Block, or the Container that
-  // hides it, else the first row.
+  // One row is in the tab order, with its own buttons: the row focus was
+  // last in, else the selected Block, or the Container that hides it, else
+  // the first row.
   const shownIds = owned.flatMap((region) => rowsOf(region).map((r) => r.id))
   const selected = selectedId === null ? null : findBlock(doc, selectedId)
   const tabbableId =
+    (focusedId !== null && shownIds.includes(focusedId) && focusedId) ||
     (selected &&
       [...selected.ancestors.map((b) => b.id), selected.block.id]
         .filter((id): id is string => !!id && shownIds.includes(id))
@@ -779,6 +791,8 @@ export function OutlinePanel({
                           }
                           toggleSlot={toggles}
                           onSelect={choose}
+                          onPick={select}
+                          onFocusRow={setFocusedId}
                           onToggle={toggle}
                           onMove={(direction) =>
                             move(region, row.index, direction, row.parentId)
@@ -916,12 +930,14 @@ function MoveButton({
   label,
   direction,
   disabled,
+  tabIndex,
   onMove,
 }: {
   id: string
   label: string
   direction: "up" | "down"
   disabled: boolean
+  tabIndex: number
   onMove: (direction: "up" | "down") => void
 }) {
   return (
@@ -929,6 +945,7 @@ function MoveButton({
       type="button"
       variant="ghost"
       size="icon-xs"
+      tabIndex={tabIndex}
       aria-label={`Move ${label} ${direction}`}
       data-move={direction}
       data-block-id={id}
@@ -952,11 +969,13 @@ function NestButton({
   id,
   label,
   direction,
+  tabIndex,
   onNest,
 }: {
   id: string
   label: string
   direction: "in" | "out"
+  tabIndex: number
   onNest: (direction: "in" | "out") => void
 }) {
   return (
@@ -964,6 +983,7 @@ function NestButton({
       type="button"
       variant="ghost"
       size="icon-xs"
+      tabIndex={tabIndex}
       aria-label={
         direction === "in"
           ? `Move ${label} into the Container above`
@@ -985,9 +1005,11 @@ function NestButton({
 /** A Container row's "+": a Block at the end of the Container. */
 function AddButton({
   block,
+  tabIndex,
   onAdd,
 }: {
   block: BlockValues
+  tabIndex: number
   onAdd: (parent: BlockValues) => void
 }) {
   if ((block.blockType as string) !== "container") return null
@@ -996,6 +1018,7 @@ function AddButton({
       type="button"
       variant="ghost"
       size="icon-xs"
+      tabIndex={tabIndex}
       aria-label="Add a Block to this Container"
       onClick={() => onAdd(block)}
     >
@@ -1013,12 +1036,14 @@ function ToggleButton({
   label,
   expanded,
   slot,
+  tabIndex,
   onToggle,
 }: {
   id: string
   label: string
   expanded: boolean | undefined
   slot: boolean
+  tabIndex: number
   onToggle: (id: string, open: boolean) => void
 }) {
   if (expanded === undefined) {
@@ -1034,6 +1059,7 @@ function ToggleButton({
       type="button"
       variant="ghost"
       size="icon-xs"
+      tabIndex={tabIndex}
       aria-label={`${expanded ? "Collapse" : "Expand"} ${label}`}
       onClick={() => onToggle(id, !expanded)}
     >
@@ -1041,6 +1067,9 @@ function ToggleButton({
     </Button>
   )
 }
+
+/** The keys that walk the tree from a row's buttons as well as from a row. */
+const WALK_KEYS = ["ArrowDown", "ArrowUp", "Home", "End"]
 
 /**
  * A click on the row selects it, but not one on its buttons: selecting opens
@@ -1057,14 +1086,18 @@ const selectOnClick =
     onSelect(id)
   }
 
-/** Enter or Space on the row itself selects it; its buttons keep their own keys. */
+/**
+ * Enter on the row itself selects it as a click does, and the caller opens
+ * the Block tab; Space only selects it, so focus stays on the row to walk on
+ * from. The row's buttons keep their own keys.
+ */
 const selectKeys =
-  (id: string, onSelect: (id: string) => void) =>
+  (id: string, onSelect: (id: string) => void, onPick: (id: string) => void) =>
   (event: KeyboardEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) return
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault()
-      onSelect(id)
+      ;(event.key === "Enter" ? onSelect : onPick)(id)
     }
   }
 
@@ -1082,6 +1115,8 @@ function Row({
   landing,
   toggleSlot,
   onSelect,
+  onPick,
+  onFocusRow,
   onToggle,
   onMove,
   nests,
@@ -1097,7 +1132,12 @@ function Row({
   /** While the row is dragged: the level it would land at, and whether it may. */
   landing?: { depth: number; refused: boolean }
   toggleSlot: boolean
+  /** Selects the Block, and tells the caller (a click, Enter). */
   onSelect: (id: string) => void
+  /** Selects the Block only (Space). */
+  onPick: (id: string) => void
+  /** Focus went to the row or one of its buttons. */
+  onFocusRow: (id: string) => void
   onToggle: (id: string, open: boolean) => void
   onMove: (direction: "up" | "down") => void
   /** Whether there is a Container above to move into, and one to move out of. */
@@ -1119,6 +1159,8 @@ function Row({
   }
   const label = blockLabel(block)
   const hintId = `outline-hint-${id}`
+  // The row's buttons are in the tab order only with the row's tab stop.
+  const tabIndex = tabbable ? 0 : -1
 
   return (
     <li
@@ -1132,10 +1174,11 @@ function Row({
       aria-describedby={blockHint(block) ? hintId : undefined}
       data-block-id={id}
       data-parent-id={row.parentId ?? undefined}
-      tabIndex={tabbable ? 0 : -1}
+      tabIndex={tabIndex}
       {...listeners}
       onClick={selectOnClick(id, onSelect)}
-      onKeyDown={selectKeys(id, onSelect)}
+      onKeyDown={selectKeys(id, onSelect, onPick)}
+      onFocus={() => onFocusRow(id)}
       className={cn(
         ROW_CLASS,
         "cursor-grab active:cursor-grabbing",
@@ -1154,6 +1197,7 @@ function Row({
         label={label}
         expanded={expanded}
         slot={toggleSlot}
+        tabIndex={tabIndex}
         onToggle={onToggle}
       />
       <RowText block={block} hintId={hintId} />
@@ -1163,6 +1207,7 @@ function Row({
           label={label}
           direction="up"
           disabled={row.index === 0}
+          tabIndex={tabIndex}
           onMove={onMove}
         />
         <MoveButton
@@ -1170,20 +1215,34 @@ function Row({
           label={label}
           direction="down"
           disabled={row.index === row.count - 1}
+          tabIndex={tabIndex}
           onMove={onMove}
         />
         {nests.in && (
-          <NestButton id={id} label={label} direction="in" onNest={onNest} />
+          <NestButton
+            id={id}
+            label={label}
+            direction="in"
+            tabIndex={tabIndex}
+            onNest={onNest}
+          />
         )}
         {nests.out && (
-          <NestButton id={id} label={label} direction="out" onNest={onNest} />
+          <NestButton
+            id={id}
+            label={label}
+            direction="out"
+            tabIndex={tabIndex}
+            onNest={onNest}
+          />
         )}
-        <AddButton block={block} onAdd={onAdd} />
+        <AddButton block={block} tabIndex={tabIndex} onAdd={onAdd} />
         {depth > 0 && (
           <Button
             type="button"
             variant="ghost"
             size="icon-xs"
+            tabIndex={tabIndex}
             aria-label={`Remove ${label}`}
             onClick={() => onRemove(id)}
           >
