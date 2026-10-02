@@ -98,7 +98,8 @@ function apply(
       editor.moveBlock(
         found.region,
         found.index,
-        found.index + (action.direction === "up" ? -1 : 1)
+        found.index + (action.direction === "up" ? -1 : 1),
+        found.parentId
       )
       return
     }

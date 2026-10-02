@@ -8,14 +8,7 @@ import { useEditor } from "./EditorProvider"
 import { FieldsProvider, pathKey, type PageOption } from "./fields/context"
 import { FieldList } from "./fields/FieldList"
 import { planWrite, type Segment } from "./fields/values"
-import { findBlock, type Region } from "./state"
-
-/** Where a Region keeps its Blocks in the document. */
-const REGION_KEY: Record<Region, string> = {
-  page: "blocks",
-  header: "header",
-  footer: "footer",
-}
+import { findBlock } from "./state"
 
 /**
  * The Block tab: the selected Block's settings, as a form made from the
@@ -64,7 +57,7 @@ export function BlockPanel({
       key={selectedId}
       config={config}
       blockId={selectedId!}
-      blockPath={[REGION_KEY[found.region], found.index]}
+      blockPath={found.path}
       values={found.block as unknown as Record<string, unknown>}
       media={media}
       pages={pages}

@@ -212,6 +212,29 @@ describe("useCanvasBridge: what the canvas asks for", () => {
     expect(ids(result.current)).toEqual(["b2", "b1", "b3"])
   })
 
+  it("moves a Block in a Container within its Container", () => {
+    const doc = {
+      ...(pageDoc("b1") as object),
+      blocks: [
+        block("b1"),
+        {
+          id: "c1",
+          blockType: "container",
+          children: [block("x"), block("y")],
+        },
+      ],
+    } as unknown as EditorDocument
+    const { result } = setup(documentOf("One"), { doc })
+    ask({ type: "move", id: "y", direction: "up" })
+    expect(ids(result.current)).toEqual(["b1", "c1"])
+    const container = (
+      result.current.doc as unknown as {
+        blocks: { children?: { id: string }[] }[]
+      }
+    ).blocks[1]!
+    expect(container.children!.map((b) => b.id)).toEqual(["y", "x"])
+  })
+
   it("does not move the first Block up or the last one down", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1", "b2") })
     ask({ type: "move", id: "b1", direction: "up" })

@@ -10,6 +10,7 @@ import {
   editorReducer,
   findBlock,
   isEditorDirty,
+  placementProblem,
   type EditorAction,
   type EditorDocument,
   type EditorState,
@@ -691,5 +692,342 @@ describe("findBlock", () => {
       index: 0,
     })
     expect(findBlock(state.doc, "nope")).toBeNull()
+  })
+})
+
+describe("Blocks in Containers", () => {
+  /** A Container of `columns` holding `children`. */
+  const box = (
+    id: string | undefined,
+    children: BlockValues[],
+    columns = "1"
+  ): BlockValues =>
+    ({
+      blockType: "container",
+      id,
+      columns,
+      gap: "medium",
+      align: "top",
+      width: "page",
+      background: "default",
+      children,
+    }) as unknown as BlockValues
+  const button = (id: string | undefined): BlockValues =>
+    ({
+      blockType: "button",
+      id,
+      link: { label: "Go", href: "/" },
+    }) as unknown as BlockValues
+  const childIds = (state: EditorState, parentId: string) =>
+    (
+      findBlock(state.doc, parentId)!.block as unknown as {
+        children: BlockValues[]
+      }
+    ).children.map((b) => b.id)
+  /** hero a, then Container c1 [text t1, Container c2 [Container c3 [b1]]]. */
+  const nested = () =>
+    createEditorState(
+      pageDoc([
+        hero("a"),
+        box("c1", [text("t1"), box("c2", [box("c3", [button("b1")])])]),
+      ])
+    )
+
+  it("gives every Block at every depth an id, and no two the same", () => {
+    const state = createEditorState(
+      pageDoc([
+        box(undefined, [button(undefined), box("dup", [button("dup")])]),
+      ])
+    )
+    const all: unknown[] = []
+    const collect = (blocks: BlockValues[]) =>
+      blocks.forEach((block) => {
+        all.push(block.id)
+        collect(
+          (block as unknown as { children?: BlockValues[] }).children ?? []
+        )
+      })
+    collect(blocksIn(state.doc, "page"))
+    expect(all).toHaveLength(4)
+    expect(all.every((id) => typeof id === "string")).toBe(true)
+    expect(new Set(all).size).toBe(4)
+    expect(isEditorDirty(state)).toBe(false)
+  })
+
+  it("finds a Block at any depth: its Container, place and path", () => {
+    const state = nested()
+    expect(findBlock(state.doc, "b1")).toMatchObject({
+      region: "page",
+      parentId: "c3",
+      index: 0,
+      path: ["blocks", 1, "children", 1, "children", 0, "children", 0],
+    })
+    expect(
+      findBlock(state.doc, "b1")!.ancestors.map((block) => block.id)
+    ).toEqual(["c1", "c2", "c3"])
+    expect(findBlock(state.doc, "a")).toMatchObject({
+      parentId: null,
+      path: ["blocks", 0],
+      ancestors: [],
+    })
+  })
+
+  it("selects a Block in a Container and edits its fields by its path", () => {
+    let state = run(nested(), { type: "select", id: "b1" })
+    expect(state.selectedId).toBe("b1")
+    const path = findBlock(state.doc, "b1")!.path.join(".")
+    state = run(state, {
+      type: "setField",
+      path: `${path}.link.label`,
+      value: "Book",
+    })
+    expect(findBlock(state.doc, "b1")!.block).toMatchObject({
+      link: { label: "Book" },
+    })
+  })
+
+  it("inserts into a Container, selects the new Block, and undoes", () => {
+    let state = run(nested(), {
+      type: "insertBlock",
+      region: "page",
+      parentId: "c1",
+      index: 1,
+      block: button("new"),
+    })
+    expect(childIds(state, "c1")).toEqual(["t1", "new", "c2"])
+    expect(state.selectedId).toBe("new")
+    state = run(state, { type: "undo" })
+    expect(childIds(state, "c1")).toEqual(["t1", "c2"])
+  })
+
+  it("gives an inserted Container and its Blocks ids nothing else uses", () => {
+    const state = run(nested(), {
+      type: "insertBlock",
+      region: "page",
+      index: 2,
+      block: box("c1", [button("b1"), button(undefined)]),
+    })
+    const added = blocksIn(state.doc, "page")[2]!
+    const ids = [
+      added.id,
+      ...(added as unknown as { children: BlockValues[] }).children.map(
+        (b) => b.id
+      ),
+    ]
+    expect(ids).not.toContain("c1")
+    expect(ids).not.toContain("b1")
+    expect(ids.every((id) => typeof id === "string")).toBe(true)
+    expect(new Set(ids).size).toBe(3)
+  })
+
+  it("refuses an insert that would put a Container a fourth level down", () => {
+    const state = nested()
+    for (const [parentId, block] of [
+      ["c3", box("x", [])],
+      ["c2", box("x", [box("y", [])])],
+      ["c1", box("x", [box("y", [box("z", [])])])],
+    ] as const) {
+      expect(
+        run(state, {
+          type: "insertBlock",
+          region: "page",
+          parentId,
+          index: 0,
+          block,
+        }),
+        parentId
+      ).toBe(state)
+    }
+    // A third level is as deep as it goes, and that is allowed.
+    const third = run(state, {
+      type: "insertBlock",
+      region: "page",
+      parentId: "c2",
+      index: 0,
+      block: box("x", [button("y")]),
+    })
+    expect(childIds(third, "c2")).toEqual(["x", "c3"])
+  })
+
+  it("refuses a full-width Block in a column, at any depth below one", () => {
+    const state = createEditorState(
+      pageDoc([box("stack", []), box("cols", [box("inner", [])], "2")])
+    )
+    const insert = (parentId: string, block: BlockValues) =>
+      run(state, {
+        type: "insertBlock",
+        region: "page",
+        parentId,
+        index: 0,
+        block,
+      })
+    expect(insert("cols", hero("h"))).toBe(state)
+    expect(insert("inner", hero("h"))).toBe(state)
+    // A Container that fits a column, but holds a Block that doesn't.
+    expect(insert("cols", box("x", [hero("h")]))).toBe(state)
+    expect(childIds(insert("cols", text("t")), "cols")).toEqual(["t", "inner"])
+    // A stack of one column has the page's width.
+    expect(childIds(insert("stack", hero("h")), "stack")).toEqual(["h"])
+  })
+
+  it("refuses a place that isn't a Container, and a Container in the Header or Footer", () => {
+    const state = nested()
+    for (const parentId of ["a", "nope"]) {
+      expect(
+        run(state, {
+          type: "insertBlock",
+          region: "page",
+          parentId,
+          index: 0,
+          block: button("x"),
+        }),
+        parentId
+      ).toBe(state)
+    }
+    const layout = createEditorState(layoutDoc())
+    expect(
+      run(layout, {
+        type: "insertBlock",
+        region: "header",
+        index: 0,
+        block: box("x", []),
+      })
+    ).toBe(layout)
+  })
+
+  it("says why a Block can't go somewhere", () => {
+    const state = createEditorState(
+      pageDoc([box("cols", [box("c2", [box("c3", [])])], "2")])
+    )
+    expect(
+      placementProblem(state.doc, hero("h"), {
+        region: "page",
+        parentId: "cols",
+      })
+    ).toMatch(/“Hero” Block needs the full width of the page/)
+    expect(
+      placementProblem(state.doc, box("x", []), {
+        region: "page",
+        parentId: "c3",
+      })
+    ).toMatch(/Containers go 3 levels deep/)
+    expect(
+      placementProblem(state.doc, findBlock(state.doc, "cols")!.block, {
+        region: "page",
+        parentId: "c2",
+      })
+    ).toMatch(/inside itself/)
+    expect(
+      placementProblem(state.doc, text("t"), {
+        region: "page",
+        parentId: "c3",
+      })
+    ).toBeNull()
+  })
+
+  it("reorders the Blocks of a Container", () => {
+    const state = run(nested(), {
+      type: "moveBlock",
+      region: "page",
+      parentId: "c1",
+      from: 0,
+      to: 1,
+    })
+    expect(childIds(state, "c1")).toEqual(["c2", "t1"])
+    expect(ids(state)).toEqual(["a", "c1"])
+  })
+
+  it("moves a Block into a Container, out of one, and between two", () => {
+    let state = run(
+      nested(),
+      { type: "select", id: "a" },
+      { type: "moveBlockTo", id: "a", region: "page", parentId: "c2", index: 1 }
+    )
+    expect(ids(state)).toEqual(["c1"])
+    expect(childIds(state, "c2")).toEqual(["c3", "a"])
+    expect(state.selectedId).toBe("a")
+
+    state = run(state, {
+      type: "moveBlockTo",
+      id: "b1",
+      region: "page",
+      parentId: null,
+      index: 0,
+    })
+    expect(ids(state)).toEqual(["b1", "c1"])
+    expect(childIds(state, "c3")).toEqual([])
+
+    state = run(state, {
+      type: "moveBlockTo",
+      id: "t1",
+      region: "page",
+      parentId: "c3",
+      index: 0,
+    })
+    expect(childIds(state, "c1")).toEqual(["c2"])
+    expect(childIds(state, "c3")).toEqual(["t1"])
+
+    state = run(state, { type: "undo" }, { type: "undo" }, { type: "undo" })
+    expect(state.doc).toEqual(nested().doc)
+  })
+
+  it("refuses a move into the Block itself, too deep, or too narrow", () => {
+    const state = createEditorState(
+      pageDoc([
+        hero("h"),
+        box("c1", [box("c2", [])]),
+        box("deep", [box("d2", [box("d3", [])])]),
+        box("cols", [], "2"),
+      ])
+    )
+    for (const [id, parentId] of [
+      ["c1", "c1"],
+      ["c1", "c2"],
+      ["c1", "d3"],
+      ["deep", "c1"],
+      ["h", "cols"],
+      ["nope", null],
+    ] as const) {
+      expect(
+        run(state, {
+          type: "moveBlockTo",
+          id,
+          region: "page",
+          parentId,
+          index: 0,
+        }),
+        `${id} -> ${parentId}`
+      ).toBe(state)
+    }
+  })
+
+  it("duplicates a Block in a Container next to it, with new ids all the way down", () => {
+    const state = run(nested(), { type: "duplicateBlock", id: "c2" })
+    const [, originalId, copyId] = childIds(state, "c1")
+    expect(originalId).toBe("c2")
+    const copy = findBlock(state.doc, copyId!)!
+    expect(copy.parentId).toBe("c1")
+    expect(state.selectedId).toBe(copyId)
+    const inner = (copy.block as unknown as { children: BlockValues[] })
+      .children[0]!
+    expect(inner.id).not.toBe("c3")
+    expect(
+      (inner as unknown as { children: BlockValues[] }).children[0]!.id
+    ).not.toBe("b1")
+  })
+
+  it("removes a Block from a Container, and a Container with its Blocks", () => {
+    let state = run(nested(), { type: "removeBlock", id: "t1" })
+    expect(childIds(state, "c1")).toEqual(["c2"])
+    state = run(
+      state,
+      { type: "select", id: "b1" },
+      { type: "removeBlock", id: "c2" }
+    )
+    expect(childIds(state, "c1")).toEqual([])
+    expect(findBlock(state.doc, "b1")).toBeNull()
+    expect(state.selectedId).toBeNull()
+    state = run(state, { type: "undo" }, { type: "undo" })
+    expect(state.doc).toEqual(nested().doc)
   })
 })

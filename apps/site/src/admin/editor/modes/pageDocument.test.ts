@@ -99,6 +99,36 @@ describe("pageDataFromDocument", () => {
     ])
   })
 
+  it("leaves out the ids the editor made up inside Containers too", () => {
+    const data = pageDataFromDocument(
+      doc({
+        blocks: [
+          {
+            id: "new-1",
+            blockType: "container",
+            children: [
+              { id: "c1", blockType: "button" },
+              {
+                id: "new-2",
+                blockType: "container",
+                children: [{ id: "new-3", blockType: "image" }],
+              },
+            ],
+          } as never,
+        ],
+      })
+    )
+    expect(data.blocks).toEqual([
+      {
+        blockType: "container",
+        children: [
+          { id: "c1", blockType: "button" },
+          { blockType: "container", children: [{ blockType: "image" }] },
+        ],
+      },
+    ])
+  })
+
   it("writes the Layout choice, and a Layout only for a specific one", () => {
     expect(pageDataFromDocument(doc()).layout).toEqual({ mode: "route" })
     expect(

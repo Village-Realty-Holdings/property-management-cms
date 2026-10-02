@@ -35,8 +35,15 @@ import type { Region } from "./state"
  * (`onInsert`: the editor's `insertBlock`, which also selects the new Block).
  */
 
-/** Where the Block goes: the `index` place in `region`. */
-export type InsertTarget = { region: Region; index: number }
+/**
+ * Where the Block goes: the `index` place in `region`, or in the Blocks of
+ * its Container `parentId`.
+ */
+export type InsertTarget = {
+  region: Region
+  index: number
+  parentId?: string | null
+}
 
 /** One Block the picker offers. */
 export type PickerEntry = {
@@ -120,7 +127,12 @@ export function BlockPicker({
   /** Where a Block is wanted; null keeps the picker closed. */
   target: InsertTarget | null
   onClose: () => void
-  onInsert: (region: Region, index: number, block: BlockValues) => void
+  onInsert: (
+    region: Region,
+    index: number,
+    block: BlockValues,
+    parentId?: string | null
+  ) => void
 }) {
   // Not rendered at all while closed: the dialog's title sits outside its
   // popup and would otherwise stay in the page as a heading.
@@ -146,7 +158,11 @@ export function BlockPicker({
           // the catalogue's stored-shape defaults are not.
           const block = structuredClone(entry.defaults) as BlockValues
           onClose()
-          onInsert(target.region, target.index, block)
+          if (target.parentId == null) {
+            onInsert(target.region, target.index, block)
+          } else {
+            onInsert(target.region, target.index, block, target.parentId)
+          }
         }}
       />
     </CommandDialog>
