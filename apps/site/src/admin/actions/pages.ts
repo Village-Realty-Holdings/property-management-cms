@@ -10,6 +10,12 @@ import {
   type PageIntent,
   type PageSaveResult,
 } from "../pageSave"
+import {
+  exportPageAs,
+  importPageAs,
+  type ExportResult,
+  type ImportResult,
+} from "../pageTransfer"
 import { requireStaff } from "../session"
 
 /**
@@ -42,6 +48,24 @@ export async function deletePage(id: number): Promise<FormState> {
     revalidatePath("/admin/pages")
     revalidatePath("/admin")
     revalidatePath("/", "layout")
+  }
+  return result
+}
+
+/** A Page as a file to download (Pages list, Export). */
+export async function exportPage(id: number): Promise<ExportResult> {
+  const { payload, as } = await requireStaff()
+  return exportPageAs(payload, as, id)
+}
+
+/** Adds a Page file's text to the Site as a new Draft (Pages list, Import). */
+export async function importPage(text: string): Promise<ImportResult> {
+  const { payload, as } = await requireStaff()
+  const result = await importPageAs(payload, as, text)
+  if (result.ok) {
+    revalidatePath("/admin/pages")
+    revalidatePath("/admin/pages/templates")
+    revalidatePath("/admin")
   }
   return result
 }

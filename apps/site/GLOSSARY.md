@@ -42,6 +42,10 @@ _Avoid_: Typeface, font file (for the family)
 A page of the Site at its own path (such as Home, About or Contact), composed from Blocks.
 _Avoid_: Landing page, screen, post
 
+**Page file**:
+A Page exported from the Pages list as a file: its title, path, Blocks, SEO and Layout choice, with its images by Media file name. Importing one adds it to a Site as a new Draft; it never replaces a Page.
+_Avoid_: Backup, dump, template (a Page Template is a Page on the Site)
+
 **Layout**:
 The Header and Footer that wrap a Page's content. One Layout is the Site's default, a Layout can be the default for the Pages under a path, and a Page can use another Layout or none.
 _Avoid_: Template, shell, chrome, master page

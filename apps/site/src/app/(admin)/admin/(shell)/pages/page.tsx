@@ -5,6 +5,7 @@ import { LayoutPanelTopIcon } from "lucide-react"
 
 import { buttonVariants } from "@workspace/ui/components/button"
 
+import { ImportPageButton } from "@/admin/components/pages/PageTransfer"
 import { NewPageButton } from "@/admin/components/pageTemplates/NewPageButton"
 import { PagesSearch, PagesTable } from "@/admin/dashboard/PagesTable"
 import { loadPageRows } from "@/admin/dashboard/queries"
@@ -37,6 +38,7 @@ export default async function PagesList({
             >
               <LayoutPanelTopIcon aria-hidden="true" /> Page Templates
             </Link>
+            <ImportPageButton />
             <Suspense fallback={<NewPageButton templates={[]} />}>
               <NewPage />
             </Suspense>
