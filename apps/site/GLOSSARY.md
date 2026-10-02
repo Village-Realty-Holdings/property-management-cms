@@ -76,6 +76,14 @@ _Avoid_: Home (for the Admin page), overview
 The Admin's grouping, under Settings, for the files the Theme draws on. Today that is Fonts. It is a heading in the Admin, not a model: Media is Content, not an Asset.
 _Avoid_: Assets for Media, or as a model name
 
+**Tools**:
+The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text and Replace Image. It is a heading in the Admin, not a model.
+_Avoid_: Utilities, system tools, other
+
+**Replace Text** / **Replace Image**:
+Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first. Pages are saved as Drafts or published, as the Staff User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
+_Avoid_: Find and replace, search and replace, bulk edit
+
 **Visual Editor**:
 The part of the Admin where a Staff User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
 _Avoid_: Page builder, live preview, inline editing (as the feature name)

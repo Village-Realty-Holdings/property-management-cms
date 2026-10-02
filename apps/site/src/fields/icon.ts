@@ -1,6 +1,7 @@
 import type { TextField } from "payload"
 
 import { iconNames, isIconName } from "../site/blocks/icons"
+import { NOT_PROSE } from "./prose"
 
 /** Empty, or the name of an icon on the curated Lucide list. */
 export function validateIcon(value: string | null | undefined): true | string {
@@ -37,6 +38,7 @@ export function iconField({
       required && (value == null || value === "")
         ? "Pick an icon."
         : validateIcon(value),
+    custom: NOT_PROSE,
     admin: {
       description: 'A Lucide icon name, such as "wifi" or "map-pin".',
       ...admin,
