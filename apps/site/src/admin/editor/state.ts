@@ -1,5 +1,6 @@
 import { catalogue, fitsNarrow } from "../../blocks/catalogue"
 import { CONTAINER_LEVELS, hasColumns } from "../../blocks/Container"
+import { withoutRowIds } from "../../fields/rowIds"
 import type { ThemeInputs } from "../../theme/inputs"
 import { isDirty } from "../kit/unsaved/dirty"
 import type { BlockValues, PageValues } from "../pageForm"
@@ -356,7 +357,9 @@ export function editorReducer(
       if (!found) return state
       const { block, nextId } = withFreshIds(
         state,
-        withoutIds(structuredClone(found.block))
+        // No id of the original's goes with the copy: not its Blocks' ids,
+        // nor its rows' (a Features item), which a save would find twice.
+        withoutRowIds(found.block)
       )
       return commit(
         { ...state, nextId },
@@ -619,10 +622,6 @@ function mapTree(
       )
     : changed
 }
-
-/** `block` and the Blocks it holds with no ids. */
-const withoutIds = (block: BlockValues) =>
-  mapTree(block, (b) => ({ ...b, id: undefined }))
 
 const idsIn = (doc: EditorDocument) =>
   new Set(

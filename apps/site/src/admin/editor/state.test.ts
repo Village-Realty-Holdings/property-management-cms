@@ -1017,6 +1017,37 @@ describe("Blocks in Containers", () => {
     ).not.toBe("b1")
   })
 
+  it("leaves the copy's own rows (a Features item) with no ids at any depth, so no row id is saved twice", () => {
+    const features = (id: string): BlockValues =>
+      ({
+        blockType: "features",
+        id,
+        items: [{ id: "row-1", title: "Pool", text: "Heated" }],
+      }) as unknown as BlockValues
+    const itemIds = (block: BlockValues | undefined) =>
+      (block as unknown as { items: { id?: string }[] }).items.map((i) => i.id)
+    let state = createEditorState(
+      pageDoc([features("f"), box("c", [features("g")])])
+    )
+    state = run(
+      state,
+      { type: "duplicateBlock", id: "f" },
+      { type: "duplicateBlock", id: "c" }
+    )
+    const [original, copy, container, containerCopy] = blocksIn(
+      state.doc,
+      "page"
+    )
+    expect(itemIds(original)).toEqual(["row-1"])
+    expect(itemIds(copy)).toEqual([undefined])
+    expect(container!.id).toBe("c")
+    const inner = (containerCopy as unknown as { children: BlockValues[] })
+      .children[0]
+    expect(inner!.id).toEqual(expect.any(String))
+    expect(inner!.id).not.toBe("g")
+    expect(itemIds(inner)).toEqual([undefined])
+  })
+
   it("names a Block's place from the Region down, by column in a Container with columns", () => {
     const state = createEditorState(
       pageDoc([

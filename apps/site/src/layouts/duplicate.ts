@@ -1,5 +1,6 @@
 import type { Payload, TypedUser } from "payload"
 
+import { withoutRowIds } from "../fields/rowIds"
 import type { Layout } from "../payload-types"
 import { saveLayout } from "./record"
 
@@ -35,24 +36,6 @@ function copyName(name: string, taken: ReadonlySet<string>): string {
     const candidate = `${name} (copy ${n})`
     if (!taken.has(key(candidate))) return candidate
   }
-}
-
-/**
- * Block rows carry generated ids, and a row id belongs to one row: a copy
- * gets fresh ones. Only string ids go (rows); a relationship's id is a number.
- */
-export function withoutRowIds<T>(value: T): T {
-  if (Array.isArray(value)) return value.map(withoutRowIds) as T
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(
-          ([field, entry]) => !(field === "id" && typeof entry === "string")
-        )
-        .map(([field, entry]) => [field, withoutRowIds(entry)])
-    ) as T
-  }
-  return value
 }
 
 /**

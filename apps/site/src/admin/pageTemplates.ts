@@ -1,7 +1,7 @@
 import { NotFound, type Payload } from "payload"
 
 import { catalogue } from "../blocks/catalogue"
-import { withoutRowIds } from "../layouts/duplicate"
+import { withoutRowIds } from "../fields/rowIds"
 import {
   ensureStarterTemplates,
   STARTER_TEMPLATES,
