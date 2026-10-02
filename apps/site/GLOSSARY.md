@@ -58,6 +58,10 @@ _Avoid_: Component, widget, section, element
 A Block that holds other Blocks, as a stack or as columns side by side. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band.
 _Avoid_: Section, row, grid (as model names), wrapper, group
 
+**Guest survey**:
+A Block that asks a guest how their stay was, out of five stars. A high rating is asked for a public review; a lower one gets a feedback form, and what the guest writes is passed to the guest care team. The Site keeps none of it.
+_Avoid_: Review form, NPS, rating widget, feedback Block
+
 **Media**:
 An image uploaded by staff for use on Pages, Layouts, the Brand and SEO.
 _Avoid_: Asset, file, upload (as model names)
@@ -85,12 +89,16 @@ The Admin's grouping, under Settings, for the files the Theme draws on. Today th
 _Avoid_: Assets for Media, or as a model name
 
 **Tools**:
-The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text and Replace Image, and for the lists a Site draws on: Themes and Starter Kits. It is a heading in the Admin, not a model.
+The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text, Replace Image and Links, and for the lists a Site draws on: Themes and Starter Kits. It is a heading in the Admin, not a model.
 _Avoid_: Utilities, system tools, other
 
 **Replace Text** / **Replace Image**:
 Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first, and leaves Page Templates as they are unless asked to include them. Pages are saved as Drafts or published, as the Staff User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
 _Avoid_: Find and replace, search and replace, bulk edit
+
+**Links**:
+A Tool that lists every link on the Site's Pages and Layouts, one row per place a link leads, with where it is used. A link to a path no Page has, or to a Page that is not published, is a broken link. A URL can be replaced everywhere it is used, as Replace Text replaces words.
+_Avoid_: Link checker (links that leave the Site are not checked), redirects, URLs (for the Tool)
 
 **Visual Editor**:
 The part of the Admin where a Staff User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
