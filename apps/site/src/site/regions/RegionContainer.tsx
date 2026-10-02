@@ -90,8 +90,13 @@ export function RegionContainer({
                       })
                     : {})}
                   className={cn(
-                    "@container min-w-0 empty:hidden",
-                    (block.justify ?? "start") !== "start" && "max-w-full",
+                    "min-w-0 empty:hidden",
+                    // A cell is the width its Block measures itself against,
+                    // unless the Block is as wide as what it holds: a size
+                    // container has no width of its own to shrink to.
+                    (block.justify ?? "start") === "start"
+                      ? "@container"
+                      : "max-w-full",
                     block.align === "stretch" && "*:h-full"
                   )}
                 >

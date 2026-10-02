@@ -134,10 +134,13 @@ export function ContainerBlock({
                   // A cell is the width a Block inside it can measure itself
                   // against. One whose Block renders nothing takes no room.
                   className={cn(
-                    "@container min-w-0 empty:hidden",
-                    // A Block that sits at the centre or the end is as wide
-                    // as its content, up to the cell.
-                    (block.justify ?? "start") !== "start" && "max-w-full",
+                    "min-w-0 empty:hidden",
+                    // A cell is the width its Block measures itself against,
+                    // unless the Block is as wide as what it holds: a size
+                    // container has no width of its own to shrink to.
+                    (block.justify ?? "start") === "start"
+                      ? "@container"
+                      : "max-w-full",
                     block.align === "stretch" && "*:h-full"
                   )}
                 >
