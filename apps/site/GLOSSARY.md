@@ -43,8 +43,12 @@ A Page that new Pages can start from. Staff turn any unpublished Page into one, 
 _Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made)
 
 **Block**:
-A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action.
+A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action. A Block sits on the Page itself or inside a Container.
 _Avoid_: Component, widget, section, element
+
+**Container**:
+A Block that holds other Blocks, as a stack or as columns side by side. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band.
+_Avoid_: Section, row, grid (as model names), wrapper, group
 
 **Media**:
 An image uploaded by staff for use on Pages, Layouts, the Brand and SEO.
