@@ -63,7 +63,7 @@ export type PickerGroup = { heading: string; entries: PickerEntry[] }
 
 /**
  * Where in a Container the Block goes: how many Containers deep the list is,
- * and whether it is in a column.
+ * and whether it is narrower than the page (in columns, or at Reading width).
  */
 export type PickerInside = { level: number; narrow: boolean }
 

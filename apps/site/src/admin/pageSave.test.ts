@@ -382,7 +382,7 @@ describe("saving a Page with Containers", () => {
     expect(result).toEqual({
       ok: false,
       message:
-        "Block 2, Container, Column 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.",
+        "Block 2, Container, Column 1 is a “Hero” Block, which needs the full width of the page and can't sit in a column. Move it out of the Container, or set the Container to 1 column at Page width.",
     })
   })
 

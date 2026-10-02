@@ -131,7 +131,7 @@ const rentalGrid = { blockType: "rentalGrid", heading: "All our homes" }
 
 /** Why a Block that needs the page's full width can't sit at `place`. */
 const tooNarrow = (place: string, label = "Rental grid") =>
-  `${place} is a “${label}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
+  `${place} is a “${label}” Block, which needs the full width of the page and can't sit in a column. Move it out of the Container, or set the Container to 1 column at Page width.`
 
 type Row = { blockType: string; heading?: string; children?: Row[] | null }
 
@@ -219,6 +219,16 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
         "Block 1, Container, Column 1, Container, Block 1, Container, Block 2"
       )
     )
+  })
+
+  it("refuses it at Reading width, which is narrower than the page, and in a stack inside that", () => {
+    expect(
+      refusedIn([container([rentalGrid], { width: "reading" })])?.message
+    ).toBe(tooNarrow("Block 1, Container, Block 1"))
+    expect(
+      refusedIn([container([container([rentalGrid])], { width: "reading" })])
+        ?.message
+    ).toBe(tooNarrow("Block 1, Container, Block 1, Container, Block 1"))
   })
 
   it("takes the Blocks that fit a column there: Rich text, Button, Image, Call to action, Container", () => {
@@ -370,7 +380,7 @@ describe("a Page with Containers", () => {
     })
   })
 
-  it("refuses a Block that needs the page's full width in columns, and in a stack inside them, as a Draft too", async () => {
+  it("refuses a Block that needs the page's full width in columns, in a stack inside them, and at Reading width, as a Draft too", async () => {
     const refused = (blocks: unknown[]) =>
       payload.create({
         collection: "pages",
@@ -402,6 +412,18 @@ describe("a Page with Containers", () => {
         errors: [
           {
             path: "blocks.0.children.0.children",
+            message: tooNarrow("Block 1", "Testimonials"),
+          },
+        ],
+      },
+    })
+    await expect(
+      refused([container([testimonials], { width: "reading" })])
+    ).rejects.toMatchObject({
+      data: {
+        errors: [
+          {
+            path: "blocks.0.children",
             message: tooNarrow("Block 1", "Testimonials"),
           },
         ],

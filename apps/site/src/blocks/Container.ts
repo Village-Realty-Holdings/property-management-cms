@@ -16,11 +16,21 @@ const CONTAINER = "container"
 /** A Block's place in a list of Blocks, counting from 1: "Block 2". */
 const placeOf = (index: number) => `Block ${index + 1}`
 
-type Row = { blockType?: unknown; columns?: unknown } | null | undefined
+type Row =
+  | { blockType?: unknown; columns?: unknown; width?: unknown }
+  | null
+  | undefined
 
 /** Whether `row` is a Container that puts its Blocks side by side. */
 export const hasColumns = (row: Row) =>
   row?.blockType === CONTAINER && row.columns != null && row.columns !== "1"
+
+/**
+ * Whether the Blocks in `row` have less than the page's width: it is a
+ * Container with columns, or one at Reading width.
+ */
+export const narrows = (row: Row) =>
+  hasColumns(row) || (row?.blockType === CONTAINER && row.width === "reading")
 
 /** The Block's name as the Admin gives it, or its type when it has none. */
 const labelOf = (blockType: unknown) =>
@@ -31,8 +41,9 @@ const labelOf = (blockType: unknown) =>
  * Why the Block `row`, at `place`, can't be stored in a list that takes
  * `allowed`, or null when it can. Payload drops a Block type a list doesn't
  * take without saying so, so every list of Blocks refuses it by name instead.
- * A list that is `narrow` (in a Container with columns, or in a stack inside
- * one) also refuses a Block that needs the page's full width.
+ * A list that is `narrow` (in a Container with columns or at Reading width,
+ * or in a stack inside one) also refuses a Block that needs the page's full
+ * width.
  */
 function refusal(
   row: unknown,
@@ -48,7 +59,7 @@ function refusal(
       : `${place} is a “${String(blockType)}” Block, which ${holder} can't hold. Remove it.`
   }
   return narrow && !fitsNarrow(blockType)
-    ? `${place} is a “${labelOf(blockType)}” Block, which needs the full width of the page and can't sit in a column. Move it out of the columns, or set the Container to 1 column.`
+    ? `${place} is a “${labelOf(blockType)}” Block, which needs the full width of the page and can't sit in a column. Move it out of the Container, or set the Container to 1 column at Page width.`
     : null
 }
 
@@ -79,7 +90,7 @@ export function refusedBlock(
         row[field.name],
         field.blocks,
         "a Container",
-        narrow || hasColumns(row),
+        narrow || narrows(row),
         hasColumns(row) ? "Column" : "Block"
       )
       if (inner) {
@@ -95,15 +106,16 @@ export function refusedBlock(
 }
 
 /**
- * Whether the list of Blocks at `path` of the document `data` is in a column:
- * its own Container, or one above it, has columns.
+ * Whether the list of Blocks at `path` of the document `data` is narrower
+ * than the page: its own Container, or one above it, has columns or is at
+ * Reading width.
  */
-function inColumns(data: unknown, path: readonly (number | string)[]) {
+function isNarrow(data: unknown, path: readonly (number | string)[]) {
   let node: unknown = data
   for (const key of path) {
     if (node == null || typeof node !== "object") return false
     node = (node as Record<number | string, unknown>)[key]
-    if (!Array.isArray(node) && hasColumns(node as Row)) return true
+    if (!Array.isArray(node) && narrows(node as Row)) return true
   }
   return false
 }
@@ -118,7 +130,7 @@ export const takesOnly =
   (allowed: readonly Block[], holder: string): BlocksField["validate"] =>
   (rows, options) => {
     if (!Array.isArray(rows)) return true
-    const narrow = inColumns(options?.data, options?.path ?? [])
+    const narrow = isNarrow(options?.data, options?.path ?? [])
     for (const [index, row] of rows.entries()) {
       const message = refusal(row, placeOf(index), allowed, holder, narrow)
       if (message) return message

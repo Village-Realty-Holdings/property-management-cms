@@ -1,5 +1,5 @@
 import { catalogue, fitsNarrow } from "../../blocks/catalogue"
-import { CONTAINER_LEVELS, hasColumns } from "../../blocks/Container"
+import { CONTAINER_LEVELS, hasColumns, narrows } from "../../blocks/Container"
 import { withoutRowIds } from "../../fields/rowIds"
 import type { ThemeInputs } from "../../theme/inputs"
 import { isDirty } from "../kit/unsaved/dirty"
@@ -224,8 +224,9 @@ export function blocksOfList(
 
 /**
  * Where `list` sits: the Containers around it (`holders`, outermost first),
- * how many that is (0 for a Region's own Blocks), and whether it is in a
- * column (one of them has columns). Null when the document has no such list.
+ * how many that is (0 for a Region's own Blocks), and whether it is narrower
+ * than the page (one of them has columns, or is at Reading width). Null when
+ * the document has no such list.
  */
 export function listPlace(
   doc: EditorDocument,
@@ -237,7 +238,7 @@ export function listPlace(
   const holders = [...parent.ancestors, parent.block]
   return {
     level: holders.length,
-    narrow: holders.some((holder) => hasColumns(holder)),
+    narrow: holders.some((holder) => narrows(holder)),
     holders,
   }
 }
@@ -585,10 +586,10 @@ function containerDepth(block: BlockValues): number {
   return 1 + Math.max(0, ...childrenOf(block).map(containerDepth))
 }
 
-/** The first Block in `block`'s tree that is in a column and needs the page's width. */
+/** The first Block in `block`'s tree that is narrower than the page and needs its width. */
 function firstTooWide(block: BlockValues, narrow: boolean): BlockValues | null {
   if (narrow && !fitsNarrow(block.blockType)) return block
-  const inner = narrow || hasColumns(block)
+  const inner = narrow || narrows(block)
   for (const child of childrenOf(block)) {
     const found = firstTooWide(child, inner)
     if (found) return found

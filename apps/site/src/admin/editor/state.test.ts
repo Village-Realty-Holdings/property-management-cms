@@ -926,6 +926,23 @@ describe("Blocks in Containers", () => {
     ).toBeNull()
   })
 
+  it("counts a Container at Reading width as narrower than the page, and a stack inside it too", () => {
+    const reading = {
+      ...(box("r", [box("s", [])]) as object),
+      width: "reading",
+    } as unknown as BlockValues
+    const state = createEditorState(pageDoc([reading]))
+    for (const parentId of ["r", "s"]) {
+      expect(
+        placementProblem(state.doc, hero("h"), { region: "page", parentId }),
+        parentId
+      ).toMatch(/“Hero” Block needs the full width of the page/)
+      expect(
+        placementProblem(state.doc, text("t"), { region: "page", parentId })
+      ).toBeNull()
+    }
+  })
+
   it("reorders the Blocks of a Container", () => {
     const state = run(nested(), {
       type: "moveBlock",
