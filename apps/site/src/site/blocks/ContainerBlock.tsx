@@ -1,6 +1,7 @@
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { ContainerBlock as ContainerBlockData } from "../../payload-types"
+import { frameAttributes } from "../editing/BlockFrame"
 import { backgroundOf, surfaces } from "./BlockSection"
 import { renderBlock } from "./registry"
 import { CONTAINER_MARK, container, sectionY, type BlockContext } from "./types"
@@ -45,8 +46,10 @@ const card = "rounded-(--card-radius) p-6 sm:p-8"
  * Each Block it holds is the same component as on the Page, in a cell of the
  * grid. The wrapper marks them (`data-container`), which takes their own
  * band away (see `embeddedBand`), and they are drawn for the Container's
- * surface (`context.surface`). The Visual Editor shows them and can't edit
- * them there yet, so they are drawn as the Site draws them.
+ * surface (`context.surface`). In the Visual Editor each cell is its Block's
+ * frame (see `frameAttributes`), naming this Container as the list it is in,
+ * so the overlay finds and selects a Block at any depth, and its text is
+ * edited in place as on the Page.
  *
  * With no Blocks it renders nothing on the Site, and a placeholder in the
  * Visual Editor.
@@ -94,6 +97,15 @@ export function ContainerBlock({
               {children.map((child, index) => (
                 <div
                   key={child.id ?? index}
+                  {...(context.editing
+                    ? frameAttributes({
+                        id: child.id,
+                        blockType: child.blockType,
+                        region: "page",
+                        index,
+                        parentId: block.id,
+                      })
+                    : {})}
                   // A cell is the width a Block inside it can measure itself
                   // against. One whose Block renders nothing takes no room.
                   className={cn(
@@ -106,7 +118,6 @@ export function ContainerBlock({
                     index,
                     within,
                     surface,
-                    editing: false,
                   })}
                 </div>
               ))}

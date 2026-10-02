@@ -57,7 +57,6 @@ export function RichTextBlock({
         <RichTextEditing
           field="content"
           content={block.content}
-          context={context}
           className={className}
         />
       ) : (

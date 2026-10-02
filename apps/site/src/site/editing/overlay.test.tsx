@@ -461,3 +461,98 @@ describe("CanvasOverlay placement", () => {
     expect(outline.style.height).toBe("120px")
   })
 })
+
+describe("CanvasOverlay in Containers", () => {
+  const button = (id: string, label: string) =>
+    ({
+      id,
+      blockType: "button",
+      link: { label, href: "/contact" },
+      style: "primary",
+      align: "start",
+    }) as unknown as PageBlock
+  const containerOf = (id: string, children: PageBlock[], columns = "1") =>
+    ({
+      id,
+      blockType: "container",
+      columns,
+      gap: "medium",
+      align: "top",
+      width: "page",
+      background: "default",
+      children,
+    }) as unknown as PageBlock
+  const tree = [
+    hero("b1", "First"),
+    containerOf("c1", [
+      button("x", "Outer button"),
+      containerOf("c2", [button("y", "Inner button"), button("z", "Last")]),
+    ]),
+    hero("b3", "Third"),
+  ]
+  const link = (name: string) => screen.getByRole("link", { name })
+  const disabled = (name: string) =>
+    (screen.getByRole("button", { name }) as HTMLButtonElement).disabled
+
+  it("selects the innermost Block that is clicked", () => {
+    const { send } = setup({ blocks: tree })
+    fireEvent.click(link("Inner button"))
+    expect(send).toHaveBeenCalledExactlyOnceWith({ type: "select", id: "y" })
+    send.mockClear()
+    fireEvent.click(link("Outer button"))
+    expect(send).toHaveBeenCalledExactlyOnceWith({ type: "select", id: "x" })
+  })
+
+  it("selects a Container from its own part, outside the Blocks it holds", () => {
+    const { send, container } = setup({ blocks: tree })
+    fireEvent.click(container.querySelector("[data-block-id=c2] > *")!)
+    expect(send).toHaveBeenCalledExactlyOnceWith({ type: "select", id: "c2" })
+  })
+
+  it("labels a Block in a Container with its path from the Page", () => {
+    setup({ blocks: tree })
+    hover(link("Inner button"))
+    expect(screen.getByText("Container › Container › Button")).toBeTruthy()
+    hover(link("Outer button"))
+    expect(screen.getByText("Container › Button")).toBeTruthy()
+  })
+
+  it("labels the selected Block with its path too", () => {
+    setup({ blocks: tree, selectedId: "c2" })
+    expect(screen.getByText("Container › Container")).toBeTruthy()
+  })
+
+  it("moves a Block within its own Container: first and last are in that list", () => {
+    const { send, select } = setup({ blocks: tree, selectedId: "y" })
+    expect(disabled("Move up")).toBe(true)
+    expect(disabled("Move down")).toBe(false)
+    fireEvent.click(screen.getByRole("button", { name: "Move down" }))
+    expect(send).toHaveBeenCalledWith({
+      type: "move",
+      id: "y",
+      direction: "down",
+    })
+
+    select("z")
+    expect(disabled("Move up")).toBe(false)
+    expect(disabled("Move down")).toBe(true)
+
+    select("c2")
+    expect(disabled("Move up")).toBe(false)
+    expect(disabled("Move down")).toBe(true)
+  })
+
+  it("scrolls to a Block in a Container that becomes selected", () => {
+    const spy = vi.fn()
+    Element.prototype.scrollIntoView = spy
+    try {
+      const { container } = setup({ blocks: tree, selectedId: "z" })
+      expect(spy.mock.contexts[0]).toBe(
+        container.querySelector("[data-block-id=z]")
+      )
+    } finally {
+      // @ts-expect-error -- jsdom has none.
+      delete Element.prototype.scrollIntoView
+    }
+  })
+})

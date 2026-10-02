@@ -49,7 +49,9 @@ function renderText(
     text?: string
     editing?: boolean
   } = {},
-  wrap: (node: React.ReactNode) => React.ReactNode = (node) => node
+  wrap: (node: React.ReactNode) => React.ReactNode = (node) => (
+    <div data-block-id="b2">{node}</div>
+  )
 ) {
   const send = vi.fn<(request: CanvasRequest) => void>()
   const view = render(
@@ -93,31 +95,39 @@ describe("<EditableText> in the Visual Editor", () => {
     expect(send.mock.calls.map(([request]) => request)).toEqual([
       {
         type: "edit-text",
-        region: "page",
-        index: 2,
+        id: "b2",
         fieldPath: "cta.label",
         value: "Welcome a",
       },
       {
         type: "edit-text",
-        region: "page",
-        index: 2,
+        id: "b2",
         fieldPath: "cta.label",
         value: "Welcome aboard",
       },
     ])
   })
 
-  it("names a region Block by its place in the region", () => {
+  it("names the innermost Block it is in: one in a Container, at any depth", () => {
     const { heading, send } = renderText({}, (node) => (
-      <div data-block-region="footer" data-block-index="1">
-        {node}
+      <div data-block-id="c1">
+        <div data-block-id="c2" data-block-parent="c1">
+          <div data-block-id="deep" data-block-parent="c2">
+            {node}
+          </div>
+        </div>
       </div>
     ))
     type(heading, "Changed")
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({ region: "footer", index: 1 })
+    expect(send).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ id: "deep", value: "Changed" })
     )
+  })
+
+  it("sends nothing for a text in no Block it can name", () => {
+    const { heading, send } = renderText({}, (node) => node)
+    type(heading, "Changed")
+    expect(send).not.toHaveBeenCalled()
   })
 
   it("keeps a single line on one line", () => {
@@ -520,13 +530,8 @@ describe("<RichTextEditing>", () => {
     const send = vi.fn<(request: CanvasRequest) => void>()
     const view = render(
       <CanvasSendContext.Provider value={send}>
-        <div data-block-region="page" data-block-index="3">
-          <RichTextEditing
-            field="content"
-            content={content}
-            context={context({ index: 3 })}
-            {...over}
-          />
+        <div data-block-id="r1">
+          <RichTextEditing field="content" content={content} {...over} />
         </div>
       </CanvasSendContext.Provider>
     )
@@ -583,8 +588,7 @@ describe("<RichTextEditing>", () => {
     const request = send.mock.calls.at(-1)![0]
     expect(request).toMatchObject({
       type: "edit-text",
-      region: "page",
-      index: 3,
+      id: "r1",
       fieldPath: "content",
     })
     const value = (request as { value: unknown }).value
@@ -636,12 +640,8 @@ describe("<RichTextEditing>", () => {
     const again = (next: unknown) =>
       rerender(
         <CanvasSendContext.Provider value={send}>
-          <div data-block-region="page" data-block-index="3">
-            <RichTextEditing
-              field="content"
-              content={next}
-              context={context({ index: 3 })}
-            />
+          <div data-block-id="r1">
+            <RichTextEditing field="content" content={next} />
           </div>
         </CanvasSendContext.Provider>
       )

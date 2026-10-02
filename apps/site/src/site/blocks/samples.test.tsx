@@ -68,8 +68,13 @@ describe("the Block catalogue's samples", () => {
 
   it.each(
     catalogueEntries
-      // Rich text is a Lexical editor in the canvas: see inlineText.test.tsx.
-      .filter((entry) => entry.blockType !== "richText")
+      // Rich text is a Lexical editor in the canvas (see inlineText.test.tsx),
+      // and so is the Rich text in the Container's sample: its Blocks are
+      // framed in ContainerBlock.test.tsx and BlockFrame.test.tsx.
+      .filter(
+        (entry) =>
+          entry.blockType !== "richText" && entry.blockType !== "container"
+      )
       .map((entry) => [entry.label, entry] as const)
   )(
     "%s in the Visual Editor is the same markup plus its field names, in a frame",

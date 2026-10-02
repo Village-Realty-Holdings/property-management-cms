@@ -21,11 +21,13 @@ import { BLOCK_SELECTOR } from "./BlockFrame"
  * The Visual Editor's overlay on the canvas. It draws over the Site's own
  * markup and adds nothing to it:
  *
- *  - the Block under the pointer is outlined and labelled with its name;
- *  - a click selects a Block: it asks the Admin to (`select`), and the Admin
- *    answers with the selection in its next document;
- *  - the selected Block has a toolbar (move up and down, duplicate, delete),
- *    each a request to the Admin;
+ *  - the Block under the pointer is outlined and labelled with its name, and
+ *    inside Containers with theirs: "Container › Button";
+ *  - a click selects the innermost Block under it: it asks the Admin to
+ *    (`select`), and the Admin answers with the selection in its next
+ *    document;
+ *  - the selected Block has a toolbar (move up and down in its own list,
+ *    duplicate, delete), each a request to the Admin;
  *  - a "+" above and below the hovered and the selected Block, and one in an
  *    empty Page, asks the Admin for a Block at that place (`insert-request`).
  *
@@ -49,6 +51,8 @@ type Box = { left: number; top: number; width: number; height: number }
 type Measured = {
   id: string
   region: Region
+  /** The Container it is in, or null for a Block of the region itself. */
+  parentId: string | null
   index: number
   blockType: string
   box: Box
@@ -101,6 +105,7 @@ function measure(): Geometry {
     blocks.push({
       id,
       region,
+      parentId: el.dataset.blockParent ?? null,
       index,
       box,
       blockType: el.dataset.blockType ?? "",
@@ -253,7 +258,7 @@ export function CanvasOverlay({
     { at: Box; region: Region; index: number; label: string }
   >()
   for (const block of [hovered, selected]) {
-    if (!block) continue
+    if (!block || block.parentId !== null) continue
     const { box, region, index } = block
     const edges = [
       { index, y: box.top, label: "Add Block above" },
@@ -276,8 +281,23 @@ export function CanvasOverlay({
       ? geometry.main
       : null
 
-  const regionBlocks = (block: Measured) =>
-    blocks.filter((b) => b.region === block.region)
+  /** The Blocks in the same list as `block`: its region's, or its Container's. */
+  const siblings = (block: Measured) =>
+    blocks.filter(
+      (b) => b.region === block.region && b.parentId === block.parentId
+    )
+  /** A Block's name, after those of the Containers it is in. */
+  const pathLabel = (block: Measured) => {
+    const names = [labelOf(block.region, block.blockType)]
+    for (
+      let parent = find(block.parentId);
+      parent;
+      parent = find(parent.parentId)
+    ) {
+      names.unshift(labelOf(parent.region, parent.blockType))
+    }
+    return names.join(" › ")
+  }
 
   return (
     <div
@@ -295,9 +315,11 @@ export function CanvasOverlay({
       }}
     >
       {hovered && hovered !== selected && (
-        <Frame block={hovered} kind="hover" />
+        <Frame block={hovered} label={pathLabel(hovered)} kind="hover" />
       )}
-      {selected && <Frame block={selected} kind="selected" />}
+      {selected && (
+        <Frame block={selected} label={pathLabel(selected)} kind="selected" />
+      )}
 
       {[...pluses.values()].map(({ at, region, index, label }) => (
         <PlusButton
@@ -338,7 +360,7 @@ export function CanvasOverlay({
           first={selected.index === 0}
           last={
             selected.index ===
-            Math.max(...regionBlocks(selected).map((b) => b.index))
+            Math.max(...siblings(selected).map((b) => b.index))
           }
           send={send}
         />
@@ -363,9 +385,11 @@ const controlStyle: CSSProperties = {
 /** A Block's outline and its name. */
 function Frame({
   block,
+  label,
   kind,
 }: {
   block: Measured
+  label: string
   kind: "hover" | "selected"
 }) {
   const { box } = block
@@ -399,7 +423,7 @@ function Frame({
           pointerEvents: "none",
         }}
       >
-        {labelOf(block.region, block.blockType)}
+        {label}
       </span>
     </>
   )

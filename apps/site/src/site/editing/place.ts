@@ -1,22 +1,11 @@
-import type { Region } from "../../admin/editor/state"
-
-const REGIONS: readonly Region[] = ["page", "header", "footer"]
+import { BLOCK_SELECTOR } from "./BlockFrame"
 
 /**
- * Where the Block that holds `el` is: its region, and its place in that
- * region's list. Read from the Block's frame (see BlockFrame), because a
- * region Block's `context.index` is offset to keep its heading ids apart from
- * the Page's. With no frame (a Block drawn on its own), it is the Page's Block
- * at `fallbackIndex`.
+ * The id of the Block that holds `el`: its innermost frame's (see
+ * BlockFrame), so a text in a Block inside a Container names that Block, not
+ * the Container. Null when `el` is in no framed Block with an id, which the
+ * Admin could not find either.
  */
-export function placeOf(
-  el: Element,
-  fallbackIndex: number
-): { region: Region; index: number } {
-  const frame = el.closest<HTMLElement>("[data-block-region]")
-  const region = frame?.dataset.blockRegion as Region | undefined
-  const index = Number(frame?.dataset.blockIndex)
-  return frame && region && REGIONS.includes(region) && Number.isInteger(index)
-    ? { region, index }
-    : { region: "page", index: fallbackIndex }
+export function blockIdOf(el: Element): string | null {
+  return el.closest<HTMLElement>(BLOCK_SELECTOR)?.dataset.blockId || null
 }

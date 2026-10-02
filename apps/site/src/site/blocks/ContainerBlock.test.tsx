@@ -194,14 +194,21 @@ describe("<ContainerBlock>", () => {
     )
   })
 
-  it("shows its Blocks in the Visual Editor as the Site draws them: not editable there yet", () => {
-    const block = containerOf([sampleFor("callToAction")])
+  it("shows its Blocks in the Visual Editor as the Site draws them, each framed on its cell and editable in place", () => {
+    const block = { ...containerOf([sampleFor("callToAction")]), id: "c1" }
     const site = draw(block).innerHTML
     cleanup()
     const frame = draw(block, true).firstElementChild!
     expect(frame.getAttribute("data-block-type")).toBe("container")
-    expect(frame.innerHTML).toBe(site)
-    expect(frame.querySelector("[data-editable-field]")).toBeNull()
+    const strip = (html: string) =>
+      html.replace(
+        / (data-block-[a-z]+|data-editable-field|contenteditable)="[^"]*"/g,
+        ""
+      )
+    expect(strip(frame.innerHTML)).toBe(site)
+    const cell = frame.querySelector("[data-block-parent=c1]")!
+    expect(cell.getAttribute("data-block-type")).toBe("callToAction")
+    expect(cell.querySelector("[data-editable-field=heading]")).not.toBeNull()
   })
 })
 

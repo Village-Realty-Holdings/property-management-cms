@@ -311,8 +311,7 @@ describe("useCanvasBridge: text edited in place", () => {
   const edit = (over: object) =>
     ask({
       type: "edit-text",
-      region: "page",
-      index: 1,
+      id: "b2",
       fieldPath: "heading",
       value: "Hello",
       ...over,
@@ -347,29 +346,64 @@ describe("useCanvasBridge: text edited in place", () => {
     expect(result.current.canUndo).toBe(false)
   })
 
-  it("edits a Layout's Header and Footer Blocks by their place in the region", () => {
+  it("edits a Layout's Header and Footer Blocks", () => {
     const { result } = setup(documentOf("One"), { doc: layoutDoc() })
-    edit({ region: "header", index: 0, fieldPath: "text", value: "Changed" })
+    edit({ id: "h1", fieldPath: "text", value: "Changed" })
     expect(
       (result.current.doc as unknown as { header: { text: string }[] })
         .header[0]?.text
     ).toBe("Changed")
   })
 
-  it("ignores an edit for a Block or a region the document does not have", () => {
+  it("edits a Block in a Container, at any depth, as one undo step per run", () => {
+    const { result } = setup(documentOf("One"), {
+      doc: {
+        ...(pageDoc("b1") as object),
+        blocks: [
+          block("b1"),
+          {
+            id: "c1",
+            blockType: "container",
+            children: [
+              {
+                id: "c2",
+                blockType: "container",
+                children: [block("deep", "Old")],
+              },
+            ],
+          },
+        ],
+      } as unknown as EditorDocument,
+    })
+    edit({ id: "deep", value: "N" })
+    edit({ id: "deep", value: "New" })
+    const deep = () =>
+      (
+        result.current.doc as unknown as {
+          blocks: { children: { children: { heading: string }[] }[] }[]
+        }
+      ).blocks[1]!.children[0]!.children[0]!.heading
+    expect(deep()).toBe("New")
+    act(() => result.current.undo())
+    expect(deep()).toBe("Old")
+    expect(result.current.canUndo).toBe(false)
+  })
+
+  it("ignores an edit for a Block the document does not have", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
-    edit({ index: 4 })
-    edit({ region: "header", index: 0 })
+    edit({ id: "gone" })
+    // A Header Block, while a Page is edited.
+    edit({ id: "h1" })
     expect(headings(result.current)).toEqual(["b1"])
     expect(result.current.canUndo).toBe(false)
   })
 
   it("ignores an edit of a field the Block does not have, or of another kind", () => {
     const { result } = setup(documentOf("One"), { doc: pageDoc("b1") })
-    edit({ index: 0, fieldPath: "nope" })
-    edit({ index: 0, fieldPath: "blockType" })
-    edit({ index: 0, fieldPath: "heading", value: lexical("x") })
-    edit({ index: 0, fieldPath: "__proto__.polluted" })
+    edit({ id: "b1", fieldPath: "nope" })
+    edit({ id: "b1", fieldPath: "blockType" })
+    edit({ id: "b1", fieldPath: "heading", value: lexical("x") })
+    edit({ id: "b1", fieldPath: "__proto__.polluted" })
     expect(headings(result.current)).toEqual(["b1"])
     expect(result.current.canUndo).toBe(false)
   })
@@ -381,7 +415,7 @@ describe("useCanvasBridge: text edited in place", () => {
         blocks: [{ id: "r1", blockType: "richText", content: lexical("Old") }],
       } as unknown as EditorDocument,
     })
-    edit({ index: 0, fieldPath: "content", value: lexical("New") })
+    edit({ id: "r1", fieldPath: "content", value: lexical("New") })
     expect(
       (
         result.current.doc as unknown as {
@@ -390,9 +424,9 @@ describe("useCanvasBridge: text edited in place", () => {
       ).blocks[0]?.content
     ).toEqual(lexical("New"))
 
-    edit({ index: 0, fieldPath: "content", value: "a string" })
+    edit({ id: "r1", fieldPath: "content", value: "a string" })
     edit({
-      index: 0,
+      id: "r1",
       fieldPath: "content",
       value: {
         root: {
