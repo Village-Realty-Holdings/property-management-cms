@@ -72,6 +72,7 @@ export interface Config {
     media: Media;
     fonts: Font;
     'font-files': FontFile;
+    'saved-themes': SavedTheme;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -85,6 +86,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     fonts: FontsSelect<false> | FontsSelect<true>;
     'font-files': FontFilesSelect<false> | FontFilesSelect<true>;
+    'saved-themes': SavedThemesSelect<false> | SavedThemesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -1110,6 +1112,25 @@ export interface FontFile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-themes".
+ */
+export interface SavedTheme {
+  id: number;
+  name: string;
+  inputs:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1151,6 +1172,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'font-files';
         value: number | FontFile;
+      } | null)
+    | ({
+        relationTo: 'saved-themes';
+        value: number | SavedTheme;
       } | null)
     | ({
         relationTo: 'users';
@@ -1983,6 +2008,16 @@ export interface FontFilesSelect<T extends boolean = true> {
   filesize?: T;
   width?: T;
   height?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-themes_select".
+ */
+export interface SavedThemesSelect<T extends boolean = true> {
+  name?: T;
+  inputs?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

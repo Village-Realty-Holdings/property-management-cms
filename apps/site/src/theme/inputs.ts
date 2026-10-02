@@ -139,3 +139,49 @@ export function describeChanges(from: ThemeInputs, to: ThemeInputs): string[] {
     .filter((key) => from[key] !== to[key])
     .map((key) => INPUT_LABELS[key])
 }
+
+const HEX_EXAMPLE = "a hex colour, such as #283d6b"
+
+/**
+ * Why `raw` can't be a Theme's inputs, one line per problem; empty when it
+ * can. Unlike `normalizeInputs` nothing is filled in: this is for inputs that
+ * come from outside (an imported Theme file), where a wrong value should be
+ * reported instead of quietly replaced. A font is only checked to be named.
+ */
+export function inputProblems(raw: unknown): string[] {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return ["It has no Theme settings."]
+  }
+  const source = raw as Record<string, unknown>
+  const problems: string[] = []
+  for (const key of Object.keys(source)) {
+    if (!(key in INPUT_LABELS))
+      problems.push(`“${key}” is not a Theme setting.`)
+  }
+  for (const key of ["primary", "accent", "text"] as const) {
+    if (!normalizeHex(str(source[key]))) {
+      problems.push(`${INPUT_LABELS[key]} must be ${HEX_EXAMPLE}.`)
+    }
+  }
+  for (const key of ["third", "darkSurface"] as const) {
+    const value = source[key]
+    if (value != null && value !== "" && !normalizeHex(str(value))) {
+      problems.push(`${INPUT_LABELS[key]} must be ${HEX_EXAMPLE}, or empty.`)
+    }
+  }
+  for (const key of ["headingFont", "bodyFont"] as const) {
+    if (!str(source[key])?.trim()) {
+      problems.push(`${INPUT_LABELS[key]} is missing.`)
+    }
+  }
+  for (const key of Object.keys(ENUM_KEYS) as (keyof typeof ENUM_KEYS)[]) {
+    const allowed: readonly string[] = ENUM_KEYS[key]
+    const value = source[key]
+    if (typeof value !== "string" || !allowed.includes(value)) {
+      problems.push(
+        `${INPUT_LABELS[key]} must be one of: ${allowed.join(", ")}.`
+      )
+    }
+  }
+  return problems
+}

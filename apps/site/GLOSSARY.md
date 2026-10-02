@@ -22,6 +22,10 @@ _Avoid_: Metadata, meta tags
 The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
 _Avoid_: Skin, styles, look and feel
 
+**Saved Theme**:
+A named copy of the Theme's settings that staff keep, to apply later or to move to another Site as a file. Saved Themes are listed with the built-in presets under Tools, Themes. The Site still has one Theme: applying a preset or a Saved Theme saves the Theme with those settings, live at once, and the Theme's history can put the earlier one back.
+_Avoid_: Theme (for one in the list that isn't applied), template, skin
+
 **Font**:
 A font family staff have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by staff, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
 A Font with no files is treated as missing: the Site shows the built-in stand-in instead, never a bare family name that would depend on the visitor's machine.
@@ -77,7 +81,7 @@ The Admin's grouping, under Settings, for the files the Theme draws on. Today th
 _Avoid_: Assets for Media, or as a model name
 
 **Tools**:
-The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text and Replace Image. It is a heading in the Admin, not a model.
+The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text and Replace Image, and for the lists a Site draws on: Themes and Starter Kits. It is a heading in the Admin, not a model.
 _Avoid_: Utilities, system tools, other
 
 **Replace Text** / **Replace Image**:

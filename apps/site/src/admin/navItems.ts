@@ -9,6 +9,7 @@ export type NavIcon =
   | "assets"
   | "replaceText"
   | "replaceImage"
+  | "themes"
 
 export type NavItem = {
   label: string
@@ -61,6 +62,7 @@ export const navGroups: NavGroup[] = [
         href: "/admin/tools/replace-image",
         icon: "replaceImage",
       },
+      { label: "Themes", href: "/admin/tools/themes", icon: "themes" },
     ],
   },
 ]

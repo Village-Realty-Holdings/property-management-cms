@@ -5,6 +5,7 @@ import { Fonts } from "./Fonts"
 import { Layouts } from "./Layouts"
 import { Media } from "./Media"
 import { Pages } from "./Pages"
+import { SavedThemes } from "./SavedThemes"
 import { Users } from "./Users"
 
 /** Every collection registered with Payload. */
@@ -15,5 +16,6 @@ export const collections: CollectionConfig[] = [
   Media,
   Fonts,
   FontFiles,
+  SavedThemes,
   Users,
 ]

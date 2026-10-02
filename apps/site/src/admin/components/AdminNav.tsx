@@ -12,6 +12,7 @@ import {
   ReplaceIcon,
   SearchIcon,
   StoreIcon,
+  SwatchBookIcon,
   TypeIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -31,6 +32,7 @@ const icons: Record<NavIcon, LucideIcon> = {
   assets: TypeIcon,
   replaceText: ReplaceIcon,
   replaceImage: ImagesIcon,
+  themes: SwatchBookIcon,
 }
 
 /**

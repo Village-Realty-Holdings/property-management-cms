@@ -10,6 +10,7 @@ import * as migration_20261001_230649_page_is_template from './20261001_230649_p
 import * as migration_20261002_000500_rich_text_width from './20261002_000500_rich_text_width';
 import * as migration_20261002_005526_container_blocks from './20261002_005526_container_blocks';
 import * as migration_20261002_012541_button_image_blocks from './20261002_012541_button_image_blocks';
+import * as migration_20261002_162507_saved_themes from './20261002_162507_saved_themes';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20261002_012541_button_image_blocks.up,
     down: migration_20261002_012541_button_image_blocks.down,
-    name: '20261002_012541_button_image_blocks'
+    name: '20261002_012541_button_image_blocks',
+  },
+  {
+    up: migration_20261002_162507_saved_themes.up,
+    down: migration_20261002_162507_saved_themes.down,
+    name: '20261002_162507_saved_themes'
   },
 ];
