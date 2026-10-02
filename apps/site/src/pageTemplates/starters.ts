@@ -13,12 +13,12 @@ import type { Layout, Page, User } from "../payload-types"
  *   Tuck-in   an announcement that a company has joined the brand, as on
  *             pclodge.com: for owners, then for guests, each a Container of
  *             text across the page with its button under it (ADR-0007). It
- *             comes with its own Layout, "Tuck-in": the logo and phone number
+ *             comes with its own Layout, "Tuck-in Layout": the logo and phone number
  *             above, a copyright line below, no menu.
  *   Guest survey
  *             what a guest opens after a stay: a rating out of five stars,
  *             then a request for a review or a feedback form (the Guest
- *             survey Block). It comes with its own Layout, "Survey": the
+ *             survey Block). It comes with its own Layout, "Survey Layout": the
  *             logo above, a copyright line and the privacy link below.
  */
 
@@ -119,7 +119,7 @@ const tuckIn: StarterTemplate = {
   path: "/templates/tuck-in",
   title: "Tuck-in template",
   layout: {
-    name: "Tuck-in",
+    name: "Tuck-in Layout",
     header: [
       { blockType: "logo", size: "large", showTagline: false },
       { blockType: "headerActions", showPhone: true },
@@ -188,7 +188,7 @@ const guestSurvey: StarterTemplate = {
   path: "/templates/guest-survey",
   title: "Guest survey template",
   layout: {
-    name: "Survey",
+    name: "Survey Layout",
     header: [{ blockType: "logo", size: "large", showTagline: false }],
     footer: [
       {

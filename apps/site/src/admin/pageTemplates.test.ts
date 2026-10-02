@@ -278,8 +278,8 @@ describe("the starter Page Templates", () => {
       layouts.map((layout) => [layout.name, layout.isDefault, layout.paths])
     ).toEqual([
       ["Main", true, []],
-      ["Tuck-in", false, []],
-      ["Survey", false, []],
+      ["Tuck-in Layout", false, []],
+      ["Survey Layout", false, []],
     ])
     expect(layouts[2]!.header?.map((block) => block.blockType)).toEqual([
       "logo",

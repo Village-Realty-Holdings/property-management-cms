@@ -243,7 +243,7 @@ describe("the Guest survey Page Template", () => {
     ).toBeGreaterThan(0)
     const layouts = (await (
       await h.staff.context.request.get(
-        `${ORIGIN}/api/layouts?where[name][equals]=Survey&depth=0`
+        `${ORIGIN}/api/layouts?where[name][equals]=Survey%20Layout&depth=0`
       )
     ).json()) as { docs: Doc[] }
     expect(layouts.docs).toHaveLength(1)
