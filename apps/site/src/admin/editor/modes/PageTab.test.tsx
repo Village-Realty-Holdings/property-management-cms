@@ -32,6 +32,8 @@ const layoutActions = vi.hoisted(() => ({
   makeLayoutFromPageDocument: vi.fn(),
 }))
 vi.mock("../../actions/layouts", () => layoutActions)
+const linkActions = vi.hoisted(() => ({ linksToPath: vi.fn() }))
+vi.mock("../../actions/links", () => linkActions)
 
 const toast = vi.hoisted(() => ({
   success: vi.fn(),
@@ -76,11 +78,21 @@ const main = option({ id: 3, name: "Main", isDefault: true })
 const listings = option({ id: 4, name: "Listings", paths: ["/stays"] })
 
 function mount(props: Partial<PageModeProps> = {}) {
+  // A live Page is served at the path its Draft starts with, unless the test
+  // says its Draft has moved on.
+  const status = props.status ?? "draft"
+  const publishedPath =
+    props.publishedPath !== undefined
+      ? props.publishedPath
+      : status === "draft"
+        ? null
+        : (props.initial ?? about).path
   return render(
     <PageMode
       id={4}
       initial={about}
       status="draft"
+      publishedPath={publishedPath}
       layouts={[main, listings]}
       media={[{ id: 7, label: "Beach", url: null }]}
       pages={[]}
@@ -99,6 +111,7 @@ const button = (scope: HTMLElement, name: string) =>
   (within(scope).getByRole("button", { name }) as HTMLButtonElement)
 
 beforeEach(() => {
+  linkActions.linksToPath.mockResolvedValue([])
   pages.savePage.mockResolvedValue({ ok: true, id: 4 })
 })
 
@@ -206,6 +219,122 @@ describe("<PageTab> path", () => {
         }) as HTMLInputElement
       ).value
     ).toBe("/about")
+  })
+})
+
+describe("<PageTab> path change warning", () => {
+  const uses = [
+    {
+      kind: "Page" as const,
+      title: "Home",
+      href: "/admin/pages/1",
+      place: "Block 1, Button: Link: Link",
+    },
+    {
+      kind: "Layout" as const,
+      title: "Main",
+      href: "/admin/layouts/3",
+      place: "Footer Block 1, Legal bar: Link 2: Link: URL",
+    },
+  ]
+  const retype = async (to: string) => {
+    const user = userEvent.setup()
+    const path = within(panel()).getByLabelText("Path", { exact: true })
+    await user.clear(path)
+    await user.type(path, to)
+    return user
+  }
+  const notice = () => document.querySelector("[data-slot=path-change-notice]")
+
+  it("lists what still links to the old path when a Published Page's path changes, and does not block saving", async () => {
+    linkActions.linksToPath.mockResolvedValue(uses)
+    mount({ status: "published" })
+    await retype("/about-us")
+    await waitFor(() => expect(notice()).not.toBeNull())
+    const warning = within(notice() as HTMLElement)
+    expect(warning.getByText(/2 links still lead to “\/about”/)).toBeTruthy()
+    expect(
+      warning.getByRole("link", { name: "Home" }).getAttribute("href")
+    ).toBe("/admin/pages/1")
+    expect(warning.getByText(/Layout, Footer Block 1/)).toBeTruthy()
+    expect(
+      warning.getByRole("link", { name: /Tools, Links/ }).getAttribute("href")
+    ).toBe("/admin/tools/links")
+    // The old path is asked about, once, however much is typed.
+    expect(linkActions.linksToPath).toHaveBeenCalledTimes(1)
+    expect(linkActions.linksToPath).toHaveBeenCalledWith("/about")
+    expect(button(topBar(), "Save").disabled).toBe(false)
+  })
+
+  it("warns a Page with Changes not published, about the path visitors use and not its Draft's", async () => {
+    linkActions.linksToPath.mockResolvedValue(uses)
+    // The Draft was saved at /about-us; visitors are still served /about.
+    mount({
+      status: "changes",
+      initial: { ...about, path: "/about-us" },
+      publishedPath: "/about",
+    })
+    await waitFor(() => expect(notice()).not.toBeNull())
+    expect(linkActions.linksToPath).toHaveBeenCalledWith("/about")
+    // Typing another new path keeps asking about the Published one.
+    await retype("/about-new")
+    expect(
+      within(notice() as HTMLElement).getByText(
+        /2 links still lead to “\/about”/
+      )
+    ).toBeTruthy()
+    expect(linkActions.linksToPath).toHaveBeenCalledTimes(1)
+    expect(linkActions.linksToPath).not.toHaveBeenCalledWith("/about-us")
+    expect(button(topBar(), "Save").disabled).toBe(false)
+    // Describes the Path field, so it is read with it.
+    const path = within(panel()).getByLabelText("Path", { exact: true })
+    expect(path.getAttribute("aria-describedby")).toContain(
+      (notice() as HTMLElement).id
+    )
+  })
+
+  it('lists links for a "changes" Page whose path is edited away from the Published one', async () => {
+    linkActions.linksToPath.mockResolvedValue(uses)
+    mount({ status: "changes" })
+    await retype("/about-us")
+    await waitFor(() => expect(notice()).not.toBeNull())
+    expect(linkActions.linksToPath).toHaveBeenCalledWith("/about")
+    expect(button(topBar(), "Save").disabled).toBe(false)
+  })
+
+  it("goes when the path is put back", async () => {
+    linkActions.linksToPath.mockResolvedValue(uses)
+    mount({ status: "published" })
+    await retype("/about-us")
+    await waitFor(() => expect(notice()).not.toBeNull())
+    await retype("/about")
+    expect(notice()).toBeNull()
+  })
+
+  it("says nothing when nothing links to the old path", async () => {
+    mount({ status: "published" })
+    await retype("/about-us")
+    await waitFor(() => expect(linkActions.linksToPath).toHaveBeenCalled())
+    expect(notice()).toBeNull()
+  })
+
+  it("says nothing for a Draft or a New Page, and does not look", async () => {
+    linkActions.linksToPath.mockResolvedValue(uses)
+    mount({ status: "draft" })
+    await retype("/about-us")
+    cleanup()
+    mount({ status: "published", id: null })
+    await retype("/about-us")
+    expect(notice()).toBeNull()
+    expect(linkActions.linksToPath).not.toHaveBeenCalled()
+  })
+
+  it("says nothing when the lookup fails", async () => {
+    linkActions.linksToPath.mockRejectedValue(new Error("down"))
+    mount({ status: "published" })
+    await retype("/about-us")
+    await waitFor(() => expect(linkActions.linksToPath).toHaveBeenCalled())
+    expect(notice()).toBeNull()
   })
 })
 

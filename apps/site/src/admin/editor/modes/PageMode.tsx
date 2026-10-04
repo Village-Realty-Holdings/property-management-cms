@@ -39,6 +39,11 @@ export type PageModeProps = {
   initial: PageDocument
   status: PageStatus
   /**
+   * The path visitors are served the Page at: its Published path, which the
+   * Draft's can differ from. Null while the Page is not Published.
+   */
+  publishedPath: string | null
+  /**
    * Every Layout, with its Blocks. The Page's own is found from its path and
    * choice as they are edited, and shown locked around the Page.
    */
@@ -92,6 +97,7 @@ function PageModeEditor({
   id,
   initial,
   status: initialStatus,
+  publishedPath: initialPublishedPath,
   layouts: initialLayouts,
   initialTab,
   media,
@@ -105,6 +111,7 @@ function PageModeEditor({
 
   const [pageId, setPageId] = useState(id)
   const [status, setStatus] = useState(initialStatus)
+  const [publishedPath, setPublishedPath] = useState(initialPublishedPath)
   const [busy, setBusy] = useState<PageIntent | null>(null)
   const [problem, setProblem] = useState<SaveProblem | null>(null)
   const [tab, setTab] = useState<string>(initialTab ?? TABS.outline)
@@ -150,6 +157,9 @@ function PageModeEditor({
         setProblem(null)
         markSaved(result.document, current)
         if (result.status) setStatus(result.status)
+        // Publishing makes the saved path the live one; unpublishing leaves none.
+        if (intent === "publish") setPublishedPath(result.document.path)
+        else if (intent === "unpublish") setPublishedPath(null)
         notify.success(result.message || "Saved")
         if (currentId === null) {
           latest.current = { ...latest.current, pageId: result.id }
@@ -229,6 +239,7 @@ function PageModeEditor({
               <PageTab
                 id={pageId}
                 status={status}
+                publishedPath={publishedPath}
                 layouts={layouts}
                 layout={layout}
                 media={media}

@@ -6,6 +6,7 @@ import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { applyReplace, previewReplace } from "../replace/run"
 import { kindOf, linksIn, replaceLink, sitePath } from "./collect"
+import { linksToPathAs } from "./pathLinks"
 import { isBroken, linkReplacement, loadLinks } from "./screen"
 
 const text = (value: string) => ({
@@ -336,5 +337,85 @@ describe("the Links list", () => {
       status: "ok",
       uses: [{ title: "Home" }, { title: "Main" }],
     })
+  })
+})
+
+describe("what links to a path", () => {
+  let t: TestPayload
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
+
+  beforeAll(async () => {
+    t = await getTestPayload()
+    const user = await t.payload.create({
+      collection: "users",
+      data: { email: "path@awayday.test", entraOid: "path" },
+    })
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
+    const button = (href: string) => ({
+      blockType: "button" as const,
+      link: { label: "Go", href },
+      style: "primary" as const,
+      align: "start" as const,
+    })
+    const stays = await t.payload.create({
+      collection: "pages",
+      data: { title: "Stays", path: "/stays", _status: "published" },
+      ...asUser,
+    })
+    await t.payload.create({
+      collection: "pages",
+      data: {
+        title: "Home",
+        path: "/",
+        _status: "published",
+        blocks: [
+          button("/stays/"),
+          button("https://site.test/stays#rooms"),
+          button("/about"),
+        ],
+      },
+      ...asUser,
+    })
+    await t.payload.create({
+      collection: "layouts",
+      data: {
+        name: "Main",
+        footer: [
+          {
+            blockType: "legalBar",
+            text: "©",
+            links: [
+              { label: "Stays", link: { type: "url", url: "/stays" } },
+              { label: "Stays", link: { type: "page", page: stays.id } },
+            ],
+          },
+        ],
+      },
+      ...asUser,
+    })
+  })
+
+  afterAll(async () => {
+    await t?.teardown()
+  })
+
+  it("lists every use of the path, however the link is spelled, and leaves menu links to Pages out", async () => {
+    const uses = await linksToPathAs(t.payload, asUser, "/stays", {
+      siteUrl: "https://site.test",
+    })
+    expect(uses.map((use) => [use.kind, use.title])).toEqual([
+      ["Layout", "Main"],
+      ["Page", "Home"],
+      ["Page", "Home"],
+    ])
+    expect(uses[1]).toMatchObject({
+      href: expect.stringMatching(/^\/admin\/pages\/\d+$/),
+      place: "Block 1, Button: Link: Link",
+    })
+  })
+
+  it("finds nothing for a path nothing links to, or one that is not a path", async () => {
+    expect(await linksToPathAs(t.payload, asUser, "/nobody")).toEqual([])
+    expect(await linksToPathAs(t.payload, asUser, "not a path")).toEqual([])
   })
 })

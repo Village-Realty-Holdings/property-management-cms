@@ -43,6 +43,7 @@ export default async function NewPage({ searchParams }: Props) {
       id={null}
       initial={initial}
       status="draft"
+      publishedPath={null}
       layouts={await loadLayoutOptions(payload)}
       dependents={[]}
       canvasSrc={editingUrl(initial.path)}

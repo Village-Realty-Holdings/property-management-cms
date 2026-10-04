@@ -1,6 +1,8 @@
 "use client"
 
-import { useId, useRef, useState, type ReactNode } from "react"
+import Link from "next/link"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import { TriangleAlertIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -22,11 +24,13 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { checkPagePath } from "../../../collections/Pages/path"
 import { SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from "../../../fields/seo"
 import { makeLayoutFromPageDocument } from "../../actions/layouts"
+import { linksToPath } from "../../actions/links"
 import { DeletePageButton } from "../../components/DeletePageButton"
 import { describedBy, FormField } from "../../components/FormBits"
 import { MediaSelect, type MediaOption } from "../../components/MediaSelect"
 import type { PageStatus } from "../../dashboard/pageStatus"
 import { InlineError, notify, type Dependent } from "../../kit"
+import type { LinkUse } from "../../links/screen"
 import { useEditor } from "../EditorProvider"
 import type { LayoutChoice, PageDocument } from "../state"
 import {
@@ -50,6 +54,7 @@ import { fieldErrorFor, type SaveProblem } from "./saveProblem"
 export function PageTab({
   id,
   status,
+  publishedPath,
   layouts,
   layout,
   media,
@@ -63,6 +68,8 @@ export function PageTab({
   /** Null while the Page has not been saved yet. */
   id: number | null
   status: PageStatus
+  /** The path visitors are served the Page at; null while it is not Published. */
+  publishedPath: string | null
   /** Every Layout the Page can pick. */
   layouts: readonly LayoutOption[]
   /** The Layout the Page resolves to now; null for none. */
@@ -138,9 +145,18 @@ export function PageTab({
           {...describedBy("page-path", {
             description: true,
             error: pathError,
+            also: [PATH_NOTICE_ID],
           })}
         />
       </FormField>
+      <PathChangeNotice
+        // A Page not yet on the Site has no visitors or links to lose.
+        oldPath={
+          id !== null && publishedPath !== null && page.path !== publishedPath
+            ? publishedPath
+            : null
+        }
+      />
 
       <LayoutSection
         pageId={id}
@@ -273,6 +289,88 @@ export function PageTab({
           />
         </section>
       )}
+    </div>
+  )
+}
+
+/** The notice's id, so the Path field is described by it when it shows. */
+const PATH_NOTICE_ID = "page-path-change-notice"
+
+/** The most links the notice lists; the Links tool has the rest. */
+const NOTICE_LIMIT = 5
+
+/**
+ * Under Path, when a Published Page's path is being changed: what still links
+ * to the old path. Visitors who follow those links reach no Page once the new
+ * path is published, and nothing changes them for the User. It never blocks
+ * Save; it says where to look. Silent when nothing links there, and when the
+ * lookup fails: it is advice, not a check.
+ */
+function PathChangeNotice({ oldPath }: { oldPath: string | null }) {
+  // The lookup's answer, with the old path it was asked for.
+  const [found, setFound] = useState<{
+    path: string
+    uses: readonly LinkUse[]
+  } | null>(null)
+
+  useEffect(() => {
+    if (oldPath === null || found?.path === oldPath) return
+    let current = true
+    linksToPath(oldPath)
+      .then((uses) => current && setFound({ path: oldPath, uses }))
+      .catch(() => {})
+    return () => {
+      current = false
+    }
+  }, [oldPath, found?.path])
+
+  if (oldPath === null || found?.path !== oldPath || found.uses.length === 0) {
+    return null
+  }
+  const { uses } = found
+  const shown = uses.slice(0, NOTICE_LIMIT)
+  const more = uses.length - shown.length
+
+  return (
+    <div
+      id={PATH_NOTICE_ID}
+      role="status"
+      data-slot="path-change-notice"
+      className="grid gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+    >
+      <p className="flex items-start gap-2">
+        <TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <span>
+          {uses.length === 1
+            ? `1 link still leads to “${oldPath}”.`
+            : `${uses.length} links still lead to “${oldPath}”.`}{" "}
+          They will not follow the Page to its new path, and visitors who use
+          them will not find it. Saving does not change them.
+        </span>
+      </p>
+      <ul className="grid gap-0.5 pl-6">
+        {shown.map((use) => (
+          <li key={`${use.href}|${use.place}`}>
+            <Link href={use.href} className="underline underline-offset-2">
+              {use.title}
+            </Link>
+            <span>
+              {" "}
+              ({use.kind}, {use.place})
+            </span>
+          </li>
+        ))}
+      </ul>
+      {more > 0 && <p className="pl-6">and {more} more.</p>}
+      <p className="pl-6">
+        <Link
+          href="/admin/tools/links"
+          className="underline underline-offset-2"
+        >
+          Open Tools, Links
+        </Link>{" "}
+        to see them all and point them at the new path.
+      </p>
     </div>
   )
 }

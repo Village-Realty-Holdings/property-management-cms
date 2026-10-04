@@ -74,6 +74,7 @@ function mount(props: Partial<PageModeProps> = {}) {
       id={4}
       initial={about}
       status="draft"
+      publishedPath={null}
       layouts={[main]}
       media={[]}
       pages={[]}

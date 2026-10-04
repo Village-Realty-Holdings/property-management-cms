@@ -57,6 +57,7 @@ export default async function EditPage({ params, searchParams }: Props) {
         published: published._status,
         latest: draft._status,
       })}
+      publishedPath={published._status === "published" ? published.path : null}
       layouts={layouts}
       initialTab={tab === "page" ? "page" : undefined}
       dependents={dependents}
