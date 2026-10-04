@@ -8,9 +8,9 @@ import {
   type BlockButtonTone,
   type BlockSurface,
 } from "./BlockButton"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 type Style = CallToActionBlockData["style"]
 
@@ -57,12 +57,17 @@ export function CallToActionBlock({
   const body = block.body?.trim()
   const button = linkOf(block.button)
   const style = styles[block.style] ?? styles.primary
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   return (
-    <BlockSection background={block.background} labelledBy={id}>
+    <BlockSection
+      background={surfaceOf(block.background, context)}
+      labelledBy={id}
+    >
+      {/* The card lays itself out by the room it has (fit-*), so it fits a
+          Container's column as well as the page (ADR-0007). */}
       <div
         className={cn(
-          "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between md:gap-12 lg:px-14",
+          "relative flex flex-col gap-6 overflow-hidden rounded-(--card-radius) px-6 py-10 fit-sm:px-10 fit-sm:py-12 fit-md:flex-row fit-md:items-center fit-md:justify-between fit-md:gap-12 fit-lg:px-14",
           "shadow-(--card-shadow)",
           style.panel
         )}
@@ -75,7 +80,7 @@ export function CallToActionBlock({
             id={id}
             className={cn(
               displayFont,
-              "text-3xl leading-[1.05] text-balance sm:text-4xl"
+              "text-3xl leading-[1.05] text-balance fit-sm:text-4xl"
             )}
           >
             {heading}
@@ -86,7 +91,7 @@ export function CallToActionBlock({
               field="body"
               context={context}
               multiline
-              className="text-base text-pretty whitespace-pre-line sm:text-lg"
+              className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
             >
               {body}
             </EditableText>
@@ -98,7 +103,7 @@ export function CallToActionBlock({
             tone={style.button}
             surface={style.surface}
             editable={{ field: "button.label", context }}
-            className="self-start md:self-auto"
+            className="self-start fit-md:self-auto"
           />
         )}
       </div>

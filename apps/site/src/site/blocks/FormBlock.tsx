@@ -2,15 +2,17 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FormBlock as FormBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 import { VisualForm } from "./VisualForm"
 
 /**
  * Form: a heading, some text and a visual-only form with the fields the
  * Block lists. On submit it shows its success message and stores nothing.
- * Everything but the form is server-safe; the form is a client island.
+ * Everything but the form is server-safe; the form is a client island. It
+ * lays itself out by the room it has (`fit-*`), so it fits a Container's
+ * column.
  */
 export function FormBlock({
   block,
@@ -21,12 +23,12 @@ export function FormBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   const intro = block.intro?.trim()
 
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-8"
     >
@@ -36,7 +38,7 @@ export function FormBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>
@@ -59,7 +61,11 @@ export function FormBlock({
           block.successMessage?.trim() ||
           "Thank you. We have received your message and will be in touch soon."
         }
-        context={{ index: context.index, editing: context.editing }}
+        context={{
+          index: context.index,
+          within: context.within,
+          editing: context.editing,
+        }}
       />
     </BlockSection>
   )

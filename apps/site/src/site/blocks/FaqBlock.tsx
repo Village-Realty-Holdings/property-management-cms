@@ -8,10 +8,10 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FaqBlock as FaqBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
 import { faqPageJsonLd, jsonLdScript } from "./structuredData"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * FAQ: question and answer pairs in an accordion (one open at a time, by
@@ -19,6 +19,8 @@ import type { BlockContext } from "./types"
  * also emits the same pairs as schema.org `FAQPage` JSON-LD, in the HTML the
  * server sends. Element ids come from the Block's position, not `useId`, so
  * the Visual Editor's canvas and the Site draw the same markup. Pairs missing their question or answer are left out of both.
+ * It lays itself out by the room it has (`fit-*`), so it fits a Container's
+ * column.
  */
 export function FaqBlock({
   block,
@@ -29,7 +31,7 @@ export function FaqBlock({
 }) {
   const heading = block.heading?.trim()
   if (!heading) return null
-  const id = `block-${context.index}-heading`
+  const id = blockId(context, "heading")
   // Keep each pair's position in the Block, so an edit in the Visual Editor
   // names the right field even when a blank pair is skipped.
   const items = (block.questions ?? []).flatMap((item, index) =>
@@ -39,7 +41,7 @@ export function FaqBlock({
 
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-8"
     >
@@ -48,16 +50,16 @@ export function FaqBlock({
         field="heading"
         context={context}
         id={id}
-        className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+        className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
       >
         {heading}
       </EditableText>
       {items.length > 0 && (
-        <Accordion className="max-w-3xl rounded-(--card-radius) bg-card px-4 text-card-foreground shadow-(--card-shadow) sm:px-6">
+        <Accordion className="max-w-3xl rounded-(--card-radius) bg-card px-4 text-card-foreground shadow-(--card-shadow) fit-sm:px-6">
           {items.map(({ item, index }) => (
             <AccordionItem key={item.id ?? index} value={`faq-${index}`}>
               <AccordionTrigger
-                id={`block-${context.index}-faq-${index}-question`}
+                id={blockId(context, `faq-${index}-question`)}
                 className="py-4 text-base"
               >
                 <EditableText
@@ -68,7 +70,7 @@ export function FaqBlock({
                 </EditableText>
               </AccordionTrigger>
               <AccordionContent
-                id={`block-${context.index}-faq-${index}-answer`}
+                id={blockId(context, `faq-${index}-answer`)}
                 className="text-base"
               >
                 <EditableText

@@ -157,6 +157,7 @@ describe("readCanvasMessage (the Admin reads the canvas)", () => {
     [{ type: "move", id: "b1", direction: "down" }],
     [{ type: "insert-request", region: "page", index: 0 }],
     [{ type: "insert-request", region: "footer", index: 3 }],
+    [{ type: "insert-request", region: "page", index: 2, parentId: "c1" }],
   ])("accepts the request %j", (request) => {
     expect(read({ channel: BRIDGE_CHANNEL, ...request })).toEqual(request)
   })
@@ -180,6 +181,14 @@ describe("readCanvasMessage (the Admin reads the canvas)", () => {
       { type: "insert-request", region: "page", index: 0.5 },
     ],
     ["insert with no index", { type: "insert-request", region: "page" }],
+    [
+      "insert in a Container with an empty id",
+      { type: "insert-request", region: "page", index: 0, parentId: "" },
+    ],
+    [
+      "insert in a Container with a number for an id",
+      { type: "insert-request", region: "page", index: 0, parentId: 3 },
+    ],
   ])("ignores a request that is malformed: %s", (_name, request) => {
     expect(read({ channel: BRIDGE_CHANNEL, ...request })).toBeNull()
   })
@@ -314,38 +323,13 @@ describe("edit-text", () => {
   })
 
   it.each([
+    [{ type: "edit-text", id: "b1", fieldPath: "heading", value: "Hi" }],
+    [{ type: "edit-text", id: "f1", fieldPath: "cta.label", value: "" }],
+    [{ type: "edit-text", id: "b2", fieldPath: "items.3.title", value: "A" }],
     [
       {
         type: "edit-text",
-        region: "page",
-        index: 0,
-        fieldPath: "heading",
-        value: "Hi",
-      },
-    ],
-    [
-      {
-        type: "edit-text",
-        region: "footer",
-        index: 2,
-        fieldPath: "cta.label",
-        value: "",
-      },
-    ],
-    [
-      {
-        type: "edit-text",
-        region: "page",
-        index: 1,
-        fieldPath: "items.3.title",
-        value: "A",
-      },
-    ],
-    [
-      {
-        type: "edit-text",
-        region: "page",
-        index: 1,
+        id: "new-4",
         fieldPath: "content",
         value: lexical(paragraph(text("Hi"))),
       },
@@ -354,11 +338,11 @@ describe("edit-text", () => {
     expect(read({ channel: BRIDGE_CHANNEL, ...request })).toEqual(request)
   })
 
-  const base = { region: "page", index: 0, fieldPath: "a", value: "v" }
+  const base = { id: "b1", fieldPath: "a", value: "v" }
   it.each([
-    ["an unknown region", { ...base, region: "x" }],
-    ["a negative index", { ...base, index: -1 }],
-    ["a fractional index", { ...base, index: 0.5 }],
+    ["no Block", { ...base, id: undefined }],
+    ["an empty id", { ...base, id: "" }],
+    ["a number for an id", { ...base, id: 4 }],
     ["no field", { ...base, fieldPath: undefined }],
     ["an empty field", { ...base, fieldPath: "" }],
     ["an empty path segment", { ...base, fieldPath: "a..b" }],

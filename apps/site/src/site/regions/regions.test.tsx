@@ -15,6 +15,7 @@ import type {
   NavigationBlock,
   NewsletterBlock,
   Page,
+  RegionContainerBlock,
   UtilityStripBlock,
 } from "../../payload-types"
 import type { Brand } from "../brand"
@@ -415,12 +416,193 @@ describe("the Footer", () => {
 
   it("renders nothing for a Block that belongs in the Header", () => {
     const misplaced = [
-      logo(),
       navigation(),
       headerActions(),
       utilityStrip(),
     ] as unknown as FooterBlock[]
     expect(footer(misplaced).container.textContent).toBe("")
+  })
+})
+
+describe("the Utility strip's phone number", () => {
+  const strip = (over: Partial<UtilityStripBlock>): UtilityStripBlock => ({
+    blockType: "utilityStrip",
+    ...over,
+  })
+
+  it("is the Brand's, with an icon, at the start, as a link to call", () => {
+    const { container } = header([strip({ showPhone: true })])
+    const link = within(container).getByRole("link", {
+      name: "+44 20 7946 0000",
+    })
+    expect(hrefOf(link)).toBe("tel:+442079460000")
+    expect(link.querySelector("svg")).toBeTruthy()
+    expect(container.textContent).toBe("+44 20 7946 0000")
+  })
+
+  it("comes before the text, and the links stay at the end", () => {
+    const { container } = header([
+      strip({ ...utilityStrip(), showPhone: true }),
+    ])
+    const words = container.textContent!
+    expect(words.indexOf("+44 20 7946 0000")).toBe(0)
+    expect(words.indexOf("Free cancellation")).toBeGreaterThan(0)
+    expect(words.indexOf("Offers")).toBeGreaterThan(
+      words.indexOf("Free cancellation")
+    )
+  })
+
+  it("is left out when it is off, or the Brand has none", () => {
+    expect(header([strip({ showPhone: false })]).container.textContent).toBe("")
+    cleanup()
+    const noPhone = context({ brand: { ...brand, phone: null } })
+    expect(
+      header([strip({ showPhone: true })], noPhone).container.textContent
+    ).toBe("")
+  })
+})
+
+describe("a Container in a region", () => {
+  const box = (
+    children: object[],
+    over: Partial<RegionContainerBlock> = {}
+  ): RegionContainerBlock =>
+    ({
+      id: "box",
+      blockType: "container",
+      columns: "1",
+      gap: "medium",
+      align: "centre",
+      justify: "centre",
+      width: "page",
+      background: "primary",
+      children,
+      ...over,
+    }) as RegionContainerBlock
+
+  const withLogos = context({
+    brand: {
+      ...brand,
+      logo: { url: "/logo.svg", alt: "Warren Beach" },
+      logoLight: { url: "/logo-white.svg", alt: "Warren Beach" },
+    },
+  })
+
+  it("is a band of its own in the Header, in its place among the rows", () => {
+    const { container } = header(
+      [utilityStrip(), box([logo({ size: "xlarge" })]), navigation()],
+      withLogos
+    )
+    const bands = [...container.querySelector("header")!.children]
+    // The strip, the Container's band, then the row with the menu.
+    expect(bands).toHaveLength(3)
+    expect(bands[1]!.className).toContain("bg-primary")
+    expect(bands[1]!.querySelector("img")).toBeTruthy()
+    expect(bands[2]!.querySelector("nav")).toBeTruthy()
+  })
+
+  it("has a line under its band only when it asks for one", () => {
+    const boxed = header([utilityStrip(), box([logo()])], withLogos)
+    const head = boxed.container.querySelector("header")!
+    // The Header's own line closes a row, and this Header ends in a band.
+    expect(head.className).not.toContain("border-b")
+    expect(head.lastElementChild!.className).not.toContain("border-b")
+    cleanup()
+    const lined = header([box([logo()], { rule: true })], withLogos)
+    expect(
+      lined.container.querySelector("header")!.lastElementChild!.className
+    ).toContain("border-b")
+    cleanup()
+    const row = header([box([logo()]), navigation()], withLogos)
+    expect(row.container.querySelector("header")!.className).toContain(
+      "border-b"
+    )
+    cleanup()
+    const plain = header([logo(), navigation()])
+    expect(plain.container.querySelector("header")!.className).toContain(
+      "border-b"
+    )
+  })
+
+  it("puts its Blocks in the centre, and on a Primary band shows the light logo", () => {
+    const { container } = header([box([logo({ size: "xlarge" })])], withLogos)
+    const grid = container.querySelector("[data-container] > div")!
+    expect(grid.className).toContain("justify-items-center")
+    const image = container.querySelector("img")!
+    expect(image.getAttribute("src")).toContain("logo-white.svg")
+    expect(image.className).toContain("h-20")
+  })
+
+  it("shows the Brand's logo on a Default band, and when there is no light one", () => {
+    const plain = header([box([logo()], { background: "default" })], withLogos)
+    expect(plain.container.querySelector("img")!.getAttribute("src")).toContain(
+      "logo.svg"
+    )
+    cleanup()
+    const only = context({
+      brand: { ...brand, logo: { url: "/logo.svg", alt: "Warren Beach" } },
+    })
+    const { container } = header([box([logo()])], only)
+    expect(container.querySelector("img")!.getAttribute("src")).toContain(
+      "logo.svg"
+    )
+  })
+
+  it("holds the Logo and the Legal bar in a Footer, side by side", () => {
+    const { container } = footer(
+      [
+        box([logo({ size: "large" }), legalBar({ links: [] })], {
+          columns: "2",
+          justify: "start",
+        }),
+      ],
+      withLogos
+    )
+    const band = container.querySelector("footer")!.firstElementChild!
+    expect(band.className).toContain("bg-primary")
+    expect(band.querySelector("img")!.getAttribute("src")).toContain(
+      "logo-white.svg"
+    )
+    expect(band.textContent).toContain("Warren Beach. All rights reserved.")
+    expect(band.querySelector("[data-container] > div")!.className).toContain(
+      "@sm:grid-cols-2"
+    )
+  })
+
+  it("leaves out a Block the region doesn't hold, and a Utility strip", () => {
+    const { container } = header([
+      box([legalBar(), utilityStrip(), headerActions()], {
+        background: "default",
+      }),
+    ])
+    expect(container.textContent).not.toContain("All rights reserved")
+    expect(container.textContent).not.toContain("Free cancellation")
+    expect(container.textContent).toContain("Book now")
+  })
+
+  it("draws nothing when it is empty, and a placeholder in the Visual Editor", () => {
+    expect(header([box([])]).container.textContent).toBe("")
+    cleanup()
+    const editing = header([box([])], context({ editing: true }))
+    expect(editing.container.textContent).toContain("This Container is empty")
+  })
+
+  it("names each Block in it to the Visual Editor, with the Container it is in", () => {
+    const { container } = header(
+      [box([{ ...logo(), id: "l1" }])],
+      context({ editing: true })
+    )
+    const frame = container.querySelector('[data-block-id="l1"]')!
+    expect(frame.getAttribute("data-block-region")).toBe("header")
+    expect(frame.getAttribute("data-block-parent")).toBe("box")
+  })
+
+  it("passes axe", async () => {
+    const { container } = footer(
+      [box([logo(), legalBar()], { columns: "2" })],
+      withLogos
+    )
+    expect(await violations(container)).toEqual([])
   })
 })
 
@@ -520,7 +702,8 @@ describe("the region catalogue", () => {
   it("starts each region-only Block from defaults that render", () => {
     for (const region of ["header", "footer"] as const) {
       for (const entry of regionCatalogue(region)) {
-        if (entry.shared) continue
+        // A Container starts empty, and an empty one draws nothing.
+        if (entry.shared || entry.blockType === "container") continue
         expect(entry.defaults.blockType).toBe(entry.blockType)
         const block = entry.defaults as RegionBlock
         const { container } =

@@ -68,6 +68,7 @@ export async function loadPageRows(
         updatedAt: true,
         _status: true,
         layout: true,
+        isTemplate: true,
       },
       ...as,
     }),

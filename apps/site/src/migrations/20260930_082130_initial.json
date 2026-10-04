@@ -134,12 +134,8 @@
           "name": "pages_blocks_hero_image_id_media_id_fk",
           "tableFrom": "pages_blocks_hero",
           "tableTo": "media",
-          "columnsFrom": [
-            "image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -147,12 +143,8 @@
           "name": "pages_blocks_hero_parent_id_fk",
           "tableFrom": "pages_blocks_hero",
           "tableTo": "pages",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -256,12 +248,8 @@
           "name": "pages_blocks_rich_text_parent_id_fk",
           "tableFrom": "pages_blocks_rich_text",
           "tableTo": "pages",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -391,12 +379,8 @@
           "name": "pages_blocks_call_to_action_parent_id_fk",
           "tableFrom": "pages_blocks_call_to_action",
           "tableTo": "pages",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -552,12 +536,8 @@
           "name": "pages_seo_image_id_media_id_fk",
           "tableFrom": "pages",
           "tableTo": "media",
-          "columnsFrom": [
-            "seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -706,12 +686,8 @@
           "name": "_pages_v_blocks_hero_image_id_media_id_fk",
           "tableFrom": "_pages_v_blocks_hero",
           "tableTo": "media",
-          "columnsFrom": [
-            "image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -719,12 +695,8 @@
           "name": "_pages_v_blocks_hero_parent_id_fk",
           "tableFrom": "_pages_v_blocks_hero",
           "tableTo": "_pages_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -834,12 +806,8 @@
           "name": "_pages_v_blocks_rich_text_parent_id_fk",
           "tableFrom": "_pages_v_blocks_rich_text",
           "tableTo": "_pages_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -975,12 +943,8 @@
           "name": "_pages_v_blocks_call_to_action_parent_id_fk",
           "tableFrom": "_pages_v_blocks_call_to_action",
           "tableTo": "_pages_v",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1220,12 +1184,8 @@
           "name": "_pages_v_parent_id_pages_id_fk",
           "tableFrom": "_pages_v",
           "tableTo": "pages",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1233,12 +1193,8 @@
           "name": "_pages_v_version_seo_image_id_media_id_fk",
           "tableFrom": "_pages_v",
           "tableTo": "media",
-          "columnsFrom": [
-            "version_seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1496,12 +1452,8 @@
           "name": "fonts_files_file_id_font_files_id_fk",
           "tableFrom": "fonts_files",
           "tableTo": "font_files",
-          "columnsFrom": [
-            "file_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["file_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1509,12 +1461,8 @@
           "name": "fonts_files_parent_id_fk",
           "tableFrom": "fonts_files",
           "tableTo": "fonts",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2188,12 +2136,8 @@
           "name": "payload_locked_documents_rels_parent_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "payload_locked_documents",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2201,12 +2145,8 @@
           "name": "payload_locked_documents_rels_pages_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "pages",
-          "columnsFrom": [
-            "pages_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pages_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2214,12 +2154,8 @@
           "name": "payload_locked_documents_rels_media_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "media",
-          "columnsFrom": [
-            "media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2227,12 +2163,8 @@
           "name": "payload_locked_documents_rels_fonts_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "fonts",
-          "columnsFrom": [
-            "fonts_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fonts_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2240,12 +2172,8 @@
           "name": "payload_locked_documents_rels_font_files_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "font_files",
-          "columnsFrom": [
-            "font_files_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["font_files_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2253,12 +2181,8 @@
           "name": "payload_locked_documents_rels_users_fk",
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "users",
-          "columnsFrom": [
-            "users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2462,12 +2386,8 @@
           "name": "payload_preferences_rels_parent_fk",
           "tableFrom": "payload_preferences_rels",
           "tableTo": "payload_preferences",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2475,12 +2395,8 @@
           "name": "payload_preferences_rels_users_fk",
           "tableFrom": "payload_preferences_rels",
           "tableTo": "users",
-          "columnsFrom": [
-            "users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2640,12 +2556,8 @@
           "name": "brand_social_parent_id_fk",
           "tableFrom": "brand_social",
           "tableTo": "brand",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2737,12 +2649,8 @@
           "name": "brand_logo_id_media_id_fk",
           "tableFrom": "brand",
           "tableTo": "media",
-          "columnsFrom": [
-            "logo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["logo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2845,12 +2753,8 @@
           "name": "seo_image_id_media_id_fk",
           "tableFrom": "seo",
           "tableTo": "media",
-          "columnsFrom": [
-            "image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2858,12 +2762,8 @@
           "name": "seo_favicon_id_media_id_fk",
           "tableFrom": "seo",
           "tableTo": "media",
-          "columnsFrom": [
-            "favicon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["favicon_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2879,72 +2779,42 @@
     "public.enum_pages_blocks_call_to_action_style": {
       "name": "enum_pages_blocks_call_to_action_style",
       "schema": "public",
-      "values": [
-        "primary",
-        "secondary",
-        "inverted"
-      ]
+      "values": ["primary", "secondary", "inverted"]
     },
     "public.enum_pages_status": {
       "name": "enum_pages_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "public.enum__pages_v_blocks_call_to_action_style": {
       "name": "enum__pages_v_blocks_call_to_action_style",
       "schema": "public",
-      "values": [
-        "primary",
-        "secondary",
-        "inverted"
-      ]
+      "values": ["primary", "secondary", "inverted"]
     },
     "public.enum__pages_v_version_status": {
       "name": "enum__pages_v_version_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "public.enum_fonts_files_style": {
       "name": "enum_fonts_files_style",
       "schema": "public",
-      "values": [
-        "normal",
-        "italic"
-      ]
+      "values": ["normal", "italic"]
     },
     "public.enum_fonts_kind": {
       "name": "enum_fonts_kind",
       "schema": "public",
-      "values": [
-        "serif",
-        "sans",
-        "slab"
-      ]
+      "values": ["serif", "sans", "slab"]
     },
     "public.enum_fonts_source": {
       "name": "enum_fonts_source",
       "schema": "public",
-      "values": [
-        "uploaded",
-        "google"
-      ]
+      "values": ["uploaded", "google"]
     },
     "public.enum_brand_social_platform": {
       "name": "enum_brand_social_platform",
       "schema": "public",
-      "values": [
-        "facebook",
-        "instagram",
-        "x",
-        "youtube",
-        "tiktok"
-      ]
+      "values": ["facebook", "instagram", "x", "youtube", "tiktok"]
     }
   },
   "schemas": {},

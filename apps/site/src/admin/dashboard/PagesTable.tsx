@@ -1,15 +1,18 @@
 import Link from "next/link"
 import { FileTextIcon, PlusIcon, SearchIcon } from "lucide-react"
 
+import { Badge } from "@workspace/ui/components/badge"
 import { buttonVariants } from "@workspace/ui/components/button"
 
+import { ExportPageButton } from "../components/pages/PageTransfer"
 import { EmptyState } from "../kit/EmptyState"
 import type { PageRow } from "./rows"
 import { StatusChip } from "./StatusChip"
 import { UpdatedAt } from "./UpdatedAt"
 
 /**
- * The Pages list: title, path, status, the Layout it uses and last updated.
+ * The Pages list: title, path, status, the Layout it uses, last updated, and
+ * Export, which downloads the Page as a file another Site can import.
  * With no rows it offers New Page, or Clear search when a search found nothing.
  */
 export function PagesTable({
@@ -71,6 +74,9 @@ export function PagesTable({
             <th scope="col" className="px-4 py-3 font-medium">
               Updated
             </th>
+            <th scope="col" className="px-4 py-3">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -86,6 +92,11 @@ export function PagesTable({
                 >
                   {row.title}
                 </Link>
+                {row.isTemplate && (
+                  <Badge variant="secondary" className="ml-2">
+                    Page Template
+                  </Badge>
+                )}
               </th>
               <td className="px-4 py-3 font-mono text-xs">{row.path}</td>
               <td className="px-4 py-3">
@@ -94,6 +105,9 @@ export function PagesTable({
               <td className="px-4 py-3 text-muted-foreground">{row.layout}</td>
               <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                 <UpdatedAt iso={row.updatedAt} />
+              </td>
+              <td className="px-4 py-2 text-right">
+                <ExportPageButton id={row.id} title={row.title} />
               </td>
             </tr>
           ))}

@@ -39,6 +39,7 @@ const fallback: ThemeInputs = {
   buttonStyle: "solid",
   buttonLetters: "uppercase",
   buttonWeight: "bold",
+  buttonText: "auto",
   motion: "subtle",
 }
 
@@ -147,5 +148,20 @@ describe("control help text", () => {
     expect(INPUT_HELP.buttonStyle).toBe(
       "Style applies to primary buttons. The accent button stays filled."
     )
+  })
+})
+
+describe("a Theme from before Button text existed", () => {
+  it("reads as Automatic, and still imports", async () => {
+    const { inputProblems, normalizeInputs } = await import("./inputs")
+    const { CLASSIC } = await import("./presets")
+    const { buttonText: _dropped, ...old } = CLASSIC.inputs
+    void _dropped
+    expect(normalizeInputs(old, CLASSIC.inputs).buttonText).toBe("auto")
+    // Fonts in a file are family names; the rest is as stored.
+    expect(inputProblems(old)).toEqual([])
+    expect(inputProblems({ ...old, buttonText: "pink" })).toEqual([
+      "Button text must be one of: auto, white, dark.",
+    ])
   })
 })

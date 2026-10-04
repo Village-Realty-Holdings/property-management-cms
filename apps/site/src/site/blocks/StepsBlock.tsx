@@ -2,9 +2,9 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { StepsBlock as StepsBlockData } from "../../payload-types"
 import { displayFont } from "../display"
-import { BlockSection, backgroundOf } from "./BlockSection"
+import { BlockSection, surfaceOf } from "./BlockSection"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId } from "./types"
 
 /**
  * The number's disc: the background's text colour as the fill and the
@@ -16,20 +16,23 @@ const discs = {
   default: "bg-primary text-primary-foreground",
   muted: "bg-primary text-primary-foreground",
   primary: "bg-primary-foreground text-primary",
+  accent: "bg-primary text-primary-foreground",
+  third: "bg-primary text-primary-foreground",
   dark: "bg-surface-dark-foreground text-surface-dark",
 } as const
 
-/** Columns at `lg`, by the number of steps shown. (Class names are written out so Tailwind can see them.) */
+/** Columns at `fit-lg`, by the number of steps shown. (Class names are written out so Tailwind can see them.) */
 const columns: Record<number, string> = {
-  1: "lg:grid-cols-1",
-  2: "lg:grid-cols-2",
-  3: "lg:grid-cols-3",
+  1: "fit-lg:grid-cols-1",
+  2: "fit-lg:grid-cols-2",
+  3: "fit-lg:grid-cols-3",
 }
 
 /**
  * Steps: three or four numbered steps, each with a title and text, in an
  * ordered list. A step with no title is left out and the rest are numbered
- * on; each keeps its place in the stored list for in-place editing.
+ * on; each keeps its place in the stored list for in-place editing. It lays
+ * itself out by the room it has (`fit-*`), so it fits a Container's column.
  */
 export function StepsBlock({
   block,
@@ -47,11 +50,11 @@ export function StepsBlock({
       ? [{ position, title, text: step.text?.trim() ?? "", id: step.id }]
       : []
   })
-  const disc = discs[backgroundOf(block.background)]
-  const id = `block-${context.index}-heading`
+  const disc = discs[surfaceOf(block.background, context)]
+  const id = blockId(context, "heading")
   return (
     <BlockSection
-      background={block.background}
+      background={surfaceOf(block.background, context)}
       labelledBy={id}
       className="flex flex-col gap-10"
     >
@@ -61,7 +64,7 @@ export function StepsBlock({
           field="heading"
           context={context}
           id={id}
-          className={cn(displayFont, "text-3xl text-balance sm:text-4xl")}
+          className={cn(displayFont, "text-3xl text-balance fit-sm:text-4xl")}
         >
           {heading}
         </EditableText>
@@ -71,7 +74,7 @@ export function StepsBlock({
             field="intro"
             context={context}
             multiline
-            className="text-base text-pretty whitespace-pre-line sm:text-lg"
+            className="text-base text-pretty whitespace-pre-line fit-sm:text-lg"
           >
             {intro}
           </EditableText>
@@ -80,8 +83,8 @@ export function StepsBlock({
       {steps.length > 0 && (
         <ol
           className={cn(
-            "grid list-none gap-x-8 gap-y-10 sm:grid-cols-2",
-            columns[steps.length] ?? "lg:grid-cols-4"
+            "grid list-none gap-x-8 gap-y-10 fit-sm:grid-cols-2",
+            columns[steps.length] ?? "fit-lg:grid-cols-4"
           )}
         >
           {steps.map((step, i) => (

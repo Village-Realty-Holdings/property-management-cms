@@ -10,7 +10,7 @@ import {
 } from "../theme/support/browser"
 import {
   EDITOR_ROUTE,
-  HEADER_BLOCKS,
+  HEADER_ONLY_BLOCKS,
   PAGE_BLOCKS,
   RUN,
   addBlock,
@@ -155,7 +155,7 @@ describe("editing a Page in the Visual Editor", () => {
         `the picker offers ${name}`
       ).toBe(1)
     }
-    for (const name of HEADER_BLOCKS) {
+    for (const name of HEADER_ONLY_BLOCKS) {
       expect(
         await pickerOption(picker, name).count(),
         `the picker leaves out the Header Block ${name}`

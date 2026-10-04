@@ -196,6 +196,9 @@ export function deriveTheme(
   const ink = inputs.text
 
   const primaryText = readableOn(inputs.primary, ink)
+  // The label of a filled button: derived to pass AA on its fill, unless the
+  // Theme says White or Dark, which are then used as they are.
+  const forced = forcedButtonText(inputs)
   const third = inputs.third ?? inputs.primary
   const outline = inputs.buttonStyle === "outline"
   const spacing = SPACING[inputs.spacing]
@@ -204,12 +207,14 @@ export function deriveTheme(
   const letters = BUTTON_LETTERS[inputs.buttonLetters]
 
   // Solid buttons darken (or lighten) on hover, away from their text.
-  const solidHover = hoverOf(inputs.primary, primaryText, ink)
+  const buttonText = forced ?? primaryText
+  const solidHover = hoverOf(inputs.primary, buttonText, ink, forced)
 
   // The accent button hovers the same way, with text checked on the hover
   // fill: the accent text was derived for the resting fill only.
   const accentText = readableOn(inputs.accent, ink)
-  const accentHover = hoverOf(inputs.accent, accentText, ink)
+  const accentButtonText = forced ?? accentText
+  const accentHover = hoverOf(inputs.accent, accentButtonText, ink, forced)
 
   // Outline buttons are transparent, so on the accent panel the label and
   // edge take the panel's own text colour (derived to pass AA on the accent).
@@ -224,7 +229,7 @@ export function deriveTheme(
       }
     : {
         bg: inputs.primary,
-        fg: primaryText,
+        fg: buttonText,
         border: inputs.primary,
         bgHover: solidHover.fill,
         fgHover: solidHover.text,
@@ -281,11 +286,12 @@ export function deriveTheme(
     "--btn-shadow": outline ? NO_SHADOW : shadow.sm,
     "--btn-lift": motion.lift,
     "--btn-bg": outline ? "transparent" : inputs.primary,
-    "--btn-fg": outline ? p.link : primaryText,
+    "--btn-fg": outline ? p.link : buttonText,
     "--btn-border-color": inputs.primary,
     "--btn-border-width": outline ? "2px" : "0px",
     "--btn-bg-hover": outline ? inputs.primary : solidHover.fill,
-    "--btn-fg-hover": outline ? primaryText : solidHover.text,
+    "--btn-fg-hover": outline ? buttonText : solidHover.text,
+    "--btn-accent-fg": accentButtonText,
     "--btn-on-accent-bg": onAccent.bg,
     "--btn-on-accent-fg": onAccent.fg,
     "--btn-on-accent-border-color": onAccent.border,
@@ -311,18 +317,33 @@ export function deriveTheme(
 
 /**
  * A solid fill's hover: darker when its text is white, lighter otherwise,
- * with the text kept if it still reaches AA on the moved fill.
+ * with the text kept if it still reaches AA on the moved fill, or kept
+ * whatever the contrast when the Theme set it.
  */
 function hoverOf(
   fill: string,
   text: string,
-  ink: string
+  ink: string,
+  /** The label's colour when the Theme sets it: kept on the hover fill too. */
+  forced: string | null = null
 ): { fill: string; text: string } {
   const moved = mix(fill, text === WHITE ? BLACK : WHITE, 0.15)
+  if (forced) return { fill: moved, text: forced }
   return {
     fill: moved,
     text: contrastRatio(text, moved) >= AA_TEXT ? text : readableOn(moved, ink),
   }
+}
+
+/** The colour the Theme sets for a filled button's label, or null for Automatic. */
+export function forcedButtonText(
+  inputs: Pick<ThemeInputs, "buttonText" | "text">
+): string | null {
+  return inputs.buttonText === "white"
+    ? WHITE
+    : inputs.buttonText === "dark"
+      ? inputs.text
+      : null
 }
 
 function headingTracking(inputs: ThemeInputs): string {

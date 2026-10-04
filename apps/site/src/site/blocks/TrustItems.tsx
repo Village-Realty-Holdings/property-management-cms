@@ -6,7 +6,7 @@ import type { TrustStripBlock as TrustStripBlockData } from "../../payload-types
 import { imageOf } from "../brand"
 import { displayFont } from "../display"
 import { Icon } from "./Icon"
-import { container } from "./types"
+import { container, embeddedBox } from "./types"
 
 /** What the strip is drawn on; the icons take the accent colour on the coloured ones. */
 export type TrustSurface = "page" | "primary" | "dark"
@@ -63,7 +63,7 @@ export function TrustItems({
   inset?: boolean
 }) {
   return (
-    <div className={cn(inset && container)}>
+    <div className={cn(inset && [container, embeddedBox])}>
       <ul
         aria-label={label}
         className={cn(

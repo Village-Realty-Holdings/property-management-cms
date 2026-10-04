@@ -347,4 +347,66 @@ describe("<PageMode> Blocks", () => {
     const sent = actions.savePage.mock.calls[0]![0].document as PageDocument
     expect(sent.blocks[0]).toMatchObject({ id: "h1", heading: "Hello" })
   })
+
+  it("selects a row with Space and keeps focus on it; Enter opens the Block tab with focus in it", async () => {
+    mount()
+    const user = userEvent.setup()
+    const outline = screen.getByRole("tabpanel", { name: "Outline" })
+    const hero = within(outline).getByRole("treeitem", { name: /Hero/ })
+    hero.focus()
+    await user.keyboard(" ")
+    expect(hero.getAttribute("aria-selected")).toBe("true")
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    expect(document.activeElement).toBe(hero)
+    await user.keyboard("{Enter}")
+    const panel = await screen.findByRole("tabpanel", { name: "Block" })
+    await waitFor(() =>
+      expect(panel.contains(document.activeElement)).toBe(true)
+    )
+  })
+
+  it("puts focus in the Block tab when a click on a row opens it", async () => {
+    mount()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole("treeitem", { name: /Hero/ }))
+    const panel = await screen.findByRole("tabpanel", { name: "Block" })
+    await waitFor(() =>
+      expect(panel.contains(document.activeElement)).toBe(true)
+    )
+  })
+
+  it("stays on the Outline when a row's buttons move or remove a Block", async () => {
+    const container = {
+      id: "c1",
+      blockType: "container",
+      columns: "1",
+      children: [
+        { id: "t1", blockType: "richText", markdown: "One" },
+        { id: "t2", blockType: "richText", markdown: "Two" },
+      ],
+    } as never
+    mount({ initial: { ...about, blocks: [...about.blocks, container] } })
+    const user = userEvent.setup()
+    const outline = screen.getByRole("tabpanel", { name: "Outline" })
+    await user.click(
+      within(outline).getAllByRole("button", {
+        name: "Move Rich text down",
+      })[0]!
+    )
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    await user.click(
+      within(outline).getAllByRole("button", { name: "Remove Rich text" })[0]!
+    )
+    expect(
+      screen.getByRole("tab", { name: "Outline", selected: true })
+    ).toBeTruthy()
+    expect(document.activeElement).toBe(
+      within(outline).getByRole("treeitem", { name: "Container" })
+    )
+    expect(within(outline).getByText("Rich text removed.")).toBeTruthy()
+  })
 })

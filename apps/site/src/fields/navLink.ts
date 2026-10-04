@@ -1,6 +1,7 @@
 import type { Field, GroupField } from "payload"
 
 import { validateHref } from "./link"
+import { LINK } from "./prose"
 
 type Condition = NonNullable<GroupField["admin"]>["condition"]
 
@@ -39,6 +40,7 @@ export function navLink(
         label: "URL",
         type: "text",
         validate: validateHref,
+        custom: LINK,
         admin: {
           condition: (_, sibling) => sibling?.type === "url",
           description: 'A Site path like "/about", or a full URL.',

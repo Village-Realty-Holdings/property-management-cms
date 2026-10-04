@@ -57,15 +57,19 @@ export function ContrastWarnings({
               variant="outline"
               onClick={() => onChange(applyFix(value, warning.fix))}
             >
-              <span
-                aria-hidden="true"
-                className="size-3 rounded-sm border"
-                style={{ background: warning.fix.value }}
-              />
+              {warning.fix.field !== "buttonText" && (
+                <span
+                  aria-hidden="true"
+                  className="size-3 rounded-sm border"
+                  style={{ background: warning.fix.value }}
+                />
+              )}
               Apply fix
               <span className="sr-only"> to {INPUT_LABELS[warning.field]}</span>
               <span aria-hidden="true" className="font-mono">
-                {warning.fix.value}
+                {warning.fix.field === "buttonText"
+                  ? "Automatic"
+                  : warning.fix.value}
               </span>
             </Button>
           </li>

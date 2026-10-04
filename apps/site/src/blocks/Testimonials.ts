@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /** Guest quotes, each with a name, a role line and a star rating. */
 export const Testimonials: Block = {
@@ -66,6 +66,6 @@ export const Testimonials: Block = {
         },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

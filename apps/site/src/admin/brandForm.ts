@@ -23,6 +23,8 @@ export type BrandValues = {
   name: string
   tagline: string
   logo: number | null
+  /** The logo for a Primary or Dark band. */
+  logoLight: number | null
   phone: string
   email: string
   address: string
@@ -33,6 +35,7 @@ export const emptyBrand: BrandValues = {
   name: "",
   tagline: "",
   logo: null,
+  logoLight: null,
   phone: "",
   email: "",
   address: "",
@@ -81,6 +84,10 @@ export function parseBrandValues(input: unknown): BrandParseResult {
       typeof input.logo === "number" && Number.isInteger(input.logo)
         ? input.logo
         : null,
+    logoLight:
+      typeof input.logoLight === "number" && Number.isInteger(input.logoLight)
+        ? input.logoLight
+        : null,
     phone: text(input.phone),
     email: text(input.email),
     address: text(input.address),
@@ -112,6 +119,7 @@ export function brandToValues(brand: Brand): BrandValues {
     name: brand.name ?? "",
     tagline: brand.tagline ?? "",
     logo: mediaId(brand.logo),
+    logoLight: mediaId(brand.logoLight),
     phone: brand.contact?.phone ?? "",
     email: brand.contact?.email ?? "",
     address: brand.contact?.address ?? "",
@@ -128,6 +136,7 @@ export function brandValuesToData(values: BrandValues) {
     name: values.name,
     tagline: values.tagline || null,
     logo: values.logo,
+    logoLight: values.logoLight,
     contact: {
       phone: values.phone || null,
       email: values.email || null,

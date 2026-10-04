@@ -32,6 +32,12 @@ export type CatalogueEntry<T extends BlockType = BlockType> = {
   defaults: BlockDefaults<T>
   /** It can sit on a Default, Muted, Primary or Dark surface. */
   takesBackground: boolean
+  /**
+   * It fits a column narrower than the page. A Block that lays itself out by
+   * the viewport's width doesn't, and goes only where it has the page's full
+   * width: on the Page, or in Containers of one column (ADR-0007).
+   */
+  fitsNarrow: boolean
   /** The field a catalogue page's `?variant=` sets, when the Block has one. */
   variantField?: string
 }
@@ -88,6 +94,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       subheading: "Say a little about your place.",
     },
     takesBackground: false,
+    fitsNarrow: false,
   },
   searchHero: {
     blockType: "searchHero",
@@ -104,6 +111,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       searchLabel: "Search",
     },
     takesBackground: false,
+    fitsNarrow: false,
   },
   richText: {
     blockType: "richText",
@@ -118,6 +126,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   callToAction: {
     blockType: "callToAction",
@@ -134,6 +143,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   featuredRentals: {
     blockType: "featuredRentals",
@@ -151,6 +161,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
     variantField: "variant",
   },
   largeGroupRentals: {
@@ -167,6 +178,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
   },
   rentalGrid: {
     blockType: "rentalGrid",
@@ -183,6 +195,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
   },
   steps: {
     blockType: "steps",
@@ -202,6 +215,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   features: {
     blockType: "features",
@@ -233,6 +247,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   amenities: {
     blockType: "amenities",
@@ -254,6 +269,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
     variantField: "variant",
   },
   stats: {
@@ -274,6 +290,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   imageText: {
     blockType: "imageText",
@@ -291,6 +308,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
     variantField: "imageSide",
   },
   testimonials: {
@@ -323,6 +341,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
     variantField: "variant",
   },
   trustStrip: {
@@ -343,6 +362,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
     variantField: "variant",
   },
   ownerBand: {
@@ -367,6 +387,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "dark",
     },
     takesBackground: true,
+    fitsNarrow: false,
   },
   newsletter: {
     blockType: "newsletter",
@@ -384,6 +405,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   blogTeaser: {
     blockType: "blogTeaser",
@@ -399,6 +421,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
   },
   location: {
     blockType: "location",
@@ -416,6 +439,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: false,
     variantField: "map",
   },
   faq: {
@@ -441,6 +465,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
   },
   form: {
     blockType: "form",
@@ -460,6 +485,109 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       background: "default",
     },
     takesBackground: true,
+    fitsNarrow: true,
+  },
+  guestSurvey: {
+    blockType: "guestSurvey",
+    slug: "guest-feedback-survey",
+    label: "Guest feedback survey",
+    group: "Forms",
+    description:
+      "A star rating, then a review request or a feedback form for guest care.",
+    thumbnail: thumbnail("guest-feedback-survey"),
+    defaults: {
+      blockType: "guestSurvey",
+      heading: "How was your stay?",
+      intro:
+        "This takes about ten seconds and helps us take better care of every guest.",
+      reviewFrom: "4",
+      positive: {
+        heading: "We’re so glad you enjoyed your stay.",
+        text: "Would you take a minute to share it on Google? It helps other travelers find us.",
+        buttonLabel: "Leave a Google review",
+        laterLabel: "Maybe later",
+      },
+      thanks: {
+        heading: "Thanks for staying with us.",
+        text: "We hope to welcome you back soon.",
+      },
+      negative: {
+        heading: "We’re sorry your stay wasn’t what you expected.",
+        text: "Tell us what happened and our guest care team will follow up.",
+        messageLabel: "How could we have improved your stay?",
+        formFields: [
+          "name",
+          "email",
+          "phone",
+          "reservation",
+          "property",
+          "checkIn",
+        ],
+        consentLabel: "It’s okay to contact me about this.",
+        submitLabel: "Send feedback",
+      },
+      success: {
+        heading: "Thank you. Our team has your feedback and will be in touch.",
+        text: "Prefer to talk now? Call us at {phone}.",
+      },
+      failure: {
+        heading: "We couldn’t send your feedback.",
+        text: "Something went wrong on our end. Your answers are still here. Try again, or call us at {phone}.",
+      },
+      background: "default",
+    },
+    takesBackground: true,
+    fitsNarrow: true,
+  },
+  button: {
+    blockType: "button",
+    slug: "button",
+    label: "Button",
+    group: "Content",
+    description: "One button: a label and a link.",
+    thumbnail: thumbnail("button"),
+    defaults: {
+      blockType: "button",
+      link: { label: "Find out more", href: "/contact" },
+      style: "primary",
+      align: "start",
+    },
+    takesBackground: false,
+    fitsNarrow: true,
+  },
+  image: {
+    blockType: "image",
+    slug: "image",
+    label: "Image",
+    group: "Content",
+    description: "One image, at its own shape or cropped, with a caption.",
+    thumbnail: thumbnail("image"),
+    defaults: {
+      blockType: "image",
+      aspect: "original",
+    },
+    takesBackground: false,
+    fitsNarrow: true,
+  },
+  container: {
+    blockType: "container",
+    slug: "container",
+    label: "Container",
+    group: "Content",
+    description: "Holds other Blocks, as a stack or as columns side by side.",
+    thumbnail: thumbnail("container"),
+    defaults: {
+      blockType: "container",
+      columns: "1",
+      gap: "medium",
+      align: "top",
+      justify: "start",
+      width: "page",
+      background: "default",
+      children: [],
+    },
+    takesBackground: true,
+    fitsNarrow: true,
   },
 }
 
@@ -467,6 +595,16 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
 export const catalogueEntries: CatalogueEntry[] = Object.values(
   catalogue
 ) as CatalogueEntry[]
+
+/**
+ * Whether the Block stored under `blockType` fits a column narrower than the
+ * page. A type the catalogue doesn't have is for the list holding it to
+ * refuse, not for this.
+ */
+export function fitsNarrow(blockType: unknown): boolean {
+  const entry = catalogueEntries.find((e) => e.blockType === blockType)
+  return entry?.fitsNarrow ?? true
+}
 
 /** The entry for a catalogue page's slug, if there is one. */
 export function entryBySlug(slug: string): CatalogueEntry | undefined {

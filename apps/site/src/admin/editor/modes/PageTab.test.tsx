@@ -26,6 +26,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }))
 
 const pages = vi.hoisted(() => ({ savePage: vi.fn(), deletePage: vi.fn() }))
 vi.mock("../../actions/pages", () => pages)
+vi.mock("../../actions/media", () => ({ uploadMedia: vi.fn() }))
 vi.mock("../../actions/pagePicker", () => ({ searchPages: async () => [] }))
 const layoutActions = vi.hoisted(() => ({
   makeLayoutFromPageDocument: vi.fn(),
@@ -499,13 +500,39 @@ describe("<PageTab> SEO", () => {
     expect(button(topBar(), "Publish").disabled).toBe(false)
   })
 
+  it("turns the Page into a Page Template, which can't be published", async () => {
+    mount({ initial: { ...about, isTemplate: false } })
+    const user = userEvent.setup()
+    expect(button(topBar(), "Publish").disabled).toBe(false)
+    await user.click(within(panel()).getByLabelText("Use as a Page Template"))
+
+    // Publish stays a keyboard stop while it is off.
+    expect(button(topBar(), "Publish").getAttribute("aria-disabled")).toBe(
+      "true"
+    )
+    await user.click(button(topBar(), "Save"))
+    await waitFor(() => expect(pages.savePage).toHaveBeenCalled())
+    expect(pages.savePage.mock.calls[0]![0]).toMatchObject({
+      intent: "draft",
+      document: { isTemplate: true },
+    })
+  })
+
+  it("asks for a live Page to be unpublished before it is a Page Template", () => {
+    mount({ status: "published" })
+    const box = within(panel()).getByLabelText(
+      "Use as a Page Template"
+    ) as HTMLInputElement
+    expect(box.disabled).toBe(true)
+    expect(within(panel()).getByText(/Unpublish the Page first/)).toBeTruthy()
+  })
+
   it("picks the share image from the Media", async () => {
     mount()
     const user = userEvent.setup()
-    await user.selectOptions(
-      within(panel()).getByLabelText("SEO image"),
-      "Beach"
-    )
+    await user.click(within(panel()).getByLabelText("SEO image"))
+    const dialog = await screen.findByRole("dialog")
+    await user.click(within(dialog).getByRole("button", { name: "Beach" }))
     await user.click(button(topBar(), "Save"))
     await waitFor(() => expect(pages.savePage).toHaveBeenCalled())
     expect(pages.savePage.mock.calls[0]![0].document.seo.image).toBe(7)

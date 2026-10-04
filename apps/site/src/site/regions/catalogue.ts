@@ -15,7 +15,7 @@ type Base<T extends RegionBlockType> = {
   description: string
   /** `/block-thumbnails/<slug>.svg`, served from `public/`. */
   thumbnail: string
-  /** The region the picker offers it in. */
+  /** The region it belongs to first; `regionTakes` says where it can go. */
   region: Region
 }
 
@@ -125,6 +125,25 @@ export const regionCatalogueByType: {
     shared: false,
     defaults: { blockType: "legalBar", text: "© {year} {name}" },
   },
+  container: {
+    blockType: "container",
+    slug: "container",
+    label: "Container",
+    description: "Holds other Blocks, as a stack or as columns side by side.",
+    thumbnail: thumbnail("container"),
+    region: "header",
+    shared: false,
+    defaults: {
+      blockType: "container",
+      columns: "1",
+      gap: "medium",
+      align: "centre",
+      justify: "start",
+      width: "page",
+      background: "default",
+      children: [],
+    },
+  },
   newsletter: {
     blockType: "newsletter",
     slug: "newsletter",
@@ -147,8 +166,15 @@ export const regionCatalogueByType: {
 
 /** The order the picker offers them in, which is the Payload config's. */
 const order: Record<Region, RegionBlockType[]> = {
-  header: ["logo", "navigation", "headerActions", "utilityStrip"],
-  footer: ["footerColumns", "legalBar", "newsletter", "callToAction"],
+  header: ["logo", "navigation", "headerActions", "utilityStrip", "container"],
+  footer: [
+    "footerColumns",
+    "legalBar",
+    "newsletter",
+    "callToAction",
+    "logo",
+    "container",
+  ],
 }
 
 /** The entry for a region Block type. */
@@ -158,15 +184,31 @@ export function regionCatalogueEntry<T extends RegionBlockType>(
   return regionCatalogueByType[blockType]
 }
 
-/** The entries for the Blocks `region` takes, in the order the picker offers them. */
-export function regionCatalogue(region: Region): RegionCatalogueEntry[] {
-  return order[region].map((type) => regionCatalogueByType[type])
+/**
+ * The entries for the Blocks `region` takes, in the order the picker offers
+ * them: on the region itself, or in a Container there.
+ */
+export function regionCatalogue(
+  region: Region,
+  inContainer = false
+): RegionCatalogueEntry[] {
+  return order[region]
+    .filter((type) => regionTakes(region, type, inContainer))
+    .map((type) => regionCatalogueByType[type])
 }
 
-/** Whether `region` takes the Block stored under `blockType`. */
-export function regionTakes(region: Region, blockType: string): boolean {
+/**
+ * Whether `region` takes the Block stored under `blockType`: on the region
+ * itself, or (`inContainer`) in a Container there, which holds everything
+ * the region does but a Utility strip.
+ */
+export function regionTakes(
+  region: Region,
+  blockType: string,
+  inContainer = false
+): boolean {
   return (
-    Object.hasOwn(regionCatalogueByType, blockType) &&
-    regionCatalogueByType[blockType as RegionBlockType].region === region
+    order[region].includes(blockType as RegionBlockType) &&
+    !(inContainer && blockType === "utilityStrip")
   )
 }

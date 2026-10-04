@@ -23,13 +23,15 @@ export async function loadLayoutOptions(
   return (await readLayouts(payload)).map(layoutOptionOf)
 }
 
-/** Every Page, for the Block tab's link fields. */
+/** Every Page but the Page Templates (they are never live), for the Block tab's link fields. */
 export async function pageOptions({
   payload,
   as,
 }: StaffContext): Promise<PageOption[]> {
   const { docs } = await payload.find({
     collection: "pages",
+    where: { isTemplate: { not_equals: true } },
+    draft: true,
     pagination: false,
     sort: "title",
     depth: 0,

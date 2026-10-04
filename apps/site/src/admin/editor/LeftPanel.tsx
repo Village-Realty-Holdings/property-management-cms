@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 
 import {
   Tabs,
@@ -16,6 +16,10 @@ export type PanelTab = { id: string; label: string; content: ReactNode }
  * The panel docked on the left of the canvas. Uncontrolled by default, opening
  * on the first tab; pass `tab` and `onTabChange` to let the editor switch tabs
  * itself (selecting a Block opens the Block tab).
+ *
+ * When the editor switches the tab under the Staff User's focus (a row of
+ * the Outline selected with a click or Enter), the focus would fall to the
+ * page with the panel it was in: it goes to the new tab's panel instead.
  */
 export function LeftPanel({
   tabs,
@@ -26,8 +30,27 @@ export function LeftPanel({
   tab?: string
   onTabChange?: (id: string) => void
 }) {
+  const aside = useRef<HTMLElement>(null)
+  const shown = useRef(tab)
+  useEffect(() => {
+    if (tab === shown.current) return
+    shown.current = tab
+    // The panel being left stays a moment, inert, while it fades out.
+    const panels = [
+      ...(aside.current?.querySelectorAll<HTMLElement>('[role="tabpanel"]') ??
+        []),
+    ]
+    const current = panels.find((panel) => !panel.hasAttribute("inert"))
+    const active = document.activeElement
+    const lost =
+      !active ||
+      active === document.body ||
+      panels.some((panel) => panel !== current && panel.contains(active))
+    if (lost) current?.focus()
+  }, [tab])
   return (
     <aside
+      ref={aside}
       aria-label="Editor panel"
       className="flex w-80 shrink-0 flex-col overflow-hidden border-r bg-background max-md:w-64"
     >

@@ -13,6 +13,7 @@ import { ORIGIN } from "../theme/support/env"
 import {
   CATALOGUE_PATH,
   PAGE_BLOCKS,
+  SMALL_BLOCKS,
   blockPath,
   blockRegion,
   brokenImages,
@@ -72,15 +73,16 @@ describe("the Block catalogue", () => {
     try {
       const response = await visit(page, CATALOGUE_PATH)
       expect(response?.status()).toBe(200)
+      const blocks = [...PAGE_BLOCKS, ...SMALL_BLOCKS]
       const missing: string[] = []
-      for (const { name } of PAGE_BLOCKS) {
+      for (const { name } of blocks) {
         const links = page.getByRole("link", { name, exact: true })
         if ((await links.count()) !== 1) missing.push(name)
       }
       expect(missing).toEqual([])
-      // Twenty Blocks, twenty different pages.
+      // The twenty Blocks and the two small ones, each its own page.
       const paths = new Set((await catalogueLinks(browser)).values())
-      expect(paths.size).toBe(PAGE_BLOCKS.length)
+      expect(paths.size).toBe(blocks.length)
     } finally {
       await context.close()
     }

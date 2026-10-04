@@ -1,25 +1,27 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import type { Block } from "payload"
+import type { Block, Field } from "payload"
+
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs"
 
 import type { MediaOption } from "../components/MediaSelect"
 import { useEditor } from "./EditorProvider"
 import { FieldsProvider, pathKey, type PageOption } from "./fields/context"
 import { FieldList } from "./fields/FieldList"
 import { planWrite, type Segment } from "./fields/values"
-import { findBlock, type Region } from "./state"
-
-/** Where a Region keeps its Blocks in the document. */
-const REGION_KEY: Record<Region, string> = {
-  page: "blocks",
-  header: "header",
-  footer: "footer",
-}
+import { findBlock, placeName } from "./state"
 
 /**
  * The Block tab: the selected Block's settings, as a form made from the
- * Block's Payload config, so a Block's fields are declared once. Every change
+ * Block's Payload config, so a Block's fields are declared once. A Block with
+ * style settings (its background and text colour) shows them under Style,
+ * beside Content. Every change
  * is dispatched at once, so the canvas shows it without a network round trip.
  *
  * `blocks` are the configs the document's Blocks come from (`pageBlocks`,
@@ -64,7 +66,8 @@ export function BlockPanel({
       key={selectedId}
       config={config}
       blockId={selectedId!}
-      blockPath={[REGION_KEY[found.region], found.index]}
+      blockPath={found.path}
+      place={found.parentId === null ? null : placeName(doc, found)}
       values={found.block as unknown as Record<string, unknown>}
       media={media}
       pages={pages}
@@ -76,6 +79,7 @@ function BlockForm({
   config,
   blockId,
   blockPath,
+  place,
   values,
   media,
   pages,
@@ -83,6 +87,8 @@ function BlockForm({
   config: Block
   blockId: string
   blockPath: readonly Segment[]
+  /** Where a Block in a Container is, to say so; null for any other. */
+  place: string | null
   values: Record<string, unknown>
   media: readonly MediaOption[]
   pages: readonly PageOption[]
@@ -118,6 +124,12 @@ function BlockForm({
     [blockId, values, media, pages, touched, touch, write]
   )
 
+  // A field marked as style (`STYLE`) goes under Style; the rest is content.
+  const isStyle = (field: Field) =>
+    (field as { custom?: { style?: unknown } }).custom?.style === true
+  const style = config.fields.filter(isStyle)
+  const content = config.fields.filter((field) => !isStyle(field))
+
   const label =
     typeof config.labels?.singular === "string"
       ? config.labels.singular
@@ -131,8 +143,42 @@ function BlockForm({
         onSubmit={(event) => event.preventDefault()}
         noValidate
       >
-        <h2 className="text-sm font-semibold">{label}</h2>
-        <FieldList fields={config.fields} path={[]} sibling={values} />
+        <div>
+          <h2 className="text-sm font-semibold">{label}</h2>
+          {place && <p className="text-xs text-muted-foreground">In {place}</p>}
+        </div>
+        {style.length === 0 ? (
+          <FieldList fields={config.fields} path={[]} sibling={values} />
+        ) : (
+          // What the Block says, and how it looks: its background and text
+          // colour, from the Theme (apps/site ADR-0013).
+          <Tabs defaultValue="content" className="gap-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="style">Style</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="content"
+              aria-label="Content"
+              className="flex flex-col gap-4"
+            >
+              {content.length > 0 ? (
+                <FieldList fields={content} path={[]} sibling={values} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  This Block has no content of its own.
+                </p>
+              )}
+            </TabsContent>
+            <TabsContent
+              value="style"
+              aria-label="Style"
+              className="flex flex-col gap-4"
+            >
+              <FieldList fields={style} path={[]} sibling={values} />
+            </TabsContent>
+          </Tabs>
+        )}
       </form>
     </FieldsProvider>
   )

@@ -83,6 +83,8 @@ const counts = async () => {
 const pagesInOrder = async () => {
   const { docs } = await payload.find({
     collection: "pages",
+    // The starter Page Templates are Pages too, but not the Site's own.
+    where: { isTemplate: { not_equals: true } },
     depth: 0,
     sort: "createdAt",
     pagination: false,
@@ -99,8 +101,10 @@ describe("the Beachside seed", () => {
     expect(report.length).toBeGreaterThan(10)
 
     expect(await counts()).toMatchObject({
-      pages: 4,
-      layouts: 1,
+      // Its four Pages and the three starter Page Templates.
+      pages: 7,
+      // Its own, and the Tuck-in and Guest feedback survey starters'.
+      layouts: 3,
       media: 7,
       fonts: 2,
       "font-files": 5,
@@ -283,6 +287,8 @@ describe("the Beachside seed", () => {
   it("has a default Layout whose menu links to every other Page", async () => {
     const { docs: layouts } = await payload.find({
       collection: "layouts",
+      // Not the Tuck-in starter's Layout.
+      where: { isDefault: { equals: true } },
       depth: 0,
       pagination: false,
     })

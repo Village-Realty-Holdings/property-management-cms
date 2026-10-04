@@ -2,7 +2,7 @@ import config from "@payload-config"
 import { getPayload } from "payload"
 import { cache } from "react"
 
-import type { Brand, Layout, Page, Seo } from "../payload-types"
+import type { Brand, Layout, Media, Page, Seo } from "../payload-types"
 import {
   readBrand,
   readLayoutFor,
@@ -70,6 +70,21 @@ export const getSeo = cache(async (): Promise<Seo> => {
 /** Every Published Page's path and last change, for the sitemap. */
 export const getPublishedPages = cache(async (): Promise<SitemapPage[]> => {
   return readPublishedPages(await getPayload({ config }))
+})
+
+/**
+ * Every Media image, for the Visual Editor's canvas: the Page it is posted
+ * holds an image as a Media id, and the canvas draws it from this.
+ */
+export const getMediaLibrary = cache(async (): Promise<Media[]> => {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: "media",
+    pagination: false,
+    depth: 0,
+    ...asVisitor,
+  })
+  return docs
 })
 
 /** The Page path for the catch-all route's segments: [] is "/". */

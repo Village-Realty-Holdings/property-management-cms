@@ -12,7 +12,7 @@ import {
 } from "react"
 
 import { useCanvasSend } from "./canvasSend"
-import { placeOf } from "./place"
+import { blockIdOf } from "./place"
 
 /**
  * `text` on one line, where it differs from `before`: only the line breaks
@@ -51,7 +51,8 @@ export function collapseTyped(before: string, text: string): string {
  * as plain text.
  *
  * Every input is sent to the Admin as an `edit-text` with the whole new value
- * (see bridge.ts), which shows on the canvas at once and is one undo step for
+ * (see bridge.ts), naming the Block by the id of its innermost frame, which
+ * shows on the canvas at once and is one undo step for
  * the run of typing. Enter ends the edit on a single line; Esc puts back the
  * text the edit started with.
  *
@@ -70,7 +71,7 @@ export function EditingText({
 }: Omit<ComponentPropsWithoutRef<"span">, "children"> & {
   as: ElementType
   field: string
-  /** The Block's `context.index`: where a Block with no frame is. */
+  /** The Block's `context.index`, which it is marked with. */
   index: number
   /** Whether Enter adds a line. By default Enter ends the edit. */
   multiline?: boolean
@@ -85,13 +86,10 @@ export function EditingText({
     text: string
   } | null>(null)
 
-  const post = (el: HTMLElement, value: string) =>
-    send?.({
-      type: "edit-text",
-      ...placeOf(el, index),
-      fieldPath: field,
-      value,
-    })
+  const post = (el: HTMLElement, value: string) => {
+    const id = blockIdOf(el)
+    if (id) send?.({ type: "edit-text", id, fieldPath: field, value })
+  }
 
   const onInput = (event: FormEvent<HTMLElement>) => {
     const el = event.currentTarget

@@ -129,6 +129,57 @@ describe("Blocks read tokens only", () => {
     }
   )
 
+  describe("rich text width", () => {
+    const content = {
+      root: {
+        type: "root",
+        version: 1,
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        children: [
+          {
+            type: "paragraph",
+            version: 1,
+            direction: "ltr",
+            format: "",
+            indent: 0,
+            children: [
+              {
+                type: "text",
+                version: 1,
+                text: "Hello",
+                detail: 0,
+                format: 0,
+                mode: "normal",
+                style: "",
+              },
+            ],
+          },
+        ],
+      },
+    } as never
+    const text = (container: HTMLElement) =>
+      container.querySelector("section > div > div")!
+
+    it("sets the text at reading width unless it is wide", () => {
+      const reading = render(
+        <Block block={{ blockType: "richText", content }} index={1} />
+      )
+      expect(text(reading.container).className).toContain("max-w-prose")
+      cleanup()
+
+      const wide = render(
+        <Block
+          block={{ blockType: "richText", content, width: "wide" }}
+          index={1}
+        />
+      )
+      expect(text(wide.container).className).toContain("max-w-none")
+      expect(text(wide.container).className).not.toContain("max-w-prose")
+    })
+  })
+
   it("rich text uses --section-y", () => {
     const { container } = render(
       <Block
@@ -195,7 +246,7 @@ describe("<BlockButton>", () => {
       </>
     )
     const one = getByRole("link", { name: "One" })
-    expect(one.className).toContain("bg-accent text-accent-foreground")
+    expect(one.className).toContain("bg-accent text-(--btn-accent-fg)")
     // The accent button is the emphasised CTA: it stays a fill whatever the
     // Buttons style is, because the Style control applies to primary buttons.
     expect(one.className).not.toMatch(/--btn-(bg|fg|border)/)
@@ -327,7 +378,7 @@ describe("a dark Call to action", () => {
       "class"
     )!
     expect(button).toContain("bg-accent")
-    expect(button).toContain("text-accent-foreground")
+    expect(button).toContain("text-(--btn-accent-fg)")
   })
 
   it.each(["default", "muted", "primary", "dark"] as const)(

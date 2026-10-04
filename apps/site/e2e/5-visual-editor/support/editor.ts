@@ -55,15 +55,19 @@ export const PAGE_BLOCKS = [
   "Location",
   "FAQ",
   "Form",
+  "Guest feedback survey",
 ] as const
 
-/** Header-only Blocks (spec "Phase 3"). */
-export const HEADER_BLOCKS = [
+/** The Blocks only a Layout takes, which a Page's picker never offers. */
+export const HEADER_ONLY_BLOCKS = [
   "Logo",
   "Navigation",
   "Header actions",
   "Utility strip",
 ] as const
+
+/** Header Blocks (spec "Phase 3"), and the Container (ADR-0011). */
+export const HEADER_BLOCKS = [...HEADER_ONLY_BLOCKS, "Container"] as const
 
 /** Footer Blocks: the footer-only ones plus the shared ones allowed there. */
 export const FOOTER_BLOCKS = [
@@ -71,6 +75,8 @@ export const FOOTER_BLOCKS = [
   "Legal bar",
   "Newsletter",
   "Call to action",
+  "Logo",
+  "Container",
 ] as const
 
 // ── HTTP: Payload's REST API as the signed-in Staff User ─────────────────────

@@ -39,12 +39,20 @@ import { openSession, visit } from "../../theme/support/browser"
 
 export const CATALOGUE_PATH = "/dev/blocks"
 
-export type Background = "default" | "muted" | "primary" | "dark"
+export type Background =
+  | "default"
+  | "muted"
+  | "primary"
+  | "accent"
+  | "third"
+  | "dark"
 
 export const BACKGROUNDS: readonly Background[] = [
   "default",
   "muted",
   "primary",
+  "accent",
+  "third",
   "dark",
 ]
 
@@ -53,6 +61,9 @@ export const BACKGROUND_TOKEN: Record<Background, string> = {
   default: "--background",
   muted: "--muted",
   primary: "--primary",
+  accent: "--accent",
+  // A Theme with no third colour paints Third with its secondary.
+  third: "var(--third, var(--secondary))",
   dark: "--surface-dark",
 }
 
@@ -92,6 +103,17 @@ export const PAGE_BLOCKS: readonly BlockSpec[] = [
   { name: "Location", backgrounds: true },
   { name: "FAQ", backgrounds: true },
   { name: "Form", backgrounds: true },
+  { name: "Guest feedback survey", backgrounds: true },
+]
+
+/**
+ * The small Blocks that came with the Container (Container Blocks, Phase 2).
+ * They have no background of their own: they sit on the page's, or on their
+ * Container's.
+ */
+export const SMALL_BLOCKS: readonly BlockSpec[] = [
+  { name: "Button", backgrounds: false },
+  { name: "Image", backgrounds: false },
 ]
 
 /** A file-name-safe id for a Block: "Image + text" is "image-text". */
@@ -117,7 +139,7 @@ export async function catalogueLinks(
   try {
     await visit(page, CATALOGUE_PATH)
     const found = new Map<string, string>()
-    for (const { name } of PAGE_BLOCKS) {
+    for (const { name } of [...PAGE_BLOCKS, ...SMALL_BLOCKS]) {
       const link = page.getByRole("link", { name, exact: true })
       if ((await link.count()) !== 1) continue
       const href = await link.getAttribute("href")
@@ -195,7 +217,9 @@ export function effectiveBackground(region: Locator): Promise<string> {
 export function tokenColour(page: Page, token: string): Promise<string> {
   return page.evaluate((name) => {
     const probe = document.createElement("div")
-    probe.style.backgroundColor = `var(${name})`
+    probe.style.backgroundColor = name.startsWith("var(")
+      ? name
+      : `var(${name})`
     document.body.appendChild(probe)
     const colour = getComputedStyle(probe).backgroundColor
     probe.remove()

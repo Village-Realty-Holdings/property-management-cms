@@ -44,6 +44,49 @@ describe("saveProblemLines", () => {
     ])
   })
 
+  it("names a Block in a Container by its place from the Page down", () => {
+    const nested: PageDocument = {
+      ...doc,
+      blocks: [
+        { id: "a", blockType: "hero" } as never,
+        {
+          id: "c",
+          blockType: "container",
+          columns: "2",
+          children: [
+            { id: "x", blockType: "button" },
+            {
+              id: "s",
+              blockType: "container",
+              columns: "1",
+              children: [{ id: "y", blockType: "callToAction" }],
+            },
+          ],
+        } as never,
+      ],
+    }
+    expect(
+      saveProblemLines(
+        {
+          message: "Some fields need attention.",
+          fieldErrors: {
+            "blocks.1.children.0.link.href": "Enter a link.",
+            "blocks.1.children.1.children.0.heading": "Too long.",
+            "blocks.1.columns": "Choose one.",
+            "blocks.1.children.5.heading": "Bad.",
+          },
+        },
+        nested
+      )
+    ).toEqual([
+      "Some fields need attention.",
+      "Block 2, Container, Column 1, Button, link href: Enter a link.",
+      "Block 2, Container, Column 2, Container, Block 1, Call to action, heading: Too long.",
+      "Container, columns: Choose one.",
+      "Block 2, Container, Column 6, heading: Bad.",
+    ])
+  })
+
   it("names the Page's own fields", () => {
     expect(
       saveProblemLines(

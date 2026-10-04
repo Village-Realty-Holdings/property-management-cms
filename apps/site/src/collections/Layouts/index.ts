@@ -1,7 +1,11 @@
 import type { CollectionConfig } from "payload"
 
 import { anyone, signedIn } from "../../access"
-import { footerBlocks, headerBlocks } from "../../blocks/region"
+import {
+  footerBlocks,
+  headerBlocks,
+  regionTakesOnly,
+} from "../../blocks/region"
 import { refuseDeleteWhenInUse } from "./deleteProtection"
 import {
   clearPreviousDefault,
@@ -51,6 +55,7 @@ export const Layouts: CollectionConfig = {
       type: "blocks",
       labels: { singular: "Header Block", plural: "Header Blocks" },
       blocks: headerBlocks,
+      validate: regionTakesOnly("header"),
     },
     {
       name: "footer",
@@ -58,6 +63,7 @@ export const Layouts: CollectionConfig = {
       type: "blocks",
       labels: { singular: "Footer Block", plural: "Footer Blocks" },
       blocks: footerBlocks,
+      validate: regionTakesOnly("footer"),
     },
     {
       name: "paths",

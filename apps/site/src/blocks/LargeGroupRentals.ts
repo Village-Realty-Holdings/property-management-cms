@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /** The Site's Rentals that sleep at least a given number of guests. */
 export const LargeGroupRentals: Block = {
@@ -21,6 +21,6 @@ export const LargeGroupRentals: Block = {
         description: "Shows the Rentals that sleep at least this many guests.",
       },
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

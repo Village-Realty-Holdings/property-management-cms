@@ -29,13 +29,19 @@ describe("<AdminNav>", () => {
       ["SEO", "/admin/settings/seo"],
       ["Theme", "/admin/theme"],
       ["Assets", "/admin/settings/assets/fonts"],
+      ["Replace Text", "/admin/tools/replace-text"],
+      ["Replace Image", "/admin/tools/replace-image"],
+      ["Links", "/admin/tools/links"],
+      ["Themes", "/admin/tools/themes"],
+      ["Starter Kits", "/admin/tools/starter-kits"],
     ])
   })
 
-  it("names the Content and Settings groups", () => {
+  it("names the Content, Settings and Tools groups", () => {
     render(<AdminNav />)
     expect(screen.getByRole("group", { name: "Content" })).toBeTruthy()
     expect(screen.getByRole("group", { name: "Settings" })).toBeTruthy()
+    expect(screen.getByRole("group", { name: "Tools" })).toBeTruthy()
   })
 
   it("marks only the current screen with aria-current", () => {

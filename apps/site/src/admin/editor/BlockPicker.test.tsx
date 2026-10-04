@@ -62,6 +62,7 @@ describe("what each region offers", () => {
       "Navigation",
       "Header actions",
       "Utility strip",
+      "Container",
     ])
   })
 
@@ -71,7 +72,80 @@ describe("what each region offers", () => {
       "Legal bar",
       "Newsletter",
       "Call to action",
+      "Logo",
+      "Container",
     ])
+  })
+
+  it("offers a Container in a region the region's Blocks, but no Utility strip", () => {
+    const inside = (region: "header" | "footer", level: number) =>
+      pickerGroups(region, { level, narrow: false }).flatMap((group) =>
+        group.entries.map((entry) => entry.label)
+      )
+    expect(inside("header", 1)).toEqual([
+      "Logo",
+      "Navigation",
+      "Header actions",
+      "Container",
+    ])
+    // The third level takes no Container, as on a Page.
+    expect(inside("footer", 3)).toEqual([
+      "Footer columns",
+      "Legal bar",
+      "Newsletter",
+      "Call to action",
+      "Logo",
+    ])
+  })
+})
+
+describe("what a Container offers", () => {
+  const inside = (level: number, narrow: boolean) =>
+    pickerGroups("page", { level, narrow }).flatMap((group) =>
+      group.entries.map((entry) => entry.blockType)
+    )
+
+  it("offers every Page Block in a stack, Containers too until the third level", () => {
+    const all = catalogueEntries.map((e) => e.blockType).sort()
+    expect(inside(1, false).sort()).toEqual(all)
+    expect(inside(2, false)).toContain("container")
+    expect(inside(3, false).sort()).toEqual(
+      all.filter((type) => type !== "container")
+    )
+  })
+
+  it("offers only the Blocks that fit a column in a Container with columns", () => {
+    const fit = catalogueEntries
+      .filter((e) => e.fitsNarrow)
+      .map((e) => e.blockType)
+    expect(inside(1, true).sort()).toEqual([...fit].sort())
+    expect(inside(1, true)).not.toContain("hero")
+    expect(inside(3, true)).not.toContain("container")
+  })
+
+  it("says so in the dialog, and adds into the Container", async () => {
+    const user = userEvent.setup()
+    const onInsert = vi.fn()
+    render(
+      <BlockPicker
+        target={{ region: "page", index: 1, parentId: "c1" }}
+        inside={{ level: 1, narrow: true }}
+        onClose={vi.fn()}
+        onInsert={onInsert}
+      />
+    )
+    expect(
+      screen.getByRole("dialog", { name: "Add a Block to the Container" })
+    ).toBeTruthy()
+    expect(screen.getByText(/fit a column/)).toBeTruthy()
+    expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
+    await user.click(screen.getByRole("option", { name: /^Button\b/ }))
+    expect(onInsert).toHaveBeenCalledWith(
+      "page",
+      1,
+      expect.objectContaining({ blockType: "button" }),
+      "c1"
+    )
   })
 })
 
@@ -142,15 +216,16 @@ describe("the dialog", () => {
 
   it("shows only Header Blocks for a Header, and Footer ones for a Footer", () => {
     open({ region: "header", index: 0 })
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getAllByRole("option")).toHaveLength(5)
     expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
     expect(screen.queryByRole("option", { name: /^Legal bar\b/ })).toBeNull()
     cleanup()
     open({ region: "footer", index: 0 })
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getAllByRole("option")).toHaveLength(6)
     expect(option(/^Newsletter\b/)).toBeTruthy()
     expect(option(/^Call to action\b/)).toBeTruthy()
-    expect(screen.queryByRole("option", { name: /^Logo\b/ })).toBeNull()
+    expect(option(/^Logo\b/)).toBeTruthy()
+    expect(screen.queryByRole("option", { name: /^Navigation\b/ })).toBeNull()
   })
 })
 

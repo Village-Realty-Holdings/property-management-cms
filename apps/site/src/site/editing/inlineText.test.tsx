@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { CanvasRequest } from "../../admin/editor/bridge"
 import { fixturesFor } from "../fixtures"
+import { Blocks, type PageBlock } from "../blocks"
 import { EditableText } from "../blocks/Editable"
 import type { BlockContext } from "../blocks/types"
 import { RichText } from "../RichText"
@@ -49,7 +50,9 @@ function renderText(
     text?: string
     editing?: boolean
   } = {},
-  wrap: (node: React.ReactNode) => React.ReactNode = (node) => node
+  wrap: (node: React.ReactNode) => React.ReactNode = (node) => (
+    <div data-block-id="b2">{node}</div>
+  )
 ) {
   const send = vi.fn<(request: CanvasRequest) => void>()
   const view = render(
@@ -93,31 +96,39 @@ describe("<EditableText> in the Visual Editor", () => {
     expect(send.mock.calls.map(([request]) => request)).toEqual([
       {
         type: "edit-text",
-        region: "page",
-        index: 2,
+        id: "b2",
         fieldPath: "cta.label",
         value: "Welcome a",
       },
       {
         type: "edit-text",
-        region: "page",
-        index: 2,
+        id: "b2",
         fieldPath: "cta.label",
         value: "Welcome aboard",
       },
     ])
   })
 
-  it("names a region Block by its place in the region", () => {
+  it("names the innermost Block it is in: one in a Container, at any depth", () => {
     const { heading, send } = renderText({}, (node) => (
-      <div data-block-region="footer" data-block-index="1">
-        {node}
+      <div data-block-id="c1">
+        <div data-block-id="c2" data-block-parent="c1">
+          <div data-block-id="deep" data-block-parent="c2">
+            {node}
+          </div>
+        </div>
       </div>
     ))
     type(heading, "Changed")
-    expect(send).toHaveBeenCalledWith(
-      expect.objectContaining({ region: "footer", index: 1 })
+    expect(send).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ id: "deep", value: "Changed" })
     )
+  })
+
+  it("sends nothing for a text in no Block it can name", () => {
+    const { heading, send } = renderText({}, (node) => node)
+    type(heading, "Changed")
+    expect(send).not.toHaveBeenCalled()
   })
 
   it("keeps a single line on one line", () => {
@@ -520,13 +531,8 @@ describe("<RichTextEditing>", () => {
     const send = vi.fn<(request: CanvasRequest) => void>()
     const view = render(
       <CanvasSendContext.Provider value={send}>
-        <div data-block-region="page" data-block-index="3">
-          <RichTextEditing
-            field="content"
-            content={content}
-            context={context({ index: 3 })}
-            {...over}
-          />
+        <div data-block-id="r1">
+          <RichTextEditing field="content" content={content} {...over} />
         </div>
       </CanvasSendContext.Provider>
     )
@@ -583,8 +589,7 @@ describe("<RichTextEditing>", () => {
     const request = send.mock.calls.at(-1)![0]
     expect(request).toMatchObject({
       type: "edit-text",
-      region: "page",
-      index: 3,
+      id: "r1",
       fieldPath: "content",
     })
     const value = (request as { value: unknown }).value
@@ -636,12 +641,8 @@ describe("<RichTextEditing>", () => {
     const again = (next: unknown) =>
       rerender(
         <CanvasSendContext.Provider value={send}>
-          <div data-block-region="page" data-block-index="3">
-            <RichTextEditing
-              field="content"
-              content={next}
-              context={context({ index: 3 })}
-            />
+          <div data-block-id="r1">
+            <RichTextEditing field="content" content={next} />
           </div>
         </CanvasSendContext.Provider>
       )
@@ -758,5 +759,103 @@ describe("<RichTextEditing>", () => {
     await screen.findByRole("toolbar")
     fireEvent.keyDown(box, { key: "k", ctrlKey: true })
     expect(screen.queryByLabelText("Link URL")).toBeNull()
+  })
+})
+
+// ── In a Container ───────────────────────────────────────────────────────────
+
+describe("text in place in a Container", () => {
+  const containerOf = (id: string, children: object[], columns = "1") => ({
+    id,
+    blockType: "container",
+    columns,
+    gap: "medium",
+    align: "top",
+    width: "page",
+    background: "default",
+    children,
+  })
+  const page = [
+    { id: "b1", blockType: "hero", heading: "On the Page" },
+    containerOf("c1", [
+      containerOf(
+        "c2",
+        [
+          {
+            id: "r1",
+            blockType: "richText",
+            content: doc(paragraph(textNode("Some words here"))),
+          },
+          {
+            id: "btn",
+            blockType: "button",
+            link: { label: "Learn More", href: "/about" },
+            style: "primary",
+            align: "start",
+          },
+        ],
+        "2"
+      ),
+    ]),
+  ] as unknown as PageBlock[]
+
+  const mount = () => {
+    const send = vi.fn<(request: CanvasRequest) => void>()
+    const view = render(
+      <CanvasSendContext.Provider value={send}>
+        <main>
+          <Blocks blocks={page} fixtures={fixturesFor(undefined)} editing />
+        </main>
+      </CanvasSendContext.Provider>
+    )
+    return { send, ...view }
+  }
+
+  it("edits a Button's label two Containers deep, naming the Button", () => {
+    const { send, container } = mount()
+    const label = container.querySelector<HTMLElement>(
+      "[data-block-id=btn] [data-editable-field='link.label']"
+    )!
+    fireEvent.focus(label)
+    type(label, "Read our story")
+    expect(send).toHaveBeenCalledExactlyOnceWith({
+      type: "edit-text",
+      id: "btn",
+      fieldPath: "link.label",
+      value: "Read our story",
+    })
+  })
+
+  it("edits a Rich text two Containers deep in place, naming the Rich text", async () => {
+    const { send, container } = mount()
+    const box = await within(
+      container.querySelector<HTMLElement>("[data-block-id=r1]")!
+    ).findByRole("textbox", { name: "Rich text" })
+    expect(box.textContent).toBe("Some words here")
+
+    act(() => box.focus())
+    const text = box.querySelector("[data-lexical-text]")!.firstChild!
+    const range = document.createRange()
+    range.setStart(text, 5)
+    range.setEnd(text, 10)
+    window.getSelection()!.removeAllRanges()
+    window.getSelection()!.addRange(range)
+    act(() => {
+      document.dispatchEvent(new Event("selectionchange"))
+    })
+    fireEvent.click(await screen.findByRole("button", { name: "Bold" }))
+    await waitFor(() => expect(send).toHaveBeenCalled())
+    const request = send.mock.calls.at(-1)![0]
+    expect(request).toMatchObject({
+      type: "edit-text",
+      id: "r1",
+      fieldPath: "content",
+    })
+    const value = (request as { value: unknown }).value
+    expect(nodesOf(value, "text").map((n) => [n.text, n.format])).toEqual([
+      ["Some ", 0],
+      ["words", 1],
+      [" here", 0],
+    ])
   })
 })

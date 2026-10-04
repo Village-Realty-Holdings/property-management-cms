@@ -283,7 +283,12 @@ function PageModeEditor({
             </Button>
             <Button
               size="sm"
-              disabled={busy !== null || (status === "published" && !isDirty)}
+              disabled={
+                busy !== null ||
+                (status === "published" && !isDirty) ||
+                // A Page Template stays off the Site.
+                page.isTemplate === true
+              }
               // Stays a keyboard stop while there is nothing to publish.
               focusableWhenDisabled
               className="aria-disabled:opacity-50"

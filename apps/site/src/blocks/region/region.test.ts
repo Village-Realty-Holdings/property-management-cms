@@ -2,7 +2,7 @@ import type { Block, Field } from "payload"
 import { describe, expect, it } from "vitest"
 
 import { navLink } from "../../fields/navLink"
-import { footerBlocks, headerBlocks } from "./index"
+import { footerBlocks, headerBlocks, regionHolds } from "./index"
 import { Navigation } from "./Navigation"
 
 const slugs = (blocks: Block[]) => blocks.map((b) => b.slug)
@@ -36,6 +36,7 @@ describe("the region Blocks", () => {
       "navigation",
       "headerActions",
       "utilityStrip",
+      "container",
     ])
   })
 
@@ -45,12 +46,23 @@ describe("the region Blocks", () => {
       "legalBar",
       "newsletter",
       "callToAction",
+      "logo",
+      "container",
     ])
   })
 
-  it("keeps the Header-only and Footer-only Blocks apart", () => {
+  it("keeps the Header-only and Footer-only Blocks apart: they share the Logo and the Container", () => {
     const header = new Set(slugs(headerBlocks))
-    expect(slugs(footerBlocks).filter((s) => header.has(s))).toEqual([])
+    expect(slugs(footerBlocks).filter((s) => header.has(s))).toEqual([
+      "logo",
+      "container",
+    ])
+    expect(regionHolds("header", "legalBar", false)).toBe(false)
+    expect(regionHolds("footer", "navigation", true)).toBe(false)
+    expect(regionHolds("footer", "logo", true)).toBe(true)
+    expect(regionHolds("header", "utilityStrip", false)).toBe(true)
+    expect(regionHolds("header", "utilityStrip", true)).toBe(false)
+    expect(regionHolds("header", "hero", false)).toBe(false)
   })
 
   it("gives every Block an interface name", () => {

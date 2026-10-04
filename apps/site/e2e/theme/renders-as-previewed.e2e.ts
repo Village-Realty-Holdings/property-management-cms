@@ -51,6 +51,7 @@ const LIFTED_PILL: ThemeInputs = {
   buttonStyle: "solid",
   buttonLetters: "title",
   buttonWeight: "medium",
+  buttonText: "auto",
   motion: "lively",
 }
 

@@ -121,6 +121,8 @@ async function pages() {
   return (
     await payload.find({
       collection: "pages",
+      // The starter Page Templates are Pages too, but not the Site's own.
+      where: { isTemplate: { not_equals: true } },
       depth: 0,
       sort: "id",
       pagination: false,

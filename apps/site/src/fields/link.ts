@@ -1,5 +1,7 @@
 import type { GroupField } from "payload"
 
+import { LINK } from "./prose"
+
 /**
  * A button or link: `{ label, href }`. `href` is a Site path ("/about") or
  * an absolute URL. Both are optional; the Site renders nothing without both.
@@ -19,6 +21,7 @@ export function linkGroup(name: string, label?: string): GroupField {
             label: "Link",
             type: "text",
             validate: validateHref,
+            custom: LINK,
             admin: { description: 'A Site path like "/about", or a full URL.' },
           },
         ],

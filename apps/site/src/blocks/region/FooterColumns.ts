@@ -1,5 +1,6 @@
 import type { Block } from "payload"
 
+import { surfaceFields } from "../../fields/background"
 import { navLinkFields } from "../../fields/navLink"
 
 /**
@@ -61,5 +62,7 @@ export const FooterColumns: Block = {
         },
       ],
     },
+    // Default is the Footer's own surface.
+    ...surfaceFields,
   ],
 }

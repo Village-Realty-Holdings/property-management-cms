@@ -247,8 +247,10 @@ describe("a sample seed", () => {
 
     const after = await snapshot()
     expect(after.counts).toMatchObject({
-      pages: 2,
-      layouts: 2,
+      // The sample's two Pages and the three starter Page Templates.
+      pages: 5,
+      // The sample's two, and the Tuck-in and Guest feedback survey starters'.
+      layouts: 4,
       media: 1,
       fonts: 1,
       "font-files": 2,
@@ -258,6 +260,29 @@ describe("a sample seed", () => {
 
     const brand = await payload.findGlobal({ slug: "brand", depth: 0 })
     expect(brand.name).toBe("Sample Rentals")
+    // Every Site gets the starter Page Templates, as Drafts.
+    const templates = await payload.find({
+      collection: "pages",
+      where: { isTemplate: { equals: true } },
+      sort: "path",
+      depth: 0,
+    })
+    expect(templates.docs.map((page) => [page.path, page._status])).toEqual([
+      ["/templates/guest-feedback-survey", "draft"],
+      ["/templates/home", "draft"],
+      ["/templates/tuck-in", "draft"],
+    ])
+    // Tuck-in is two Containers, each a Rich text with its Button.
+    const tuckIn = templates.docs[2]!.blocks!.map((block) => [
+      block.blockType,
+      ...(block.blockType === "container"
+        ? (block.children ?? []).map((child) => child.blockType)
+        : []),
+    ])
+    expect(tuckIn).toEqual([
+      ["container", "richText", "button"],
+      ["container", "richText", "button"],
+    ])
     const home = await payload.find({
       collection: "pages",
       where: { path: { equals: "/" } },

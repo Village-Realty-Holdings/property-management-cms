@@ -5,11 +5,16 @@ import { usePathname } from "next/navigation"
 import {
   FileTextIcon,
   ImageIcon,
+  ImagesIcon,
   LayoutDashboardIcon,
   LayoutTemplateIcon,
+  LinkIcon,
+  PackageIcon,
   PaletteIcon,
+  ReplaceIcon,
   SearchIcon,
   StoreIcon,
+  SwatchBookIcon,
   TypeIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -27,10 +32,15 @@ const icons: Record<NavIcon, LucideIcon> = {
   seo: SearchIcon,
   theme: PaletteIcon,
   assets: TypeIcon,
+  replaceText: ReplaceIcon,
+  replaceImage: ImagesIcon,
+  links: LinkIcon,
+  themes: SwatchBookIcon,
+  starterKits: PackageIcon,
 }
 
 /**
- * The Admin's sidebar navigation: the Dashboard, Content and Settings. The
+ * The Admin's sidebar navigation: the Dashboard, Content, Settings and Tools. The
  * current screen has `aria-current="page"`. Below the `md` breakpoint the
  * groups flow in a row above the content; the group names stay available to
  * screen readers.

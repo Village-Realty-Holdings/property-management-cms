@@ -72,6 +72,7 @@ export interface Config {
     media: Media;
     fonts: Font;
     'font-files': FontFile;
+    'saved-themes': SavedTheme;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -85,6 +86,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     fonts: FontsSelect<false> | FontsSelect<true>;
     'font-files': FontFilesSelect<false> | FontFilesSelect<true>;
+    'saved-themes': SavedThemesSelect<false> | SavedThemesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -166,6 +168,10 @@ export interface Page {
         | LocationBlock
         | FaqBlock
         | FormBlock
+        | GuestSurveyBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlock
       )[]
     | null;
   layout?: {
@@ -186,6 +192,10 @@ export interface Page {
      */
     image?: (number | null) | Media;
   };
+  /**
+   * New Pages can start from a copy of this Page. A Page Template is never published.
+   */
+  isTemplate?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -319,7 +329,12 @@ export interface RichTextBlock {
     };
     [k: string]: unknown;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  width?: ('reading' | 'wide') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'richText';
@@ -339,7 +354,11 @@ export interface CallToActionBlock {
     href?: string | null;
   };
   style: 'primary' | 'secondary' | 'inverted' | 'dark';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'callToAction';
@@ -355,7 +374,11 @@ export interface FeaturedRentalsBlock {
    */
   count: number;
   variant: 'carousel' | 'grid';
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'featuredRentals';
@@ -370,7 +393,11 @@ export interface LargeGroupRentalsBlock {
    * Shows the Rentals that sleep at least this many guests.
    */
   minSleeps: number;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'largeGroupRentals';
@@ -385,7 +412,11 @@ export interface RentalGridBlock {
    * How many Rentals each page shows.
    */
   pageSize: number;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'rentalGrid';
@@ -402,7 +433,11 @@ export interface StepsBlock {
     text: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'steps';
@@ -423,7 +458,11 @@ export interface FeaturesBlock {
     text: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'features';
@@ -448,7 +487,11 @@ export interface AmenitiesBlock {
     icon?: string | null;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'amenities';
@@ -467,7 +510,11 @@ export interface StatsBlock {
     label: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'stats';
@@ -498,7 +545,11 @@ export interface ImageTextBlock {
         id?: string | null;
       }[]
     | null;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'imageText';
@@ -523,7 +574,11 @@ export interface TestimonialsBlock {
     rating: number;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'testimonials';
@@ -562,7 +617,11 @@ export interface TrustStripBlock {
         id?: string | null;
       }[]
     | null;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'trustStrip';
@@ -585,7 +644,11 @@ export interface OwnerBandBlock {
      */
     href?: string | null;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'ownerBand';
@@ -599,7 +662,11 @@ export interface NewsletterBlock {
   text?: string | null;
   emailPlaceholder?: string | null;
   buttonLabel: string;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'newsletter';
@@ -620,7 +687,11 @@ export interface BlogTeaserBlock {
      */
     href?: string | null;
   };
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'blogTeaser';
@@ -638,7 +709,11 @@ export interface LocationBlock {
    * A picture of the map. Its alt text is read out for it.
    */
   mapImage?: (number | null) | Media;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'location';
@@ -654,7 +729,11 @@ export interface FaqBlock {
     answer: string;
     id?: string | null;
   }[];
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'faq';
@@ -672,10 +751,256 @@ export interface FormBlock {
   formFields: ('name' | 'email' | 'phone' | 'message' | 'propertyAddress' | 'dates')[];
   submitLabel: string;
   successMessage: string;
-  background?: ('default' | 'muted' | 'primary' | 'dark') | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'form';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuestSurveyBlock".
+ */
+export interface GuestSurveyBlock {
+  heading: string;
+  intro?: string | null;
+  /**
+   * A rating this high is asked for a public review. A lower one gets the feedback form.
+   */
+  reviewFrom: '4' | '5';
+  /**
+   * Replaces {phone} in the Sent and Not sent texts, as a link guests can call.
+   */
+  phone?: string | null;
+  positive: {
+    heading: string;
+    text?: string | null;
+    /**
+     * Where a happy guest leaves a review, such as your Google review link. Without one, the button is not shown.
+     */
+    reviewUrl?: string | null;
+    buttonLabel: string;
+    laterLabel: string;
+  };
+  thanks: {
+    heading: string;
+    text?: string | null;
+  };
+  negative: {
+    heading: string;
+    text?: string | null;
+    messageLabel: string;
+    /**
+     * The message is always asked. These are shown after it, in this order, and a guest may leave them empty.
+     */
+    formFields?: ('name' | 'email' | 'phone' | 'reservation' | 'property' | 'checkIn')[] | null;
+    /**
+     * Leave empty to show no checkbox.
+     */
+    consentLabel?: string | null;
+    submitLabel: string;
+  };
+  success: {
+    heading: string;
+    text?: string | null;
+  };
+  failure: {
+    heading: string;
+    text?: string | null;
+  };
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'guestSurvey';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock".
+ */
+export interface ButtonBlock {
+  link?: {
+    label?: string | null;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    href?: string | null;
+  };
+  style: 'primary' | 'accent' | 'outline';
+  align: 'start' | 'centre' | 'end';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'button';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock".
+ */
+export interface ImageBlock {
+  image?: (number | null) | Media;
+  /**
+   * Optional. Shown under the image.
+   */
+  caption?: string | null;
+  aspect: 'original' | '16x9' | '4x3' | '1x1';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlock".
+ */
+export interface ContainerBlock {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | GuestSurveyBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlockLevel2
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel2".
+ */
+export interface ContainerBlockLevel2 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | GuestSurveyBlock
+        | ButtonBlock
+        | ImageBlock
+        | ContainerBlockLevel3
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel3".
+ */
+export interface ContainerBlockLevel3 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  children?:
+    | (
+        | HeroBlock
+        | SearchHeroBlock
+        | RichTextBlock
+        | CallToActionBlock
+        | FeaturedRentalsBlock
+        | LargeGroupRentalsBlock
+        | RentalGridBlock
+        | StepsBlock
+        | FeaturesBlock
+        | AmenitiesBlock
+        | StatsBlock
+        | ImageTextBlock
+        | TestimonialsBlock
+        | TrustStripBlock
+        | OwnerBandBlock
+        | NewsletterBlock
+        | BlogTeaserBlock
+        | LocationBlock
+        | FaqBlock
+        | FormBlock
+        | GuestSurveyBlock
+        | ButtonBlock
+        | ImageBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -684,8 +1009,10 @@ export interface FormBlock {
 export interface Layout {
   id: number;
   name: string;
-  header?: (LogoBlock | NavigationBlock | HeaderActionsBlock | UtilityStripBlock)[] | null;
-  footer?: (FooterColumnsBlock | LegalBarBlock | NewsletterBlock | CallToActionBlock)[] | null;
+  header?: (LogoBlock | NavigationBlock | HeaderActionsBlock | UtilityStripBlock | RegionContainerBlock)[] | null;
+  footer?:
+    | (FooterColumnsBlock | LegalBarBlock | NewsletterBlock | CallToActionBlock | LogoBlock | RegionContainerBlock)[]
+    | null;
   /**
    * Pages at or under these paths use this Layout, like "/stays". The longest match wins. A path belongs to one Layout.
    */
@@ -713,7 +1040,7 @@ export interface Layout {
  * via the `definition` "LogoBlock".
  */
 export interface LogoBlock {
-  size: 'small' | 'medium' | 'large';
+  size: 'small' | 'medium' | 'large' | 'xlarge';
   showTagline?: boolean | null;
   id?: string | null;
   blockName?: string | null;
@@ -798,9 +1125,13 @@ export interface HeaderActionsBlock {
  */
 export interface UtilityStripBlock {
   /**
+   * The Brand's phone number, with a phone icon, at the start of the strip. Guests can tap it to call.
+   */
+  showPhone?: boolean | null;
+  /**
    * A short line, such as an offer or a notice.
    */
-  text: string;
+  text?: string | null;
   links?:
     | {
         label: string;
@@ -815,9 +1146,52 @@ export interface UtilityStripBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'utilityStrip';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlock".
+ */
+export interface RegionContainerBlock {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+        | RegionContainerBlockLevel2
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -856,6 +1230,11 @@ export interface FooterColumnsBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'footerColumns';
@@ -883,9 +1262,89 @@ export interface LegalBarBlock {
         id?: string | null;
       }[]
     | null;
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'legalBar';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel2".
+ */
+export interface RegionContainerBlockLevel2 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+        | RegionContainerBlockLevel3
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel3".
+ */
+export interface RegionContainerBlockLevel3 {
+  columns: '1' | '2' | '3' | '4';
+  gap: 'small' | 'medium' | 'large';
+  align: 'top' | 'centre' | 'stretch';
+  /**
+   * Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.
+   */
+  justify?: ('start' | 'centre' | 'end') | null;
+  width: 'page' | 'reading';
+  background?: ('default' | 'muted' | 'primary' | 'accent' | 'third' | 'dark') | null;
+  /**
+   * Automatic reads well on the background. White and Dark are used as they are.
+   */
+  textColour?: ('auto' | 'white' | 'dark') | null;
+  /**
+   * A thin line under this band, to set it apart from what follows.
+   */
+  rule?: boolean | null;
+  children?:
+    | (
+        | LogoBlock
+        | NavigationBlock
+        | HeaderActionsBlock
+        | FooterColumnsBlock
+        | LegalBarBlock
+        | NewsletterBlock
+        | CallToActionBlock
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'container';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -947,6 +1406,25 @@ export interface FontFile {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-themes".
+ */
+export interface SavedTheme {
+  id: number;
+  name: string;
+  inputs:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -988,6 +1466,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'font-files';
         value: number | FontFile;
+      } | null)
+    | ({
+        relationTo: 'saved-themes';
+        value: number | SavedTheme;
       } | null)
     | ({
         relationTo: 'users';
@@ -1065,6 +1547,10 @@ export interface PagesSelect<T extends boolean = true> {
         location?: T | LocationBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
         form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockSelect<T>;
       };
   layout?:
     | T
@@ -1079,6 +1565,7 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T;
         image?: T;
       };
+  isTemplate?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1136,7 +1623,9 @@ export interface SearchHeroBlockSelect<T extends boolean = true> {
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
   content?: T;
+  width?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1155,6 +1644,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
       };
   style?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1167,6 +1657,7 @@ export interface FeaturedRentalsBlockSelect<T extends boolean = true> {
   count?: T;
   variant?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1178,6 +1669,7 @@ export interface LargeGroupRentalsBlockSelect<T extends boolean = true> {
   heading?: T;
   minSleeps?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1189,6 +1681,7 @@ export interface RentalGridBlockSelect<T extends boolean = true> {
   heading?: T;
   pageSize?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1207,6 +1700,7 @@ export interface StepsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1226,6 +1720,7 @@ export interface FeaturesBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1246,6 +1741,7 @@ export interface AmenitiesBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1263,6 +1759,7 @@ export interface StatsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1284,6 +1781,7 @@ export interface ImageTextBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1304,6 +1802,7 @@ export interface TestimonialsBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1330,6 +1829,7 @@ export interface TrustStripBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1353,6 +1853,7 @@ export interface OwnerBandBlockSelect<T extends boolean = true> {
         href?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1366,6 +1867,7 @@ export interface NewsletterBlockSelect<T extends boolean = true> {
   emailPlaceholder?: T;
   buttonLabel?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1382,6 +1884,7 @@ export interface BlogTeaserBlockSelect<T extends boolean = true> {
         href?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1396,6 +1899,7 @@ export interface LocationBlockSelect<T extends boolean = true> {
   map?: T;
   mapImage?: T;
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1413,6 +1917,7 @@ export interface FaqBlockSelect<T extends boolean = true> {
         id?: T;
       };
   background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1427,6 +1932,213 @@ export interface FormBlockSelect<T extends boolean = true> {
   submitLabel?: T;
   successMessage?: T;
   background?: T;
+  textColour?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GuestSurveyBlock_select".
+ */
+export interface GuestSurveyBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  reviewFrom?: T;
+  phone?: T;
+  positive?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        reviewUrl?: T;
+        buttonLabel?: T;
+        laterLabel?: T;
+      };
+  thanks?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  negative?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        messageLabel?: T;
+        formFields?: T;
+        consentLabel?: T;
+        submitLabel?: T;
+      };
+  success?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  failure?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  background?: T;
+  textColour?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ButtonBlock_select".
+ */
+export interface ButtonBlockSelect<T extends boolean = true> {
+  link?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  style?: T;
+  align?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock_select".
+ */
+export interface ImageBlockSelect<T extends boolean = true> {
+  image?: T;
+  caption?: T;
+  aspect?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlock_select".
+ */
+export interface ContainerBlockSelect<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockLevel2Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel2_select".
+ */
+export interface ContainerBlockLevel2Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        container?: T | ContainerBlockLevel3Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContainerBlockLevel3_select".
+ */
+export interface ContainerBlockLevel3Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  children?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        searchHero?: T | SearchHeroBlockSelect<T>;
+        richText?: T | RichTextBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        featuredRentals?: T | FeaturedRentalsBlockSelect<T>;
+        largeGroupRentals?: T | LargeGroupRentalsBlockSelect<T>;
+        rentalGrid?: T | RentalGridBlockSelect<T>;
+        steps?: T | StepsBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        amenities?: T | AmenitiesBlockSelect<T>;
+        stats?: T | StatsBlockSelect<T>;
+        imageText?: T | ImageTextBlockSelect<T>;
+        testimonials?: T | TestimonialsBlockSelect<T>;
+        trustStrip?: T | TrustStripBlockSelect<T>;
+        ownerBand?: T | OwnerBandBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        blogTeaser?: T | BlogTeaserBlockSelect<T>;
+        location?: T | LocationBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        form?: T | FormBlockSelect<T>;
+        guestSurvey?: T | GuestSurveyBlockSelect<T>;
+        button?: T | ButtonBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+      };
   id?: T;
   blockName?: T;
 }
@@ -1443,6 +2155,7 @@ export interface LayoutsSelect<T extends boolean = true> {
         navigation?: T | NavigationBlockSelect<T>;
         headerActions?: T | HeaderActionsBlockSelect<T>;
         utilityStrip?: T | UtilityStripBlockSelect<T>;
+        container?: T | RegionContainerBlockSelect<T>;
       };
   footer?:
     | T
@@ -1451,6 +2164,8 @@ export interface LayoutsSelect<T extends boolean = true> {
         legalBar?: T | LegalBarBlockSelect<T>;
         newsletter?: T | NewsletterBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+        logo?: T | LogoBlockSelect<T>;
+        container?: T | RegionContainerBlockSelect<T>;
       };
   paths?:
     | T
@@ -1538,6 +2253,7 @@ export interface HeaderActionsBlockSelect<T extends boolean = true> {
  * via the `definition` "UtilityStripBlock_select".
  */
 export interface UtilityStripBlockSelect<T extends boolean = true> {
+  showPhone?: T;
   text?: T;
   links?:
     | T
@@ -1551,6 +2267,36 @@ export interface UtilityStripBlockSelect<T extends boolean = true> {
               url?: T;
             };
         id?: T;
+      };
+  background?: T;
+  textColour?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlock_select".
+ */
+export interface RegionContainerBlockSelect<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  rule?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        container?: T | RegionContainerBlockLevel2Select<T>;
       };
   id?: T;
   blockName?: T;
@@ -1582,6 +2328,8 @@ export interface FooterColumnsBlockSelect<T extends boolean = true> {
         hours?: T;
         id?: T;
       };
+  background?: T;
+  textColour?: T;
   id?: T;
   blockName?: T;
 }
@@ -1603,6 +2351,63 @@ export interface LegalBarBlockSelect<T extends boolean = true> {
               url?: T;
             };
         id?: T;
+      };
+  background?: T;
+  textColour?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel2_select".
+ */
+export interface RegionContainerBlockLevel2Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  rule?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        container?: T | RegionContainerBlockLevel3Select<T>;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RegionContainerBlockLevel3_select".
+ */
+export interface RegionContainerBlockLevel3Select<T extends boolean = true> {
+  columns?: T;
+  gap?: T;
+  align?: T;
+  justify?: T;
+  width?: T;
+  background?: T;
+  textColour?: T;
+  rule?: T;
+  children?:
+    | T
+    | {
+        logo?: T | LogoBlockSelect<T>;
+        navigation?: T | NavigationBlockSelect<T>;
+        headerActions?: T | HeaderActionsBlockSelect<T>;
+        footerColumns?: T | FooterColumnsBlockSelect<T>;
+        legalBar?: T | LegalBarBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
       };
   id?: T;
   blockName?: T;
@@ -1672,6 +2477,16 @@ export interface FontFilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-themes_select".
+ */
+export interface SavedThemesSelect<T extends boolean = true> {
+  name?: T;
+  inputs?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -1736,6 +2551,10 @@ export interface Brand {
    * Shown in the Site's header.
    */
   logo?: (number | null) | Media;
+  /**
+   * The logo in white or a light colour, for a Primary or Dark band. Without one, the logo is used there too.
+   */
+  logoLight?: (number | null) | Media;
   contact?: {
     phone?: string | null;
     email?: string | null;
@@ -1821,6 +2640,10 @@ export interface Theme {
   buttonStyle: 'solid' | 'outline';
   buttonLetters: 'normal' | 'uppercase' | 'title';
   buttonWeight: 'regular' | 'medium' | 'bold';
+  /**
+   * Automatic picks white or your text colour, whichever is easier to read on the button. White and Dark are used as they are, even where they are hard to read.
+   */
+  buttonText: 'auto' | 'white' | 'dark';
   motion: 'none' | 'subtle' | 'lively';
   /**
    * Optional. Replaces the automatic summary of this save in the history.
@@ -1839,6 +2662,7 @@ export interface BrandSelect<T extends boolean = true> {
   name?: T;
   tagline?: T;
   logo?: T;
+  logoLight?: T;
   contact?:
     | T
     | {
@@ -1893,6 +2717,7 @@ export interface ThemeSelect<T extends boolean = true> {
   buttonStyle?: T;
   buttonLetters?: T;
   buttonWeight?: T;
+  buttonText?: T;
   motion?: T;
   note?: T;
   changeSummary?: T;

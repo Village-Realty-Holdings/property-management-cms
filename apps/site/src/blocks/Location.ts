@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /**
  * An address and some text beside a map: a static map image, or a map card
@@ -40,6 +40,6 @@ export const Location: Block = {
           ? "Choose the map image."
           : true,
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

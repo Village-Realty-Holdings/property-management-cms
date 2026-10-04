@@ -119,6 +119,8 @@ describe("the Warren Beach seed", () => {
   it("creates the four Pages, Published, at their paths", async () => {
     const { docs } = await payload.find({
       collection: "pages",
+      // The starter Page Templates are Pages too, but not the Site's own.
+      where: { isTemplate: { not_equals: true } },
       draft: false,
       depth: 0,
       sort: "path",
@@ -217,6 +219,8 @@ describe("the Warren Beach seed", () => {
   it("makes a default Layout whose Navigation links to the Pages", async () => {
     const layouts = await payload.find({
       collection: "layouts",
+      // Not the Tuck-in starter's Layout.
+      where: { isDefault: { equals: true } },
       depth: 0,
       pagination: false,
     })

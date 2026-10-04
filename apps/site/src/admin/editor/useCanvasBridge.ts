@@ -10,7 +10,7 @@ import {
   type CanvasDocument,
 } from "./bridge"
 import { useEditor, type EditorApi } from "./EditorProvider"
-import { blocksIn, findBlock, regionsOf } from "./state"
+import { blocksOfList, findBlock } from "./state"
 
 /**
  * Keeps the canvas showing `document`, and answers what the canvas asks for.
@@ -26,9 +26,10 @@ import { blocksIn, findBlock, regionsOf } from "./state"
  *
  * The canvas's other messages become editor actions, so each is one undo step
  * like the same change made in a panel: a click selects, the Block toolbar
- * moves, duplicates and deletes, and a "+" is an insert request, handed to the
- * editor's `onInsertRequest`. Text edited in place (`edit-text`) is a
- * `setField` of that Block's field, so typing is one coalesced undo step. The
+ * moves, duplicates and deletes, and a "+" is an insert request, in a region
+ * or in a Container, handed to the editor's `onInsertRequest`. Text edited in place (`edit-text`) is a
+ * `setField` of that Block's field, found by its id at any depth, so typing
+ * is one coalesced undo step. The
  * editor decides whether a request applies: a Block that is not in the
  * document being edited (one of a locked region) is ignored, and so is a value
  * the field cannot take.
@@ -98,7 +99,8 @@ function apply(
       editor.moveBlock(
         found.region,
         found.index,
-        found.index + (action.direction === "up" ? -1 : 1)
+        found.index + (action.direction === "up" ? -1 : 1),
+        found.parentId
       )
       return
     }
@@ -109,9 +111,12 @@ function apply(
       editor.removeBlock(action.id)
       return
     case "insert-request": {
-      if (!regionsOf(editor.doc).includes(action.region)) return
-      if (action.index > blocksIn(editor.doc, action.region).length) return
-      editor.onInsertRequest(action.region, action.index)
+      // A list the document has: the region's own, or a Container's in it.
+      const { region, index, parentId } = action
+      const blocks = blocksOfList(editor.doc, { region, parentId })
+      if (!blocks || index > blocks.length) return
+      if (parentId === undefined) editor.onInsertRequest(region, index)
+      else editor.onInsertRequest(region, index, parentId)
       return
     }
     case "key":
@@ -120,8 +125,8 @@ function apply(
     case "edit-text": {
       // Only a field the Block has, and only a value of its kind: the canvas
       // asks, and the document decides.
-      const block = blocksIn(editor.doc, action.region)[action.index]
-      if (!block) return
+      const found = findBlock(editor.doc, action.id)
+      if (!found) return
       const current = action.fieldPath
         .split(".")
         .reduce<unknown>(
@@ -129,16 +134,12 @@ function apply(
             typeof node === "object" && node !== null
               ? (node as Record<string, unknown>)[key]
               : undefined,
-          block
+          found.block
         )
       if (!acceptsTextEdit(current, action.value)) return
       // Each input is a setField of the same field, so a run of typing is one
       // undo step (see the reducer's coalescing).
-      const list = editor.doc.kind === "page" ? "blocks" : action.region
-      editor.setField(
-        `${list}.${action.index}.${action.fieldPath}`,
-        action.value
-      )
+      editor.setField([...found.path, action.fieldPath].join("."), action.value)
       return
     }
   }

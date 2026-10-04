@@ -19,6 +19,7 @@ import {
 import { regionCatalogue } from "../../site/regions/catalogue"
 import type { BlockValues } from "../pageForm"
 import { moveInGrid, type GridKey } from "./pickerGrid"
+import { CONTAINER_LEVELS } from "../../blocks/Container"
 import type { Region } from "./state"
 
 /**
@@ -29,14 +30,23 @@ import type { Region } from "./state"
  * and one-line description, and inserts the chosen one with the catalogue's
  * default values. The arrow keys move over the grid, Enter inserts. The Page offers the whole Block catalogue; a
  * Header or Footer only the Blocks allowed there (the Footer also takes
- * Newsletter and Call to action, which are Page Blocks).
+ * Newsletter and Call to action, which are Page Blocks). A Container offers
+ * the Page's Blocks that fit where it is: in a column only those that fit a
+ * narrow one, and at the third level no Container (ADR-0007).
  *
  * The picker only chooses. Whoever opens it says what inserting does
  * (`onInsert`: the editor's `insertBlock`, which also selects the new Block).
  */
 
-/** Where the Block goes: the `index` place in `region`. */
-export type InsertTarget = { region: Region; index: number }
+/**
+ * Where the Block goes: the `index` place in `region`, or in the Blocks of
+ * its Container `parentId`.
+ */
+export type InsertTarget = {
+  region: Region
+  index: number
+  parentId?: string | null
+}
 
 /** One Block the picker offers. */
 export type PickerEntry = {
@@ -51,16 +61,32 @@ export type PickerEntry = {
 
 export type PickerGroup = { heading: string; entries: PickerEntry[] }
 
+/**
+ * Where in a Container the Block goes: how many Containers deep the list is,
+ * and whether it is narrower than the page (in columns, or at Reading width).
+ */
+export type PickerInside = { level: number; narrow: boolean }
+
 const REGION_HEADING = { header: "Header", footer: "Footer" } as const
 
-/** The groups of Blocks `region` offers, in the order the picker shows them. */
-export function pickerGroups(region: Region): PickerGroup[] {
+/**
+ * The groups of Blocks `region` offers, in the order the picker shows them,
+ * or the Blocks a Container `inside` it takes.
+ */
+export function pickerGroups(
+  region: Region,
+  inside?: PickerInside
+): PickerGroup[] {
   if (region === "page") {
+    const fits = (entry: (typeof catalogueEntries)[number]) =>
+      !inside ||
+      ((!inside.narrow || entry.fitsNarrow) &&
+        (entry.blockType !== "container" || inside.level < CONTAINER_LEVELS))
     return blockGroups
       .map((heading) => ({
         heading,
         entries: catalogueEntries
-          .filter((entry) => entry.group === heading)
+          .filter((entry) => entry.group === heading && fits(entry))
           .map((entry) => ({
             blockType: entry.blockType,
             label: entry.label,
@@ -74,17 +100,25 @@ export function pickerGroups(region: Region): PickerGroup[] {
   return [
     {
       heading: REGION_HEADING[region],
-      entries: regionCatalogue(region).map((entry) => ({
-        blockType: entry.blockType,
-        label: entry.label,
-        description: entry.description,
-        thumbnail: entry.thumbnail,
-        // A shared Block (Newsletter, Call to action) starts from the Page
-        // catalogue's values.
-        defaults: entry.shared
-          ? catalogue[entry.blockType].defaults
-          : entry.defaults,
-      })),
+      entries: regionCatalogue(region, Boolean(inside))
+        // A Container goes three levels deep in a region, as on a Page.
+        .filter(
+          (entry) =>
+            entry.blockType !== "container" ||
+            !inside ||
+            inside.level < CONTAINER_LEVELS
+        )
+        .map((entry) => ({
+          blockType: entry.blockType,
+          label: entry.label,
+          description: entry.description,
+          thumbnail: entry.thumbnail,
+          // A shared Block (Newsletter, Call to action) starts from the Page
+          // catalogue's values.
+          defaults: entry.shared
+            ? catalogue[entry.blockType].defaults
+            : entry.defaults,
+        })),
     },
   ]
 }
@@ -114,13 +148,21 @@ export function filterGroups(
 
 export function BlockPicker({
   target,
+  inside,
   onClose,
   onInsert,
 }: {
   /** Where a Block is wanted; null keeps the picker closed. */
   target: InsertTarget | null
+  /** Where the target is, when it is in a Container. */
+  inside?: PickerInside
   onClose: () => void
-  onInsert: (region: Region, index: number, block: BlockValues) => void
+  onInsert: (
+    region: Region,
+    index: number,
+    block: BlockValues,
+    parentId?: string | null
+  ) => void
 }) {
   // Not rendered at all while closed: the dialog's title sits outside its
   // popup and would otherwise stay in the page as a heading.
@@ -135,18 +177,27 @@ export function BlockPicker({
       // contrast checks, see the final colours, not a half-faded dialog.
       className={DIALOG_CLASS}
       showCloseButton
-      title="Add a Block"
-      description="Search the Blocks you can add, then press Enter to add one."
+      title={inside ? "Add a Block to the Container" : "Add a Block"}
+      description={
+        inside?.narrow
+          ? "Search the Blocks that fit a column, then press Enter to add one."
+          : "Search the Blocks you can add, then press Enter to add one."
+      }
     >
       <PickerBody
         target={target}
+        inside={inside}
         onPick={(entry) => {
           // A copy: editing the new Block must never edit the catalogue. The
           // editor's state is still typed on the form's Block values, which
           // the catalogue's stored-shape defaults are not.
           const block = structuredClone(entry.defaults) as BlockValues
           onClose()
-          onInsert(target.region, target.index, block)
+          if (target.parentId == null) {
+            onInsert(target.region, target.index, block)
+          } else {
+            onInsert(target.region, target.index, block, target.parentId)
+          }
         }}
       />
     </CommandDialog>
@@ -189,15 +240,17 @@ function measureColumns(list: HTMLElement | null): number {
 
 function PickerBody({
   target,
+  inside,
   onPick,
 }: {
   target: InsertTarget
+  inside: PickerInside | undefined
   onPick: (entry: PickerEntry) => void
 }) {
   const [query, setQuery] = useState("")
   const [highlighted, setHighlighted] = useState("")
   const list = useRef<HTMLDivElement>(null)
-  const groups = filterGroups(pickerGroups(target.region), query)
+  const groups = filterGroups(pickerGroups(target.region, inside), query)
   const visible = groups.flatMap((group) => group.entries)
   // Enter adds the highlighted Block, so it must always be one on screen: the
   // first, when a new search leaves the old highlight out.

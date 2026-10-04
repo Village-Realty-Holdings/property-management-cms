@@ -35,7 +35,11 @@ export function SearchHeroBlock({
       <SearchHeroForm
         searchLabel={block.searchLabel?.trim() || "Search"}
         locations={locations}
-        context={{ index: context.index, editing: context.editing }}
+        context={{
+          index: context.index,
+          within: context.within,
+          editing: context.editing,
+        }}
       />
     </HeroShell>
   )

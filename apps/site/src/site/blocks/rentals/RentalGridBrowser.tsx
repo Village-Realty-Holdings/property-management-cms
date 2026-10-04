@@ -81,12 +81,13 @@ function ChipGroup({
 export function RentalGridBrowser({
   rentals,
   pageSize,
-  index,
+  sortId,
   label,
 }: {
   rentals: readonly Rental[]
   pageSize: number | null | undefined
-  index: number
+  /** The id of the sort control, from the Block's place. */
+  sortId: string
   /** Names the pagination and the result count, e.g. the Block's heading. */
   label: string
 }) {
@@ -103,7 +104,6 @@ export function RentalGridBrowser({
     state.minBedrooms !== null ||
     state.petFriendly ||
     state.locations.length > 0
-  const sortId = `block-${index}-rentals-sort`
 
   return (
     <div className="flex flex-col gap-6">

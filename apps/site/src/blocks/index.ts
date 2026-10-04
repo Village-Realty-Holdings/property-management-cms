@@ -2,12 +2,16 @@ import type { Block } from "payload"
 
 import { Amenities } from "./Amenities"
 import { BlogTeaser } from "./BlogTeaser"
+import { Button } from "./Button"
 import { CallToAction } from "./CallToAction"
+import { containerOf } from "./Container"
 import { Faq } from "./Faq"
 import { FeaturedRentals } from "./FeaturedRentals"
 import { Features } from "./Features"
 import { Form } from "./Form"
+import { GuestSurvey } from "./GuestSurvey"
 import { Hero } from "./Hero"
+import { Image } from "./Image"
 import { ImageText } from "./ImageText"
 import { LargeGroupRentals } from "./LargeGroupRentals"
 import { Location } from "./Location"
@@ -21,8 +25,8 @@ import { Steps } from "./Steps"
 import { Testimonials } from "./Testimonials"
 import { TrustStrip } from "./TrustStrip"
 
-/** The Blocks a Page can use, in the order the Admin offers them. */
-export const pageBlocks: Block[] = [
+/** Every Block but the Container: what a Container holds besides Containers. */
+const contentBlocks: Block[] = [
   Hero,
   SearchHero,
   RichText,
@@ -43,4 +47,13 @@ export const pageBlocks: Block[] = [
   Location,
   Faq,
   Form,
+  GuestSurvey,
+  Button,
+  Image,
+]
+
+/** The Blocks a Page can use, in the order the Admin offers them. */
+export const pageBlocks: Block[] = [
+  ...contentBlocks,
+  containerOf(contentBlocks),
 ]

@@ -3,23 +3,29 @@
 import { revalidatePath } from "next/cache"
 import { NotFound } from "payload"
 
+import type { MediaOption } from "../components/MediaSelect"
 import { formStateFromError, type FormState } from "../formState"
+import { toMediaOption } from "../media"
 import { requireStaff } from "../session"
 import { loadMediaDependents, mediaInUseMessage } from "../usage"
+
+/** An upload's result: on success, the new image as a picker option. */
+export type UploadState = FormState & { media?: MediaOption }
 
 /** Uploads an image to Media with its alt text. */
 export async function uploadMedia(
   _previous: FormState,
   formData: FormData
-): Promise<FormState> {
+): Promise<UploadState> {
   const { payload, as } = await requireStaff()
   const file = formData.get("file")
   const alt = String(formData.get("alt") ?? "").trim()
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, fieldErrors: { file: "Choose an image to upload." } }
   }
+  let media: MediaOption
   try {
-    await payload.create({
+    const doc = await payload.create({
       collection: "media",
       data: { alt },
       file: {
@@ -30,11 +36,12 @@ export async function uploadMedia(
       },
       ...as,
     })
+    media = toMediaOption(doc)
   } catch (error) {
     return formStateFromError(error)
   }
   revalidatePath("/admin/media")
-  return { ok: true, message: `Uploaded ${file.name}.` }
+  return { ok: true, message: `Uploaded ${file.name}.`, media }
 }
 
 /**

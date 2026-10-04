@@ -4,7 +4,11 @@ import { notFound } from "next/navigation"
 import { entryBySlug } from "@/blocks/catalogue"
 import { siteSchema } from "@/database"
 import { Block } from "@/site/blocks"
-import { sampleWithQuery, type Query } from "@/site/dev/blockCatalogue"
+import {
+  sampleInContainer,
+  sampleWithQuery,
+  type Query,
+} from "@/site/dev/blockCatalogue"
 import { devOnly } from "@/site/dev/devOnly"
 import { fixturesFor } from "@/site/fixtures"
 
@@ -22,8 +26,10 @@ type Props = {
  * One Block of the catalogue, outside production only (404 in production):
  * the same component a published Page uses, from the Block's sample data, in
  * the Site's Theme, in a <main> like a Page's. The query sets what it shows:
- * `?background=`, `?variant=`, any sample field (`?count=3`), and
- * `?fixtures=<schema>` to read another Site's fixtures instead of this one's.
+ * `?background=`, `?variant=`, any sample field (`?count=3`),
+ * `?container=<background>` to show the Block inside a one-column Container
+ * on that background (`&columns=2` to `4` for one in each column), and `?fixtures=<schema>` to read another Site's
+ * fixtures instead of this one's.
  */
 export default async function BlockCataloguePage({
   params,
@@ -40,7 +46,7 @@ export default async function BlockCataloguePage({
   return (
     <main>
       <Block
-        block={sampleWithQuery(entry, query)}
+        block={sampleInContainer(sampleWithQuery(entry, query), query)}
         index={0}
         fixtures={fixturesFor(schema ?? siteSchema())}
       />

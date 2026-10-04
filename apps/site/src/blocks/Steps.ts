@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /** Three or four numbered steps, each with a title and text. */
 export const Steps: Block = {
@@ -27,6 +27,6 @@ export const Steps: Block = {
         { name: "text", type: "textarea", required: true },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

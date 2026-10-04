@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /**
  * Every Rental of the Site in a grid, with filter chips (bedrooms, pets,
@@ -22,6 +22,6 @@ export const RentalGrid: Block = {
       defaultValue: 6,
       admin: { step: 1, description: "How many Rentals each page shows." },
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

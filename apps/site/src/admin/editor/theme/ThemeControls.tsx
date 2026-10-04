@@ -11,6 +11,7 @@ import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
   BUTTON_STYLES,
+  BUTTON_TEXTS,
   BUTTON_WEIGHTS,
   CARD_CORNERS,
   derivePalette,
@@ -170,6 +171,7 @@ export function ThemeControls({
         {choice("buttonStyle", BUTTON_STYLES)}
         {choice("buttonLetters", BUTTON_LETTERS)}
         {choice("buttonWeight", BUTTON_WEIGHTS)}
+        {choice("buttonText", BUTTON_TEXTS)}
       </Section>
 
       <Section title="Motion">{choice("motion", MOTIONS, true)}</Section>

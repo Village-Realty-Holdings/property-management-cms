@@ -25,10 +25,9 @@ import { createPortal } from "react-dom"
 
 import { cn } from "@workspace/ui/lib/utils"
 
-import type { BlockContext } from "../blocks/types"
 import { displayFont } from "../display"
 import { useCanvasSend } from "./canvasSend"
-import { placeOf } from "./place"
+import { blockIdOf } from "./place"
 import {
   applyLink,
   EDITOR_NODES,
@@ -102,13 +101,11 @@ const theme: EditorThemeClasses = {
 export function RichTextEditing({
   field,
   content,
-  context,
   className,
 }: {
   /** The Block's field that holds the rich text: "content". */
   field: string
   content: unknown
-  context: Pick<BlockContext, "index">
   className?: string
 }) {
   // Read once, when the editor is made: later changes come in through `Sync`.
@@ -163,7 +160,7 @@ export function RichTextEditing({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <ListPlugin />
-      <Sync field={field} content={content} index={context.index} />
+      <Sync field={field} content={content} />
       {active && (
         <FloatingToolbar ref={toolbar} close={() => setActive(false)} />
       )}
@@ -180,22 +177,14 @@ const PENDING_LIMIT = 50
  * that comes back is one this editor wrote, and is not shown again: that would
  * throw away what was typed since.
  */
-function Sync({
-  field,
-  content,
-  index,
-}: {
-  field: string
-  content: unknown
-  index: number
-}) {
+function Sync({ field, content }: { field: string; content: unknown }) {
   const [editor] = useLexicalComposerContext()
   const send = useCanvasSend()
   const synced = useRef(JSON.stringify(content ?? null))
   const pending = useRef<string[]>([])
-  const latest = useRef({ field, index, send })
+  const latest = useRef({ field, send })
   useEffect(() => {
-    latest.current = { field, index, send }
+    latest.current = { field, send }
   })
 
   useEffect(
@@ -205,16 +194,17 @@ function Sync({
           if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return
           if (prevEditorState.isEmpty()) return
           if (tags.has("history-merge") || tags.has("sync-external")) return
-          const { field, index, send } = latest.current
+          const { field, send } = latest.current
           const root = editor.getRootElement()
-          if (!send || !root) return
+          const id = root && blockIdOf(root)
+          if (!send || !id) return
           const value = readContent(editor)
           const json = JSON.stringify(value)
           pending.current = [...pending.current, json].slice(-PENDING_LIMIT)
           synced.current = json
           send({
             type: "edit-text",
-            ...placeOf(root, index),
+            id,
             fieldPath: field,
             value: value as unknown as Record<string, unknown>,
           })

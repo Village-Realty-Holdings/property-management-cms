@@ -33,11 +33,27 @@ type PayloadConfigOptions = {
   seedDefaultLayout?: boolean
 }
 
+/** The config build in flight, if any: builds run one after another. */
+let building: Promise<unknown> = Promise.resolve()
+
 /**
  * Builds the Payload config. The default export uses the environment; tests
- * call this with their own throwaway database (see src/test/getTestPayload.ts).
+ * and scripts call this with their own database or schema (see
+ * src/test/getTestPayload.ts, scripts/seed.ts).
+ *
+ * Builds never overlap. Every build prepares the same collection objects, and
+ * Payload fills one in only once, at the end of the first build that meets
+ * it. A second build started meanwhile (the default export's and a script's)
+ * would get a collection that is not finished and fail with it, so each build
+ * waits for the one before.
  */
-export function buildPayloadConfig({
+export function buildPayloadConfig(options: PayloadConfigOptions) {
+  const next = building.then(() => build(options))
+  building = next.catch(() => {})
+  return next
+}
+
+function build({
   databaseUrl,
   push,
   schemaName = siteSchema(),

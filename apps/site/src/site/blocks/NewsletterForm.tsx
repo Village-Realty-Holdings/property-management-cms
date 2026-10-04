@@ -8,7 +8,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { focusRings, type BlockSurface } from "./BlockButton"
 import { EditableText } from "./Editable"
-import type { BlockContext } from "./types"
+import { type BlockContext, blockId, type BlockPlace } from "./types"
 
 const address = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -46,12 +46,12 @@ export function NewsletterForm({
   buttonLabel: string
   /** The coloured background the form sits on, when it is not the page. */
   surface?: Extract<BlockSurface, "primary" | "dark">
-  context: Pick<BlockContext, "index" | "editing">
+  context: BlockPlace & Pick<BlockContext, "editing">
 }) {
   const [email, setEmail] = useState("")
   const [problem, setProblem] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-  const base = `block-${context.index}-newsletter`
+  const base = blockId(context, "newsletter")
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -68,7 +68,7 @@ export function NewsletterForm({
       aria-label="Newsletter sign-up"
       className="flex w-full flex-col gap-3"
     >
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 fit-sm:flex-row">
         <label htmlFor={`${base}-email`} className="sr-only">
           Email address
         </label>
@@ -87,7 +87,7 @@ export function NewsletterForm({
           aria-invalid={problem ? true : undefined}
           aria-describedby={problem ? `${base}-problem` : undefined}
           className={cn(
-            "h-[calc(var(--btn-height)*1.125)] bg-background text-foreground sm:flex-1",
+            "h-[calc(var(--btn-height)*1.125)] bg-background text-foreground fit-sm:flex-1",
             surface && focusRings[surface]
           )}
         />
