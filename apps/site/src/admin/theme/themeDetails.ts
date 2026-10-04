@@ -4,6 +4,7 @@ import {
   BUTTON_CORNERS,
   BUTTON_LETTERS,
   BUTTON_STYLES,
+  BUTTON_TEXTS,
   BUTTON_WEIGHTS,
   CARD_CORNERS,
   HEADING_CASES,
@@ -35,6 +36,7 @@ const CHOICES: [keyof ThemeInputs, Choices][] = [
   ["buttonStyle", BUTTON_STYLES],
   ["buttonLetters", BUTTON_LETTERS],
   ["buttonWeight", BUTTON_WEIGHTS],
+  ["buttonText", BUTTON_TEXTS],
   ["motion", MOTIONS],
   ["neutralTint", NEUTRAL_TINTS],
 ]

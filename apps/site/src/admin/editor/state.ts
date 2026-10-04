@@ -1,5 +1,6 @@
 import { catalogue, fitsNarrow } from "../../blocks/catalogue"
 import { CONTAINER_LEVELS, hasColumns, narrows } from "../../blocks/Container"
+import { regionHolds } from "../../blocks/region"
 import { withoutRowIds } from "../../fields/rowIds"
 import type { ThemeInputs } from "../../theme/inputs"
 import { isDirty } from "../kit/unsaved/dirty"
@@ -254,13 +255,31 @@ export function placementProblem(
 ): string | null {
   const place = listPlace(doc, list)
   if (!place) return "There is no such place for a Block."
-  if (list.region !== "page" && isContainer(block)) {
-    return "The Header and Footer don't take Containers."
+  if (list.region !== "page") {
+    // A Container in a Header holds the Header's Blocks, and one in a
+    // Footer the Footer's. (The picker offers a region only its own Blocks,
+    // and a save refuses any other.)
+    const region = list.region
+    const stray =
+      place.level > 0
+        ? firstNotOf(region, block, true)
+        : (childrenOf(block)
+            .map((child) => firstNotOf(region, child, true))
+            .find(Boolean) ?? null)
+    if (stray) {
+      return `A “${labelOf(stray)}” Block can't go in a Container in the ${
+        region === "header" ? "Header" : "Footer"
+      }.`
+    }
   }
   if (block.id && place.holders.some((holder) => holder.id === block.id)) {
     return "A Container can't go inside itself."
   }
-  if (place.level > 0 && !Object.hasOwn(catalogue, block.blockType)) {
+  if (
+    list.region === "page" &&
+    place.level > 0 &&
+    !Object.hasOwn(catalogue, block.blockType)
+  ) {
     return `A Container can't hold a “${String(block.blockType)}” Block.`
   }
   if (place.level + containerDepth(block) > CONTAINER_LEVELS) {
@@ -584,6 +603,20 @@ const withChildren = (block: BlockValues, children: BlockValues[]) =>
 function containerDepth(block: BlockValues): number {
   if (!isContainer(block)) return 0
   return 1 + Math.max(0, ...childrenOf(block).map(containerDepth))
+}
+
+/** The first Block in `block`'s tree that `region` doesn't take where it would be. */
+function firstNotOf(
+  region: "header" | "footer",
+  block: BlockValues,
+  inContainer: boolean
+): BlockValues | null {
+  if (!regionHolds(region, block.blockType, inContainer)) return block
+  for (const child of childrenOf(block)) {
+    const found = firstNotOf(region, child, true)
+    if (found) return found
+  }
+  return null
 }
 
 /** The first Block in `block`'s tree that is narrower than the page and needs its width. */

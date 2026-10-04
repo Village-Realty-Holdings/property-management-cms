@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { trustItemsField } from "../fields/trustItems"
 
 /** The fewest logos a partner-logo strip shows. */
@@ -66,6 +66,6 @@ export const TrustStrip: Block = {
         { name: "image", type: "upload", relationTo: "media", required: true },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

@@ -72,8 +72,14 @@ describe("the Container in the config", () => {
       ["columns", "1", ["1", "2", "3", "4"]],
       ["gap", "medium", ["small", "medium", "large"]],
       ["align", "top", ["top", "centre", "stretch"]],
+      ["justify", "start", ["start", "centre", "end"]],
       ["width", "page", ["page", "reading"]],
-      ["background", "default", ["default", "muted", "primary", "dark"]],
+      [
+        "background",
+        "default",
+        ["default", "muted", "primary", "accent", "third", "dark"],
+      ],
+      ["textColour", "auto", ["auto", "white", "dark"]],
     ])
     for (const level of rest) expect(level).toEqual(first)
   })
@@ -475,10 +481,17 @@ describe("a Page with Containers", () => {
       `select table_name from information_schema.tables
        where table_name like '%blocks\\_container%' order by table_name`
     )
+    // A Layout's Header and Footer share one Container, three levels too.
     expect(rows.map((row) => row.table_name)).toEqual([
+      "_layouts_v_blocks_container",
+      "_layouts_v_blocks_container_2",
+      "_layouts_v_blocks_container_3",
       "_pages_v_blocks_container",
       "_pages_v_blocks_container_2",
       "_pages_v_blocks_container_3",
+      "layouts_blocks_container",
+      "layouts_blocks_container_2",
+      "layouts_blocks_container_3",
       "pages_blocks_container",
       "pages_blocks_container_2",
       "pages_blocks_container_3",

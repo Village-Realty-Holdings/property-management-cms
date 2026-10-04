@@ -11,7 +11,7 @@ The one public website a deployment serves. Each deployment serves exactly one S
 _Avoid_: Tenant, client
 
 **Brand**:
-The Site's identity details: name, logo, tagline, contact details and social links.
+The Site's identity details: name, logo, tagline, contact details and social links. It can hold a second, light logo, which the Logo Block shows on a Primary or Dark band.
 _Avoid_: Site Brand, Site Settings, branding, config
 
 **SEO**:
@@ -19,7 +19,7 @@ How the Site and its Pages appear in search results and link previews: the Site'
 _Avoid_: Metadata, meta tags
 
 **Theme**:
-The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
+The Site's visual style: its colours, fonts, shape, density, shadows, buttons and motion. There is one Theme, and it applies to every Page. It works out the colours that carry text so they are readable; a button's text can instead be set to white or dark, and the Theme editor warns when that is hard to read. A Site that has not saved a Theme shows the Classic preset, which is also where a new Theme starts.
 _Avoid_: Skin, styles, look and feel
 
 **Saved Theme**:
@@ -42,6 +42,10 @@ _Avoid_: Typeface, font file (for the family)
 A page of the Site at its own path (such as Home, About or Contact), composed from Blocks.
 _Avoid_: Landing page, screen, post
 
+**Page file**:
+A Page exported from the Pages list as a file: its title, path, Blocks, SEO and Layout choice, with its images by Media file name. Importing one adds it to a Site as a new Draft; it never replaces a Page.
+_Avoid_: Backup, dump, template (a Page Template is a Page on the Site)
+
 **Layout**:
 The Header and Footer that wrap a Page's content. One Layout is the Site's default, a Layout can be the default for the Pages under a path, and a Page can use another Layout or none.
 _Avoid_: Template, shell, chrome, master page
@@ -54,8 +58,12 @@ _Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, start
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action. A Block sits on the Page itself or inside a Container.
 _Avoid_: Component, widget, section, element
 
+**Style** (of a Block):
+How a Block looks, apart from what it says: its background, one of the Theme's colours, and its text colour, worked out from the background or set to white or dark. The Block tab shows it under Style, beside Content.
+_Avoid_: Theme (the Theme is the whole Site's), design, appearance, overrides
+
 **Container**:
-A Block that holds other Blocks, as a stack or as columns side by side. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band.
+A Block that holds other Blocks, as a stack or as columns side by side, and says where they sit across: at the start, in the centre or at the end. A Container can hold Containers, three levels deep. A Block inside one is the same Block as on the Page, drawn without its own full-width band. A Layout's Header and Footer take Containers too, holding that region's own Blocks: a Header's Container never holds a Footer's Block.
 _Avoid_: Section, row, grid (as model names), wrapper, group
 
 **Guest feedback survey**:

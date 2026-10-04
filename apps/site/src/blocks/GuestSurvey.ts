@@ -1,6 +1,6 @@
 import type { Block, Field } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { validateHref } from "../fields/link"
 import { LINK } from "../fields/prose"
 
@@ -183,6 +183,6 @@ export const GuestSurvey: Block = {
       heading: "We couldn’t send your feedback.",
       text: "Something went wrong on our end. Your answers are still here. Try again, or call us at {phone}.",
     }),
-    backgroundField,
+    ...surfaceFields,
   ],
 }

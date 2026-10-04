@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { backgroundField, textColourField } from "../fields/background"
 import { linkGroup } from "../fields/link"
 
 /** A pitch to property owners: a list of benefits and a button. */
@@ -28,5 +28,6 @@ export const OwnerBand: Block = {
     linkGroup("cta", "Call to action"),
     // Usually on the dark surface.
     { ...backgroundField, defaultValue: "dark" },
+    textColourField,
   ],
 }

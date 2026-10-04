@@ -1,6 +1,6 @@
-import type { Block, BlocksField } from "payload"
+import type { Block, BlocksField, Field } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { catalogueEntries, fitsNarrow } from "./catalogue"
 
 /** How many Containers deep a Page goes (apps/site ADR-0007). */
@@ -9,6 +9,7 @@ export const CONTAINER_LEVELS = 3
 export const containerColumns = ["1", "2", "3", "4"] as const
 export const containerGaps = ["small", "medium", "large"] as const
 export const containerAligns = ["top", "centre", "stretch"] as const
+export const containerJustifies = ["start", "centre", "end"] as const
 export const containerWidths = ["page", "reading"] as const
 
 const CONTAINER = "container"
@@ -138,11 +139,18 @@ export const takesOnly =
     return true
   }
 
-/** The generated type of the Container at each level. */
-const interfaceNames = [
+/** The generated type of the Container at each level, on a Page. */
+const PAGE_INTERFACES = [
   "ContainerBlock",
   "ContainerBlockLevel2",
   "ContainerBlockLevel3",
+] as const
+
+/** The same for the Container a Layout's Header and Footer take. */
+export const REGION_INTERFACES = [
+  "RegionContainerBlock",
+  "RegionContainerBlockLevel2",
+  "RegionContainerBlockLevel3",
 ] as const
 
 /**
@@ -151,7 +159,8 @@ const interfaceNames = [
  * It is written out once per level under the one `blockType`, and the last
  * level takes no Container: Payload's Postgres schema builder can't build a
  * Block that contains itself (ADR-0007). `blocks` are the Blocks a Container
- * holds besides Containers.
+ * holds besides Containers. A Layout's Header and Footer take a Container of
+ * their own Blocks (src/blocks/region), with its own generated types.
  *
  * Each level has its own table: `pages_blocks_container`, then `_2` and
  * `_3`. Payload numbers them as it meets the slug again on its way down, so
@@ -160,10 +169,20 @@ const interfaceNames = [
  * collection, and the three levels would read and write the last one's.
  * `container.test.ts` holds the names.
  */
-export function containerOf(blocks: readonly Block[], level = 1): Block {
+export function containerOf(
+  blocks: readonly Block[],
+  level = 1,
+  interfaceNames: readonly string[] = PAGE_INTERFACES,
+  holder = "a Container",
+  /** Settings only this kind of Container has, shown after the background. */
+  extra: readonly Field[] = []
+): Block {
   const children =
     level < CONTAINER_LEVELS
-      ? [...blocks, containerOf(blocks, level + 1)]
+      ? [
+          ...blocks,
+          containerOf(blocks, level + 1, interfaceNames, holder, extra),
+        ]
       : [...blocks]
   return {
     slug: CONTAINER,
@@ -208,6 +227,21 @@ export function containerOf(blocks: readonly Block[], level = 1): Block {
         ],
       },
       {
+        name: "justify",
+        label: "Horizontal alignment",
+        type: "select",
+        defaultValue: "start",
+        options: [
+          { label: "Start", value: "start" },
+          { label: "Centre", value: "centre" },
+          { label: "End", value: "end" },
+        ],
+        admin: {
+          description:
+            "Where each Block sits in its cell when it is narrower than the cell: a logo, a button, an image.",
+        },
+      },
+      {
         name: "width",
         label: "Width",
         type: "select",
@@ -218,14 +252,15 @@ export function containerOf(blocks: readonly Block[], level = 1): Block {
           { label: "Reading width", value: "reading" },
         ],
       },
-      backgroundField,
+      ...surfaceFields,
+      ...extra,
       {
         name: "children",
         label: "Blocks",
         type: "blocks",
         labels: { singular: "Block", plural: "Blocks" },
         blocks: children,
-        validate: takesOnly(children, "a Container"),
+        validate: takesOnly(children, holder),
       },
     ],
   }

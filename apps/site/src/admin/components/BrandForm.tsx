@@ -112,6 +112,19 @@ export function BrandForm({
               onChange={(logo) => set("logo", logo)}
             />
           </FormField>
+          <FormField
+            id="brand-logo-light"
+            label="Light logo"
+            description="The logo in white or a light colour, for a Primary or Dark band. Without one, the logo is used there too."
+            error={fieldErrors.logoLight}
+          >
+            <MediaSelect
+              id="brand-logo-light"
+              value={values.logoLight}
+              options={media}
+              onChange={(logoLight) => set("logoLight", logoLight)}
+            />
+          </FormField>
         </Section>
 
         <Section

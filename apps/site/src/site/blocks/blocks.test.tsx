@@ -246,7 +246,7 @@ describe("<BlockButton>", () => {
       </>
     )
     const one = getByRole("link", { name: "One" })
-    expect(one.className).toContain("bg-accent text-accent-foreground")
+    expect(one.className).toContain("bg-accent text-(--btn-accent-fg)")
     // The accent button is the emphasised CTA: it stays a fill whatever the
     // Buttons style is, because the Style control applies to primary buttons.
     expect(one.className).not.toMatch(/--btn-(bg|fg|border)/)
@@ -378,7 +378,7 @@ describe("a dark Call to action", () => {
       "class"
     )!
     expect(button).toContain("bg-accent")
-    expect(button).toContain("text-accent-foreground")
+    expect(button).toContain("text-(--btn-accent-fg)")
   })
 
   it.each(["default", "muted", "primary", "dark"] as const)(

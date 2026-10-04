@@ -24,6 +24,7 @@ import { StatsBlock } from "./StatsBlock"
 import { StepsBlock } from "./StepsBlock"
 import { TestimonialsBlock } from "./TestimonialsBlock"
 import { TrustStripBlock } from "./TrustStripBlock"
+import { withBlockStyle } from "./style"
 import type {
   BlockComponent,
   BlockContext,
@@ -73,5 +74,11 @@ export const blockRegistry: { [T in BlockType]: BlockComponent<BlockOf<T>> } = {
 export function renderBlock(block: PageBlock, context: BlockContext) {
   if (!Object.hasOwn(blockRegistry, block.blockType)) return null
   const Component = blockRegistry[block.blockType] as BlockComponent
-  return createElement(Component, { block, context })
+  // The Block's own style (an Accent or Third background, a set text colour)
+  // is around it, not in it: see `withBlockStyle`.
+  return withBlockStyle(
+    createElement(Component, { block, context }),
+    block,
+    context
+  )
 }

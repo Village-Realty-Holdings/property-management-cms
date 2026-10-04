@@ -503,7 +503,7 @@ describe("adding a Block with +", () => {
     const user = userEvent.setup()
     mount(layoutDoc())
     await user.click(plus("Header")!)
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getAllByRole("option")).toHaveLength(5)
     expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
     await user.click(screen.getByRole("option", { name: /^Utility strip\b/ }))
     expect(value("header order")!.split(",")).toHaveLength(3)

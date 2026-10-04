@@ -581,6 +581,7 @@ export const catalogue: { [T in BlockType]: CatalogueEntry<T> } = {
       columns: "1",
       gap: "medium",
       align: "top",
+      justify: "start",
       width: "page",
       background: "default",
       children: [],

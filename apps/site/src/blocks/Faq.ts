@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /**
  * Question and answer pairs in an accordion. The Site also emits them as
@@ -34,6 +34,6 @@ export const Faq: Block = {
         { name: "answer", type: "textarea", required: true },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

@@ -2,7 +2,8 @@ import type { Block } from "payload"
 
 /**
  * The Site's logo, from the Brand (its logo, or its name when it has none),
- * linking Home. The image is not chosen here: change it in the Brand.
+ * linking Home. The image is not chosen here: change it in the Brand. On a
+ * Primary or Dark band it is the Brand's light logo, when the Brand has one.
  */
 export const Logo: Block = {
   slug: "logo",
@@ -18,6 +19,7 @@ export const Logo: Block = {
         { label: "Small", value: "small" },
         { label: "Medium", value: "medium" },
         { label: "Large", value: "large" },
+        { label: "Extra large", value: "xlarge" },
       ],
     },
     {

@@ -79,3 +79,53 @@ describe.each(WITH_BACKGROUNDS.map((block) => [block.name, block] as const))(
     )
   }
 )
+
+/**
+ * A Block's text colour (apps/site ADR-0013): Automatic reads on the
+ * background, and White or Dark are used as they are, by the Block's
+ * heading and its text alike.
+ */
+describe.each([
+  ["Call to action", "primary"],
+  ["Rich text", "accent"],
+  ["FAQ", "third"],
+  ["Steps", "dark"],
+] as const)(
+  "the %s Block's text colour, on the %s background",
+  (name, background) => {
+    const headingColour = async (textColour: string) => {
+      const { context, page } = await openSession(browser)
+      try {
+        await visit(
+          page,
+          await blockPath(browser, name, { background, textColour })
+        )
+        return await blockRegion(page).evaluate((region) => {
+          const heading = region.querySelector("h1, h2, h3, p") ?? region
+          return getComputedStyle(heading).color
+        })
+      } finally {
+        await context.close()
+      }
+    }
+
+    it("is white when it is set to White, and the Theme's text colour when it is set to Dark", async () => {
+      expect(await headingColour("white")).toBe("rgb(255, 255, 255)")
+      const { context, page } = await openSession(browser)
+      try {
+        await visit(page, await blockPath(browser, name))
+        const ink = await page.evaluate(() => {
+          const probe = document.createElement("div")
+          probe.style.color = "var(--foreground)"
+          document.body.appendChild(probe)
+          const colour = getComputedStyle(probe).color
+          probe.remove()
+          return colour
+        })
+        expect(await headingColour("dark")).toBe(ink)
+      } finally {
+        await context.close()
+      }
+    })
+  }
+)

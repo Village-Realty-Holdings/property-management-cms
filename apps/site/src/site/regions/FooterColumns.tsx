@@ -4,7 +4,8 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { FooterColumnsBlock } from "../../payload-types"
 import { EditableText } from "../blocks/Editable"
-import { container } from "../blocks/types"
+import { container, embeddedBox } from "../blocks/types"
+import { band } from "./band"
 import { displayFont } from "../display"
 import { linksOf } from "./links"
 import { focusOutline, RegionLink } from "./RegionLink"
@@ -103,25 +104,28 @@ export function FooterColumns({
   })
   if (columns.length === 0) return null
   return (
-    <div
-      className={cn(
-        container,
-        "grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-x-8 gap-y-10 py-10"
-      )}
-    >
-      {columns.map((column) => (
-        <div key={column.key} className="flex min-w-0 flex-col gap-3">
-          <EditableText
-            as="h2"
-            field={`columns.${column.index}.heading`}
-            context={context}
-            className={cn(displayFont, "text-base")}
-          >
-            {column.heading}
-          </EditableText>
-          {column.content}
-        </div>
-      ))}
+    <div className={band(block.background, context)}>
+      <div
+        className={cn(
+          container,
+          embeddedBox,
+          "grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-x-8 gap-y-10 py-10 in-data-container:py-0"
+        )}
+      >
+        {columns.map((column) => (
+          <div key={column.key} className="flex min-w-0 flex-col gap-3">
+            <EditableText
+              as="h2"
+              field={`columns.${column.index}.heading`}
+              context={context}
+              className={cn(displayFont, "text-base")}
+            >
+              {column.heading}
+            </EditableText>
+            {column.content}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

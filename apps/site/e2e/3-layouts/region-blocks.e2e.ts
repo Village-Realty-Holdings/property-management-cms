@@ -305,8 +305,11 @@ describe("which Blocks each region takes", () => {
     if (types !== null) expect(types).not.toContain(type)
   })
 
+  it("keeps a logo Block in a Footer (ADR-0011)", async () => {
+    expect(await saved("footer", blocks.logo())).toEqual(["logo"])
+  })
+
   it.each([
-    ["logo", blocks.logo()],
     ["navigation", blocks.navigation([nav.link("Home", urlLink("/"))])],
     ["headerActions", blocks.headerActions({ phone: "+44 1234 567890" })],
     ["utilityStrip", blocks.utilityStrip("Nope")],

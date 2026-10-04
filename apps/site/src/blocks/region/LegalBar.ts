@@ -1,5 +1,6 @@
 import type { Block } from "payload"
 
+import { surfaceFields } from "../../fields/background"
 import { navLinkFields } from "../../fields/navLink"
 
 /** The bottom line of the Footer: a copyright notice and legal links. */
@@ -20,5 +21,7 @@ export const LegalBar: Block = {
       },
     },
     { name: "links", type: "array", maxRows: 8, fields: navLinkFields() },
+    // Default is the Footer's own surface.
+    ...surfaceFields,
   ],
 }

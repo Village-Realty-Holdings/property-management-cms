@@ -12,6 +12,9 @@ import * as migration_20261002_005526_container_blocks from "./20261002_005526_c
 import * as migration_20261002_012541_button_image_blocks from "./20261002_012541_button_image_blocks"
 import * as migration_20261002_162507_saved_themes from "./20261002_162507_saved_themes"
 import * as migration_20261002_180704_guest_survey_block from "./20261002_180704_guest_survey_block"
+import * as migration_20261002_204427_region_containers from "./20261002_204427_region_containers"
+import * as migration_20261002_210426_theme_button_text from "./20261002_210426_theme_button_text"
+import * as migration_20261002_213303_block_style from "./20261002_213303_block_style"
 
 export const migrations = [
   {
@@ -83,5 +86,20 @@ export const migrations = [
     up: migration_20261002_180704_guest_survey_block.up,
     down: migration_20261002_180704_guest_survey_block.down,
     name: "20261002_180704_guest_survey_block",
+  },
+  {
+    up: migration_20261002_204427_region_containers.up,
+    down: migration_20261002_204427_region_containers.down,
+    name: "20261002_204427_region_containers",
+  },
+  {
+    up: migration_20261002_210426_theme_button_text.up,
+    down: migration_20261002_210426_theme_button_text.down,
+    name: "20261002_210426_theme_button_text",
+  },
+  {
+    up: migration_20261002_213303_block_style.up,
+    down: migration_20261002_213303_block_style.down,
+    name: "20261002_213303_block_style",
   },
 ]

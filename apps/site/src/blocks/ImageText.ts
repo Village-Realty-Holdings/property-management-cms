@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { iconField } from "../fields/icon"
 
 /**
@@ -39,6 +39,6 @@ export const ImageText: Block = {
       admin: { description: "Optional. A short list, each with an icon." },
       fields: [iconField(), { name: "text", type: "text", required: true }],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

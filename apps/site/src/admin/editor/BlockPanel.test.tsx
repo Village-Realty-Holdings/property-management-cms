@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -791,7 +792,13 @@ describe("<BlockPanel>", () => {
         (within(form).getByLabelText("Columns") as HTMLSelectElement).value
       ).toBe("2")
       expect(within(form).getByLabelText("Gap")).toBeTruthy()
+      // How it looks is under Style.
+      expect(within(form).queryByLabelText("Background")).toBeNull()
+      fireEvent.click(within(form).getByRole("tab", { name: "Style" }))
       expect(within(form).getByLabelText("Background")).toBeTruthy()
+      expect(within(form).getByLabelText("Text colour")).toBeTruthy()
+      expect(within(form).queryByLabelText("Gap")).toBeNull()
+      fireEvent.click(within(form).getByRole("tab", { name: "Content" }))
       expect(within(form).getByText(/2 Blocks.*Outline/)).toBeTruthy()
       expect(within(form).queryByText(/can't be edited/)).toBeNull()
       expect(within(form).queryByText(/^In Block/)).toBeNull()

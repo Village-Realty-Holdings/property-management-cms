@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { iconField } from "../fields/icon"
 
 /** Amenities, as a photo-tile mosaic or as an icon list. */
@@ -55,6 +55,6 @@ export const Amenities: Block = {
         }),
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

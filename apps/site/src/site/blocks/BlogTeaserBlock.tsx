@@ -32,6 +32,9 @@ const onBackground = {
     surface: "primary",
     outline: "outline-primary-foreground",
   },
+  // The Accent and Third backgrounds give --ring the surface's text colour.
+  accent: { tone: "primary", surface: undefined, outline: "outline-ring" },
+  third: { tone: "primary", surface: undefined, outline: "outline-ring" },
   dark: {
     tone: "accent",
     surface: "dark",

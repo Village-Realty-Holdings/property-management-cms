@@ -100,17 +100,25 @@ export function pickerGroups(
   return [
     {
       heading: REGION_HEADING[region],
-      entries: regionCatalogue(region).map((entry) => ({
-        blockType: entry.blockType,
-        label: entry.label,
-        description: entry.description,
-        thumbnail: entry.thumbnail,
-        // A shared Block (Newsletter, Call to action) starts from the Page
-        // catalogue's values.
-        defaults: entry.shared
-          ? catalogue[entry.blockType].defaults
-          : entry.defaults,
-      })),
+      entries: regionCatalogue(region, Boolean(inside))
+        // A Container goes three levels deep in a region, as on a Page.
+        .filter(
+          (entry) =>
+            entry.blockType !== "container" ||
+            !inside ||
+            inside.level < CONTAINER_LEVELS
+        )
+        .map((entry) => ({
+          blockType: entry.blockType,
+          label: entry.label,
+          description: entry.description,
+          thumbnail: entry.thumbnail,
+          // A shared Block (Newsletter, Call to action) starts from the Page
+          // catalogue's values.
+          defaults: entry.shared
+            ? catalogue[entry.blockType].defaults
+            : entry.defaults,
+        })),
     },
   ]
 }

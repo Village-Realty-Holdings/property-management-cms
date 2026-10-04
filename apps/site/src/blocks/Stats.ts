@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 
 /** Three or four figures, each with a label. */
 export const Stats: Block = {
@@ -31,6 +31,6 @@ export const Stats: Block = {
         { name: "label", type: "text", required: true },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

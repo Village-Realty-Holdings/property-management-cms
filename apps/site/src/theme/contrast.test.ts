@@ -132,6 +132,62 @@ describe("suggested fixes", () => {
   })
 })
 
+describe("a button text the Theme sets", () => {
+  const blues = { primary: "#61c2ee", accent: "#3096e0", text: "#292929" }
+
+  it("warns when it is hard to read on a button colour, and the fix is Automatic", () => {
+    const [warning, ...rest] = contrastWarnings(
+      inputs({ ...blues, buttonText: "white" })
+    )
+    expect(rest).toEqual([])
+    expect(warning).toMatchObject({
+      id: "button-text",
+      field: "buttonText",
+      message: "White button text is hard to read on your button colours.",
+      needed: 4.5,
+      fix: { field: "buttonText", value: "auto" },
+    })
+    expect(warning!.ratio).toBeLessThan(3.3)
+    const fixed = applyFix(
+      inputs({ ...blues, buttonText: "white" }),
+      warning!.fix
+    )
+    expect(fixed.buttonText).toBe("auto")
+    expect(contrastWarnings(fixed)).toEqual([])
+  })
+
+  it("doesn't warn when the colour it sets reads well, or when it is Automatic", () => {
+    expect(contrastWarnings(inputs({ ...blues, buttonText: "dark" }))).toEqual(
+      []
+    )
+    expect(contrastWarnings(inputs({ ...blues, buttonText: "auto" }))).toEqual(
+      []
+    )
+    // White passes on a dark primary and a dark accent.
+    expect(
+      contrastWarnings(
+        inputs({ primary: "#0e5e6f", accent: "#1f4e79", buttonText: "white" })
+      )
+    ).toEqual([])
+  })
+
+  it("checks only the accent for outline buttons, whose primary is an edge", () => {
+    expect(
+      ids(
+        contrastWarnings(
+          inputs({
+            primary: "#f4d35e",
+            accent: "#1f4e79",
+            text: "#1a1a1a",
+            buttonStyle: "outline",
+            buttonText: "white",
+          })
+        )
+      )
+    ).not.toContain("button-text")
+  })
+})
+
 describe("textPairFailures", () => {
   it("is empty for derived tokens", () => {
     expect(

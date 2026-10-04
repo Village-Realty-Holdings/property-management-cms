@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { richTextEditor } from "../fields/richText"
 
 /** How wide a Rich text Block sets its text. */
@@ -31,6 +31,6 @@ export const RichText: Block = {
         { label: "Wide (the page's width)", value: "wide" },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

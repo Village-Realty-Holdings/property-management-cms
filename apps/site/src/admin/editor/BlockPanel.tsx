@@ -1,7 +1,14 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import type { Block } from "payload"
+import type { Block, Field } from "payload"
+
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@workspace/ui/components/tabs"
 
 import type { MediaOption } from "../components/MediaSelect"
 import { useEditor } from "./EditorProvider"
@@ -12,7 +19,9 @@ import { findBlock, placeName } from "./state"
 
 /**
  * The Block tab: the selected Block's settings, as a form made from the
- * Block's Payload config, so a Block's fields are declared once. Every change
+ * Block's Payload config, so a Block's fields are declared once. A Block with
+ * style settings (its background and text colour) shows them under Style,
+ * beside Content. Every change
  * is dispatched at once, so the canvas shows it without a network round trip.
  *
  * `blocks` are the configs the document's Blocks come from (`pageBlocks`,
@@ -115,6 +124,12 @@ function BlockForm({
     [blockId, values, media, pages, touched, touch, write]
   )
 
+  // A field marked as style (`STYLE`) goes under Style; the rest is content.
+  const isStyle = (field: Field) =>
+    (field as { custom?: { style?: unknown } }).custom?.style === true
+  const style = config.fields.filter(isStyle)
+  const content = config.fields.filter((field) => !isStyle(field))
+
   const label =
     typeof config.labels?.singular === "string"
       ? config.labels.singular
@@ -132,7 +147,38 @@ function BlockForm({
           <h2 className="text-sm font-semibold">{label}</h2>
           {place && <p className="text-xs text-muted-foreground">In {place}</p>}
         </div>
-        <FieldList fields={config.fields} path={[]} sibling={values} />
+        {style.length === 0 ? (
+          <FieldList fields={config.fields} path={[]} sibling={values} />
+        ) : (
+          // What the Block says, and how it looks: its background and text
+          // colour, from the Theme (apps/site ADR-0013).
+          <Tabs defaultValue="content" className="gap-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="style">Style</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="content"
+              aria-label="Content"
+              className="flex flex-col gap-4"
+            >
+              {content.length > 0 ? (
+                <FieldList fields={content} path={[]} sibling={values} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  This Block has no content of its own.
+                </p>
+              )}
+            </TabsContent>
+            <TabsContent
+              value="style"
+              aria-label="Style"
+              className="flex flex-col gap-4"
+            >
+              <FieldList fields={style} path={[]} sibling={values} />
+            </TabsContent>
+          </Tabs>
+        )}
       </form>
     </FieldsProvider>
   )

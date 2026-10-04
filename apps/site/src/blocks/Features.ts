@@ -1,6 +1,6 @@
 import type { Block } from "payload"
 
-import { backgroundField } from "../fields/background"
+import { surfaceFields } from "../fields/background"
 import { iconField } from "../fields/icon"
 
 /** A grid of features, each with an icon, a title and text. */
@@ -41,6 +41,6 @@ export const Features: Block = {
         { name: "text", type: "textarea", required: true },
       ],
     },
-    backgroundField,
+    ...surfaceFields,
   ],
 }

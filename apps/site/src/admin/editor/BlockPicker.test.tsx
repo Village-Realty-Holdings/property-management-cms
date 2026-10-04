@@ -62,6 +62,7 @@ describe("what each region offers", () => {
       "Navigation",
       "Header actions",
       "Utility strip",
+      "Container",
     ])
   })
 
@@ -71,6 +72,29 @@ describe("what each region offers", () => {
       "Legal bar",
       "Newsletter",
       "Call to action",
+      "Logo",
+      "Container",
+    ])
+  })
+
+  it("offers a Container in a region the region's Blocks, but no Utility strip", () => {
+    const inside = (region: "header" | "footer", level: number) =>
+      pickerGroups(region, { level, narrow: false }).flatMap((group) =>
+        group.entries.map((entry) => entry.label)
+      )
+    expect(inside("header", 1)).toEqual([
+      "Logo",
+      "Navigation",
+      "Header actions",
+      "Container",
+    ])
+    // The third level takes no Container, as on a Page.
+    expect(inside("footer", 3)).toEqual([
+      "Footer columns",
+      "Legal bar",
+      "Newsletter",
+      "Call to action",
+      "Logo",
     ])
   })
 })
@@ -192,15 +216,16 @@ describe("the dialog", () => {
 
   it("shows only Header Blocks for a Header, and Footer ones for a Footer", () => {
     open({ region: "header", index: 0 })
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getAllByRole("option")).toHaveLength(5)
     expect(screen.queryByRole("option", { name: /^Hero\b/ })).toBeNull()
     expect(screen.queryByRole("option", { name: /^Legal bar\b/ })).toBeNull()
     cleanup()
     open({ region: "footer", index: 0 })
-    expect(screen.getAllByRole("option")).toHaveLength(4)
+    expect(screen.getAllByRole("option")).toHaveLength(6)
     expect(option(/^Newsletter\b/)).toBeTruthy()
     expect(option(/^Call to action\b/)).toBeTruthy()
-    expect(screen.queryByRole("option", { name: /^Logo\b/ })).toBeNull()
+    expect(option(/^Logo\b/)).toBeTruthy()
+    expect(screen.queryByRole("option", { name: /^Navigation\b/ })).toBeNull()
   })
 })
 
