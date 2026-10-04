@@ -16,6 +16,13 @@ import type { LayoutDocument } from "../editor/state"
 import type { PageOption } from "../editor/fields/context"
 import { formStateFromError, type FormState } from "../formState"
 import type { BlockValues } from "../pageForm"
+import { staleSaveRefusal } from "../revision"
+import {
+  latestRevision,
+  type Revision,
+  type RevisionResult,
+  type SaveGuard,
+} from "../staleSave"
 
 /**
  * What Layout mode of the Visual Editor reads and does, through the Local API
@@ -58,14 +65,17 @@ export type LayoutScreen = {
   history: LayoutVersionRow[]
   /** The Pages a link in a Block can point to. */
   pages: PageOption[]
+  /** The latest version, for the stale-save check; null with no versions. */
+  revision?: Revision | null
 }
 
 /** What a save or a restore answers: the stored state, to start from again. */
-export type LayoutResult = FormState & {
-  doc?: LayoutDocument
-  usedBy?: number
-  history?: LayoutVersionRow[]
-}
+export type LayoutResult = FormState &
+  RevisionResult & {
+    doc?: LayoutDocument
+    usedBy?: number
+    history?: LayoutVersionRow[]
+  }
 
 const GONE = "That Layout no longer exists."
 const VERSION_GONE = "That version no longer exists."
@@ -199,6 +209,7 @@ export async function loadLayoutScreen(
       title,
       path,
     })),
+    revision: latestRevision(history),
   }
 }
 
@@ -222,6 +233,7 @@ async function resultAfterWrite(
     doc: layoutToDocument(saved),
     usedBy,
     history,
+    revision: latestRevision(history),
   }
 }
 
@@ -244,7 +256,7 @@ export async function saveLayoutAs(
   access: UserAccess,
   id: number,
   doc: LayoutDocument,
-  options: { note?: string | null } = {}
+  options: { note?: string | null } & SaveGuard = {}
 ): Promise<LayoutResult> {
   if (!Number.isInteger(id) || id <= 0) return { ok: false, message: GONE }
   if (doc?.kind !== "layout") {
@@ -253,6 +265,13 @@ export async function saveLayoutAs(
   const name = typeof doc.name === "string" ? doc.name.trim() : ""
   if (!name) return { ok: false, message: "Give the Layout a name." }
   try {
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "layout", id },
+      options
+    )
+    if (stale) return stale
     const saved = await saveLayout(payload, {
       user: access.user,
       id,
@@ -289,13 +308,21 @@ export async function restoreLayoutAs(
   payload: Payload,
   access: UserAccess,
   id: number,
-  versionId: number
+  versionId: number,
+  guard: SaveGuard = {}
 ): Promise<LayoutResult> {
   if (!Number.isInteger(id) || id <= 0) return { ok: false, message: GONE }
   if (!Number.isInteger(versionId) || versionId <= 0) {
     return { ok: false, message: VERSION_GONE }
   }
   try {
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "layout", id },
+      guard
+    )
+    if (stale) return stale
     const saved = await restoreLayoutVersion(payload, {
       user: access.user,
       id,

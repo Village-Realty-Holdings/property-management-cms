@@ -9,12 +9,18 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { saveSeo } from "../actions/seo"
-import { InlineError, PageHeader, UnsavedChangesGuard } from "../kit"
+import {
+  InlineError,
+  PageHeader,
+  StaleSaveDialog,
+  UnsavedChangesGuard,
+} from "../kit"
 import {
   describeDescriptionLength,
   titleExample,
   type SeoValues,
 } from "../seoForm"
+import type { Revision } from "../staleSave"
 import { describedBy, FormField, Section } from "./FormBits"
 import { MediaSelect, type MediaOption } from "./MediaSelect"
 import { useSettingsEditor } from "./useSettingsEditor"
@@ -30,13 +36,16 @@ export function SeoForm({
   initial,
   media,
   siteName,
+  revision,
 }: {
   initial: SeoValues
   media: MediaOption[]
+  /** The SEO defaults' revision as opened, for the stale-save check. */
+  revision?: Revision | null
   /** The Brand's name, for the title example. */
   siteName: string
 }) {
-  const editor = useSettingsEditor({ initial, save: saveSeo })
+  const editor = useSettingsEditor({ initial, revision, save: saveSeo })
   const { values, fieldErrors, state, pending } = editor
 
   const set = <K extends keyof SeoValues>(key: K, value: SeoValues[K]) =>
@@ -63,7 +72,11 @@ export function SeoForm({
           </>
         }
       />
-      <UnsavedChangesGuard dirty={editor.dirty} onSave={editor.submit} />
+      <UnsavedChangesGuard
+        dirty={editor.dirty}
+        onSave={() => editor.submit()}
+      />
+      <StaleSaveDialog {...editor.staleDialog} />
 
       <form
         id={FORM_ID}

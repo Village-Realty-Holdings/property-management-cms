@@ -8,7 +8,14 @@ import type { Layout } from "../../payload-types"
 import type { UserAccess } from "../dashboard/queries"
 import { makeLayoutFromPageAs } from "./makeFromPage"
 
-const payload = {} as Payload
+const findVersions = vi.fn()
+const payload = { findVersions } as unknown as Payload
+
+/** The Page's latest version, as findVersions answers. */
+const pageVersion = (id: number) =>
+  findVersions.mockResolvedValue({
+    docs: [{ id, createdAt: "2026-10-04T14:32:00.000Z", version: {} }],
+  })
 const as = {
   overrideAccess: false,
   user: { id: 1 },
@@ -28,6 +35,7 @@ beforeEach(() => vi.resetAllMocks())
 describe("makeLayoutFromPageAs", () => {
   it("copies the Layout for the Page and answers with the copy", async () => {
     duplicate.makeLayoutFromPage.mockResolvedValue(copy)
+    pageVersion(12)
     const result = await makeLayoutFromPageAs(payload, as, {
       pageId: 4,
       layoutId: 3,
@@ -43,7 +51,39 @@ describe("makeLayoutFromPageAs", () => {
       ok: true,
       message: expect.stringContaining("Lodge"),
       layout: { id: 9, name: "Lodge", header: [{ blockType: "logo" }] },
+      revision: "12",
     })
+  })
+
+  it("refuses before making anything when the Page changed since it was opened", async () => {
+    pageVersion(12)
+    const result = await makeLayoutFromPageAs(payload, as, {
+      pageId: 4,
+      layoutId: 3,
+      name: "Lodge",
+      expected: "11",
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      message: "This Page changed since you opened it.",
+      conflict: { kind: "page", at: "2026-10-04T14:32:00.000Z" },
+    })
+    expect(duplicate.makeLayoutFromPage).not.toHaveBeenCalled()
+  })
+
+  it("goes ahead when forced, or when the Page is as it was opened", async () => {
+    duplicate.makeLayoutFromPage.mockResolvedValue(copy)
+    pageVersion(12)
+    for (const guard of [{ expected: "12" }, { expected: "11", force: true }]) {
+      const result = await makeLayoutFromPageAs(payload, as, {
+        pageId: 4,
+        layoutId: 3,
+        name: "Lodge",
+        ...guard,
+      })
+      expect(result.ok).toBe(true)
+    }
+    expect(duplicate.makeLayoutFromPage).toHaveBeenCalledTimes(2)
   })
 
   it("asks for a name before doing anything", async () => {

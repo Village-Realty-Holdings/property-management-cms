@@ -601,7 +601,7 @@ describe("the History tab", () => {
     const confirm = await screen.findByRole("alertdialog")
     await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
 
-    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith(7, 2))
+    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith(7, 2, {}))
     await waitFor(() =>
       expect(success).toHaveBeenCalledWith("Version restored: 2 Pages changed.")
     )
@@ -681,4 +681,82 @@ describe("accessibility", () => {
       expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
     }
   )
+})
+
+describe("when someone else saved first", () => {
+  const conflict: LayoutResult = {
+    ok: false,
+    message: "This Layout changed since you opened it.",
+    conflict: {
+      kind: "layout",
+      by: "Sam Taylor",
+      byYou: false,
+      at: "2026-10-04T14:32:00.000Z",
+    },
+  }
+
+  it("sends the revision it opened, and the one a save returned next time", async () => {
+    const user = userEvent.setup()
+    actions.save.mockResolvedValue(saved({ revision: "9" }))
+    mount({ revision: "3" })
+    await rename(user, "Listings")
+    await user.click(saveButton())
+    await waitFor(() => expect(success).toHaveBeenCalled())
+    expect(actions.save).toHaveBeenLastCalledWith(7, expect.anything(), {
+      note: null,
+      expected: "3",
+    })
+    await rename(user, "Listings 2")
+    await user.click(saveButton())
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(2))
+    expect(actions.save).toHaveBeenLastCalledWith(7, expect.anything(), {
+      note: null,
+      expected: "9",
+    })
+  })
+
+  it("opens the dialog when a save is refused, and saves with force on Save anyway", async () => {
+    const user = userEvent.setup()
+    actions.save
+      .mockResolvedValueOnce(conflict)
+      .mockResolvedValueOnce(saved({ revision: "10" }))
+    mount({ revision: "3" })
+    await rename(user, "Listings")
+    await user.click(saveButton())
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("This Layout changed since you opened it")
+    ).toBeTruthy()
+    expect(dialog.textContent).toContain("Sam Taylor saved it at")
+    expect(success).not.toHaveBeenCalled()
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save anyway" })
+    )
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(2))
+    expect(actions.save).toHaveBeenLastCalledWith(
+      7,
+      expect.objectContaining({ name: "Listings" }),
+      { note: null, expected: "3", force: true }
+    )
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+    await waitFor(() => expect(success).toHaveBeenCalled())
+  })
+
+  it("closes the History confirm and opens the dialog when a restore is refused", async () => {
+    const user = userEvent.setup()
+    actions.restore.mockResolvedValue(conflict)
+    mount({ revision: "3" })
+    const panel = await openTab(user, "History")
+    await user.click(
+      within(within(panel).getAllByRole("listitem")[1]!).getByRole("button", {
+        name: /Restore/,
+      })
+    )
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    await screen.findByText("This Layout changed since you opened it")
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1)
+    expect(actions.restore).toHaveBeenCalledWith(7, 2, { expected: "3" })
+  })
 })

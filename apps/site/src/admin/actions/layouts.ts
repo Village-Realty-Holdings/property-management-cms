@@ -15,6 +15,7 @@ import {
   type MakeLayoutResult,
 } from "../layouts/makeFromPage"
 import { requireUser } from "../session"
+import type { Revision, SaveGuard } from "../staleSave"
 
 /**
  * Layout mode's Server Actions. Each runs as the User (apps/site
@@ -34,7 +35,7 @@ function revalidateAfterLayoutWrite() {
 export async function saveLayoutDocument(
   id: number,
   doc: LayoutDocument,
-  options: { note?: string | null } = {}
+  options: { note?: string | null } & SaveGuard = {}
 ): Promise<LayoutResult> {
   const { payload, as } = await requireUser()
   const result = await saveLayoutAs(payload, as, id, doc, options)
@@ -45,10 +46,11 @@ export async function saveLayoutDocument(
 /** Restores an earlier version of the Layout, saved as the newest. */
 export async function restoreLayoutDocument(
   id: number,
-  versionId: number
+  versionId: number,
+  guard?: SaveGuard
 ): Promise<LayoutResult> {
   const { payload, as } = await requireUser()
-  const result = await restoreLayoutAs(payload, as, id, versionId)
+  const result = await restoreLayoutAs(payload, as, id, versionId, guard)
   if (result.ok) revalidateAfterLayoutWrite()
   return result
 }
@@ -70,6 +72,8 @@ export async function makeLayoutFromPageDocument(input: {
   pageId: number
   layoutId: number
   name: string
+  expected?: Revision | null
+  force?: boolean
 }): Promise<MakeLayoutResult> {
   const { payload, as } = await requireUser()
   const result = await makeLayoutFromPageAs(payload, as, input)

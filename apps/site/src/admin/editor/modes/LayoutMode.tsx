@@ -9,13 +9,19 @@ import { Input } from "@workspace/ui/components/input"
 import { footerBlocks, headerBlocks } from "../../../blocks/region"
 import { editingUrl } from "../../../site/editing/flag"
 import type { MediaOption } from "../../components/MediaSelect"
-import { notify, type SaveResult } from "../../kit"
+import {
+  notify,
+  StaleSaveDialog,
+  useStaleSave,
+  type SaveResult,
+} from "../../kit"
 import type {
   LayoutResult,
   LayoutScreen,
   LayoutVersionRow,
   PreviewPage,
 } from "../../layouts/layoutScreen"
+import type { SaveGuard } from "../../staleSave"
 import { BlockPanel } from "../BlockPanel"
 import { canvasDocument } from "../bridge"
 import { EditorProvider, useEditor } from "../EditorProvider"
@@ -35,9 +41,13 @@ export type LayoutModeActions = {
   save: (
     id: number,
     doc: LayoutDocument,
-    options?: { note?: string | null }
+    options?: { note?: string | null } & SaveGuard
   ) => Promise<LayoutResult>
-  restore: (id: number, versionId: number) => Promise<LayoutResult>
+  restore: (
+    id: number,
+    versionId: number,
+    guard?: SaveGuard
+  ) => Promise<LayoutResult>
   /** The Page, with its Blocks, that Ctrl-K picked to preview the Layout on. */
   loadPage: (pageId: number) => Promise<PreviewPage | null>
 }
@@ -90,6 +100,11 @@ function LayoutModeBody({
   actions: LayoutModeActions
 }) {
   const { doc, state, isDirty, markSaved, discard } = useEditor()
+  const stale = useStaleSave({
+    initial: screen.revision,
+    dirty: isDirty,
+    discard,
+  })
   const [tab, setTab] = useState("outline")
   const [usedBy, setUsedBy] = useState(screen.usedBy)
   const [history, setHistory] = useState<LayoutVersionRow[]>(screen.history)
@@ -137,14 +152,22 @@ function LayoutModeBody({
     if (result.history) setHistory(result.history)
   }
 
-  const save = async (): Promise<SaveResult> => {
+  const save = async ({ force = false } = {}): Promise<SaveResult> => {
     const sent: EditorDocument = doc
     setSaving(true)
     setSaveError(null)
     try {
       const result = await actions.save(screen.id, doc, {
         note: note.trim() || null,
+        expected: stale.expected(),
+        ...(force ? { force: true } : {}),
       })
+      // Someone saved since this was opened: the dialog decides what next.
+      if (stale.settle(result, () => save({ force: true }))) {
+        const message = failureText(result)
+        setSaveError(message)
+        return { ok: false, message }
+      }
       if (!result.ok || !result.doc) {
         const message = failureText(result)
         setSaveError(message)
@@ -164,8 +187,16 @@ function LayoutModeBody({
     }
   }
 
-  const restore = async (row: LayoutVersionRow) => {
-    const result = await actions.restore(screen.id, row.id)
+  const restore = async (
+    row: LayoutVersionRow,
+    force = false
+  ): Promise<SaveResult> => {
+    const result = await actions.restore(screen.id, row.id, {
+      expected: stale.expected(),
+      ...(force ? { force: true } : {}),
+    })
+    // The History confirm closes; the dialog decides what next.
+    if (stale.settle(result, () => restore(row, true))) return undefined
     if (!result.ok || !result.doc) {
       return { ok: false, message: failureText(result) }
     }
@@ -218,7 +249,7 @@ function LayoutModeBody({
           rows={history}
           usedBy={usedBy}
           dirty={isDirty}
-          onRestore={restore}
+          onRestore={(row) => restore(row)}
         />
       ),
     },
@@ -242,7 +273,7 @@ function LayoutModeBody({
             onTakeOver={presence.takeOver}
           />
         }
-        onSave={save}
+        onSave={() => save()}
         canSave={isDirty && !saving}
         onPickPage={pickPage}
         actions={
@@ -275,6 +306,7 @@ function LayoutModeBody({
           </>
         }
       />
+      <StaleSaveDialog {...stale.dialog} />
     </div>
   )
 }

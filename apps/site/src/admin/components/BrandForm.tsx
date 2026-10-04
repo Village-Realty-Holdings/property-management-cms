@@ -13,7 +13,13 @@ import { Textarea } from "@workspace/ui/components/textarea"
 
 import { saveBrand } from "../actions/brand"
 import { SOCIAL_PLATFORMS, type BrandValues } from "../brandForm"
-import { InlineError, PageHeader, UnsavedChangesGuard } from "../kit"
+import {
+  InlineError,
+  PageHeader,
+  StaleSaveDialog,
+  UnsavedChangesGuard,
+} from "../kit"
+import type { Revision } from "../staleSave"
 import { describedBy, FormField, Section } from "./FormBits"
 import { MediaSelect, type MediaOption } from "./MediaSelect"
 import { useSettingsEditor } from "./useSettingsEditor"
@@ -27,11 +33,14 @@ const FORM_ID = "brand-form"
 export function BrandForm({
   initial,
   media,
+  revision,
 }: {
   initial: BrandValues
   media: MediaOption[]
+  /** The Brand's revision as opened, for the stale-save check. */
+  revision?: Revision | null
 }) {
-  const editor = useSettingsEditor({ initial, save: saveBrand })
+  const editor = useSettingsEditor({ initial, revision, save: saveBrand })
   const { values, fieldErrors, state, pending } = editor
   const addLink = useRef<HTMLButtonElement>(null)
 
@@ -63,7 +72,11 @@ export function BrandForm({
           </>
         }
       />
-      <UnsavedChangesGuard dirty={editor.dirty} onSave={editor.submit} />
+      <UnsavedChangesGuard
+        dirty={editor.dirty}
+        onSave={() => editor.submit()}
+      />
+      <StaleSaveDialog {...editor.staleDialog} />
 
       <form
         id={FORM_ID}

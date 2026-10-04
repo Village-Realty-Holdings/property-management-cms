@@ -561,7 +561,7 @@ describe("<PageMode> the History tab", () => {
     await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
 
     await waitFor(() =>
-      expect(actions.restorePageVersion).toHaveBeenCalledWith(4, 2)
+      expect(actions.restorePageVersion).toHaveBeenCalledWith(4, 2, {})
     )
     await waitFor(() => expect(toast.success).toHaveBeenCalled())
     expect(
@@ -626,5 +626,104 @@ describe("<PageMode> the History tab", () => {
     await waitFor(() => expect(toast.success).toHaveBeenCalled())
     const items = within(await openHistory(user)).getAllByRole("listitem")
     expect(items).toHaveLength(4)
+  })
+})
+
+const conflictResult = {
+  ok: false,
+  message: "This Page changed since you opened it.",
+  conflict: {
+    kind: "page",
+    by: "Sam Taylor",
+    byYou: false,
+    at: "2026-10-04T14:32:00.000Z",
+  },
+}
+
+describe("<PageMode> someone else saved first", () => {
+  it("sends the revision it opened, and keeps the one a save returns", async () => {
+    actions.savePage.mockResolvedValue(saved({ revision: "6" }))
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await waitFor(() =>
+      expect(actions.savePage).toHaveBeenCalledWith(
+        expect.objectContaining({ expected: "5" })
+      )
+    )
+    await waitFor(() => expect(toast.success).toHaveBeenCalled())
+    await edit("About v3")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(actions.savePage).toHaveBeenCalledTimes(2))
+    expect(actions.savePage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ expected: "6" })
+    )
+  })
+
+  it("opens the dialog when a save is refused", async () => {
+    actions.savePage.mockResolvedValue(conflictResult)
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("This Page changed since you opened it")
+    ).toBeTruthy()
+    expect(dialog.textContent).toContain(
+      "Sam Taylor saved it at Oct 4, 2026, 2:32 PM UTC."
+    )
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("saves again with force, the same intent, on Save anyway", async () => {
+    actions.savePage
+      .mockResolvedValueOnce(conflictResult)
+      .mockResolvedValueOnce(saved({ status: "published", revision: "7" }))
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Publish" }))
+    const dialog = await screen.findByRole("alertdialog")
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save anyway" })
+    )
+    await waitFor(() => expect(actions.savePage).toHaveBeenCalledTimes(2))
+    expect(actions.savePage).toHaveBeenLastCalledWith({
+      id: 4,
+      intent: "publish",
+      document: expect.objectContaining({ title: "About v2" }),
+      expected: "5",
+      force: true,
+    })
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+  })
+
+  it("keeps editing when the dialog is dismissed", async () => {
+    actions.savePage.mockResolvedValue(conflictResult)
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await screen.findByRole("alertdialog")
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+    expect(actions.savePage).toHaveBeenCalledTimes(1)
+  })
+
+  it("closes the History confirm and opens the dialog when a restore is refused", async () => {
+    actions.restorePageVersion.mockResolvedValue(conflictResult)
+    mount({ history: versions, revision: "3" })
+    const user = userEvent.setup()
+    const panel = await openHistory(user)
+    await user.click(
+      within(within(panel).getAllByRole("listitem")[1]!).getByRole("button", {
+        name: /Restore/,
+      })
+    )
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    await screen.findByText("This Page changed since you opened it")
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1)
+    expect(actions.restorePageVersion).toHaveBeenCalledWith(4, 2, {
+      expected: "3",
+    })
   })
 })

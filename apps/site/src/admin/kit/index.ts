@@ -86,6 +86,9 @@ export {
   type SaveResultLike,
 } from "./toast"
 
+export { StaleSaveDialog, type StaleSaveDialogProps } from "./StaleSaveDialog"
+export { useStaleSave } from "./useStaleSave"
+
 export { isDirty } from "./unsaved/dirty"
 export { useDirtyState } from "./unsaved/useDirtyState"
 export {

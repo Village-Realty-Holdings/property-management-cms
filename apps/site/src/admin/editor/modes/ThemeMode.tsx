@@ -14,7 +14,14 @@ import {
 import { saveTheme } from "../../actions/theme"
 import { loadPreviewPage } from "../../actions/themePreview"
 import { ThemeHistory } from "../../components/ThemeHistory"
-import { InlineError, notify, type SaveResult } from "../../kit"
+import {
+  InlineError,
+  notify,
+  StaleSaveDialog,
+  useStaleSave,
+  type SaveResult,
+} from "../../kit"
+import type { Revision } from "../../staleSave"
 import type { PreviewPage } from "../../theme/previewPage"
 import type { HistoryRow } from "../../theme/themeScreen"
 import { editingUrl } from "../../../site/editing/flag"
@@ -46,6 +53,8 @@ export function ThemeMode(props: {
   publishedPages: number
   /** Home, which the canvas starts on. */
   home: PreviewPage
+  /** The latest version when the editor opened, for the stale-save check. */
+  revision?: Revision | null
 }) {
   return (
     <EditorProvider initial={{ kind: "theme", inputs: props.live }}>
@@ -83,14 +92,19 @@ function ThemeModeBody({
   history,
   publishedPages,
   home,
+  revision,
 }: {
   live: ThemeInputs
   fonts: readonly AvailableFont[]
   history: readonly HistoryRow[]
   publishedPages: number
   home: PreviewPage
+  revision?: Revision | null
 }) {
-  const { state, doc, isDirty, setField, markSaved } = useEditor()
+  const { state, doc, isDirty, setField, markSaved, discard } = useEditor()
+  // The ref behind it moves on with every save and restore, so a router
+  // refresh never needs to hand it a new one.
+  const stale = useStaleSave({ initial: revision, dirty: isDirty, discard })
   const inputs = (doc as ThemeDocument).inputs
   // Who else is editing the Theme. A save or Restore clears every hold on it,
   // so this editor claims it again afterwards.
@@ -159,12 +173,21 @@ function ThemeModeBody({
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
 
-  const save = async (): Promise<SaveResult> => {
+  const save = async ({ force = false } = {}): Promise<SaveResult> => {
     setSaving(true)
     setFailure(null)
     try {
       const sent = doc
-      const result = await saveTheme(inputs, note.trim() || null)
+      const result = await saveTheme(inputs, note.trim() || null, {
+        expected: stale.expected(),
+        ...(force ? { force: true } : {}),
+      })
+      // Someone saved since this was opened: the dialog decides what next.
+      if (stale.settle(result, () => save({ force: true }))) {
+        const message = result.message || "The Theme could not be saved."
+        setFailure(message)
+        return { ok: false, message }
+      }
       if (result.ok) {
         markSaved(sent, sent)
         presence.refresh()
@@ -180,68 +203,75 @@ function ThemeModeBody({
   }
 
   return (
-    <VisualEditorShell
-      mode="theme"
-      name="Theme"
-      goesLiveOn={publishedPages}
-      canvasSrc={canvasSrc}
-      notice={
-        <PresenceBanner
-          view={presence.view}
-          kind="theme"
-          onTakeOver={presence.takeOver}
-        />
-      }
-      onSave={save}
-      canSave={isDirty && !saving}
-      onPickPage={pickPage}
-      actions={
-        <>
-          {failure && <InlineError>{failure}</InlineError>}
-          <label className="sr-only" htmlFor="theme-save-note">
-            Note for History (optional)
-          </label>
-          <Input
-            id="theme-save-note"
-            value={note}
-            maxLength={200}
-            placeholder="Note (optional)"
-            className="h-7 w-44 text-xs"
-            onChange={(event) => setNote(event.target.value)}
+    <>
+      <VisualEditorShell
+        mode="theme"
+        name="Theme"
+        goesLiveOn={publishedPages}
+        canvasSrc={canvasSrc}
+        notice={
+          <PresenceBanner
+            view={presence.view}
+            kind="theme"
+            onTakeOver={presence.takeOver}
           />
-          <Button
-            size="sm"
-            disabled={!isDirty || saving}
-            onClick={() => void save()}
-          >
-            Save
-          </Button>
-        </>
-      }
-      tabs={[
-        {
-          id: "controls",
-          label: "Controls",
-          content: (
-            <div className="p-3">
-              <ThemeControls value={inputs} onChange={change} fonts={fonts} />
-            </div>
-          ),
-        },
-        {
-          id: "history",
-          label: "History",
-          content: (
-            <div className="flex flex-col gap-3 p-3">
-              <p className="text-sm text-muted-foreground">
-                Every save goes live on your Site at once and is kept here.
-                Restore an earlier version to put your Site back the way it was.
-              </p>
-              <ThemeHistory rows={history} />
-            </div>
-          ),
-        },
-      ]}
-    />
+        }
+        onSave={() => save()}
+        canSave={isDirty && !saving}
+        onPickPage={pickPage}
+        actions={
+          <>
+            {failure && <InlineError>{failure}</InlineError>}
+            <label className="sr-only" htmlFor="theme-save-note">
+              Note for History (optional)
+            </label>
+            <Input
+              id="theme-save-note"
+              value={note}
+              maxLength={200}
+              placeholder="Note (optional)"
+              className="h-7 w-44 text-xs"
+              onChange={(event) => setNote(event.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={!isDirty || saving}
+              onClick={() => void save()}
+            >
+              Save
+            </Button>
+          </>
+        }
+        tabs={[
+          {
+            id: "controls",
+            label: "Controls",
+            content: (
+              <div className="p-3">
+                <ThemeControls value={inputs} onChange={change} fonts={fonts} />
+              </div>
+            ),
+          },
+          {
+            id: "history",
+            label: "History",
+            content: (
+              <div className="flex flex-col gap-3 p-3">
+                <p className="text-sm text-muted-foreground">
+                  Every save goes live on your Site at once and is kept here.
+                  Restore an earlier version to put your Site back the way it
+                  was.
+                </p>
+                <ThemeHistory
+                  rows={history}
+                  stale={{ expected: stale.expected, settle: stale.settle }}
+                />
+              </div>
+            ),
+          },
+        ]}
+      />
+      <StaleSaveDialog {...stale.dialog} />
+    </>
   )
 }

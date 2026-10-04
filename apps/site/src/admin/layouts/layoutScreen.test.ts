@@ -5,6 +5,7 @@ import { defaultLayoutData } from "../../layouts/defaultLayout"
 import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { truncateTables } from "../../test/truncateTables"
+import { latestRevision } from "../staleSave"
 import type { BlockValues } from "../pageForm"
 import type { LayoutDocument } from "../editor/state"
 import {
@@ -336,5 +337,94 @@ describe("createUntitledLayout", () => {
       ...as,
     })
     expect(made.isDefault).toBe(true)
+  })
+})
+
+describe("saving a Layout over someone else's change", () => {
+  let sam: typeof as
+
+  beforeAll(async () => {
+    const user = await payload.create({
+      collection: "users",
+      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+    })
+    sam = { overrideAccess: false, user: { ...user, collection: "users" } }
+  })
+
+  async function opened() {
+    const saved = await layout({ name: "Main", header: strip("One") })
+    const screen = (await loadLayoutScreen(payload, as, saved.id))!
+    return { id: saved.id, screen }
+  }
+
+  const two = (doc: LayoutDocument) => ({
+    ...doc,
+    header: strip("Two") as unknown as BlockValues[],
+  })
+
+  it("opens on the latest version", async () => {
+    const { screen } = await opened()
+    expect(screen.revision).toBe(latestRevision(screen.history))
+    expect(screen.revision).toEqual(expect.any(String))
+  })
+
+  it("saves when `expected` is the opened revision, and returns the new one", async () => {
+    const { id, screen } = await opened()
+    const result = await saveLayoutAs(payload, as, id, two(screen.doc), {
+      expected: screen.revision,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.revision).toBe(latestRevision(result.history!))
+    expect(result.revision).not.toBe(screen.revision)
+  })
+
+  it("refuses when someone saved since, and writes nothing", async () => {
+    const { id, screen } = await opened()
+    await saveLayoutAs(payload, sam, id, {
+      ...screen.doc,
+      name: "Sam's",
+    })
+    const result = await saveLayoutAs(payload, as, id, two(screen.doc), {
+      expected: screen.revision,
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      message: "This Layout changed since you opened it.",
+      conflict: { kind: "layout", by: "Sam Taylor", byYou: false },
+    })
+    const now = await loadLayoutScreen(payload, as, id)
+    expect(now!.doc.name).toBe("Sam's")
+    expect(now!.history).toHaveLength(2)
+  })
+
+  it("saves over it when forced", async () => {
+    const { id, screen } = await opened()
+    await saveLayoutAs(payload, sam, id, { ...screen.doc, name: "Sam's" })
+    const result = await saveLayoutAs(payload, as, id, two(screen.doc), {
+      expected: screen.revision,
+      force: true,
+    })
+    expect(result.ok).toBe(true)
+    expect(stripOf(result.doc!)).toBe("Two")
+  })
+
+  it("refuses a stale restore, and restores when forced", async () => {
+    const { id, screen } = await opened()
+    const oldVersion = screen.history[0]!.id
+    await saveLayoutAs(payload, sam, id, two(screen.doc))
+    const refused = await restoreLayoutAs(payload, as, id, oldVersion, {
+      expected: screen.revision,
+    })
+    expect(refused).toMatchObject({
+      ok: false,
+      conflict: { kind: "layout", by: "Sam Taylor" },
+    })
+    expect((await loadLayoutScreen(payload, as, id))!.history).toHaveLength(2)
+    const forced = await restoreLayoutAs(payload, as, id, oldVersion, {
+      expected: screen.revision,
+      force: true,
+    })
+    expect(forced.ok).toBe(true)
+    expect(stripOf(forced.doc!)).toBe("One")
   })
 })

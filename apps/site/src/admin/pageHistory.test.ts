@@ -337,3 +337,51 @@ describe("restorePageVersionAs", () => {
     )
   })
 })
+
+describe("restorePageVersionAs over someone else's change", () => {
+  it("refuses a stale restore and leaves the history as it was", async () => {
+    const id = await threeVersions("/restore-stale")
+    const rows = await readPageVersionRows(t.payload, asAva, id)
+    const opened = String(rows[0]!.id)
+    await savePageAs(t.payload, asSam, {
+      id,
+      intent: "draft",
+      document: pageDoc({ path: "/restore-stale", blocks: [hero("v4")] }),
+    })
+    const before = await readPageVersionRows(t.payload, asAva, id)
+    const result = await restorePageVersionAs(
+      t.payload,
+      asAva,
+      id,
+      rows[1]!.id,
+      { expected: opened }
+    )
+    expect(result).toMatchObject({
+      ok: false,
+      message: "This Page changed since you opened it.",
+      conflict: { kind: "page", by: "Sam Taylor", byYou: false },
+    })
+    expect(await readPageVersionRows(t.payload, asAva, id)).toHaveLength(
+      before.length
+    )
+  })
+
+  it("restores with force, and returns the new revision", async () => {
+    const id = await threeVersions("/restore-forced")
+    const rows = await readPageVersionRows(t.payload, asAva, id)
+    await savePageAs(t.payload, asSam, {
+      id,
+      intent: "draft",
+      document: pageDoc({ path: "/restore-forced", blocks: [hero("v4")] }),
+    })
+    const result = await restorePageVersionAs(
+      t.payload,
+      asAva,
+      id,
+      rows[1]!.id,
+      { expected: String(rows[0]!.id), force: true }
+    )
+    expect(result.ok).toBe(true)
+    expect(result.revision).toBe(String(result.history![0]!.id))
+  })
+})

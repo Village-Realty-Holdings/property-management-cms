@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { ThemeMode } from "@/admin/editor/modes/ThemeMode"
 import { requireUser } from "@/admin/session"
+import { latestRevision } from "@/admin/staleSave"
 import { countPublishedPages, loadHomePreview } from "@/admin/theme/previewPage"
 import { loadThemeScreen } from "@/admin/theme/themeScreen"
 import { getAvailableFonts } from "@/fonts/available"
@@ -30,6 +31,7 @@ export default async function ThemePage() {
       history={screen.history}
       publishedPages={publishedPages}
       home={home}
+      revision={latestRevision(screen.history)}
     />
   )
 }

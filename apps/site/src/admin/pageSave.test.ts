@@ -403,3 +403,107 @@ describe("saving a Page with Containers", () => {
     })
   })
 })
+
+describe("a save over someone else's change", () => {
+  let sam: typeof asUser
+
+  beforeAll(async () => {
+    const user = await t.payload.create({
+      collection: "users",
+      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+    })
+    sam = { overrideAccess: false, user: { ...user, collection: "users" } }
+  })
+
+  const first = async (path: string) => {
+    const result = await savePageAs(t.payload, asUser, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({ title: "Mine", path }),
+    })
+    return { id: result.id!, revision: result.revision }
+  }
+
+  const versions = async (id: number) =>
+    (
+      await t.payload.findVersions({
+        collection: "pages",
+        where: { parent: { equals: id } },
+        pagination: false,
+        ...asUser,
+      })
+    ).docs.length
+
+  it("saves when `expected` is the revision the last save returned", async () => {
+    const { id, revision } = await first("/stale-fresh")
+    expect(revision).toEqual(expect.any(String))
+    const result = await savePageAs(t.payload, asUser, {
+      id,
+      intent: "draft",
+      document: pageDoc({ title: "Mine 2", path: "/stale-fresh" }),
+      expected: revision,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.revision).toEqual(expect.any(String))
+    expect(result.revision).not.toBe(revision)
+  })
+
+  it("refuses, naming who, when someone saved since, and writes nothing", async () => {
+    const { id, revision } = await first("/stale-refused")
+    await savePageAs(t.payload, sam, {
+      id,
+      intent: "draft",
+      document: pageDoc({ title: "Sam's", path: "/stale-refused" }),
+    })
+    const count = await versions(id)
+    const result = await savePageAs(t.payload, asUser, {
+      id,
+      intent: "draft",
+      document: pageDoc({ title: "Mine 2", path: "/stale-refused" }),
+      expected: revision,
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      message: "This Page changed since you opened it.",
+      conflict: { kind: "page", by: "Sam Taylor", byYou: false },
+    })
+    const draft = await t.payload.findByID({
+      collection: "pages",
+      id,
+      draft: true,
+      depth: 0,
+      ...asUser,
+    })
+    expect(draft.title).toBe("Sam's")
+    expect(await versions(id)).toBe(count)
+  })
+
+  it("saves over it when forced", async () => {
+    const { id, revision } = await first("/stale-forced")
+    await savePageAs(t.payload, sam, {
+      id,
+      intent: "draft",
+      document: pageDoc({ title: "Sam's", path: "/stale-forced" }),
+    })
+    const result = await savePageAs(t.payload, asUser, {
+      id,
+      intent: "draft",
+      document: pageDoc({ title: "Mine 2", path: "/stale-forced" }),
+      expected: revision,
+      force: true,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.document?.title).toBe("Mine 2")
+  })
+
+  it("ignores `expected` for a new Page", async () => {
+    const result = await savePageAs(t.payload, asUser, {
+      id: null,
+      intent: "draft",
+      document: pageDoc({ title: "New", path: "/stale-new" }),
+      expected: "x",
+    })
+    expect(result.ok).toBe(true)
+    expect(result.revision).toEqual(expect.any(String))
+  })
+})

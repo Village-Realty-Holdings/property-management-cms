@@ -10,6 +10,7 @@ import {
 import { PageMode } from "@/admin/editor/modes/PageMode"
 import { readPageVersionRows } from "@/admin/pageHistory"
 import { requireUser } from "@/admin/session"
+import { latestRevision } from "@/admin/staleSave"
 import { loadPageDependents } from "@/admin/usage"
 import { editingUrl } from "@/site/editing/flag"
 
@@ -64,6 +65,7 @@ export default async function EditPage({ params, searchParams }: Props) {
       initialTab={tab === "page" ? "page" : undefined}
       dependents={dependents}
       history={history}
+      revision={latestRevision(history)}
       canvasSrc={editingUrl(draft.path)}
       {...pickers}
     />

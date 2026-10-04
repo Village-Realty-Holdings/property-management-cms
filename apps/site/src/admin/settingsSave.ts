@@ -8,12 +8,14 @@ import {
   type BrandValues,
 } from "./brandForm"
 import { formStateFromError, type FormState } from "./formState"
+import { globalRevision, staleSaveRefusal } from "./revision"
 import {
   parseSeoValues,
   seoToValues,
   seoValuesToData,
   type SeoValues,
 } from "./seoForm"
+import type { RevisionResult, SaveGuard } from "./staleSave"
 
 /**
  * Reading and saving the Brand and SEO globals for their Admin screens,
@@ -29,7 +31,7 @@ export type Access = {
 }
 
 /** What a save returns to its form: the state, plus the values as stored. */
-export type SaveResult<V> = FormState & { values?: V }
+export type SaveResult<V> = FormState & { values?: V } & RevisionResult
 
 export async function loadBrand(
   payload: Payload,
@@ -52,18 +54,31 @@ export async function loadSeo(
 export async function saveBrandAs(
   payload: Payload,
   access: Access,
-  input: unknown
+  input: unknown,
+  guard: SaveGuard = {}
 ): Promise<SaveResult<BrandValues>> {
   const parsed = parseBrandValues(input)
   if (!parsed.ok) return invalid(parsed)
   try {
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "brand" },
+      guard
+    )
+    if (stale) return stale
     const saved = await payload.updateGlobal({
       slug: "brand",
       data: brandValuesToData(parsed.values),
       depth: 0,
       ...access,
     })
-    return { ok: true, message: "Brand saved.", values: brandToValues(saved) }
+    return {
+      ok: true,
+      message: "Brand saved.",
+      values: brandToValues(saved),
+      revision: globalRevision(saved),
+    }
   } catch (error) {
     return formStateFromError(error)
   }
@@ -72,18 +87,31 @@ export async function saveBrandAs(
 export async function saveSeoAs(
   payload: Payload,
   access: Access,
-  input: unknown
+  input: unknown,
+  guard: SaveGuard = {}
 ): Promise<SaveResult<SeoValues>> {
   const parsed = parseSeoValues(input)
   if (!parsed.ok) return invalid(parsed)
   try {
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "seo" },
+      guard
+    )
+    if (stale) return stale
     const saved = await payload.updateGlobal({
       slug: "seo",
       data: seoValuesToData(parsed.values),
       depth: 0,
       ...access,
     })
-    return { ok: true, message: "SEO saved.", values: seoToValues(saved) }
+    return {
+      ok: true,
+      message: "SEO saved.",
+      values: seoToValues(saved),
+      revision: globalRevision(saved),
+    }
   } catch (error) {
     return formStateFromError(error)
   }

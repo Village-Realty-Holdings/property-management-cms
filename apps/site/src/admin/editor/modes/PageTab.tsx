@@ -29,7 +29,12 @@ import { DeletePageButton } from "../../components/DeletePageButton"
 import { describedBy, FormField } from "../../components/FormBits"
 import { MediaSelect, type MediaOption } from "../../components/MediaSelect"
 import type { PageStatus } from "../../dashboard/pageStatus"
-import { InlineError, notify, type Dependent } from "../../kit"
+import {
+  InlineError,
+  notify,
+  type Dependent,
+  type useStaleSave,
+} from "../../kit"
 import type { LinkUse } from "../../links/screen"
 import { useEditor } from "../EditorProvider"
 import type { LayoutChoice, PageDocument } from "../state"
@@ -42,6 +47,8 @@ import {
   type ResolvedLayout,
 } from "./pageTabModel"
 import { fieldErrorFor, type SaveProblem } from "./saveProblem"
+
+type StaleSave = Pick<ReturnType<typeof useStaleSave>, "expected" | "settle">
 
 /**
  * The Page tab: the Page's own settings (title, path), the Layout it uses
@@ -61,6 +68,7 @@ export function PageTab({
   dependents,
   problem,
   busy,
+  stale,
   onUnpublish,
   onDeleted,
   onLayoutMade,
@@ -78,6 +86,8 @@ export function PageTab({
   dependents: readonly Dependent[]
   problem: SaveProblem | null
   busy: boolean
+  /** The stale-save check, for "Make a new Layout from this one". */
+  stale?: StaleSave
   onUnpublish: () => void
   onDeleted: () => void
   /** The Draft was switched to a Layout made from the Page's own. */
@@ -166,6 +176,7 @@ export function PageTab({
         resolved={layout}
         onChoose={(choice) => setField("layout", choice)}
         onMade={onLayoutMade}
+        stale={stale}
       />
 
       <section aria-labelledby="page-seo-heading" className="grid gap-3">
@@ -412,6 +423,7 @@ function LayoutSection({
   resolved,
   onChoose,
   onMade,
+  stale,
 }: {
   pageId: number | null
   pageTitle: string
@@ -420,6 +432,7 @@ function LayoutSection({
   resolved: ResolvedLayout | null
   onChoose: (choice: LayoutChoice) => void
   onMade: (layout: LayoutOption) => void
+  stale?: StaleSave
 }) {
   const group = useId()
 
@@ -486,6 +499,7 @@ function LayoutSection({
         source={resolved}
         layouts={layouts}
         onMade={onMade}
+        stale={stale}
       />
     </fieldset>
   )
@@ -502,12 +516,14 @@ function MakeLayoutFromThis({
   source,
   layouts,
   onMade,
+  stale,
 }: {
   pageId: number | null
   pageTitle: string
   source: ResolvedLayout | null
   layouts: readonly LayoutOption[]
   onMade: (layout: LayoutOption) => void
+  stale?: StaleSave
 }) {
   const { state, markSaved, setField } = useEditor()
   const [open, setOpen] = useState(false)
@@ -520,7 +536,10 @@ function MakeLayoutFromThis({
   if (pageId === null) why = "Save the Page first."
   else if (!source) why = "The Page has no Layout to copy."
 
-  const submit = async () => {
+  // Resolves to a failure when "Save anyway" (which calls this again) fails.
+  const submit = async (
+    force = false
+  ): Promise<{ ok: false; message: string } | void> => {
     if (!source || pageId === null || pending) return
     setPending(true)
     setError(null)
@@ -529,10 +548,18 @@ function MakeLayoutFromThis({
         pageId,
         layoutId: source.id,
         name,
+        expected: stale?.expected(),
+        ...(force ? { force: true } : {}),
       })
+      // Someone saved the Page since it was opened: the stale dialog takes over.
+      if (stale?.settle(result, () => submit(true))) {
+        setOpen(false)
+        return { ok: false, message: result.message ?? "" }
+      }
       if (!result.ok || !result.layout) {
-        setError(result.message || "Could not make the Layout.")
-        return
+        const message = result.message || "Could not make the Layout."
+        setError(message)
+        return { ok: false, message }
       }
       const made = result.layout
       // The server switched the Page's Draft: that is the saved baseline now,
@@ -548,7 +575,9 @@ function MakeLayoutFromThis({
       setOpen(false)
       notify.success(result.message || "Layout made")
     } catch {
-      setError("Could not make the Layout. Please try again.")
+      const message = "Could not make the Layout. Please try again."
+      setError(message)
+      return { ok: false, message }
     } finally {
       setPending(false)
     }

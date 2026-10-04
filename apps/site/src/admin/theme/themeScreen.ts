@@ -10,6 +10,8 @@ import {
   restoreThemeVersion,
   saveTheme,
 } from "../../theme/record"
+import { staleSaveRefusal, readRevision } from "../revision"
+import type { RevisionResult, SaveGuard } from "../staleSave"
 import { themeSummaryOf, type ThemeSummary } from "../dashboard/site"
 import { formStateFromError, type FormState } from "../formState"
 import { themeDetails, type DetailRow } from "./themeDetails"
@@ -56,6 +58,9 @@ export type ThemeScreen = {
   history: HistoryRow[]
 }
 
+/** What a Theme save or restore answers, with the new revision. */
+export type ThemeSaveResult = FormState & RevisionResult
+
 const GONE = "That version no longer exists."
 
 /** The family a restore uses in the Font control called `label`. */
@@ -76,13 +81,22 @@ export async function saveThemeAs(
   payload: Payload,
   access: UserAccess,
   inputs: ThemeInputs,
-  note?: string | null
-): Promise<FormState> {
+  note?: string | null,
+  guard: SaveGuard = {}
+): Promise<ThemeSaveResult> {
   try {
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "theme" },
+      guard
+    )
+    if (stale) return stale
     const saved = await saveTheme(payload, { user: access.user, inputs, note })
+    const { revision } = await readRevision(payload, access, { kind: "theme" })
     return saved.changed
-      ? { ok: true, message: "Theme saved. It is live on your Site." }
-      : { ok: true, message: NO_CHANGES_MESSAGE }
+      ? { ok: true, message: "Theme saved. It is live on your Site.", revision }
+      : { ok: true, message: NO_CHANGES_MESSAGE, revision }
   } catch (error) {
     return formStateFromError(error)
   }
@@ -124,8 +138,9 @@ export async function loadThemeScreen(
 export async function restoreThemeAs(
   payload: Payload,
   access: UserAccess,
-  versionId: number
-): Promise<FormState> {
+  versionId: number,
+  guard: SaveGuard = {}
+): Promise<ThemeSaveResult> {
   if (!Number.isInteger(versionId) || versionId <= 0) {
     return { ok: false, message: GONE }
   }
@@ -136,20 +151,30 @@ export async function restoreThemeAs(
     if (version.isLive) {
       return { ok: false, message: "That version is already live." }
     }
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "theme" },
+      guard
+    )
+    if (stale) return stale
     const restored = await restoreThemeVersion(payload, {
       user: access.user,
       versionId,
     })
+    const { revision } = await readRevision(payload, access, { kind: "theme" })
     if (!restored.changed) {
       return {
         ok: true,
         message:
           "Your Site already looks like that version. Nothing to restore.",
+        revision,
       }
     }
     return {
       ok: true,
       message: "Restored that version. It is live on your Site.",
+      revision,
     }
   } catch (error) {
     return formStateFromError(error)

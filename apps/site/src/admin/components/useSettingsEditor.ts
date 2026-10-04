@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 
-import { isDirty, useSaveToast } from "../kit"
+import { isDirty, useSaveToast, useStaleSave } from "../kit"
 import type { FormState } from "../formState"
 import type { SaveResult } from "../settingsSave"
+import type { Revision, SaveGuard } from "../staleSave"
 
 /**
  * The state of a settings editor (Brand, SEO): the values being edited, the
@@ -14,10 +15,13 @@ import type { SaveResult } from "../settingsSave"
  */
 export function useSettingsEditor<V>({
   initial,
+  revision,
   save,
 }: {
   initial: V
-  save: (values: V) => Promise<SaveResult<V>>
+  /** The revision the form opened, for the stale-save check. */
+  revision?: Revision | null
+  save: (values: V, guard: SaveGuard) => Promise<SaveResult<V>>
 }) {
   const [values, setValues] = useState(initial)
   const [saved, setSaved] = useState(initial)
@@ -26,12 +30,22 @@ export function useSettingsEditor<V>({
 
   useSaveToast(state)
 
-  async function submit(): Promise<FormState> {
+  const dirty = isDirty(saved, values)
+  const stale = useStaleSave({
+    initial: revision,
+    dirty,
+    discard: () => setValues(saved),
+  })
+
+  async function submit(force = false): Promise<FormState> {
     const submitted = values
     setPending(true)
     let result: SaveResult<V>
     try {
-      result = await save(submitted)
+      result = await save(submitted, {
+        expected: stale.expected(),
+        ...(force ? { force: true } : {}),
+      })
     } catch {
       result = {
         ok: false,
@@ -39,6 +53,7 @@ export function useSettingsEditor<V>({
       }
     }
     setPending(false)
+    stale.settle(result, () => submit(true))
     setState(result)
     if (result.ok && result.values) {
       const stored = result.values
@@ -55,7 +70,8 @@ export function useSettingsEditor<V>({
     state,
     fieldErrors: state.fieldErrors ?? {},
     pending,
-    dirty: isDirty(saved, values),
+    dirty,
     submit,
+    staleDialog: stale.dialog,
   }
 }

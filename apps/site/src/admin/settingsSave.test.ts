@@ -4,6 +4,7 @@ import type { User } from "../payload-types"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import { emptyBrand } from "./brandForm"
 import { emptySeo } from "./seoForm"
+import { readRevision } from "./revision"
 import { loadBrand, loadSeo, saveBrandAs, saveSeoAs } from "./settingsSave"
 
 // 1x1 transparent PNG.
@@ -138,5 +139,76 @@ describe("the SEO screen's data", () => {
   it("refuses a visitor", async () => {
     const result = await saveSeoAs(t.payload, asVisitor, emptySeo)
     expect(result.ok).toBe(false)
+  })
+})
+
+describe("saving the Brand and SEO over someone else's change", () => {
+  const brand = { ...emptyBrand, name: "Warren" }
+
+  it("refuses a stale Brand save, saying when and not who, and stores nothing", async () => {
+    const first = await saveBrandAs(t.payload, asUser, brand)
+    const stored = await loadBrand(t.payload, asUser)
+    const stale = await saveBrandAs(
+      t.payload,
+      asUser,
+      { ...brand, name: "Mine" },
+      { expected: "2000-01-01T00:00:00.000Z" }
+    )
+    const now = await readRevision(t.payload, asUser, { kind: "brand" })
+    expect(stale).toEqual({
+      ok: false,
+      message: "The Brand changed since you opened it.",
+      conflict: { kind: "brand", by: null, byYou: false, at: now.at },
+    })
+    expect(await loadBrand(t.payload, asUser)).toEqual(stored)
+    expect(first.revision).toBe(now.revision)
+  })
+
+  it("saves with the current revision, returning the next, and with force", async () => {
+    await saveBrandAs(t.payload, asUser, brand)
+    const opened = (await readRevision(t.payload, asUser, { kind: "brand" }))
+      .revision
+    const fresh = await saveBrandAs(
+      t.payload,
+      asUser,
+      { ...brand, name: "Fresh" },
+      { expected: opened }
+    )
+    expect(fresh.ok).toBe(true)
+    expect(fresh.revision).toBe(
+      (await readRevision(t.payload, asUser, { kind: "brand" })).revision
+    )
+    const forced = await saveBrandAs(
+      t.payload,
+      asUser,
+      { ...brand, name: "Forced" },
+      { expected: "2000-01-01T00:00:00.000Z", force: true }
+    )
+    expect(forced.ok).toBe(true)
+    expect((await loadBrand(t.payload, asUser)).name).toBe("Forced")
+  })
+
+  it("refuses a stale SEO save, and saves with force", async () => {
+    await saveSeoAs(t.payload, asUser, emptySeo)
+    const stale = await saveSeoAs(
+      t.payload,
+      asUser,
+      { ...emptySeo, description: "Mine" },
+      { expected: "2000-01-01T00:00:00.000Z" }
+    )
+    expect(stale).toMatchObject({
+      ok: false,
+      message: "SEO changed since you opened it.",
+      conflict: { kind: "seo", by: null },
+    })
+    expect((await loadSeo(t.payload, asUser)).description).not.toBe("Mine")
+    const forced = await saveSeoAs(
+      t.payload,
+      asUser,
+      { ...emptySeo, description: "Mine" },
+      { expected: "2000-01-01T00:00:00.000Z", force: true }
+    )
+    expect(forced.ok).toBe(true)
+    expect((await loadSeo(t.payload, asUser)).description).toBe("Mine")
   })
 })

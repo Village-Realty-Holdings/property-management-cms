@@ -11,7 +11,13 @@ import {
 } from "./editor/modes/pageDocument"
 import type { PageDocument } from "./editor/state"
 import { formStateFromError, type FormState } from "./formState"
+import { staleSaveRefusal } from "./revision"
 import type { Access } from "./settingsSave"
+import {
+  latestRevision,
+  type RevisionResult,
+  type SaveGuard,
+} from "./staleSave"
 
 /**
  * A Page's version history and Restore, through the Local API with the
@@ -37,12 +43,13 @@ export type PageVersionRow = {
 }
 
 /** What a restore answers: the stored Draft, to start the editor from again. */
-export type PageRestoreResult = FormState & {
-  id?: number
-  status?: PageStatus
-  document?: PageDocument
-  history?: PageVersionRow[]
-}
+export type PageRestoreResult = FormState &
+  RevisionResult & {
+    id?: number
+    status?: PageStatus
+    document?: PageDocument
+    history?: PageVersionRow[]
+  }
 
 const VERSION_GONE = "That version no longer exists."
 
@@ -89,7 +96,8 @@ export async function restorePageVersionAs(
   payload: Payload,
   access: Access,
   id: number,
-  versionId: number
+  versionId: number,
+  guard: SaveGuard = {}
 ): Promise<PageRestoreResult> {
   if (!Number.isInteger(id) || id <= 0) return gone("That Page")
   if (!Number.isInteger(versionId) || versionId <= 0)
@@ -109,6 +117,13 @@ export async function restorePageVersionAs(
     if (!found || String(found.parent) !== String(id)) {
       return { ok: false, message: VERSION_GONE }
     }
+    const stale = await staleSaveRefusal(
+      payload,
+      access,
+      { kind: "page", id },
+      guard
+    )
+    if (stale) return stale
     const current = await payload.findByID({
       collection: "pages",
       id,
@@ -155,6 +170,7 @@ export async function restorePageVersionAs(
       }),
       document: pageDocumentFromPage(saved),
       history,
+      revision: latestRevision(history),
     }
   } catch (error) {
     if (error instanceof NotFound) return gone("That Page")

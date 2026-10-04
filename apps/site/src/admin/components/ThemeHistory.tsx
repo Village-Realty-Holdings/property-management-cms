@@ -6,10 +6,10 @@ import { CircleAlertIcon, HistoryIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 
 import { restoreTheme } from "../actions/theme"
-import { ConfirmDialog, notify } from "../kit"
+import { ConfirmDialog, notify, type useStaleSave } from "../kit"
 import { LocalTime, useLocalMoment } from "../time/LocalTime"
 import { formatMoment } from "../time/formatMoment"
-import type { HistoryRow } from "../theme/themeScreen"
+import type { HistoryRow, ThemeSaveResult } from "../theme/themeScreen"
 
 /** The label of Restore on the live version, which is also why it is off. */
 const LIVE_VERSION_LABEL = "That version is already live."
@@ -55,7 +55,14 @@ function RestoreButton({
  * version but the live one. Restoring asks first, because it changes how the
  * whole Site looks at once; it is saved as a new version, so nothing is lost.
  */
-export function ThemeHistory({ rows }: { rows: readonly HistoryRow[] }) {
+export function ThemeHistory({
+  rows,
+  stale,
+}: {
+  rows: readonly HistoryRow[]
+  /** The stale-save check; a restore over someone else's save asks first. */
+  stale?: Pick<ReturnType<typeof useStaleSave>, "expected" | "settle">
+}) {
   const [target, setTarget] = useState<HistoryRow | null>(null)
   const [open, setOpen] = useState(false)
 
@@ -135,9 +142,20 @@ export function ThemeHistory({ rows }: { rows: readonly HistoryRow[] }) {
         confirmVariant="default"
         onConfirm={async () => {
           if (!target) return
-          const result = await restoreTheme(target.id)
-          if (result.ok) notify.success(result.message || "Theme restored")
-          return result
+          const id = target.id
+          const run = async (
+            force: boolean
+          ): Promise<ThemeSaveResult | undefined> => {
+            const result = await restoreTheme(id, {
+              expected: stale?.expected(),
+              ...(force ? { force: true } : {}),
+            })
+            // Someone saved since this was opened: the stale dialog takes over.
+            if (stale?.settle(result, () => run(true))) return undefined
+            if (result.ok) notify.success(result.message || "Theme restored")
+            return result
+          }
+          return run(false)
         }}
       />
     </>

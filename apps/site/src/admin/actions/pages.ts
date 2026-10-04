@@ -20,6 +20,7 @@ import {
 } from "../pageTransfer"
 import { duplicatePageAs } from "../pageDuplicate"
 import { requireUser } from "../session"
+import type { Revision, SaveGuard } from "../staleSave"
 
 /**
  * Saves a Page from the Visual Editor as the User: as a Draft,
@@ -31,6 +32,8 @@ export async function savePage(input: {
   id: number | null
   intent: PageIntent
   document: PageDocument
+  expected?: Revision | null
+  force?: boolean
 }): Promise<PageSaveResult> {
   const { payload, as } = await requireUser()
   const result = await savePageAs(payload, as, input)
@@ -46,10 +49,11 @@ export async function savePage(input: {
 /** Saves an earlier version of a Page as a new Draft (the History tab). */
 export async function restorePageVersion(
   id: number,
-  versionId: number
+  versionId: number,
+  guard?: SaveGuard
 ): Promise<PageRestoreResult> {
   const { payload, as } = await requireUser()
-  const result = await restorePageVersionAs(payload, as, id, versionId)
+  const result = await restorePageVersionAs(payload, as, id, versionId, guard)
   if (result.ok) {
     revalidatePath("/admin/pages")
     revalidatePath("/admin")
