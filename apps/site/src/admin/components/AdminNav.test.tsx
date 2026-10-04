@@ -29,6 +29,7 @@ describe("<AdminNav>", () => {
       ["SEO", "/admin/settings/seo"],
       ["Theme", "/admin/theme"],
       ["Assets", "/admin/settings/assets/fonts"],
+      ["Users", "/admin/settings/users"],
       ["Replace Text", "/admin/tools/replace-text"],
       ["Replace Image", "/admin/tools/replace-image"],
       ["Links", "/admin/tools/links"],

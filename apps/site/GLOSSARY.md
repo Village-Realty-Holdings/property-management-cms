@@ -96,6 +96,10 @@ _Avoid_: Home (for the Admin page), overview
 The Admin's grouping, under Settings, for the files the Theme draws on. Today that is Fonts. It is a heading in the Admin, not a model: Media is Content, not an Asset.
 _Avoid_: Assets for Media, or as a model name
 
+**Users**:
+The Admin's screen, under Settings, listing the Users of this Site, where a User can be removed. It is a heading in the Admin, not a model. A User is added by signing in, never from this screen, and you can't remove yourself.
+_Avoid_: Team, members, accounts
+
 **Tools**:
 The Admin's grouping, below Settings, for jobs that act on the whole Site at once, such as Replace Text, Replace Image and Links, and for the lists a Site draws on: Themes and Starter Kits. It is a heading in the Admin, not a model.
 _Avoid_: Utilities, system tools, other
