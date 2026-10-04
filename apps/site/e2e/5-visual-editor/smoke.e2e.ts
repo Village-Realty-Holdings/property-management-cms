@@ -91,13 +91,24 @@ describe("the Visual Editor, end to end on one Site", () => {
   it("starts a New Page from the Dashboard, in the Visual Editor", async () => {
     await page.goto(`${ORIGIN}/admin`)
     await control(page, "New Page").click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("Title", { exact: true }).fill(TITLE)
+    await dialog.getByLabel("Path", { exact: true }).fill(PATH)
+    await control(dialog, "Continue").click()
     await page.waitForURL((url) => EDITOR_ROUTE.page.test(url.pathname))
     await canvasFrame(page)
     await expectVisible(modeChip(page, "Page"), "Page mode")
 
     const pageTab = await openTab(page, "Page")
-    await pageTab.getByLabel("Title", { exact: true }).fill(TITLE)
-    await pageTab.getByLabel("Path", { exact: true }).fill(PATH)
+    // The dialog's Title and Path came through the route.
+    expect(
+      await pageTab.getByLabel("Title", { exact: true }).inputValue(),
+      "the Page tab's Title"
+    ).toBe(TITLE)
+    expect(
+      await pageTab.getByLabel("Path", { exact: true }).inputValue(),
+      "the Page tab's Path"
+    ).toBe(PATH)
   })
 
   it("adds a Hero and a Call to action, and edits them", async () => {

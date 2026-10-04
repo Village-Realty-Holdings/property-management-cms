@@ -1,9 +1,10 @@
 import Link from "next/link"
-import { FileTextIcon, PlusIcon, SearchIcon } from "lucide-react"
+import { FileTextIcon, SearchIcon } from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { buttonVariants } from "@workspace/ui/components/button"
 
+import { NewPageButton } from "../components/pageTemplates/NewPageButton"
 import { ExportPageButton } from "../components/pages/PageTransfer"
 import { EmptyState } from "../kit/EmptyState"
 import type { PageRow } from "./rows"
@@ -43,11 +44,7 @@ export function PagesTable({
         icon={<FileTextIcon />}
         title="No Pages yet"
         description='Create the Home Page with the path "/" to start the Site.'
-        action={
-          <Link href="/admin/pages/new" className={buttonVariants()}>
-            <PlusIcon aria-hidden="true" /> New Page
-          </Link>
-        }
+        action={<NewPageButton />}
       />
     )
   }

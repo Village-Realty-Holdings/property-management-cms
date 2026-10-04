@@ -10,6 +10,7 @@ import {
   type PageIntent,
   type PageSaveResult,
 } from "../pageSave"
+import { pagePathTakenAs } from "../newPage"
 import {
   exportPageAs,
   importPageAs,
@@ -68,4 +69,10 @@ export async function importPage(text: string): Promise<ImportResult> {
     revalidatePath("/admin")
   }
   return result
+}
+
+/** Whether a Page already uses this path (the New Page dialog, on submit). */
+export async function pagePathTaken(path: string): Promise<boolean> {
+  const { payload, as } = await requireUser()
+  return pagePathTakenAs(payload, as, path)
 }

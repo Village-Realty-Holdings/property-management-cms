@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
+vi.mock("../actions/pages", () => ({ pagePathTaken: vi.fn() }))
+vi.mock("../actions/pageTemplates", () => ({
+  listPageTemplates: vi.fn().mockResolvedValue([]),
+}))
 
 import {
   ContinueEditingCard,
@@ -46,9 +52,7 @@ describe("<PagesTable>", () => {
 
   it("offers New Page when there are no Pages", () => {
     render(<PagesTable rows={[]} />)
-    expect(
-      screen.getByRole("link", { name: /New Page/ }).getAttribute("href")
-    ).toBe("/admin/pages/new")
+    expect(screen.getByRole("button", { name: /New Page/ })).toBeTruthy()
   })
 
   it("offers Clear search when a search finds nothing", () => {
@@ -132,7 +136,7 @@ describe("<LayoutsTable>", () => {
 describe("Dashboard cards", () => {
   it("Continue editing offers New Page when nothing was edited yet", () => {
     render(<ContinueEditingCard items={[]} />)
-    expect(screen.getByRole("link", { name: /New Page/ })).toBeTruthy()
+    expect(screen.getByRole("button", { name: /New Page/ })).toBeTruthy()
   })
 
   it("Continue editing links each item, Pages and Layouts alike", () => {
@@ -208,14 +212,14 @@ describe("Dashboard cards", () => {
     ).toBe("/admin/theme")
   })
 
-  it("Quick actions: New Page, New Layout, Upload Media", () => {
+  it("Quick actions: New Page (the dialog), New Layout, Upload Media", () => {
     render(<QuickActionsCard />)
+    expect(screen.getByRole("button", { name: "New Page" })).toBeTruthy()
     expect(
       screen
         .getAllByRole("link")
         .map((a) => [a.textContent?.trim(), a.getAttribute("href")])
     ).toEqual([
-      ["New Page", "/admin/pages/new"],
       ["New Layout", "/admin/layouts/new"],
       ["Upload Media", "/admin/media#upload"],
     ])

@@ -128,7 +128,11 @@ describe("the routes that open the Visual Editor", () => {
   it("opens New Page from the Pages list in the Visual Editor, not a form", async () => {
     await page.goto(`${ORIGIN}/admin/pages`)
     await control(page, "New Page").click()
-    await page.waitForURL(/\/admin\/pages\/[^/]+$/)
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("Title", { exact: true }).fill(`Shell ${RUN} new`)
+    await dialog.getByLabel("Path", { exact: true }).fill(runPath("shell-new"))
+    await control(dialog, "Continue").click()
+    await page.waitForURL((url) => url.pathname === "/admin/pages/new")
     await canvasFrame(page)
     await expectVisible(modeChip(page, "Page"), "the Page mode chip")
     // The form-based PageEditor listed Blocks as a form with "Move up" /
