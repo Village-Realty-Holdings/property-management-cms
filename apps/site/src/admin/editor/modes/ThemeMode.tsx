@@ -23,6 +23,8 @@ import { EditorProvider, useEditor } from "../EditorProvider"
 import type { PickerPage } from "../PagePicker"
 import type { ThemeDocument } from "../state"
 import { ThemeControls } from "../theme/ThemeControls"
+import { PresenceBanner } from "../PresenceBanner"
+import { usePresence } from "../usePresence"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
 
@@ -51,6 +53,8 @@ export function ThemeMode(props: {
     </EditorProvider>
   )
 }
+
+const THEME_PRESENCE = { kind: "theme" } as const
 
 /** The Theme inputs whose value differs between `a` and `b`. */
 function changedKeys(a: ThemeInputs, b: ThemeInputs): ThemeInputKey[] {
@@ -88,6 +92,9 @@ function ThemeModeBody({
 }) {
   const { state, doc, isDirty, setField, markSaved } = useEditor()
   const inputs = (doc as ThemeDocument).inputs
+  // Who else is editing the Theme. A save or Restore clears every hold on it,
+  // so this editor claims it again afterwards.
+  const presence = usePresence(THEME_PRESENCE)
 
   // ── The canvas: the Page it stands on, with the unsaved Theme ────────────
   const [preview, setPreview] = useState(home)
@@ -142,6 +149,7 @@ function ThemeModeBody({
     const saved = baseline.current as ThemeDocument
     if (JSON.stringify(saved.inputs) === liveKey) return
     markSaved({ kind: "theme", inputs: live }, saved)
+    presence.refresh()
     // `live` is what `liveKey` says; only a change of the Theme should run this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveKey])
@@ -159,6 +167,7 @@ function ThemeModeBody({
       const result = await saveTheme(inputs, note.trim() || null)
       if (result.ok) {
         markSaved(sent, sent)
+        presence.refresh()
         setNote("")
         notify.success(result.message || "Theme saved")
       } else {
@@ -176,6 +185,13 @@ function ThemeModeBody({
       name="Theme"
       goesLiveOn={publishedPages}
       canvasSrc={canvasSrc}
+      notice={
+        <PresenceBanner
+          view={presence.view}
+          kind="theme"
+          onTakeOver={presence.takeOver}
+        />
+      }
       onSave={save}
       canSave={isDirty && !saving}
       onPickPage={pickPage}

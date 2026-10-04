@@ -28,6 +28,8 @@ import type { PageDocument } from "../state"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
 import { PageHistoryTab } from "./PageHistoryTab"
+import { PresenceBanner } from "../PresenceBanner"
+import { usePresence } from "../usePresence"
 import { PageTab } from "./PageTab"
 import { resolvePageLayout, type LayoutOption } from "./pageTabModel"
 import { saveProblemLines, type SaveProblem } from "./saveProblem"
@@ -141,6 +143,14 @@ function PageModeEditor({
   })
   const saving = useRef(false)
 
+  // Who else is editing this Page. A New Page has none until its first save.
+  const presenceTarget = useMemo(
+    () => (pageId === null ? null : ({ kind: "page", id: pageId } as const)),
+    [pageId]
+  )
+  const presence = usePresence(presenceTarget)
+  const refreshPresence = presence.refresh
+
   const save = useCallback(
     async (intent: PageIntent): Promise<SaveResult> => {
       const { doc: current, pageId: currentId } = latest.current
@@ -163,6 +173,8 @@ function PageModeEditor({
         }
         setProblem(null)
         markSaved(result.document, current)
+        // Payload cleared every hold on this Page with the write.
+        refreshPresence()
         if (result.status) setStatus(result.status)
         // Publishing makes the saved path the live one; unpublishing leaves none.
         if (intent === "publish") setPublishedPath(result.document.path)
@@ -184,7 +196,7 @@ function PageModeEditor({
         setBusy(null)
       }
     },
-    [markSaved, router]
+    [markSaved, router, refreshPresence]
   )
 
   // Restore replaces whatever was being edited with the old version, saved as
@@ -221,13 +233,15 @@ function PageModeEditor({
       const before = state.baseline
       discard()
       markSaved(result.document, before)
+      // The restore is a write, so it cleared every hold on this Page too.
+      refreshPresence()
       setProblem(null)
       if (result.status) setStatus(result.status)
       if (result.history) setHistory(result.history)
       notify.success(result.message || "Version restored")
       return { ok: true }
     },
-    [state.baseline, discard, markSaved, page]
+    [state.baseline, discard, markSaved, page, refreshPresence]
   )
 
   // The canvas shows the document as it is now, with the Layout around it.
@@ -256,6 +270,13 @@ function PageModeEditor({
         mode="page"
         name={page.title.trim() || "Untitled Page"}
         canvasSrc={canvasSrc}
+        notice={
+          <PresenceBanner
+            view={presence.view}
+            kind="page"
+            onTakeOver={presence.takeOver}
+          />
+        }
         onSave={() => save("draft")}
         // Ctrl-S (Cmd-S) is the Save button: the same save, on the same terms.
         canSave={busy === null && (pageId === null || isDirty)}
@@ -301,6 +322,8 @@ function PageModeEditor({
                 onDeleted={() => router.replace("/admin/pages")}
                 onLayoutMade={(option) => {
                   setMade((current) => [...current, option])
+                  // Making the Layout wrote to this Page.
+                  refreshPresence()
                   // The Draft now differs from what is live.
                   setStatus((current) =>
                     current === "published" ? "changes" : current

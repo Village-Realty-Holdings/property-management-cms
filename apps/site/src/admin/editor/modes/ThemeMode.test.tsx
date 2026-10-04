@@ -44,6 +44,11 @@ vi.mock("../../actions/themePreview", () => ({
 vi.mock("../../actions/pagePicker", () => ({
   searchPages: actions.searchPages,
 }))
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const toast = vi.hoisted(() => ({ success: vi.fn(), info: vi.fn() }))
 vi.mock("sonner", () => ({ toast }))
 
@@ -54,6 +59,7 @@ import { DEFAULT_INPUTS, HARBOUR, type ThemeInputs } from "../../../theme"
 import type { PreviewPage } from "../../theme/previewPage"
 import type { HistoryRow } from "../../theme/themeScreen"
 import { BRIDGE_CHANNEL } from "../bridge"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { ThemeMode } from "./ThemeMode"
 
 const hero = (heading: string) =>
@@ -111,6 +117,8 @@ beforeEach(() => {
     fn.mockReset()
   }
   toast.success.mockReset()
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   actions.searchPages.mockResolvedValue([
     { id: 9, title: "Stays", path: "/stays", status: "published" },
   ])
@@ -152,6 +160,26 @@ async function setPrimary(
   await user.clear(primary())
   await user.type(primary(), hex)
 }
+
+describe("who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims the Theme as who is editing it", async () => {
+    mount()
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({ kind: "theme" })
+    )
+  })
+})
 
 describe("opening Theme mode", () => {
   it("names the mode, says how many Pages a save reaches, and has no Block tab", () => {

@@ -1,6 +1,8 @@
 import type { Browser, Page } from "playwright-core"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
+import { ORIGIN } from "../theme/support/env"
+
 import {
   launchBrowser,
   openSession,
@@ -38,6 +40,10 @@ import {
  * page and its canvas make from the change until the canvas shows it, and
  * requires none (document, fetch, XHR or event stream; the dev server's hot
  * reload aside), and that the canvas shows it within a second.
+ *
+ * The editor claims what it edits (presence) with a request of its own a
+ * moment after it loads. Each test waits for that claim before it changes
+ * anything, so the claim is never counted as a round trip of the change.
  */
 
 const STARTED = new Date().toISOString()
@@ -90,9 +96,39 @@ async function measure(
   return { ms, roundTrips: recording.stop() }
 }
 
+/**
+ * Opens the Visual Editor and waits until it has claimed what it edits: a
+ * presence row for it, written after `since`.
+ */
+async function openClaimed(
+  url: string,
+  target: { collection: "pages" | "layouts"; id: Doc["id"] } | "theme"
+) {
+  const since = new Date().toISOString()
+  await openEditor(page, url)
+  const where =
+    target === "theme"
+      ? "where[globalSlug][equals]=theme"
+      : `where[document.relationTo][equals]=${target.collection}&where[document.value][equals]=${target.id}`
+  await expect
+    .poll(
+      async () => {
+        const response = await page.request.get(
+          `${ORIGIN}/api/payload-locked-documents?depth=0&${where}&where[updatedAt][greater_than]=${encodeURIComponent(since)}`
+        )
+        return ((await response.json()) as { totalDocs?: number }).totalDocs
+      },
+      { message: "the editor claims what it edits", timeout: 15_000 }
+    )
+    .toBeGreaterThan(0)
+}
+
 describe("instant preview", () => {
   it("a Block field in the Block tab", async () => {
-    await openEditor(page, editorUrl.page(doc.id))
+    await openClaimed(editorUrl.page(doc.id), {
+      collection: "pages",
+      id: doc.id,
+    })
     await openTab(page, "Outline")
     await addBlock(
       page,
@@ -134,7 +170,10 @@ describe("instant preview", () => {
 
   it("a Header Block field in a Layout", async () => {
     const layout = await defaultLayout(admin.context.request)
-    await openEditor(page, editorUrl.layout(layout.id))
+    await openClaimed(editorUrl.layout(layout.id), {
+      collection: "layouts",
+      id: layout.id,
+    })
     await openTab(page, "Outline")
     await addBlock(
       page,
@@ -160,7 +199,7 @@ describe("instant preview", () => {
     ["Spacing", "Spacious", "--section-y"],
     ["Shadows", "Lifted", "--card-shadow"],
   ] as const)("the Theme's %s control", async (name, value, token) => {
-    await openEditor(page, editorUrl.theme())
+    await openClaimed(editorUrl.theme(), "theme")
     const control = page.getByRole("radiogroup", { name })
     // Start from another choice in the same control, so the change is real.
     const other = { Pill: "Square", Spacious: "Compact", Lifted: "None" }[value]

@@ -25,6 +25,8 @@ import type { PickerPage } from "../PagePicker"
 import type { EditorDocument, LayoutDocument } from "../state"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
+import { PresenceBanner } from "../PresenceBanner"
+import { usePresence } from "../usePresence"
 import { LayoutHistoryTab } from "./LayoutHistoryTab"
 import { LayoutSettingsTab } from "./LayoutSettingsTab"
 
@@ -96,6 +98,13 @@ function LayoutModeBody({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [note, setNote] = useState("")
+  // Who else is editing this Layout. A save or restore clears every hold on
+  // it, so this editor claims it again afterwards.
+  const presenceTarget = useMemo(
+    () => ({ kind: "layout", id: screen.id }) as const,
+    [screen.id]
+  )
+  const presence = usePresence(presenceTarget)
 
   // The shell draws the canvas and does not hand out its iframe, so it is
   // found inside the wrapper when the bridge needs it.
@@ -142,6 +151,7 @@ function LayoutModeBody({
         return { ok: false, message }
       }
       markSaved(result.doc, sent)
+      presence.refresh()
       apply(result)
       setNote("")
       notify.success(result.message || "Layout saved")
@@ -163,6 +173,7 @@ function LayoutModeBody({
     const before = state.baseline
     discard()
     markSaved(result.doc, before)
+    presence.refresh()
     apply(result)
     notify.success(result.message || "Version restored")
     return { ok: true }
@@ -224,6 +235,13 @@ function LayoutModeBody({
         tab={tab}
         onTabChange={setTab}
         canvasSrc={CANVAS_SRC}
+        notice={
+          <PresenceBanner
+            view={presence.view}
+            kind="layout"
+            onTakeOver={presence.takeOver}
+          />
+        }
         onSave={save}
         canSave={isDirty && !saving}
         onPickPage={pickPage}

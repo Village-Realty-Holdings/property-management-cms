@@ -37,6 +37,11 @@ vi.mock("../../actions/pagePicker", () => ({
     { id: 9, title: "Stays", path: "/stays", status: "published" },
   ],
 }))
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const success = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast: { success } }))
 
@@ -49,6 +54,7 @@ import type {
 } from "../../layouts/layoutScreen"
 import { BRIDGE_CHANNEL } from "../bridge"
 import type { LayoutDocument } from "../state"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { LayoutMode, type LayoutModeActions } from "./LayoutMode"
 
 const hero = (heading: string) =>
@@ -132,6 +138,8 @@ beforeAll(() => {
 })
 beforeEach(() => {
   success.mockReset()
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   for (const fn of Object.values(router)) fn.mockReset()
   actions = {
     save: vi.fn<LayoutModeActions["save"]>(async () => saved()),
@@ -162,6 +170,36 @@ const rename = async (
   await user.clear(field)
   await user.type(field, name)
 }
+
+describe("who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims the Layout, and shows who holds it when someone else does", async () => {
+    presence.touchPresence.mockResolvedValue({
+      status: "other",
+      name: "Ada Lovelace",
+    })
+    mount({ id: 7 })
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({
+        kind: "layout",
+        id: 7,
+      })
+    )
+    expect(
+      (await screen.findByText("Ada Lovelace is editing this Layout.")).tagName
+    ).toBe("SPAN")
+  })
+})
 
 describe("the top bar", () => {
   it("names the Layout, shows the Layout chip and how far a save reaches", () => {

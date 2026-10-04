@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -32,6 +33,11 @@ const actions = vi.hoisted(() => ({
 vi.mock("../../actions/pages", () => actions)
 vi.mock("../../actions/pagePicker", () => ({ searchPages: async () => [] }))
 
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const toast = vi.hoisted(() => ({
   success: vi.fn(),
   info: vi.fn(),
@@ -42,6 +48,7 @@ vi.mock("sonner", () => ({ toast }))
 import { setTimeZone } from "../../../test/timeZone"
 import type { PageDocument } from "../state"
 import type { PageVersionRow } from "../../pageHistory"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { PageMode, type PageModeProps } from "./PageMode"
 
 setTimeZone("UTC")
@@ -111,12 +118,56 @@ const edit = async (title: string) => {
 }
 
 beforeEach(() => {
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   actions.savePage.mockResolvedValue(saved())
 })
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+})
+
+describe("<PageMode> who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims a saved Page", async () => {
+    mount({ id: 4 })
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({
+        kind: "page",
+        id: 4,
+      })
+    )
+  })
+
+  it("claims nothing for a New Page", async () => {
+    mount({ id: null })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(presence.touchPresence).not.toHaveBeenCalled()
+  })
+
+  it("shows who holds the Page when someone else does", async () => {
+    presence.touchPresence.mockResolvedValue({
+      status: "other",
+      name: "Sam Taylor",
+    })
+    mount()
+    await firstTouch()
+    expect(
+      await screen.findByText("Sam Taylor is editing this Page.")
+    ).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Take over" })).toBeTruthy()
+  })
 })
 
 describe("<PageMode> status chip", () => {
