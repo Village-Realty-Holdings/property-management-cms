@@ -17,7 +17,7 @@ import { faceLabel } from "../../fonts/labels"
 import { InlineError } from "../../kit"
 import { describedBy, FormField } from "../FormBits"
 import { FontKindSelect } from "./FontKindSelect"
-import { useFontForm } from "./useFontForm"
+import { useFormAction } from "../useFormAction"
 
 const FORM_ID = "add-google-font"
 /** Regular and Bold, the pair most Sites use. */
@@ -45,7 +45,10 @@ export function AddGoogleFontSheet({
 }
 
 function AddGoogleFontForm({ onDone }: { onDone: () => void }) {
-  const { state, pending, submit, errors } = useFontForm(addGoogleFont, onDone)
+  const { state, pending, submit, errors } = useFormAction(
+    addGoogleFont,
+    onDone
+  )
   return (
     <form
       id={FORM_ID}

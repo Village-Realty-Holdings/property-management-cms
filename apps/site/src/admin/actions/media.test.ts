@@ -30,7 +30,7 @@ const revalidatePath = vi.hoisted(() => vi.fn())
 vi.mock("../session", () => ({ requireUser: async () => session.current }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 
-import { deleteMedia, uploadMedia } from "./media"
+import { deleteMedia, updateMedia, uploadMedia } from "./media"
 
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -113,6 +113,90 @@ describe("uploadMedia", () => {
     expect(result.ok).toBe(false)
     expect(result.fieldErrors?.alt).toBeTruthy()
     expect(result.media).toBeUndefined()
+  })
+})
+
+describe("updateMedia", () => {
+  const details = (fields: Record<string, string>) => {
+    const formData = new FormData()
+    for (const [name, value] of Object.entries(fields)) {
+      formData.set(name, value)
+    }
+    return formData
+  }
+  const stored = (id: number) =>
+    payload.findByID({ collection: "media", id, depth: 0, ...access })
+
+  it("saves alt text, caption, credit and attribution, and refreshes the library and the Site", async () => {
+    const id = await upload()
+    const result = await updateMedia(
+      id,
+      details({
+        alt: "  A sunlit lobby ",
+        caption: "The lobby at noon",
+        credit: "© Jane Doe",
+        author: "Jane Doe",
+        sourceUrl: "https://unsplash.com/photos/abc",
+        licence: "Unsplash License",
+      })
+    )
+
+    expect(result).toMatchObject({ ok: true })
+    const doc = await stored(id)
+    expect(doc).toMatchObject({
+      alt: "A sunlit lobby",
+      caption: "The lobby at noon",
+      credit: "© Jane Doe",
+      attribution: {
+        author: "Jane Doe",
+        sourceUrl: "https://unsplash.com/photos/abc",
+        licence: "Unsplash License",
+      },
+    })
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/media")
+    expect(revalidatePath).toHaveBeenCalledWith("/", "layout")
+  })
+
+  it("clears a detail that is left blank", async () => {
+    const id = await upload()
+    await updateMedia(id, details({ alt: "One", caption: "Caption" }))
+    await updateMedia(id, details({ alt: "Two", caption: "  " }))
+    const doc = await stored(id)
+    expect(doc.alt).toBe("Two")
+    expect(doc.caption).toBeFalsy()
+  })
+
+  it("refuses empty alt text and changes nothing", async () => {
+    const id = await upload()
+    const result = await updateMedia(id, details({ alt: "   ", caption: "x" }))
+
+    expect(result.ok).toBe(false)
+    expect(result.fieldErrors?.alt).toBeTruthy()
+    const doc = await stored(id)
+    expect(doc.alt).toBe("A picture")
+    expect(doc.caption).toBeFalsy()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it("refuses a Source URL that is not a web address, against that field", async () => {
+    const id = await upload()
+    const result = await updateMedia(
+      id,
+      details({ alt: "Changed", sourceUrl: "unsplash.com/photos/abc" })
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.fieldErrors?.["attribution.sourceUrl"]).toContain("https://")
+    const doc = await stored(id)
+    expect(doc.alt).toBe("A picture")
+    expect(doc.attribution?.sourceUrl).toBeFalsy()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it("says so when the image is already gone, or the id is not one", async () => {
+    const gone = { ok: false, message: "That image no longer exists." }
+    expect(await updateMedia(999999, details({ alt: "x" }))).toEqual(gone)
+    expect(await updateMedia(-1, details({ alt: "x" }))).toEqual(gone)
   })
 })
 

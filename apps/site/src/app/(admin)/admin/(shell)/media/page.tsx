@@ -5,6 +5,7 @@ import { ImageIcon, UploadIcon } from "lucide-react"
 import { buttonVariants } from "@workspace/ui/components/button"
 
 import { MediaDeleteButton } from "@/admin/components/MediaDeleteButton"
+import { MediaEditSheet } from "@/admin/components/MediaEditSheet"
 import { UploadForm } from "@/admin/components/UploadForm"
 import { CardSkeleton, EmptyState, PageHeader } from "@/admin/kit"
 import { requireUser } from "@/admin/session"
@@ -89,11 +90,26 @@ async function MediaGrid() {
                 {doc.alt}
               </span>
             </div>
-            <MediaDeleteButton
-              id={doc.id}
-              filename={doc.filename ?? "image"}
-              dependents={usedBy.get(doc.id) ?? []}
-            />
+            <div className="flex shrink-0">
+              <MediaEditSheet
+                media={{
+                  id: doc.id,
+                  filename: doc.filename ?? "image",
+                  url: doc.thumbnailURL ?? doc.url,
+                  alt: doc.alt,
+                  caption: doc.caption,
+                  credit: doc.credit,
+                  author: doc.attribution?.author,
+                  sourceUrl: doc.attribution?.sourceUrl,
+                  licence: doc.attribution?.licence,
+                }}
+              />
+              <MediaDeleteButton
+                id={doc.id}
+                filename={doc.filename ?? "image"}
+                dependents={usedBy.get(doc.id) ?? []}
+              />
+            </div>
           </div>
         </li>
       ))}

@@ -5,7 +5,7 @@ import { NotFound } from "payload"
 
 import type { MediaOption } from "../components/MediaSelect"
 import { formStateFromError, type FormState } from "../formState"
-import { toMediaOption } from "../media"
+import { toMediaOption, updateMediaAs } from "../media"
 import { requireUser } from "../session"
 import { loadMediaDependents, mediaInUseMessage } from "../usage"
 
@@ -42,6 +42,25 @@ export async function uploadMedia(
   }
   revalidatePath("/admin/media")
   return { ok: true, message: `Uploaded ${file.name}.`, media }
+}
+
+/**
+ * Saves an image's alt text, caption, credit and attribution. The form
+ * (<MediaEditSheet>) sends `alt`, `caption`, `credit`, `author`, `sourceUrl`
+ * and `licence`.
+ */
+export async function updateMedia(
+  id: number,
+  data: FormData
+): Promise<FormState> {
+  const { payload, as } = await requireUser()
+  const result = await updateMediaAs(payload, as, id, data)
+  if (result.ok) {
+    revalidatePath("/admin/media")
+    // Alt text and captions show on the Site.
+    revalidatePath("/", "layout")
+  }
+  return result
 }
 
 /**
