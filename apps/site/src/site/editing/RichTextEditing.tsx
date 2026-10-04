@@ -30,20 +30,24 @@ import { useCanvasSend } from "./canvasSend"
 import { blockIdOf } from "./place"
 import {
   applyLink,
+  BLOCK_TYPES,
   EDITOR_NODES,
   initialState,
   loadContent,
   readContent,
   readFormat,
+  setBlockType,
   toggleFormat,
   toggleList,
+  type BlockState,
+  type BlockType,
   type FormatState,
 } from "./richTextModel"
 
 /**
  * A Rich text Block while the Visual Editor draws it: its Lexical JSON edited
- * in place, with a small floating toolbar (bold, italic, link, bulleted and
- * numbered list) while the text has focus.
+ * in place, with a small floating toolbar (text style, bold, italic, link,
+ * bulleted and numbered list) while the text has focus.
  *
  * Every change is sent to the Admin as an `edit-text` with the whole new
  * Lexical JSON (see bridge.ts), so it shows on the canvas at once and a run of
@@ -246,6 +250,9 @@ const button: CSSProperties = {
 
 type Position = { left: number; top: number }
 
+/** The toolbar's width: the select, five buttons, the gaps and the padding. */
+const TOOLBAR_WIDTH = 320
+
 /** Where the toolbar goes: above the selection, or below it with no room above. */
 function positionFor(root: HTMLElement): Position {
   const selection = root.ownerDocument.defaultView?.getSelection()
@@ -265,7 +272,9 @@ function positionFor(root: HTMLElement): Position {
   const height = 40
   const above = rect.top - height - 8 >= 4
   return {
-    left: Math.max(8, Math.min(rect.left, win.innerWidth - 220)) + win.scrollX,
+    left:
+      Math.max(8, Math.min(rect.left, win.innerWidth - TOOLBAR_WIDTH)) +
+      win.scrollX,
     top: (above ? rect.top - height - 8 : rect.bottom + 8) + win.scrollY,
   }
 }
@@ -307,6 +316,74 @@ function ToolButton({
     >
       {icon}
     </button>
+  )
+}
+
+const BLOCK_LABELS: Record<BlockState, string> = {
+  paragraph: "Paragraph",
+  h1: "Heading 1",
+  h2: "Heading 2",
+  h3: "Heading 3",
+  h4: "Heading 4",
+  h5: "Heading 5",
+  h6: "Heading 6",
+  quote: "Quote",
+  list: "List",
+}
+
+/** The options' own colours: a native list may not inherit the select's. */
+const OPTION: CSSProperties = { background: INK, color: "#fff" }
+
+/**
+ * The "Text style" select: Paragraph, Heading 2 to 4, Quote. Text that is a
+ * Heading 1, 5 or 6, or a list, keeps showing what it is, in a disabled
+ * option, so the select never claims a style the text does not have.
+ */
+function TextStyle({
+  block,
+  tabIndex,
+  onOpen,
+  onChange,
+}: {
+  block: BlockState
+  tabIndex: number
+  onOpen: () => void
+  onChange: (type: BlockType) => void
+}) {
+  const offered = (BLOCK_TYPES as readonly string[]).includes(block)
+  return (
+    <select
+      aria-label="Text style"
+      title="Text style"
+      tabIndex={tabIndex}
+      value={block}
+      // The selection is kept for the change: the select takes focus from the text.
+      onFocus={onOpen}
+      onMouseDown={onOpen}
+      onChange={(event) => onChange(event.target.value as BlockType)}
+      style={{
+        height: 28,
+        maxWidth: 120,
+        padding: "0 4px",
+        border: "none",
+        borderRadius: 4,
+        background: INK,
+        color: "#fff",
+        font: "inherit",
+        cursor: "pointer",
+      }}
+    >
+      {!offered && (
+        <option value={block} disabled style={OPTION}>
+          {BLOCK_LABELS[block]}
+        </option>
+      )}
+      {BLOCK_TYPES.map((type) => (
+        <option key={type} value={type} style={OPTION}>
+          {BLOCK_LABELS[type]}
+        </option>
+      ))}
+    </select>
   )
 }
 
@@ -365,7 +442,7 @@ function FloatingToolbar({
   }, [linking])
 
   const toolButtons = () => [
-    ...(self.current?.querySelectorAll<HTMLElement>("button") ?? []),
+    ...(self.current?.querySelectorAll<HTMLElement>("button, select") ?? []),
   ]
 
   const focusToolbar = () => {
@@ -584,23 +661,42 @@ function FloatingToolbar({
         </form>
       ) : (
         <>
+          <TextStyle
+            tabIndex={roving === 0 ? 0 : -1}
+            block={format.block}
+            onOpen={() =>
+              editor.getEditorState().read(() => {
+                saved.current = $getSelection()?.clone() ?? null
+              })
+            }
+            onChange={(type) => {
+              // Focus stays on the select: moving it on input is a change of
+              // context, and an arrow key on a closed select fires `change`.
+              setBlockType(editor, type, saved.current)
+              // The update may have replaced the line: keep the next change
+              // on the same text.
+              editor.getEditorState().read(() => {
+                saved.current = $getSelection()?.clone() ?? null
+              })
+            }}
+          />
           <ToolButton
             name="Bold"
-            tabIndex={roving === 0 ? 0 : -1}
+            tabIndex={roving === 1 ? 0 : -1}
             icon={<Bold size={16} aria-hidden />}
             pressed={format.bold}
             run={() => toggleFormat(editor, "bold")}
           />
           <ToolButton
             name="Italic"
-            tabIndex={roving === 1 ? 0 : -1}
+            tabIndex={roving === 2 ? 0 : -1}
             icon={<Italic size={16} aria-hidden />}
             pressed={format.italic}
             run={() => toggleFormat(editor, "italic")}
           />
           <ToolButton
             name="Link"
-            tabIndex={roving === 2 ? 0 : -1}
+            tabIndex={roving === 3 ? 0 : -1}
             icon={<LinkIcon size={16} aria-hidden />}
             pressed={format.link !== null}
             run={openLink}
@@ -608,14 +704,14 @@ function FloatingToolbar({
           />
           <ToolButton
             name="Bulleted list"
-            tabIndex={roving === 3 ? 0 : -1}
+            tabIndex={roving === 4 ? 0 : -1}
             icon={<List size={16} aria-hidden />}
             pressed={format.list === "bullet"}
             run={() => toggleList(editor, "bullet")}
           />
           <ToolButton
             name="Numbered list"
-            tabIndex={roving === 4 ? 0 : -1}
+            tabIndex={roving === 5 ? 0 : -1}
             icon={<ListOrdered size={16} aria-hidden />}
             pressed={format.list === "number"}
             run={() => toggleList(editor, "number")}
