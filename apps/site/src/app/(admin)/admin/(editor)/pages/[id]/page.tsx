@@ -8,6 +8,7 @@ import {
   loadPickers,
 } from "@/admin/editor/modes/loadPageMode"
 import { PageMode } from "@/admin/editor/modes/PageMode"
+import { readPageVersionRows } from "@/admin/pageHistory"
 import { requireUser } from "@/admin/session"
 import { loadPageDependents } from "@/admin/usage"
 import { editingUrl } from "@/site/editing/flag"
@@ -42,10 +43,11 @@ export default async function EditPage({ params, searchParams }: Props) {
     ...as,
   })
 
-  const [layouts, pickers, dependents] = await Promise.all([
+  const [layouts, pickers, dependents, history] = await Promise.all([
     loadLayoutOptions(payload),
     loadPickers(session),
     loadPageDependents(payload, as, { id: pageId, path: draft.path }),
+    readPageVersionRows(payload, as, pageId),
   ])
 
   return (
@@ -61,6 +63,7 @@ export default async function EditPage({ params, searchParams }: Props) {
       layouts={layouts}
       initialTab={tab === "page" ? "page" : undefined}
       dependents={dependents}
+      history={history}
       canvasSrc={editingUrl(draft.path)}
       {...pickers}
     />

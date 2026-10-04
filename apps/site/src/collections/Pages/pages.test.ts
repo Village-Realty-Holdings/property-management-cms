@@ -178,6 +178,59 @@ describe("a Page's Layout", () => {
   })
 })
 
+describe("who saved a Page", () => {
+  it("records the signed-in User on the Page and on each version", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: { title: "Saved By", path: "/saved-by", blocks: heroBlocks },
+      draft: true,
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(page.updatedBy).toBe(testUser.id)
+    const { docs } = await payload.findVersions({
+      collection: "pages",
+      where: { parent: { equals: page.id } },
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(docs.length).toBeGreaterThan(0)
+    expect(docs.every((v) => v.version.updatedBy === testUser.id)).toBe(true)
+  })
+
+  it("keeps nothing a client sends for it, and leaves it empty for a script", async () => {
+    const forged = await payload.create({
+      collection: "pages",
+      data: {
+        title: "Forged",
+        path: "/forged",
+        blocks: heroBlocks,
+        updatedBy: 999_999,
+      },
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(forged.updatedBy).toBe(testUser.id)
+    const script = await payload.update({
+      collection: "pages",
+      id: forged.id,
+      data: { title: "Forged again" },
+      depth: 0,
+    })
+    expect(script.updatedBy ?? null).toBeNull()
+  })
+
+  it("keeps the last 50 versions", async () => {
+    const config = payload.collections.pages.config
+    expect(
+      typeof config.versions === "object" ? config.versions.maxPerDoc : null
+    ).toBe(50)
+  })
+})
+
 describe("access", () => {
   it("shows visitors Published Pages only", async () => {
     const published = await payload.create({

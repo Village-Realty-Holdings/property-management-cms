@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import type { FormState } from "../formState"
 import type { PageDocument } from "../editor/state"
+import { restorePageVersionAs, type PageRestoreResult } from "../pageHistory"
 import {
   deletePageAs,
   savePageAs,
@@ -38,6 +39,20 @@ export async function savePage(input: {
     revalidatePath("/admin")
     // A Published Page changes what visitors see.
     revalidatePath("/", "layout")
+  }
+  return result
+}
+
+/** Saves an earlier version of a Page as a new Draft (the History tab). */
+export async function restorePageVersion(
+  id: number,
+  versionId: number
+): Promise<PageRestoreResult> {
+  const { payload, as } = await requireUser()
+  const result = await restorePageVersionAs(payload, as, id, versionId)
+  if (result.ok) {
+    revalidatePath("/admin/pages")
+    revalidatePath("/admin")
   }
   return result
 }

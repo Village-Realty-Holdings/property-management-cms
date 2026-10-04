@@ -15,6 +15,7 @@ import * as migration_20261002_180704_guest_survey_block from "./20261002_180704
 import * as migration_20261002_204427_region_containers from "./20261002_204427_region_containers"
 import * as migration_20261002_210426_theme_button_text from "./20261002_210426_theme_button_text"
 import * as migration_20261002_213303_block_style from "./20261002_213303_block_style"
+import * as migration_20261004_212449_page_updated_by from "./20261004_212449_page_updated_by"
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261002_213303_block_style.up,
     down: migration_20261002_213303_block_style.down,
     name: "20261002_213303_block_style",
+  },
+  {
+    up: migration_20261004_212449_page_updated_by.up,
+    down: migration_20261004_212449_page_updated_by.down,
+    name: "20261004_212449_page_updated_by",
   },
 ]

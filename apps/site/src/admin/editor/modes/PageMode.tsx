@@ -12,11 +12,12 @@ import { Button, buttonVariants } from "@workspace/ui/components/button"
 
 import { pageBlocks } from "../../../blocks"
 import type { FooterBlock, HeaderBlock } from "../../../site/regions/types"
-import { savePage } from "../../actions/pages"
+import { restorePageVersion, savePage } from "../../actions/pages"
 import type { MediaOption } from "../../components/MediaSelect"
 import { StatusChip } from "../../dashboard/StatusChip"
 import type { PageStatus } from "../../dashboard/pageStatus"
 import { InlineError, notify, type Dependent, type SaveResult } from "../../kit"
+import type { PageVersionRow } from "../../pageHistory"
 import type { PageIntent } from "../../pageSave"
 import { BlockPanel } from "../BlockPanel"
 import { canvasDocument } from "../bridge"
@@ -26,6 +27,7 @@ import { OutlinePanel } from "../OutlinePanel"
 import type { PageDocument } from "../state"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
+import { PageHistoryTab } from "./PageHistoryTab"
 import { PageTab } from "./PageTab"
 import { resolvePageLayout, type LayoutOption } from "./pageTabModel"
 import { saveProblemLines, type SaveProblem } from "./saveProblem"
@@ -54,6 +56,8 @@ export type PageModeProps = {
   media: readonly MediaOption[]
   /** The Pages a link field can pick from. */
   pages: readonly PageOption[]
+  /** The Page's saved versions, newest first; empty for a New Page. */
+  history?: readonly PageVersionRow[]
   /** The Pages whose menus or buttons link to this one, for Delete's confirmation. */
   dependents: readonly Dependent[]
   /** The canvas: the Site route at the Page's path, in its editing mode. */
@@ -91,6 +95,7 @@ const TABS = {
   outline: "outline",
   block: "block",
   page: "page",
+  history: "history",
 } as const
 
 function PageModeEditor({
@@ -104,14 +109,16 @@ function PageModeEditor({
   pages,
   dependents,
   canvasSrc,
+  history: initialHistory = [],
 }: PageModeProps) {
-  const { doc, isDirty, markSaved } = useEditor()
+  const { doc, state, isDirty, markSaved, discard } = useEditor()
   const router = useRouter()
   const page = doc.kind === "page" ? doc : initial
 
   const [pageId, setPageId] = useState(id)
   const [status, setStatus] = useState(initialStatus)
   const [publishedPath, setPublishedPath] = useState(initialPublishedPath)
+  const [history, setHistory] = useState(initialHistory)
   const [busy, setBusy] = useState<PageIntent | null>(null)
   const [problem, setProblem] = useState<SaveProblem | null>(null)
   const [tab, setTab] = useState<string>(initialTab ?? TABS.outline)
@@ -160,6 +167,7 @@ function PageModeEditor({
         // Publishing makes the saved path the live one; unpublishing leaves none.
         if (intent === "publish") setPublishedPath(result.document.path)
         else if (intent === "unpublish") setPublishedPath(null)
+        if (result.history) setHistory(result.history)
         notify.success(result.message || "Saved")
         if (currentId === null) {
           latest.current = { ...latest.current, pageId: result.id }
@@ -177,6 +185,49 @@ function PageModeEditor({
       }
     },
     [markSaved, router]
+  )
+
+  // Restore replaces whatever was being edited with the old version, saved as
+  // the Draft. The history and the status come back with it.
+  const restore = useCallback(
+    async (row: PageVersionRow) => {
+      const { doc: current, pageId: currentId } = latest.current
+      if (currentId === null) return
+      if (saving.current) {
+        return {
+          ok: false,
+          message: "Wait for the save to finish, then try again.",
+        }
+      }
+      saving.current = true
+      let result
+      try {
+        result = await restorePageVersion(currentId, row.id)
+      } finally {
+        saving.current = false
+      }
+      if (!result.ok || !result.document) {
+        // Nothing of the old version reaches the editor, so name any field
+        // that stopped it here, the way a failed Save does.
+        const lines = saveProblemLines(
+          {
+            message: result.message || "Could not restore. Please try again.",
+            fieldErrors: result.fieldErrors,
+          },
+          current.kind === "page" ? current : page
+        )
+        return { ok: false, message: lines.join(" ") }
+      }
+      const before = state.baseline
+      discard()
+      markSaved(result.document, before)
+      setProblem(null)
+      if (result.status) setStatus(result.status)
+      if (result.history) setHistory(result.history)
+      notify.success(result.message || "Version restored")
+      return { ok: true }
+    },
+    [state.baseline, discard, markSaved, page]
   )
 
   // The canvas shows the document as it is now, with the Layout around it.
@@ -255,6 +306,17 @@ function PageModeEditor({
                     current === "published" ? "changes" : current
                   )
                 }}
+              />
+            ),
+          },
+          {
+            id: TABS.history,
+            label: "History",
+            content: (
+              <PageHistoryTab
+                rows={history}
+                dirty={isDirty}
+                onRestore={restore}
               />
             ),
           },

@@ -11,6 +11,7 @@ import {
 } from "./editor/modes/pageDocument"
 import type { PageDocument } from "./editor/state"
 import { formStateFromError, type FormState } from "./formState"
+import { readPageVersionRows, type PageVersionRow } from "./pageHistory"
 import type { Access } from "./settingsSave"
 
 /**
@@ -36,6 +37,8 @@ export type PageSaveResult = FormState & {
   status?: PageStatus
   /** The Page as stored: generated path, Block ids. */
   document?: PageDocument
+  /** The Page's versions after the save, newest first. */
+  history?: PageVersionRow[]
 }
 
 /**
@@ -99,13 +102,16 @@ export async function savePageAs(
           depth: 0,
           ...access,
         })
-    const published = await payload.findByID({
-      collection: "pages",
-      id: saved.id,
-      draft: false,
-      depth: 0,
-      ...access,
-    })
+    const [published, history] = await Promise.all([
+      payload.findByID({
+        collection: "pages",
+        id: saved.id,
+        draft: false,
+        depth: 0,
+        ...access,
+      }),
+      readPageVersionRows(payload, access, saved.id),
+    ])
     return {
       ok: true,
       message: MESSAGES[intent],
@@ -115,6 +121,7 @@ export async function savePageAs(
         latest: saved._status,
       }),
       document: pageDocumentFromPage(saved),
+      history,
     }
   } catch (error) {
     return formStateFromError(error)
