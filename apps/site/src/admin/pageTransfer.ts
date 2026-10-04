@@ -162,7 +162,7 @@ export async function exportPageAs(
 }
 
 /** The first path from `wanted`, "wanted-2", "wanted-3"… that no Page has. */
-async function freePath(
+export async function freePagePath(
   payload: Payload,
   access: Access,
   wanted: string
@@ -299,7 +299,7 @@ export async function importPageAs(
       }
     }
 
-    const path = await freePath(payload, access, wanted)
+    const path = await freePagePath(payload, access, wanted)
     if (path !== wanted) {
       notes.push(`“${wanted}” is taken, so the Page is at “${path}”.`)
     }

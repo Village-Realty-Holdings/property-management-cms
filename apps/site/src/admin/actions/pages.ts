@@ -17,6 +17,7 @@ import {
   type ExportResult,
   type ImportResult,
 } from "../pageTransfer"
+import { duplicatePageAs } from "../pageDuplicate"
 import { requireUser } from "../session"
 
 /**
@@ -75,4 +76,16 @@ export async function importPage(text: string): Promise<ImportResult> {
 export async function pagePathTaken(path: string): Promise<boolean> {
   const { payload, as } = await requireUser()
   return pagePathTakenAs(payload, as, path)
+}
+
+/** Adds a Draft copy of a Page, "Title (copy)" at a free path (Pages list). */
+export async function duplicatePage(id: number): Promise<FormState> {
+  const { payload, as } = await requireUser()
+  const result = await duplicatePageAs(payload, as, id)
+  if (result.ok) {
+    revalidatePath("/admin/pages")
+    revalidatePath("/admin/pages/templates")
+    revalidatePath("/admin")
+  }
+  return result
 }
