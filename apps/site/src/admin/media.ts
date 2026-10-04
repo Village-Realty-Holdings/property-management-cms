@@ -1,6 +1,6 @@
 import "server-only"
 
-import { NotFound, type Payload } from "payload"
+import { NotFound, type Payload, type Where } from "payload"
 
 import type { Media } from "../payload-types"
 
@@ -32,6 +32,57 @@ export async function mediaOptions({
     ...as,
   })
   return docs.map(toMediaOption)
+}
+
+export const MEDIA_PER_PAGE = 48
+
+export type MediaPage = {
+  docs: Media[]
+  /** The page shown, after clamping: 1..totalPages. */
+  page: number
+  /** At least 1, even when nothing matches. */
+  totalPages: number
+  totalDocs: number
+}
+
+/** Search text for the Media library: matches alt text or file name, ignoring case. */
+function mediaSearchWhere(q: string | undefined): Where | undefined {
+  const text = q?.trim()
+  if (!text) return undefined
+  return { or: [{ alt: { like: text } }, { filename: { like: text } }] }
+}
+
+/**
+ * One page of the Media library, newest change first, 48 at a time.
+ * `q` filters on alt text or file name. A page out of range is clamped.
+ */
+export async function loadMediaPage(
+  payload: Payload,
+  access: UserContext["as"],
+  { q, page }: { q?: string; page?: number } = {}
+): Promise<MediaPage> {
+  const where = mediaSearchWhere(q)
+  const requested =
+    page !== undefined && Number.isInteger(page) && page >= 1 ? page : 1
+  const find = (pageNumber: number) =>
+    payload.find({
+      collection: "media",
+      where,
+      sort: ["-updatedAt", "-id"],
+      limit: MEDIA_PER_PAGE,
+      page: pageNumber,
+      depth: 0,
+      ...access,
+    })
+  let result = await find(requested)
+  const totalPages = Math.max(1, result.totalPages)
+  if (requested > totalPages) result = await find(totalPages)
+  return {
+    docs: result.docs,
+    page: Math.min(requested, totalPages),
+    totalPages,
+    totalDocs: result.totalDocs,
+  }
 }
 
 const GONE = "That image no longer exists."
