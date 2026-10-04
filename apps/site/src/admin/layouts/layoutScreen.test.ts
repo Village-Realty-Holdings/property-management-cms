@@ -170,6 +170,31 @@ describe("saveLayoutAs", () => {
     expect(result.history?.[0]?.isLive).toBe(true)
   })
 
+  it("records the note as the version's summary, and without one describes the change", async () => {
+    const { id, doc } = await opened()
+    const noted = await saveLayoutAs(
+      payload,
+      as,
+      id,
+      { ...doc, name: "Main 2" },
+      { note: "  Summer offers  " }
+    )
+    expect(noted.ok).toBe(true)
+    expect(noted.history?.[0]?.summary).toBe("Summer offers")
+
+    const plain = await saveLayoutAs(
+      payload,
+      as,
+      id,
+      { ...doc, name: "Main 3" },
+      { note: "   " }
+    )
+    expect(plain.history?.[0]?.summary).not.toBe("Summer offers")
+    expect(plain.history?.[0]?.summary).toBeTruthy()
+    // The note is spent on its own version.
+    expect(plain.history?.[1]?.summary).toBe("Summer offers")
+  })
+
   it("names a single Page, and a Layout no Page uses", async () => {
     const { id, doc } = await opened()
     const none = await saveLayoutAs(payload, as, id, { ...doc, name: "Main 2" })

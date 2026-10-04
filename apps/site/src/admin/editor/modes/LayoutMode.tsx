@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, type RefObject } from "react"
 import { SaveIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
+import { Input } from "@workspace/ui/components/input"
 
 import { footerBlocks, headerBlocks } from "../../../blocks/region"
 import { editingUrl } from "../../../site/editing/flag"
@@ -29,7 +30,11 @@ import { LayoutSettingsTab } from "./LayoutSettingsTab"
 
 /** The Server Actions Layout mode talks to; passed in so a test can stand in. */
 export type LayoutModeActions = {
-  save: (id: number, doc: LayoutDocument) => Promise<LayoutResult>
+  save: (
+    id: number,
+    doc: LayoutDocument,
+    options?: { note?: string | null }
+  ) => Promise<LayoutResult>
   restore: (id: number, versionId: number) => Promise<LayoutResult>
   /** The Page, with its Blocks, that Ctrl-K picked to preview the Layout on. */
   loadPage: (pageId: number) => Promise<PreviewPage | null>
@@ -90,6 +95,7 @@ function LayoutModeBody({
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [note, setNote] = useState("")
 
   // The shell draws the canvas and does not hand out its iframe, so it is
   // found inside the wrapper when the bridge needs it.
@@ -127,7 +133,9 @@ function LayoutModeBody({
     setSaving(true)
     setSaveError(null)
     try {
-      const result = await actions.save(screen.id, doc)
+      const result = await actions.save(screen.id, doc, {
+        note: note.trim() || null,
+      })
       if (!result.ok || !result.doc) {
         const message = failureText(result)
         setSaveError(message)
@@ -135,6 +143,7 @@ function LayoutModeBody({
       }
       markSaved(result.doc, sent)
       apply(result)
+      setNote("")
       notify.success(result.message || "Layout saved")
       return { ok: true }
     } catch {
@@ -225,6 +234,17 @@ function LayoutModeBody({
                 {saveError}
               </p>
             )}
+            <label className="sr-only" htmlFor="layout-save-note">
+              Note for History (optional)
+            </label>
+            <Input
+              id="layout-save-note"
+              value={note}
+              maxLength={200}
+              placeholder="Note (optional)"
+              className="h-7 w-44 text-xs"
+              onChange={(event) => setNote(event.target.value)}
+            />
             <Button
               type="button"
               size="sm"

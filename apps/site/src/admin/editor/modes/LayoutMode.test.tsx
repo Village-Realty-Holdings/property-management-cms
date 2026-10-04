@@ -362,7 +362,8 @@ describe("the Layout tab", () => {
     await user.click(saveButton())
     expect(actions.save).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({ isDefault: true })
+      expect.objectContaining({ isDefault: true }),
+      { note: null }
     )
   })
 
@@ -412,11 +413,45 @@ describe("Save", () => {
     )
     expect(actions.save).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({ kind: "layout", name: "Listings" })
+      expect.objectContaining({ kind: "layout", name: "Listings" }),
+      { note: null }
     )
     expect(saveButton().disabled).toBe(true)
     // What the save reached is what the bar says now.
     expect(within(bar()).getByText("Used by 3 Pages")).toBeTruthy()
+  })
+
+  it("saves with the note, trimmed, and clears it once saved", async () => {
+    const user = userEvent.setup()
+    mount()
+    await rename(user, "Listings")
+    const note = within(bar()).getByRole<HTMLInputElement>("textbox", {
+      name: /Note/,
+    })
+    await user.type(note, "  Summer offers  ")
+    await user.click(saveButton())
+
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(1))
+    expect(actions.save).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ name: "Listings" }),
+      { note: "Summer offers" }
+    )
+    await waitFor(() => expect(note.value).toBe(""))
+  })
+
+  it("keeps the note when the save fails", async () => {
+    actions.save.mockResolvedValue({ ok: false, message: "Nope." })
+    const user = userEvent.setup()
+    mount()
+    await rename(user, "Listings")
+    const note = within(bar()).getByRole<HTMLInputElement>("textbox", {
+      name: /Note/,
+    })
+    await user.type(note, "Try")
+    await user.click(saveButton())
+    await screen.findByRole("alert")
+    expect(note.value).toBe("Try")
   })
 
   it("fails inline, keeps the changes and stays on", async () => {

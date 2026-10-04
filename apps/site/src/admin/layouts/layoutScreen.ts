@@ -236,13 +236,15 @@ function isMissing(error: unknown): boolean {
  * Saves the Layout's name, paths, Header and Footer as the User. It is
  * live on every Page that uses it at once (ADR-0006). The document comes from
  * the browser, so Payload validates every value again; a refusal comes back
- * as a failure to show inline.
+ * as a failure to show inline. A `note` replaces the automatic summary in the
+ * History.
  */
 export async function saveLayoutAs(
   payload: Payload,
   access: UserAccess,
   id: number,
-  doc: LayoutDocument
+  doc: LayoutDocument,
+  options: { note?: string | null } = {}
 ): Promise<LayoutResult> {
   if (!Number.isInteger(id) || id <= 0) return { ok: false, message: GONE }
   if (doc?.kind !== "layout") {
@@ -254,6 +256,7 @@ export async function saveLayoutAs(
     const saved = await saveLayout(payload, {
       user: access.user,
       id,
+      note: typeof options.note === "string" ? options.note : null,
       data: {
         name,
         header: withoutTemporaryIds(

@@ -33,10 +33,11 @@ function revalidateAfterLayoutWrite() {
 /** Saves the open Layout; it is live on every Page that uses it at once. */
 export async function saveLayoutDocument(
   id: number,
-  doc: LayoutDocument
+  doc: LayoutDocument,
+  options: { note?: string | null } = {}
 ): Promise<LayoutResult> {
   const { payload, as } = await requireUser()
-  const result = await saveLayoutAs(payload, as, id, doc)
+  const result = await saveLayoutAs(payload, as, id, doc, options)
   if (result.ok) revalidateAfterLayoutWrite()
   return result
 }
