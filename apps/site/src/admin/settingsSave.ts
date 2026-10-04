@@ -18,11 +18,11 @@ import {
 /**
  * Reading and saving the Brand and SEO globals for their Admin screens,
  * through the Local API with the caller's access (apps/site ADR-0002): the
- * Server Actions pass the Staff User's `as`. Kept apart from the actions so
+ * Server Actions pass the User's `as`. Kept apart from the actions so
  * it runs in tests without Next.
  */
 
-/** The Local API access options of the caller (see StaffContext). */
+/** The Local API access options of the caller (see UserContext). */
 export type Access = {
   overrideAccess: false
   user: (User & { collection: "users" }) | null

@@ -4,10 +4,10 @@ import type { FetchLike } from "../fonts/googleFonts"
 import { ensureStarterTemplates } from "../pageTemplates/starters"
 import { seed as avada } from "./avada"
 import { seed as beachside } from "./beachside"
-import { createSeeder, seedStaffUser, type Seeder } from "./upsert"
+import { createSeeder, seedUser, type Seeder } from "./upsert"
 import { seed as warrenBeach } from "./warren_beach"
 
-export { createSeeder, sameData, seedStaffUser } from "./upsert"
+export { createSeeder, sameData, seedUser } from "./upsert"
 export type { Seeder, SeedUser, Upserted } from "./upsert"
 
 /** A Site's seed: what it creates, through the helpers of `seed`. */
@@ -31,7 +31,7 @@ export function seedModuleFor(schema: string | undefined): SeedModule {
 }
 
 /**
- * Runs a seed against a migrated database as the seed Staff User, and returns
+ * Runs a seed against a migrated database as the seed User, and returns
  * what it did, record by record. Every Site also gets the starter Page
  * Templates it doesn't have. Running it again changes nothing.
  */
@@ -39,7 +39,7 @@ export async function runSeed(
   payload: Payload,
   { module, fetch }: { module: SeedModule; fetch?: FetchLike }
 ): Promise<Seeder["report"]> {
-  const seeder = createSeeder(payload, await seedStaffUser(payload), { fetch })
+  const seeder = createSeeder(payload, await seedUser(payload), { fetch })
   await module(seeder)
   const starters = await ensureStarterTemplates(payload, {
     overrideAccess: false,

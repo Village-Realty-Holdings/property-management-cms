@@ -38,7 +38,7 @@ import {
 
 /**
  * Phase 5 acceptance: "The e2e smoke test covers this whole flow for one
- * Site." One Staff User, start to finish, only through the Admin: New Page
+ * Site." One User, start to finish, only through the Admin: New Page
  * from the Dashboard opens the Visual Editor; Blocks are added and edited;
  * the Page is published and the Site matches; a Layout made from it is
  * edited and saved, and the Site's header changes; the Theme is previewed

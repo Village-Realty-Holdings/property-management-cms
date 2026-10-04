@@ -6,17 +6,14 @@ import { saveLayout } from "./record"
 
 /**
  * Duplicate, and "Make a new Layout from this one" (apps/site ADR-0006). Both
- * copy a Layout under a new name, as the Staff User (ADR-0002).
+ * copy a Layout under a new name, as the User (ADR-0002).
  */
 
-type Staff = TypedUser
+type User = TypedUser
 
 const key = (name: string) => name.trim().toLowerCase()
 
-async function layoutNames(
-  payload: Payload,
-  user: Staff
-): Promise<Set<string>> {
+async function layoutNames(payload: Payload, user: User): Promise<Set<string>> {
   const { docs } = await payload.find({
     collection: "layouts",
     pagination: false,
@@ -40,13 +37,13 @@ function copyName(name: string, taken: ReadonlySet<string>): string {
 
 /**
  * Copies a Layout: its Header and Footer under a new name. The copy is never
- * the default and has no paths, so it doesn't take over any route until Staff
+ * the default and has no paths, so it doesn't take over any route until Users
  * give it some. `name` defaults to "<name> (copy)", numbered when that is
  * taken; a name that is given must be free (any letter case).
  */
 export async function duplicateLayout(
   payload: Payload,
-  options: { user: Staff; id: number; name?: string | null }
+  options: { user: User; id: number; name?: string | null }
 ): Promise<Layout> {
   const { user } = options
   const source = await payload.findByID({
@@ -84,12 +81,12 @@ export async function duplicateLayout(
 /**
  * "Make a new Layout from this one": copies `layoutId` under `name`, then
  * switches the Page's Draft to the copy (mode "specific"). Publishing the
- * Page is left to Staff. When the Page can't be switched, the copy is removed
+ * Page is left to Users. When the Page can't be switched, the copy is removed
  * again and the error is passed on.
  */
 export async function makeLayoutFromPage(
   payload: Payload,
-  options: { user: Staff; pageId: number; layoutId: number; name: string }
+  options: { user: User; pageId: number; layoutId: number; name: string }
 ): Promise<Layout> {
   const { user, pageId } = options
   // Fail before copying anything when the Page isn't there.

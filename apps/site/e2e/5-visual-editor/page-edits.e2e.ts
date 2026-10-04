@@ -53,7 +53,7 @@ import {
  * publish it, and the Site matches", with the editing rules of the spec's
  * "Editing" and "Page mode" sections and the keyboard shortcuts.
  *
- * One Draft Page is built up step by step, as a Staff User would: Blocks are
+ * One Draft Page is built up step by step, as a User would: Blocks are
  * added from the picker ("+" in the Outline), edited in the Block tab and in
  * place (plain text, and rich text with its floating toolbar), moved,
  * duplicated, deleted and brought back with Undo, dragged in the Outline, and

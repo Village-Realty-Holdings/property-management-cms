@@ -7,7 +7,7 @@ import {
 } from "@/admin/editor/modes/loadPageMode"
 import { PageMode } from "@/admin/editor/modes/PageMode"
 import { loadPageTemplateStart } from "@/admin/pageTemplates"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 import { editingUrl } from "@/site/editing/flag"
 
 export const metadata: Metadata = { title: "New Page" }
@@ -23,8 +23,8 @@ type Props = { searchParams: Promise<{ template?: string | string[] }> }
  */
 export default async function NewPage({ searchParams }: Props) {
   const { template } = await searchParams
-  const staff = await requireStaff()
-  const { payload, as } = staff
+  const session = await requireUser()
+  const { payload, as } = session
 
   const { docs } = await payload.find({
     collection: "pages",
@@ -49,7 +49,7 @@ export default async function NewPage({ searchParams }: Props) {
       layouts={await loadLayoutOptions(payload)}
       dependents={[]}
       canvasSrc={editingUrl(initial.path)}
-      {...await loadPickers(staff)}
+      {...await loadPickers(session)}
     />
   )
 }

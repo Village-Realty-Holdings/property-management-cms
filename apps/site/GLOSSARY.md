@@ -1,6 +1,6 @@
 # Awayday Site Builder
 
-One website that Awayday staff build and edit in one place. Staff compose Pages from Blocks, edit them on the page as visitors will see it, and publish.
+One website that Users build and edit in one place. Users compose Pages from Blocks, edit them on the page as visitors will see it, and publish.
 
 ## Language
 
@@ -23,7 +23,7 @@ The Site's visual style: its colours, fonts, shape, density, shadows, buttons an
 _Avoid_: Skin, styles, look and feel
 
 **Saved Theme**:
-A named copy of the Theme's settings that staff keep, to apply later or to move to another Site as a file. Saved Themes are listed with the built-in presets under Tools, Themes. The Site still has one Theme: applying a preset or a Saved Theme saves the Theme with those settings, live at once, and the Theme's history can put the earlier one back.
+A named copy of the Theme's settings that Users keep, to apply later or to move to another Site as a file. Saved Themes are listed with the built-in presets under Tools, Themes. The Site still has one Theme: applying a preset or a Saved Theme saves the Theme with those settings, live at once, and the Theme's history can put the earlier one back.
 _Avoid_: Theme (for one in the list that isn't applied), template, skin
 
 **Starter Kit**:
@@ -31,9 +31,9 @@ What a new Site is set up from in one go: a suggested Theme and a first set of P
 _Avoid_: Template (a Page Template is one Page to start a Page from), preset, seed, site template
 
 **Font**:
-A font family staff have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by staff, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
+A font family Users have added, as one or more files of different weights and styles, for use in the Theme. A Font is uploaded by Users, or added from Google Fonts by name: the Site downloads its files once, stores them, and serves them itself, so visitors' browsers never ask Google. The Site's six built-in fonts are quick picks in the Theme, not stored Fonts. Fonts are not Media.
 A Font with no files is treated as missing: the Site shows the built-in stand-in instead, never a bare family name that would depend on the visitor's machine.
-_Known edge case_: when a stored Font has the same family name as a built-in font, the stored Font wins because a Staff User added it deliberately, and the built-in quick pick of that name is hidden while the stored Font exists.
+_Known edge case_: when a stored Font has the same family name as a built-in font, the stored Font wins because a User added it deliberately, and the built-in quick pick of that name is hidden while the stored Font exists.
 _Avoid_: Typeface, font file (for the family)
 
 ### Content
@@ -51,8 +51,8 @@ The Header and Footer that wrap a Page's content. One Layout is the Site's defau
 _Avoid_: Template, shell, chrome, master page
 
 **Page Template**:
-A Page that new Pages can start from. Staff turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add three starters: Home, Tuck-in (an announcement that a company has joined the brand), and Guest feedback survey (what a guest opens after a stay).
-_Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one Staff made), Starter Kit (that sets up a Site)
+A Page that new Pages can start from. Users turn any unpublished Page into one, and a Page Template is never published, so visitors never see it. A Page made from it gets its own copy of the Blocks and the Layout choice, so changing or deleting the Page Template never changes that Page. A Site can add three starters: Home, Tuck-in (an announcement that a company has joined the brand), and Guest feedback survey (what a guest opens after a stay).
+_Avoid_: Template (on its own: it could mean a Layout), preset, blueprint, starter (for one made by a User), Starter Kit (that sets up a Site)
 
 **Block**:
 A reusable, configurable section of a Page, such as a hero, a rich text section or a call to action. A Block sits on the Page itself or inside a Container.
@@ -71,11 +71,11 @@ A Block that asks a guest how their stay was, out of five stars. A high rating i
 _Avoid_: Review form, NPS, rating widget, feedback Block
 
 **Media**:
-An image uploaded by staff for use on Pages, Layouts, the Brand and SEO.
+An image uploaded by Users for use on Pages, Layouts, the Brand and SEO.
 _Avoid_: Asset, file, upload (as model names)
 
 **Draft** / **Published**:
-The lifecycle of a Page. Staff edit the Draft, and visitors see only the Published version until the Draft is published.
+The lifecycle of a Page. Users edit the Draft, and visitors see only the Published version until the Draft is published.
 _Avoid_: Staging, live copy, unpublished
 
 **Rental**:
@@ -85,7 +85,7 @@ _Avoid_: Property, listing, unit
 ### Editing
 
 **Admin**:
-The place Staff Users sign in to manage Pages, Layouts, Media, the Brand, SEO and the Theme.
+The place Users sign in to manage Pages, Layouts, Media, the Brand, SEO and the Theme.
 _Avoid_: Back office, CMS (for the admin itself)
 
 **Dashboard**:
@@ -101,7 +101,7 @@ The Admin's grouping, below Settings, for jobs that act on the whole Site at onc
 _Avoid_: Utilities, system tools, other
 
 **Replace Text** / **Replace Image**:
-Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first, and leaves Page Templates as they are unless asked to include them. Pages are saved as Drafts or published, as the Staff User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
+Tools that change one text, or one Media image, everywhere the Site shows it. Each shows what it would change first, and leaves Page Templates as they are unless asked to include them. Pages are saved as Drafts or published, as the User chooses; Layouts, the Brand and SEO have no Drafts, so they change on the Site at once.
 _Avoid_: Find and replace, search and replace, bulk edit
 
 **Links**:
@@ -109,11 +109,11 @@ A Tool that lists every link on the Site's Pages and Layouts, one row per place 
 _Avoid_: Link checker (links that leave the Site are not checked), redirects, URLs (for the Tool)
 
 **Visual Editor**:
-The part of the Admin where a Staff User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
+The part of the Admin where a User edits a Page or a Layout on the rendered page itself (clicking a Block or its text to change it, adding or reordering Blocks) and edits the Theme while seeing it on real Pages.
 _Avoid_: Page builder, live preview, inline editing (as the feature name)
 
 ### People
 
-**Staff User**:
-An Awayday employee who signs into the Admin with their Awayday Microsoft account. Every Staff User can do everything in the Admin. Visitors never sign in.
-_Avoid_: Admin (for a person), editor, account, member
+**User**:
+A person who signs into the Admin with their Awayday Microsoft account. Every User can do everything in the Admin. Visitors never sign in.
+_Avoid_: Staff (the old name), Admin (for a person), editor, account, member

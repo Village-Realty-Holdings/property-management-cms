@@ -6,7 +6,7 @@ import { DEFAULT_INPUTS } from "./presets"
 /**
  * Contrast warnings. Text-bearing colours the Theme derives (button text,
  * links, muted text) always reach AA, so they never warn. What is left are the
- * colours a Staff User sets that the derivation cannot repair, and a button
+ * colours a User sets that the derivation cannot repair, and a button
  * text colour set to White or Dark instead of derived. Each warning carries a
  * concrete fix, and no warning blocks saving.
  */

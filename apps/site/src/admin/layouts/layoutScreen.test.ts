@@ -17,7 +17,7 @@ import {
   UNTITLED_LAYOUT,
 } from "./layoutScreen"
 
-/** What Layout mode reads and does, as the Staff User. */
+/** What Layout mode reads and does, as the User. */
 
 let t: TestPayload
 let payload: Payload
@@ -26,11 +26,11 @@ let as: { overrideAccess: false; user: User & { collection: "users" } }
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  const staff = await payload.create({
+  const testUser = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", name: "Sam Staff", entraOid: "s" },
+    data: { email: "staff@awayday.test", name: "Sam Taylor", entraOid: "s" },
   })
-  as = { overrideAccess: false, user: { ...staff, collection: "users" } }
+  as = { overrideAccess: false, user: { ...testUser, collection: "users" } }
 })
 
 afterAll(() => t?.teardown())
@@ -108,7 +108,7 @@ describe("loadLayoutScreen", () => {
     expect(screen?.history).toHaveLength(1)
     expect(screen?.history[0]).toMatchObject({
       isLive: true,
-      author: "Sam Staff",
+      author: "Sam Taylor",
     })
     expect(screen?.history[0]?.savedAt).toMatch(/^\d{4}-\d\d-\d\dT/)
   })

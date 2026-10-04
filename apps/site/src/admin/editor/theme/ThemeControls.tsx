@@ -35,7 +35,7 @@ import { ColourField } from "./ColourField"
 import { ContrastWarnings } from "./ContrastWarnings"
 import { FontField } from "./FontField"
 
-/** Where a Staff User adds a Google Font or uploads one. */
+/** Where a User adds a Google Font or uploads one. */
 const FONTS_ADMIN_PATH = "/admin/settings/assets/fonts"
 
 /**

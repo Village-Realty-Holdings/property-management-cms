@@ -10,7 +10,7 @@ import {
 import { loadLayoutUsage } from "../../layouts/usage"
 import type { Layout, Page } from "../../payload-types"
 import type { PageBlock } from "../../site/blocks/types"
-import type { StaffAccess } from "../dashboard/queries"
+import type { UserAccess } from "../dashboard/queries"
 import { loadPageRows } from "../dashboard/queries"
 import type { LayoutDocument } from "../editor/state"
 import type { PageOption } from "../editor/fields/context"
@@ -19,7 +19,7 @@ import type { BlockValues } from "../pageForm"
 
 /**
  * What Layout mode of the Visual Editor reads and does, through the Local API
- * as the Staff User (apps/site ADR-0002). A Layout goes live on save
+ * as the User (apps/site ADR-0002). A Layout goes live on save
  * (ADR-0006), so a save here changes every Page that uses it. The Server
  * Actions pass the user's `as`; kept apart from them so it runs in tests
  * without Next.
@@ -35,7 +35,7 @@ export type LayoutVersionRow = {
   savedAt: string
   /** Who saved it; null when that user has been deleted. */
   author: string | null
-  /** What changed, or the Staff User's note. */
+  /** What changed, or the User's note. */
   summary: string
   /** The newest version is the one on the Site. */
   isLive: boolean
@@ -115,7 +115,7 @@ function withoutTemporaryIds<T extends { id?: string | null }>(
 
 async function readVersionRows(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: number
 ): Promise<LayoutVersionRow[]> {
   const versions = await listLayoutHistory(payload, { user: access.user, id })
@@ -131,7 +131,7 @@ async function readVersionRows(
 /** A Page's newest version (its Draft, if it has one), with Blocks populated. */
 export async function loadPreviewPage(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   pageId: number
 ): Promise<PreviewPage | null> {
   if (!Number.isInteger(pageId)) return null
@@ -164,7 +164,7 @@ export async function loadPreviewPage(
  */
 export async function loadLayoutScreen(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: number
 ): Promise<LayoutScreen | null> {
   if (!Number.isInteger(id) || id <= 0) return null
@@ -207,7 +207,7 @@ export async function loadLayoutScreen(
 /** The stored Layout, how far it reaches and its history, after a write. */
 async function resultAfterWrite(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   saved: Layout,
   message: (usedBy: number) => string
 ): Promise<LayoutResult> {
@@ -233,14 +233,14 @@ function isMissing(error: unknown): boolean {
 }
 
 /**
- * Saves the Layout's name, paths, Header and Footer as the Staff User. It is
+ * Saves the Layout's name, paths, Header and Footer as the User. It is
  * live on every Page that uses it at once (ADR-0006). The document comes from
  * the browser, so Payload validates every value again; a refusal comes back
  * as a failure to show inline.
  */
 export async function saveLayoutAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: number,
   doc: LayoutDocument
 ): Promise<LayoutResult> {
@@ -284,7 +284,7 @@ export async function saveLayoutAs(
  */
 export async function restoreLayoutAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: number,
   versionId: number
 ): Promise<LayoutResult> {
@@ -316,7 +316,7 @@ export async function restoreLayoutAs(
  */
 export async function createUntitledLayout(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<number> {
   const { docs } = await payload.find({
     collection: "layouts",

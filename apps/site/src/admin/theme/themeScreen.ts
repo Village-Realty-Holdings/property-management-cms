@@ -15,15 +15,15 @@ import { formStateFromError, type FormState } from "../formState"
 import { themeDetails, type DetailRow } from "./themeDetails"
 
 /**
- * What the Theme screen reads and does, through the Local API as the Staff
+ * What the Theme screen reads and does, through the Local API as the
  * User (apps/site ADR-0002): the Server Actions pass the user's `as`. Kept
  * apart from the actions so it runs in tests without Next.
  */
 
 const FONT_INPUTS = ["headingFont", "bodyFont"] as const
 
-/** The Local API options of a signed-in Staff User (see StaffContext). */
-export type StaffAccess = {
+/** The Local API options of a signed-in User (see UserContext). */
+export type UserAccess = {
   overrideAccess: false
   user: User & { collection: "users" }
 }
@@ -35,7 +35,7 @@ export type HistoryRow = {
   savedAt: string
   /** Who saved it; null when that user has been deleted. */
   author: string | null
-  /** What changed, or the Staff User's note. */
+  /** What changed, or the User's note. */
   summary: string
   /** The newest version is the one on the Site. */
   isLive: boolean
@@ -69,12 +69,12 @@ export function substituteFamily(label: string): string {
 export const NO_CHANGES_MESSAGE = "No changes to save"
 
 /**
- * Saves the Theme as the Staff User: it is live on the Site at once. A save
+ * Saves the Theme as the User: it is live on the Site at once. A save
  * that changes nothing makes no version and says so.
  */
 export async function saveThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   inputs: ThemeInputs,
   note?: string | null
 ): Promise<FormState> {
@@ -90,7 +90,7 @@ export async function saveThemeAs(
 
 export async function loadThemeScreen(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<ThemeScreen> {
   const [live, fonts, versions] = await Promise.all([
     readLiveTheme(payload),
@@ -123,7 +123,7 @@ export async function loadThemeScreen(
  */
 export async function restoreThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   versionId: number
 ): Promise<FormState> {
   if (!Number.isInteger(versionId) || versionId <= 0) {

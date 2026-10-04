@@ -99,7 +99,7 @@ export async function openSession(
   return { context, page, log }
 }
 
-/** Signs the dev Staff User in (`DEV_SIGN_IN=1`, the same session as Entra). */
+/** Signs the dev User in (`DEV_SIGN_IN=1`, the same session as Entra). */
 export async function signIn(page: Page): Promise<void> {
   await page.goto(`${ORIGIN}/auth/dev?redirect=/admin`)
   await page.waitForURL(`${ORIGIN}/admin**`)

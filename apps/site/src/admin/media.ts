@@ -3,7 +3,7 @@ import "server-only"
 import type { Media } from "../payload-types"
 
 import type { MediaOption } from "./components/MediaSelect"
-import type { StaffContext } from "./session"
+import type { UserContext } from "./session"
 
 /** One Media image as an option for the Admin's image pickers. */
 export function toMediaOption(doc: Media): MediaOption {
@@ -20,7 +20,7 @@ export function toMediaOption(doc: Media): MediaOption {
 export async function mediaOptions({
   payload,
   as,
-}: StaffContext): Promise<MediaOption[]> {
+}: UserContext): Promise<MediaOption[]> {
   const { docs } = await payload.find({
     collection: "media",
     limit: 500,

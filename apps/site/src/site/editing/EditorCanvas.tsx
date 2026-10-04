@@ -26,7 +26,7 @@ import { withMedia } from "./withMedia"
  * The Visual Editor's canvas: the Site route in its editing mode. It draws
  * the Blocks and the Layout's region Blocks from the latest document the
  * Admin posted (see bridge.ts), with the same components the Site uses and
- * `editing` on, so what the Staff User edits is what visitors see.
+ * `editing` on, so what the User edits is what visitors see.
  *
  * While the Theme is being edited the document carries its unsaved inputs.
  * Their tokens are derived here, in the browser, into a `:root` rule that
@@ -40,7 +40,7 @@ import { withMedia } from "./withMedia"
  *
  * The overlay (see overlay.tsx) outlines, selects and offers the Block
  * toolbar and "+" on the Blocks of the regions the document's mode lets the
- * Staff User edit, and sends what they ask for to the Admin.
+ * User edit, and sends what they ask for to the Admin.
  *
  * The editor's keyboard shortcuts work with focus in the canvas: the keys are
  * forwarded to the Admin (see useForwardShortcuts).
@@ -49,7 +49,7 @@ import { withMedia } from "./withMedia"
  * `media` is the Site's Media library, which the canvas puts in place of
  * each id (see withMedia), so an image shows here as on the Site.
  *
- * Links do not navigate: the Staff User edits a Page here, and the Admin
+ * Links do not navigate: the User edits a Page here, and the Admin
  * moves between Pages.
  */
 export function EditorCanvas({

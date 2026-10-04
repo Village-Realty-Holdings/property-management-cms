@@ -15,7 +15,7 @@ export const TEMPLATE_IS_NOT_PUBLISHED =
 
 /**
  * A page of the Site at its own path, composed from Blocks: "/" for Home,
- * "/about", "/company/team". Staff Users edit the Draft; visitors see the
+ * "/about", "/company/team". Users edit the Draft; visitors see the
  * Published version only.
  */
 export const Pages: CollectionConfig = {

@@ -44,12 +44,12 @@ const PNG = Buffer.from(
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -64,9 +64,9 @@ afterAll(async () => {
   await t?.teardown()
 })
 
-const asStaff = () => ({
+const asUser = () => ({
   overrideAccess: false as const,
-  user: { ...staff, collection: "users" as const },
+  user: { ...testUser, collection: "users" as const },
 })
 
 async function upload(name: string, alt: string): Promise<Media> {
@@ -79,7 +79,7 @@ async function upload(name: string, alt: string): Promise<Media> {
       name: `${name}-${Date.now()}.png`,
       size: PNG.length,
     },
-    ...asStaff(),
+    ...asUser(),
   })
 }
 
@@ -104,18 +104,18 @@ describe("the sitemap", () => {
     await payload.create({
       collection: "pages",
       data: { title: "Home", path: "/", _status: "published" },
-      ...asStaff(),
+      ...asUser(),
     })
     await payload.create({
       collection: "pages",
       data: { title: "About", path: "/about", _status: "published" },
-      ...asStaff(),
+      ...asUser(),
     })
     await payload.create({
       collection: "pages",
       data: { title: "Secret", path: "/secret", _status: "draft" },
       draft: true,
-      ...asStaff(),
+      ...asUser(),
     })
 
     const urls = sitemapFor(
@@ -134,12 +134,12 @@ describe("SEO read as a visitor", () => {
     await payload.updateGlobal({
       slug: "brand",
       data: { name: "Warren Beach" },
-      ...asStaff(),
+      ...asUser(),
     })
     await payload.updateGlobal({
       slug: "seo",
       data: { favicon: favicon.id, image: share.id, description: "By the sea" },
-      ...asStaff(),
+      ...asUser(),
     })
 
     const brand = resolveBrand(await readBrand(payload))
@@ -156,7 +156,7 @@ describe("SEO read as a visitor", () => {
     await payload.updateGlobal({
       slug: "seo",
       data: { allowIndexing: false },
-      ...asStaff(),
+      ...asUser(),
     })
     const brand = resolveBrand(await readBrand(payload))
     const seo = resolveSeo(await readSeo(payload))
@@ -177,7 +177,7 @@ describe("SEO read as a visitor", () => {
     await payload.updateGlobal({
       slug: "seo",
       data: { titlePattern: "{name} — %s" },
-      ...asStaff(),
+      ...asUser(),
     })
     const page = await payload.create({
       collection: "pages",
@@ -187,7 +187,7 @@ describe("SEO read as a visitor", () => {
         seo: { title: "Our rooms", description: "Sea view rooms" },
         _status: "published",
       },
-      ...asStaff(),
+      ...asUser(),
     })
     const brand = resolveBrand(await readBrand(payload))
     const seo = resolveSeo(await readSeo(payload))
@@ -200,7 +200,7 @@ describe("SEO read as a visitor", () => {
 const WOFF2 = Buffer.from([0x77, 0x4f, 0x46, 0x32, 0x00, 0x01, 0x00, 0x00])
 
 describe("the Theme the Site applies", () => {
-  const staffUser = () => ({ ...staff, collection: "users" as const })
+  const user = () => ({ ...testUser, collection: "users" as const })
   const siteCss = async () => siteThemeCss(await readSiteTheme(payload))
 
   afterEach(async () => {
@@ -249,7 +249,7 @@ describe("the Theme the Site applies", () => {
   })
 
   it("shows a saved Theme on the very next read", async () => {
-    await saveTheme(payload, { user: staffUser(), inputs: HARBOUR.inputs })
+    await saveTheme(payload, { user: user(), inputs: HARBOUR.inputs })
     const theme = await readSiteTheme(payload)
     expect(theme.source).toBe("saved")
     expect(theme.savedAt).not.toBeNull()
@@ -258,17 +258,17 @@ describe("the Theme the Site applies", () => {
     expect(css).toContain("--btn-radius:0px;")
 
     await saveTheme(payload, {
-      user: staffUser(),
+      user: user(),
       inputs: { ...HARBOUR.inputs, primary: "#0a7d5a" },
     })
     expect(await siteCss()).toContain("--primary:#0a7d5a;")
   })
 
   it("shows the restored look after a restore", async () => {
-    await saveTheme(payload, { user: staffUser(), inputs: HARBOUR.inputs })
+    await saveTheme(payload, { user: user(), inputs: HARBOUR.inputs })
     const before = await siteCss()
     await saveTheme(payload, {
-      user: staffUser(),
+      user: user(),
       inputs: { ...HARBOUR.inputs, primary: "#0a7d5a", buttonCorners: "pill" },
     })
     expect(await siteCss()).not.toBe(before)
@@ -276,10 +276,10 @@ describe("the Theme the Site applies", () => {
     const versions = await payload.findGlobalVersions({
       slug: "theme",
       sort: "id",
-      ...asStaff(),
+      ...asUser(),
     })
     await restoreThemeVersion(payload, {
-      user: staffUser(),
+      user: user(),
       versionId: Number(versions.docs[0]!.id),
     })
     expect(await siteCss()).toBe(before)
@@ -295,7 +295,7 @@ describe("the Theme the Site applies", () => {
         name: `slab-${Date.now()}.woff2`,
         size: WOFF2.length,
       },
-      ...asStaff(),
+      ...asUser(),
     })
     const font = await payload.create({
       collection: "fonts",
@@ -304,10 +304,10 @@ describe("the Theme the Site applies", () => {
         kind: "slab",
         files: [{ weight: 400, style: "normal", file: file.id }],
       },
-      ...asStaff(),
+      ...asUser(),
     })
     await saveTheme(payload, {
-      user: staffUser(),
+      user: user(),
       inputs: { ...CLASSIC.inputs, headingFont: `font:${font.id}` },
     })
 
@@ -328,14 +328,14 @@ describe("Layouts read as a visitor", () => {
     payload.create({
       collection: "layouts",
       data: { name, ...data },
-      ...asStaff(),
+      ...asUser(),
     })
 
   const page = (path: string, data: Record<string, unknown> = {}) =>
     payload.create({
       collection: "pages",
       data: { title: path, path, _status: "published", ...data },
-      ...asStaff(),
+      ...asUser(),
     })
 
   it("reads as a visitor, selecting what the Site draws", async () => {
@@ -351,7 +351,7 @@ describe("Layouts read as a visitor", () => {
           user: null,
         })
       )
-      // Who saved it, and the change summary, are for staff.
+      // Who saved it, and the change summary, are for users.
       expect(layouts[0]).not.toHaveProperty("updatedBy")
       expect(layouts[0]).not.toHaveProperty("changeSummary")
     } finally {
@@ -382,7 +382,7 @@ describe("Layouts read as a visitor", () => {
       collection: "pages",
       id: about.id,
       data: { path: "/about-us", _status: "published" },
-      ...asStaff(),
+      ...asUser(),
     })
     expect(await read()).toBe("/about-us")
   })

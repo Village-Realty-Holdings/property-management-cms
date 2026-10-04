@@ -12,10 +12,10 @@ import type { Access } from "./settingsSave"
 
 /**
  * A Page as a file, to move it to another Site or keep a copy (Pages list,
- * Export and Import), through the Local API as the Staff User (apps/site
+ * Export and Import), through the Local API as the User (apps/site
  * ADR-0002).
  *
- * The file is the Page as Staff edit it (its newest copy): title, path,
+ * The file is the Page as Users edit it (its newest copy): title, path,
  * Blocks, SEO and Layout choice. What belongs to one Site is written by name,
  * since an id means nothing on another: an image is its Media file name, and
  * a picked Layout is its name. Importing looks those up again. An image or a

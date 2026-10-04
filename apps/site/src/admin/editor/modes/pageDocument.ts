@@ -12,7 +12,7 @@ import { childrenOf, type LayoutChoice, type PageDocument } from "../state"
  * server reads and writes with it, the editor holds it.
  */
 
-/** What a New Page is called until its Staff User names it. */
+/** What a New Page is called until its User names it. */
 export const NEW_PAGE_TITLE = "Untitled Page"
 
 const NEW_PAGE_PATH = "/untitled-page"

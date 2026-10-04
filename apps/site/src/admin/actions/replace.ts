@@ -12,10 +12,10 @@ import {
   type ReplaceResult,
 } from "../replace/run"
 import { parseTextQuery, textReplacement } from "../replace/text"
-import { requireStaff } from "../session"
+import { requireUser } from "../session"
 
 /**
- * The Tools' site-wide replaces (apps/site ADR-0008). Each runs as the Staff
+ * The Tools' site-wide replaces (apps/site ADR-0008). Each runs as the
  * User (ADR-0002) and checks what the browser sent again. Applying reads the
  * Site afresh: it never takes a preview's word for what matches.
  */
@@ -43,7 +43,7 @@ function revalidateAfterReplace() {
 export async function previewTextReplace(
   input: unknown
 ): Promise<PreviewResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const parsed = parseTextQuery(input)
   if (!parsed.ok) return parsed
   return {
@@ -60,7 +60,7 @@ export async function applyTextReplace(
   input: unknown,
   mode: ReplaceMode
 ): Promise<ReplaceResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const parsed = parseTextQuery(input)
   if (!parsed.ok) return refused(parsed.message)
   const result = await applyReplace(
@@ -76,7 +76,7 @@ export async function applyTextReplace(
 export async function previewImageReplace(
   input: unknown
 ): Promise<PreviewResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const loaded = await loadMediaReplacement(payload, as, input)
   if (!loaded.ok) return loaded
   return {
@@ -89,7 +89,7 @@ export async function applyImageReplace(
   input: unknown,
   mode: ReplaceMode
 ): Promise<ReplaceResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const loaded = await loadMediaReplacement(payload, as, input)
   if (!loaded.ok) return refused(loaded.message)
   const result = await applyReplace(payload, as, loaded.replacement, mode)
@@ -100,7 +100,7 @@ export async function applyImageReplace(
 export async function previewLinkReplace(
   input: unknown
 ): Promise<PreviewResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const loaded = linkReplacement(input)
   if (!loaded.ok) return loaded
   return {
@@ -113,7 +113,7 @@ export async function applyLinkReplace(
   input: unknown,
   mode: ReplaceMode
 ): Promise<ReplaceResult> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const loaded = linkReplacement(input)
   if (!loaded.ok) return refused(loaded.message)
   const result = await applyReplace(payload, as, loaded.replacement, mode)

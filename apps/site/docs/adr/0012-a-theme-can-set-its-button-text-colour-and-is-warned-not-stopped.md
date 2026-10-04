@@ -13,7 +13,7 @@ Only buttons change. Text on a Primary band, an accent panel or the Utility stri
 - **Keep deriving, and darken the brand's blue until white passes.** Rejected as the only answer. It is right for a Site that wants AA above all, and it is still what Automatic does, but a brand's button colour is not ours to change.
 - **Use WCAG's 3:1 threshold for large text on buttons.** Rejected. Button labels are not large text.
 - **A free colour picker for button text.** Rejected. White or the text colour covers what brands do, and a third colour would need its own hover and focus rules.
-- **Block the save when the contrast is low.** Rejected, as for every other contrast warning: Staff are told, and decide.
+- **Block the save when the contrast is low.** Rejected, as for every other contrast warning: Users are told, and decide.
 
 ## Consequences
 

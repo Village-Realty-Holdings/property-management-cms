@@ -98,7 +98,7 @@ async function dialogDuring(
   return type
 }
 
-/** A fresh tab of the signed-in Staff User, with `url` open. */
+/** A fresh tab of the signed-in User, with `url` open. */
 async function newTab(url: string): Promise<Page> {
   const tab = await admin.context.newPage()
   await openEditor(tab, url)

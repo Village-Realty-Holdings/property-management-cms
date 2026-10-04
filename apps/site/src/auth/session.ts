@@ -8,9 +8,9 @@ import type {
 import { parseCookies } from "payload/shared"
 
 /**
- * Staff sessions (apps/site ADR-0003). Payload's local strategy is disabled,
+ * User sessions (apps/site ADR-0003). Payload's local strategy is disabled,
  * and with it Payload's own JWT check, so sessions are ours: a signed
- * `site-session` cookie naming the Staff User, read by `sessionStrategy` on
+ * `site-session` cookie naming the User, read by `sessionStrategy` on
  * every Payload request (the Admin, /p-admin, REST and the Local API with
  * `payload.auth`). Access rules then apply as usual.
  *
@@ -26,7 +26,7 @@ const USERS = "users"
 const sessionKey = (secret: string) =>
   new TextEncoder().encode(`${secret}:site-session`)
 
-/** The `Set-Cookie` value that starts a session for the Staff User. */
+/** The `Set-Cookie` value that starts a session for the User. */
 export async function issueSession(
   payload: Payload,
   userId: number | string,
@@ -79,7 +79,7 @@ export async function readSession(
   }
 }
 
-/** The Payload auth strategy for Staff Users, registered on `users`. */
+/** The Payload auth strategy for Users, registered on `users`. */
 export const sessionStrategy: AuthStrategy = {
   name: "site-session",
   authenticate: async ({ headers, payload }) => {

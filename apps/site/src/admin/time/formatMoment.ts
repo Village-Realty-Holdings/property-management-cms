@@ -1,6 +1,6 @@
 /**
- * A moment as the Staff User reads it: in the time zone of the browser that
- * shows it. Admin times used to be UTC, so at 6:30 PM on 30 Sep a Staff User
+ * A moment as the User reads it: in the time zone of the browser that
+ * shows it. Admin times used to be UTC, so at 6:30 PM on 30 Sep a User
  * in Chicago saw "Oct 1". The time zone is a parameter so tests can pin it;
  * the default is the machine's own, which in a browser is the viewer's.
  */

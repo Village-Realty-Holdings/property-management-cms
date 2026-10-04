@@ -153,7 +153,7 @@ describe("pnpm sites:worktrees", () => {
     for (const site of SITES) {
       const tree = await worktreeOf(site)
       expect(tree).toBeDefined()
-      // A Staff User's own values (a database URL, a secret) survive.
+      // A User's own values (a database URL, a secret) survive.
       expect(readFileSync(envFileOf(tree!, site), "utf8")).toBe(
         envAfterFirstRun.get(site.slug)
       )

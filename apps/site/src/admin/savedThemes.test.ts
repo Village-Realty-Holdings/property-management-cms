@@ -16,7 +16,7 @@ import {
 } from "./savedThemes"
 
 let t: TestPayload
-let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 
 beforeAll(async () => {
   t = await getTestPayload()
@@ -24,14 +24,14 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 })
 
 afterAll(async () => {
   await t?.teardown()
 })
 
-const cards = () => loadThemes(t.payload, asStaff)
+const cards = () => loadThemes(t.payload, asUser)
 const card = async (name: string) =>
   (await cards()).find((entry) => entry.name === name)
 
@@ -65,7 +65,7 @@ describe("the Themes list", () => {
 
 describe("applying a Theme", () => {
   it("saves the Site's Theme, live at once, and the history says which", async () => {
-    const result = await applyThemeAs(t.payload, asStaff, "preset:harbour")
+    const result = await applyThemeAs(t.payload, asUser, "preset:harbour")
     expect(result).toEqual({
       ok: true,
       message: "“Harbour” is now live on your Site.",
@@ -73,12 +73,12 @@ describe("applying a Theme", () => {
     expect((await readLiveTheme(t.payload)).inputs).toEqual(HARBOUR.inputs)
     expect((await card("Harbour"))?.live).toBe(true)
     expect((await card("Classic"))?.live).toBe(false)
-    const [newest] = await listThemeHistory(t.payload, { user: asStaff.user })
+    const [newest] = await listThemeHistory(t.payload, { user: asUser.user })
     expect(newest?.summary).toBe("Applied the Theme “Harbour”")
   })
 
   it("says so when it is the Theme already", async () => {
-    expect(await applyThemeAs(t.payload, asStaff, "preset:harbour")).toEqual({
+    expect(await applyThemeAs(t.payload, asUser, "preset:harbour")).toEqual({
       ok: true,
       message: "“Harbour” is already your Theme.",
     })
@@ -86,14 +86,14 @@ describe("applying a Theme", () => {
 
   it("refuses one that isn't in the list", async () => {
     for (const id of ["preset:nope", "saved:999", "", null]) {
-      expect((await applyThemeAs(t.payload, asStaff, id)).ok).toBe(false)
+      expect((await applyThemeAs(t.payload, asUser, id)).ok).toBe(false)
     }
   })
 })
 
 describe("a Saved Theme", () => {
   it("keeps the Site's Theme under a name, listed first and marked live", async () => {
-    expect(await saveCurrentThemeAs(t.payload, asStaff, "  Summer  ")).toEqual({
+    expect(await saveCurrentThemeAs(t.payload, asUser, "  Summer  ")).toEqual({
       ok: true,
       message: "Saved as “Summer”.",
     })
@@ -102,7 +102,7 @@ describe("a Saved Theme", () => {
   })
 
   it("needs a name of its own", async () => {
-    const save = (name: unknown) => saveCurrentThemeAs(t.payload, asStaff, name)
+    const save = (name: unknown) => saveCurrentThemeAs(t.payload, asUser, name)
     expect(await save("  ")).toEqual({
       ok: false,
       message: "Give the Theme a name.",
@@ -119,10 +119,10 @@ describe("a Saved Theme", () => {
   })
 
   it("is applied again after the Theme has moved on", async () => {
-    await applyThemeAs(t.payload, asStaff, "preset:meadow")
+    await applyThemeAs(t.payload, asUser, "preset:meadow")
     const summer = await card("Summer")
     expect(summer?.live).toBe(false)
-    expect(await applyThemeAs(t.payload, asStaff, summer!.id)).toMatchObject({
+    expect(await applyThemeAs(t.payload, asUser, summer!.id)).toMatchObject({
       ok: true,
       message: "“Summer” is now live on your Site.",
     })
@@ -132,25 +132,25 @@ describe("a Saved Theme", () => {
   it("is renamed and deleted, which leaves the Site's Theme alone", async () => {
     const summer = await card("Summer")
     expect(
-      await renameSavedThemeAs(t.payload, asStaff, summer!.id, "Autumn")
+      await renameSavedThemeAs(t.payload, asUser, summer!.id, "Autumn")
     ).toEqual({ ok: true, message: "Renamed to “Autumn”." })
     expect(await card("Summer")).toBeUndefined()
-    expect(await deleteSavedThemeAs(t.payload, asStaff, summer!.id)).toEqual({
+    expect(await deleteSavedThemeAs(t.payload, asUser, summer!.id)).toEqual({
       ok: true,
       message: "Deleted the Saved Theme “Autumn”.",
     })
     expect(await card("Autumn")).toBeUndefined()
     expect((await readLiveTheme(t.payload)).inputs).toEqual(HARBOUR.inputs)
-    expect((await deleteSavedThemeAs(t.payload, asStaff, summer!.id)).ok).toBe(
+    expect((await deleteSavedThemeAs(t.payload, asUser, summer!.id)).ok).toBe(
       false
     )
     expect(
-      (await deleteSavedThemeAs(t.payload, asStaff, "preset:harbour")).ok
+      (await deleteSavedThemeAs(t.payload, asUser, "preset:harbour")).ok
     ).toBe(false)
   })
 
   it("is not listed for a visitor", async () => {
-    await saveCurrentThemeAs(t.payload, asStaff, "Private")
+    await saveCurrentThemeAs(t.payload, asUser, "Private")
     const seen = await t.payload
       .find({
         collection: "saved-themes",
@@ -164,7 +164,7 @@ describe("a Saved Theme", () => {
 
 describe("exporting and importing", () => {
   const exported = async (id: string) => {
-    const result = await exportThemeAs(t.payload, asStaff, id)
+    const result = await exportThemeAs(t.payload, asUser, id)
     if (!result.ok) throw new Error(result.message)
     return result
   }
@@ -187,19 +187,19 @@ describe("exporting and importing", () => {
   it("imports the file as a Saved Theme under a free name, applying nothing", async () => {
     const before = (await readLiveTheme(t.payload)).inputs
     const { json } = await exported("preset:meadow")
-    expect(await importThemeAs(t.payload, asStaff, json)).toEqual({
+    expect(await importThemeAs(t.payload, asUser, json)).toEqual({
       ok: true,
       message: "Imported “Meadow 2”. Apply it to use it.",
     })
     expect((await readLiveTheme(t.payload)).inputs).toEqual(before)
     const imported = await card("Meadow 2")
     expect(imported).toMatchObject({ kind: "Saved", live: false })
-    await applyThemeAs(t.payload, asStaff, imported!.id)
+    await applyThemeAs(t.payload, asUser, imported!.id)
     expect((await readLiveTheme(t.payload)).inputs).toEqual(MEADOW.inputs)
   })
 
   it("refuses a file that isn't a Theme, and says why", async () => {
-    const load = (text: unknown) => importThemeAs(t.payload, asStaff, text)
+    const load = (text: unknown) => importThemeAs(t.payload, asUser, text)
     expect((await load("not json")).message).toBe(
       "That file isn't a Theme: it isn't JSON."
     )
@@ -227,7 +227,7 @@ describe("exporting and importing", () => {
     const file = JSON.parse(json) as ThemeFile
     const result = await importThemeAs(
       t.payload,
-      asStaff,
+      asUser,
       JSON.stringify({
         ...file,
         inputs: { ...file.inputs, headingFont: "Comic Neue" },

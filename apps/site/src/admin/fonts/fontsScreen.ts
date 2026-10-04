@@ -19,7 +19,7 @@ import { buildFontRows, type FontRow, type StoredFontRecord } from "./rows"
 
 /**
  * What the Fonts screen reads and does, through the Local API with the
- * caller's access (apps/site ADR-0002): the Server Actions pass the Staff
+ * caller's access (apps/site ADR-0002): the Server Actions pass the
  * User's `as`. Kept apart from the actions so it runs in tests without Next.
  */
 

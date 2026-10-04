@@ -4,7 +4,7 @@ import type { Field } from "payload"
  * Checks a value against its field's config: `required`, length, range and
  * row limits, then the field's own `validate`. Returns the first problem as
  * a sentence, or null. Payload's built-in validators need a request and
- * translations that the browser does not have, so the rules Staff Users can
+ * translations that the browser does not have, so the rules Users can
  * trip over are written out here.
  */
 

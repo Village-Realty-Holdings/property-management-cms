@@ -167,7 +167,7 @@ describe("<PageTab> path", () => {
     await user.clear(title)
     await user.type(title, "Stays")
     expect(path()).toBe("/stays")
-    // Once the path is written by hand it is the Staff User's.
+    // Once the path is written by hand it is the User's.
     await user.type(within(panel()).getByLabelText("Path"), "-x")
     await user.type(title, " by the sea")
     expect(path()).toBe("/stays-x")

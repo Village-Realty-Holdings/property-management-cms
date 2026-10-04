@@ -119,7 +119,7 @@ function PageModeEditor({
     [layouts, page.path, page.layout]
   )
 
-  // Saving is async and the Staff User keeps typing: a save sends what was on
+  // Saving is async and the User keeps typing: a save sends what was on
   // screen when it started, and reads the latest from these.
   const latest = useRef({ doc, pageId })
   useEffect(() => {

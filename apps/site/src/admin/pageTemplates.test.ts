@@ -22,7 +22,7 @@ import {
 } from "./pageTemplates"
 
 let t: TestPayload
-let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 const asVisitor = { overrideAccess: false, user: null } as const
 
 beforeAll(async () => {
@@ -31,12 +31,12 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
   // The Site's default Layout, as every started Site has.
   await t.payload.create({
     collection: "layouts",
     data: { name: "Main" },
-    ...asStaff,
+    ...asUser,
   })
 })
 
@@ -78,7 +78,7 @@ const save = (
   document: PageDocument,
   intent: "draft" | "publish" | "unpublish" = "draft",
   id: number | null = null
-) => savePageAs(t.payload, asStaff, { id, intent, document })
+) => savePageAs(t.payload, asUser, { id, intent, document })
 
 const idsIn = (value: unknown): string[] =>
   Array.isArray(value)
@@ -95,7 +95,7 @@ describe("a Page as a Page Template", () => {
     const saved = await save(landing())
 
     expect(saved).toMatchObject({ ok: true, document: { isTemplate: true } })
-    expect(await loadPageTemplateRows(t.payload, asStaff)).toMatchObject([
+    expect(await loadPageTemplateRows(t.payload, asUser)).toMatchObject([
       { id: saved.id, name: "Landing", blocks: ["Hero", "Amenities"] },
     ])
   })
@@ -114,7 +114,7 @@ describe("a Page as a Page Template", () => {
           isTemplate: true,
           _status: "published",
         },
-        ...asStaff,
+        ...asUser,
       })
     ).rejects.toThrow()
     expect(await t.payload.count({ collection: "pages" })).toMatchObject({
@@ -139,7 +139,7 @@ describe("a Page as a Page Template", () => {
     const saved = await save(landing({ layout: { mode: "none" } }))
     expect(idsIn(saved.document!.blocks).length).toBeGreaterThan(2)
 
-    const start = await loadPageTemplateStart(t.payload, asStaff, saved.id!)
+    const start = await loadPageTemplateStart(t.payload, asUser, saved.id!)
 
     expect(idsIn(start!.blocks)).toEqual([])
     expect(start).toMatchObject({
@@ -158,11 +158,7 @@ describe("a Page as a Page Template", () => {
     const template = await save(landing())
 
     for (const path of ["/one", "/two"]) {
-      const start = await loadPageTemplateStart(
-        t.payload,
-        asStaff,
-        template.id!
-      )
+      const start = await loadPageTemplateStart(t.payload, asUser, template.id!)
       const made = await save(
         { ...newPageDocument(path), ...start! },
         "publish"
@@ -177,7 +173,7 @@ describe("a Page as a Page Template", () => {
     await t.payload.delete({
       collection: "pages",
       id: template.id!,
-      ...asStaff,
+      ...asUser,
     })
     const visitors = await t.payload.find({
       collection: "pages",
@@ -193,12 +189,10 @@ describe("a Page as a Page Template", () => {
 
   it("gives nothing for a Page that is not a Page Template, or is gone", async () => {
     const plain = await save(landing({ isTemplate: false }))
+    expect(await loadPageTemplateStart(t.payload, asUser, plain.id!)).toBeNull()
+    expect(await loadPageTemplateStart(t.payload, asUser, 99999)).toBeNull()
     expect(
-      await loadPageTemplateStart(t.payload, asStaff, plain.id!)
-    ).toBeNull()
-    expect(await loadPageTemplateStart(t.payload, asStaff, 99999)).toBeNull()
-    expect(
-      await loadPageTemplateStart(t.payload, asStaff, Number.NaN)
+      await loadPageTemplateStart(t.payload, asUser, Number.NaN)
     ).toBeNull()
   })
 
@@ -210,20 +204,20 @@ describe("a Page as a Page Template", () => {
       ok: true,
       status: "published",
     })
-    expect(await loadPageTemplateRows(t.payload, asStaff)).toEqual([])
+    expect(await loadPageTemplateRows(t.payload, asUser)).toEqual([])
   })
 
   it("is marked in the Pages list, not waiting to publish, and not offered as a link", async () => {
     await save(landing())
     await save(landing({ isTemplate: false, path: "/plain", title: "Plain" }))
 
-    const rows = await loadPageRows(t.payload, asStaff)
+    const rows = await loadPageRows(t.payload, asUser)
     expect(rows.find((row) => row.title === "Landing")?.isTemplate).toBe(true)
     expect(waitingToPublish(rows).map((row) => row.title)).toEqual(["Plain"])
     const options = await pageOptions({
       payload: t.payload,
-      user: asStaff.user,
-      as: asStaff,
+      user: asUser.user,
+      as: asUser,
     })
     expect(options.map((option) => option.title)).toEqual(["Plain"])
   })
@@ -231,17 +225,17 @@ describe("a Page as a Page Template", () => {
 
 describe("the starter Page Templates", () => {
   it("are valid Draft Pages: Home, Tuck-in and Guest feedback survey", async () => {
-    expect(await startersMissing(t.payload, asStaff)).toBe(true)
+    expect(await startersMissing(t.payload, asUser)).toBe(true)
 
-    const result = await addStarterTemplatesAs(t.payload, asStaff)
+    const result = await addStarterTemplatesAs(t.payload, asUser)
 
     expect(result).toEqual({
       ok: true,
       message:
         "Added “Home template”, “Tuck-in template” and “Guest feedback survey template”.",
     })
-    expect(await startersMissing(t.payload, asStaff)).toBe(false)
-    const rows = await loadPageTemplateRows(t.payload, asStaff)
+    expect(await startersMissing(t.payload, asUser)).toBe(false)
+    const rows = await loadPageTemplateRows(t.payload, asUser)
     expect(rows.map((row) => row.name)).toEqual([
       "Guest feedback survey template",
       "Home template",
@@ -264,8 +258,8 @@ describe("the starter Page Templates", () => {
   })
 
   it("gives Tuck-in its own Layout, which is not the default and is made once", async () => {
-    await ensureStarterTemplates(t.payload, asStaff)
-    const tuckIn = (await loadPageTemplateRows(t.payload, asStaff)).find(
+    await ensureStarterTemplates(t.payload, asUser)
+    const tuckIn = (await loadPageTemplateRows(t.payload, asUser)).find(
       (row) => row.name === "Tuck-in template"
     )!
 
@@ -299,7 +293,7 @@ describe("the starter Page Templates", () => {
     ])
     // A New Page made from it wears that Layout: twice, a Container of text
     // across the page with its button under it.
-    const start = await loadPageTemplateStart(t.payload, asStaff, tuckIn.id)
+    const start = await loadPageTemplateStart(t.payload, asUser, tuckIn.id)
     expect(start!.layout).toEqual({ mode: "layout", layoutId: layouts[1]!.id })
     expect(start!.blocks).toMatchObject([
       {
@@ -321,19 +315,19 @@ describe("the starter Page Templates", () => {
     ])
 
     // Deleting the Page Template and adding it again reuses the Layout.
-    await t.payload.delete({ collection: "pages", id: tuckIn.id, ...asStaff })
-    await ensureStarterTemplates(t.payload, asStaff)
+    await t.payload.delete({ collection: "pages", id: tuckIn.id, ...asUser })
+    await ensureStarterTemplates(t.payload, asUser)
     expect(await t.payload.count({ collection: "layouts" })).toMatchObject({
       totalDocs: 3,
     })
   })
 
   it("make Pages that publish as they are", async () => {
-    await ensureStarterTemplates(t.payload, asStaff)
-    const rows = await loadPageTemplateRows(t.payload, asStaff)
+    await ensureStarterTemplates(t.payload, asUser)
+    const rows = await loadPageTemplateRows(t.payload, asUser)
 
     for (const [index, row] of rows.entries()) {
-      const start = await loadPageTemplateStart(t.payload, asStaff, row.id)
+      const start = await loadPageTemplateStart(t.payload, asUser, row.id)
       const made = await save(
         { ...newPageDocument(`/made-${index}`), ...start! },
         "publish"
@@ -343,8 +337,8 @@ describe("the starter Page Templates", () => {
   })
 
   it("are added once, and a changed one is left as it is", async () => {
-    await ensureStarterTemplates(t.payload, asStaff)
-    const home = (await loadPageTemplateRows(t.payload, asStaff)).find(
+    await ensureStarterTemplates(t.payload, asUser)
+    const home = (await loadPageTemplateRows(t.payload, asUser)).find(
       (row) => row.name === "Home template"
     )
     const page = await t.payload.findByID({
@@ -358,10 +352,10 @@ describe("the starter Page Templates", () => {
       id: home!.id,
       data: { title: "Our Home", blocks: page.blocks!.slice(0, 1) },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
 
-    const again = await ensureStarterTemplates(t.payload, asStaff)
+    const again = await ensureStarterTemplates(t.payload, asUser)
 
     expect(again.map((starter) => starter.action)).toEqual([
       "unchanged",
@@ -372,13 +366,13 @@ describe("the starter Page Templates", () => {
       totalDocs: STARTER_TEMPLATES.length,
     })
     expect(
-      (await loadPageTemplateRows(t.payload, asStaff)).map((row) => row.name)
+      (await loadPageTemplateRows(t.payload, asUser)).map((row) => row.name)
     ).toEqual([
       "Guest feedback survey template",
       "Our Home",
       "Tuck-in template",
     ])
-    expect(await addStarterTemplatesAs(t.payload, asStaff)).toEqual({
+    expect(await addStarterTemplatesAs(t.payload, asUser)).toEqual({
       ok: true,
       message: "The starter Page Templates are already here.",
     })

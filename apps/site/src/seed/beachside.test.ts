@@ -9,7 +9,7 @@ import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import { BEACHSIDE, CLASSIC } from "../theme"
 import { runSeed } from "./index"
 import { seed as beachside } from "./beachside"
-import { createSeeder, seedStaffUser } from "./upsert"
+import { createSeeder, seedUser } from "./upsert"
 
 // Integration test: a real Payload on a throwaway database, a fake fetch
 // standing in for Google Fonts.
@@ -55,7 +55,7 @@ beforeAll(async () => {
 afterAll(async () => {
   try {
     // A Font the live Theme uses can't be deleted: put Classic back first.
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     await seeder.theme(CLASSIC.inputs)
     for (const collection of ["media", "fonts", "font-files"] as const) {
       await payload.delete({ collection, where: { id: { exists: true } } })

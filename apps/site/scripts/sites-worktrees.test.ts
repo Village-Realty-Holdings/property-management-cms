@@ -165,7 +165,7 @@ describe("planWorktrees", () => {
     ).toThrow(/pm-avada.*not a worktree/)
   })
 
-  it("keeps an env file that is there: a Staff User's own values survive", () => {
+  it("keeps an env file that is there: a User's own values survive", () => {
     const steps = planWorktrees(
       deps({
         worktrees: [

@@ -9,7 +9,7 @@ A Block inside a Container is the same component as at the top level. The Contai
 ## Considered Options
 
 - **A button on the Rich text Block.** Built, then dropped. It solved one layout and would have been followed by an image on Rich text, a second button, and so on.
-- **A small set of inner pieces only** (text, button, image), with the existing Blocks top-level only. Rejected: staff would have two vocabularies, and "a Call to action beside a text" would be impossible.
+- **A small set of inner pieces only** (text, button, image), with the existing Blocks top-level only. Rejected: Users would have two vocabularies, and "a Call to action beside a text" would be impossible.
 - **A recursive Block with no depth limit.** Not possible on this Payload version, and not wanted: past three levels a Page is hard to read in the outline and hard to predict on a phone.
 - **A separate Grid Block.** Rejected: a stack is a grid of one column, so one Block with a columns setting covers both.
 - **One level only.** Rejected: a grid cell could hold a single Block, so "text with its button" in a column would be impossible.

@@ -66,7 +66,7 @@ import {
  * The smoke test per Site: Home renders, Admin sign-in works, and the editor
  * saves and restores (a Theme change in the Visual Editor, then Restore from
  * its History). Around it, what the seeds must have made, seen as a visitor
- * and as a Staff User would:
+ * and as a User would:
  *
  * - every Page the spec names, Published, rendering its content with no
  *   errors, nothing requested from another origin, and no axe WCAG 2.2 AA
@@ -109,7 +109,7 @@ afterAll(async () => {
 const running = (spec: SiteSpec) =>
   sites.find((site) => site.slug === spec.slug)!
 
-/** A signed-in Staff User on this Site, signed in once per run. */
+/** A signed-in User on this Site, signed in once per run. */
 async function adminOf(site: RunningSite): Promise<Session> {
   const existing = admins.get(site.slug)
   if (existing) return existing
@@ -521,7 +521,7 @@ describe.each(SITES.map((spec) => [spec.name, spec] as const))(
     })
 
     describe("Admin (smoke test)", () => {
-      it("signs a Staff User in; the Dashboard names the Site and its schema", async () => {
+      it("signs a User in; the Dashboard names the Site and its schema", async () => {
         const site = running(spec)
         const { page } = await adminOf(site)
         // Signed in, the Admin root is the Dashboard (other tests have since

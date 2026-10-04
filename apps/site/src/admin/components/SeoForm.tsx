@@ -24,7 +24,7 @@ const FORM_ID = "seo-form"
 /**
  * The SEO screen's defaults form: how the Site appears in search results and
  * link previews when a Page has no SEO of its own. Saves through a Server
- * Action as the Staff User, and asks before leaving with unsaved changes.
+ * Action as the User, and asks before leaving with unsaved changes.
  */
 export function SeoForm({
   initial,

@@ -173,7 +173,7 @@ export function BlockPicker({
       onOpenChange={(open) => {
         if (!open) onClose()
       }}
-      // No fade or zoom: a Staff User who searches right away, and the
+      // No fade or zoom: a User who searches right away, and the
       // contrast checks, see the final colours, not a half-faded dialog.
       className={DIALOG_CLASS}
       showCloseButton

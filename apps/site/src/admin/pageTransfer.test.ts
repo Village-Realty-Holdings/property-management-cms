@@ -11,7 +11,7 @@ const PNG = Buffer.from(
 )
 
 let t: TestPayload
-let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 const asVisitor = { overrideAccess: false, user: null } as const
 let photo: { id: number; filename: string }
 let layoutId: number
@@ -22,7 +22,7 @@ const upload = async (name: string) => {
     collection: "media",
     data: { alt: `Alt of ${name}` },
     file: { data: PNG, mimetype: "image/png", name, size: PNG.length },
-    ...asStaff,
+    ...asUser,
   })
   return { id: doc.id, filename: doc.filename! }
 }
@@ -33,13 +33,13 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
   photo = await upload(`transfer-${Date.now()}.png`)
   layoutId = (
     await t.payload.create({
       collection: "layouts",
       data: { name: "Campaign" },
-      ...asStaff,
+      ...asUser,
     })
   ).id
   pageId = (
@@ -68,7 +68,7 @@ beforeAll(async () => {
           },
         ] as never,
       },
-      ...asStaff,
+      ...asUser,
     })
   ).id
 })
@@ -86,7 +86,7 @@ afterAll(async () => {
 })
 
 const exported = async (id = pageId) => {
-  const result = await exportPageAs(t.payload, asStaff, id)
+  const result = await exportPageAs(t.payload, asUser, id)
   if (!result.ok) throw new Error(result.message)
   return { ...result, file: JSON.parse(result.json) as PageFile }
 }
@@ -97,7 +97,7 @@ const draft = (id: number) =>
     id,
     draft: true,
     depth: 0,
-    ...asStaff,
+    ...asUser,
   })
 
 describe("exporting a Page", () => {
@@ -138,12 +138,12 @@ describe("exporting a Page", () => {
       collection: "pages",
       data: { title: "Home", path: "/", _status: "draft" },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     expect((await exported(home.id)).filename).toBe("home.page.json")
-    await t.payload.delete({ collection: "pages", id: home.id, ...asStaff })
+    await t.payload.delete({ collection: "pages", id: home.id, ...asUser })
     for (const id of [home.id, 0, "1", null]) {
-      expect(await exportPageAs(t.payload, asStaff, id)).toEqual({
+      expect(await exportPageAs(t.payload, asUser, id)).toEqual({
         ok: false,
         message: "That Page no longer exists.",
       })
@@ -154,7 +154,7 @@ describe("exporting a Page", () => {
 describe("importing a Page", () => {
   it("adds it as a new Draft at the next free path, with its images and Layout", async () => {
     const { json } = await exported()
-    const result = await importPageAs(t.payload, asStaff, json)
+    const result = await importPageAs(t.payload, asUser, json)
     expect(result).toMatchObject({
       ok: true,
       message: "Imported “Spring offer” as a Draft at /spring-2.",
@@ -197,7 +197,7 @@ describe("importing a Page", () => {
       ],
       seo: { title: "Spring" },
     })
-    const result = await importPageAs(t.payload, asStaff, elsewhere)
+    const result = await importPageAs(t.payload, asUser, elsewhere)
     expect(result.ok).toBe(true)
     expect(result.notes).toEqual([
       "An image is not in this Site's Media and was left out: not-here.jpg. Upload it and pick it again.",
@@ -219,16 +219,16 @@ describe("importing a Page", () => {
         _status: "draft",
       },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     const { json, file } = await exported(template.id)
     expect(file.isTemplate).toBe(true)
-    const result = await importPageAs(t.payload, asStaff, json)
+    const result = await importPageAs(t.payload, asUser, json)
     expect((await draft(result.id!)).isTemplate).toBe(true)
   })
 
   it("refuses a file that isn't a Page, and says why", async () => {
-    const load = (text: unknown) => importPageAs(t.payload, asStaff, text)
+    const load = (text: unknown) => importPageAs(t.payload, asUser, text)
     expect((await load("nope")).message).toBe(
       "That file isn't a Page: it isn't JSON."
     )

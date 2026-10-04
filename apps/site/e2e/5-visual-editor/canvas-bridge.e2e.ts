@@ -72,7 +72,7 @@ const documentOf = (heading: string, over: Partial<Doc> = {}): Doc => ({
 })
 
 let browser: Browser
-let staff: Session
+let user: Session
 let page: Page
 
 const send = (doc: Doc) =>
@@ -86,10 +86,10 @@ const send = (doc: Doc) =>
 
 beforeAll(async () => {
   browser = await launchBrowser()
-  staff = await openSession(browser)
-  page = staff.page
+  user = await openSession(browser)
+  page = user.page
   await signIn(page)
-  await staff.context.route(HARNESS, (route) =>
+  await user.context.route(HARNESS, (route) =>
     route.fulfill({ contentType: "text/html", body: HARNESS_HTML })
   )
   await page.goto(HARNESS, { waitUntil: "networkidle" })
@@ -193,8 +193,8 @@ describe("canvas bridge", () => {
     ])
   })
 
-  it("answers a Staff User's request noindex and uncached", async () => {
-    const response = await staff.context.request.get(`${ORIGIN}/?__edit=1`)
+  it("answers a User's request noindex and uncached", async () => {
+    const response = await user.context.request.get(`${ORIGIN}/?__edit=1`)
     expect(response.status()).toBe(200)
     expect(response.headers()["x-robots-tag"]).toBe("noindex, nofollow")
     // Dynamic, so Next sends no-cache (and no-store in production).

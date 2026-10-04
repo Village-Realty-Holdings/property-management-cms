@@ -1,8 +1,8 @@
 # A Page is exported as a file, and imported as a new Draft
 
-Staff want to move a Page from one Site to another, and to keep a copy of one outside the Site. The Pages list now has Export on each row and Import in its header.
+Users want to move a Page from one Site to another, and to keep a copy of one outside the Site. The Pages list now has Export on each row and Import in its header.
 
-**Export** downloads the Page as Staff edit it (its newest copy) as one JSON file: title, path, Blocks, SEO, its Layout choice and whether it is a Page Template. What belongs to one Site is written by name, because an id means nothing on another: an image is its Media file name and alt text, and a Layout the Page picks is the Layout's name. The file carries no ids, no status and no dates.
+**Export** downloads the Page as Users edit it (its newest copy) as one JSON file: title, path, Blocks, SEO, its Layout choice and whether it is a Page Template. What belongs to one Site is written by name, because an id means nothing on another: an image is its Media file name and alt text, and a Layout the Page picks is the Layout's name. The file carries no ids, no status and no dates.
 
 **Import** adds the Page in a file as a **new Draft**. It never replaces a Page: when the path is taken the Page gets the next free one ("/about-2"), and the result says so. Images are looked up by file name in this Site's Media and the Layout by name; one the Site doesn't have is left out (the image field is empty, the Page uses the Layout for its path), and the result names each. A file that isn't a Page, holds a Block this Site doesn't have, or would not save is refused with the reason, and nothing is created.
 

@@ -2,17 +2,17 @@ import type { Payload } from "payload"
 
 import { isSecure, notFound, publicUrl, redirect, safeReturnTo } from "./http"
 import { issueSession } from "./session"
-import { findOrCreateStaffUser } from "./staffUser"
+import { findOrCreateUser } from "./user"
 
 /**
- * The dev sign-in (apps/site ADR-0003): signs in a fixed dev Staff User
+ * The dev sign-in (apps/site ADR-0003): signs in a fixed dev User
  * through the same session code as Entra, until the Entra app
  * registration's credentials are available locally. Remove it once they are.
  */
 
 type Env = Record<string, string | undefined>
 
-export const DEV_STAFF_USER = {
+export const DEV_USER = {
   entraOid: "dev",
   email: "dev@awayday.test",
   name: "Dev User",
@@ -32,7 +32,7 @@ export function assertNoDevSignInInProduction(env: Env = process.env): void {
   }
 }
 
-/** `GET /auth/dev`: signs in the dev Staff User, or 404 when it's off. */
+/** `GET /auth/dev`: signs in the dev User, or 404 when it's off. */
 export async function devSignIn(
   request: Request,
   payload: Payload,
@@ -40,7 +40,7 @@ export async function devSignIn(
 ): Promise<Response> {
   if (!devSignInEnabled(env)) return notFound()
   const url = publicUrl(request)
-  const user = await findOrCreateStaffUser(payload, DEV_STAFF_USER)
+  const user = await findOrCreateUser(payload, DEV_USER)
   const response = redirect(safeReturnTo(url.searchParams.get("redirect")))
   response.headers.append(
     "Set-Cookie",

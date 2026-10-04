@@ -38,7 +38,7 @@ import { openScratchSite, type ScratchSite } from "./support/site"
  * and a screenshot is taken for the Phase 2 review set.
  *
  * A brand preset names the fonts the real brand uses. The Site adds them from
- * Google Fonts first (a server-side download, as a Staff User would), so the
+ * Google Fonts first (a server-side download, as a User would), so the
  * brand renders in its own typeface, self-hosted; the general presets use the
  * built-in fonts.
  */

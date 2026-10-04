@@ -19,7 +19,7 @@ import { AddGoogleFontSheet } from "./AddGoogleFontSheet"
 import { UploadFontsSheet } from "./UploadFontsSheet"
 
 /**
- * Assets › Fonts: the Fonts staff added (Google Fonts or uploaded), each with
+ * Assets › Fonts: the Fonts Users added (Google Fonts or uploaded), each with
  * a sample line set in that Font, its weights, and a lock with what uses it
  * when it is in use; and the built-in fonts, read-only, below.
  *

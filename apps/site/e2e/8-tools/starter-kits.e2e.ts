@@ -36,7 +36,7 @@ let hadHome: boolean
 let savedTheme: number | undefined
 
 const get = async <T>(path: string): Promise<T> =>
-  (await h.staff.context.request.get(`${ORIGIN}${path}`)).json() as Promise<T>
+  (await h.user.context.request.get(`${ORIGIN}${path}`)).json() as Promise<T>
 
 const homePages = () =>
   get<Found>("/api/pages?where[path][equals]=/&draft=true&depth=0")
@@ -50,7 +50,7 @@ beforeAll(async () => {
   if (theme.id) {
     const record = ["id", "createdAt", "updatedAt", "globalType"]
     const own = [...record, "updatedBy", "changeSummary", "note"]
-    const made = await h.staff.context.request.post(
+    const made = await h.user.context.request.post(
       `${ORIGIN}/api/saved-themes`,
       {
         data: {
@@ -68,7 +68,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (h) {
-    const request = h.staff.context.request
+    const request = h.user.context.request
     // The Brand as it was, and the Home Page and Layout the kit added.
     if (brand.id) {
       await request.post(`${ORIGIN}/api/globals/brand`, {
@@ -107,7 +107,7 @@ afterAll(async () => {
 
 describe("Starter Kits", () => {
   it("follows the page-header pattern, shows its steps and passes WCAG 2.2 AA", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     expect(
       await page
@@ -129,7 +129,7 @@ describe("Starter Kits", () => {
   })
 
   it("walks the steps, reviews, then sets the Site up", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     const next = page.getByRole("button", { name: "Next" })
 

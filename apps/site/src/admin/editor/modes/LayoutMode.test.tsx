@@ -70,7 +70,7 @@ const doc: LayoutDocument = {
 const version = (over: Partial<LayoutVersionRow>): LayoutVersionRow => ({
   id: 1,
   savedAt: "2026-03-01T10:00:00.000Z",
-  author: "Sam Staff",
+  author: "Sam Taylor",
   summary: "Saved again",
   isLive: false,
   ...over,
@@ -470,7 +470,7 @@ describe("the History tab", () => {
     expect(items[0]!.textContent).toContain("Header changed")
     expect(items[1]!.textContent).toContain("Footer changed")
     expect(items[1]!.textContent).toContain("Mar 2, 2026, 9:00 AM UTC")
-    expect(items[1]!.textContent).toContain("Sam Staff")
+    expect(items[1]!.textContent).toContain("Sam Taylor")
   })
 
   it("offers Restore on every version but the live one", async () => {

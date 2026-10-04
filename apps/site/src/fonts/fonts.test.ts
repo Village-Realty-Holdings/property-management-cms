@@ -75,7 +75,7 @@ function googleFetch(options: { failOn?: string } = {}) {
 
 let t: TestPayload
 let payload: Payload
-let staff: User & { collection: "users" }
+let testUser: User & { collection: "users" }
 
 beforeAll(async () => {
   t = await getTestPayload()
@@ -84,7 +84,7 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  staff = { ...user, collection: "users" }
+  testUser = { ...user, collection: "users" }
 })
 
 afterEach(async () => {
@@ -251,7 +251,7 @@ describe("importGoogleFont", () => {
     expect(await count("font-files")).toBe(0)
   })
 
-  it("removes the stored files as the Staff User, never with access overridden", async () => {
+  it("removes the stored files as the User, never with access overridden", async () => {
     const { fetch } = googleFetch()
     const create = payload.create.bind(payload)
     vi.spyOn(payload, "create").mockImplementation(((args: {
@@ -266,7 +266,7 @@ describe("importGoogleFont", () => {
       importGoogleFont(
         payload,
         { family: "Roboto Slab", kind: "slab", weights: [400, 700] },
-        { fetch, as: { overrideAccess: false, user: staff } }
+        { fetch, as: { overrideAccess: false, user: testUser } }
       )
     ).rejects.toThrow("database went away")
 
@@ -275,7 +275,7 @@ describe("importGoogleFont", () => {
       expect(args).toMatchObject({
         collection: "font-files",
         overrideAccess: false,
-        user: staff,
+        user: testUser,
       })
     }
     vi.restoreAllMocks()
@@ -315,12 +315,12 @@ describe("importGoogleFont", () => {
     expect(urls).toHaveLength(0)
   })
 
-  it("imports as the Staff User when given one, under the access rules", async () => {
+  it("imports as the User when given one, under the access rules", async () => {
     const { fetch } = googleFetch()
     const font = await importGoogleFont(
       payload,
       { family: "Roboto Slab", kind: "slab", weights: [400] },
-      { fetch, as: { overrideAccess: false, user: staff } }
+      { fetch, as: { overrideAccess: false, user: testUser } }
     )
     expect(font.family).toBe("Roboto Slab")
 
@@ -336,7 +336,7 @@ describe("importGoogleFont", () => {
 })
 
 describe("Fonts access", () => {
-  it("lets anyone read a Font but only a Staff User change one", async () => {
+  it("lets anyone read a Font but only a User change one", async () => {
     const { fetch } = googleFetch()
     const font = await importGoogleFont(
       payload,
@@ -454,7 +454,7 @@ describe("font files", () => {
     expect(await count("font-files")).toBe(0)
   })
 
-  it("can be read by anyone but only added by a Staff User", async () => {
+  it("can be read by anyone but only added by a User", async () => {
     await expect(
       payload.create({
         collection: "font-files",
@@ -468,7 +468,7 @@ describe("font files", () => {
       data: {},
       file: fontUpload("c.woff2"),
       overrideAccess: false,
-      user: staff,
+      user: testUser,
     })
     const read = await payload.findByID({
       collection: "font-files",
@@ -519,7 +519,7 @@ describe("deleting a Font", () => {
     expect(await count("font-files")).toBe(2)
   })
 
-  it("is blocked for a Staff User too, through the access rules", async () => {
+  it("is blocked for a User too, through the access rules", async () => {
     const font = await importSlab()
     cleanups.push(registerFontUsage(() => ["Used by the Theme"]))
     await expect(
@@ -527,7 +527,7 @@ describe("deleting a Font", () => {
         collection: "fonts",
         id: font.id,
         overrideAccess: false,
-        user: staff,
+        user: testUser,
       })
     ).rejects.toThrow(/Used by the Theme/)
   })

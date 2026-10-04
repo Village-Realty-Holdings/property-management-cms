@@ -73,7 +73,7 @@ describe("option lists (the Theme record's select options)", () => {
     expect(valuesOf(MOTIONS)).toEqual(["none", "subtle", "lively"])
   })
 
-  it("labels are what Staff Users read", () => {
+  it("labels are what Users read", () => {
     expect(BUTTON_LETTERS.map((o) => o.label)).toEqual([
       "Normal",
       "UPPERCASE",

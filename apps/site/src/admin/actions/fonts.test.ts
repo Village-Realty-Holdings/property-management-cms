@@ -13,7 +13,7 @@ import { registerFontUsage } from "../../fonts/fontUsage"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 
 // The Server Actions the Fonts screen calls, end to end: the actions run for
-// real, as a Staff User, against a real Payload; only the session lookup and
+// real, as a User, against a real Payload; only the session lookup and
 // Next's cache are stood in for, and `fetch` is a fake Google.
 
 const session = vi.hoisted(() => ({
@@ -26,7 +26,7 @@ const session = vi.hoisted(() => ({
 }))
 const revalidatePath = vi.hoisted(() => vi.fn())
 
-vi.mock("../session", () => ({ requireStaff: async () => session.current }))
+vi.mock("../session", () => ({ requireUser: async () => session.current }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 
 import { addGoogleFont, deleteFont, uploadFonts } from "./fonts"
@@ -110,7 +110,7 @@ describe("addGoogleFont", () => {
       ["weight", "700"],
     ])
 
-  it("imports the Font as the Staff User and refreshes the screen and the Site", async () => {
+  it("imports the Font as the User and refreshes the screen and the Site", async () => {
     const google = fakeGoogle()
     vi.stubGlobal("fetch", google)
 

@@ -16,7 +16,7 @@ import type { FetchLike } from "../fonts/googleFonts"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import { CLASSIC } from "../theme"
 import { runSeed, seedModuleFor, type SeedModule } from "./index"
-import { createSeeder, sameData, seedStaffUser } from "./upsert"
+import { createSeeder, sameData, seedUser } from "./upsert"
 
 // Integration test: a real Payload on a throwaway database, a fake fetch
 // standing in for Google, and a tiny sample seed that uses every helper.
@@ -115,7 +115,7 @@ afterAll(async () => {
   try {
     // Removes the uploaded files from local disk too. The Theme uses a Font,
     // and a Font the live Theme uses can't be deleted: put Classic back first.
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     await seeder.theme(CLASSIC.inputs)
     await payload.delete({
       collection: "media",
@@ -336,9 +336,9 @@ describe("a sample seed", () => {
     expect(after.counts["theme versions"]).toBe(before.counts["theme versions"])
   })
 
-  it("reuses the seed Staff User", async () => {
-    const first = await seedStaffUser(payload)
-    const second = await seedStaffUser(payload)
+  it("reuses the seed User", async () => {
+    const first = await seedUser(payload)
+    const second = await seedUser(payload)
     expect(second.id).toBe(first.id)
     expect(first.collection).toBe("users")
   })
@@ -346,7 +346,7 @@ describe("a sample seed", () => {
 
 describe("the seed helpers", () => {
   it("names a Font's key for the Theme", async () => {
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     const font = await seeder.font({
       family: "Roboto Slab",
       kind: "slab",
@@ -357,7 +357,7 @@ describe("the seed helpers", () => {
   })
 
   it("keeps a Media row for a file name and does not upload it again", async () => {
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     const first = await seeder.media({ file: logo, alt: "Sample logo" })
     const second = await seeder.media({ file: logo, alt: "New alt text" })
     expect(second.id).toBe(first.id)
@@ -379,7 +379,7 @@ describe("the seed helpers", () => {
     mkdirSync(folder, { recursive: true })
     copyFileSync(file, path.join(folder, name))
 
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     const before = (await payload.count({ collection: "media" })).totalDocs
     const first = await seeder.media({ file, alt: "Leftover" })
     const second = await seeder.media({ file, alt: "Leftover" })

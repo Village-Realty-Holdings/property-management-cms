@@ -114,7 +114,7 @@ export type EditorAction =
   | { type: "discard" }
   /**
    * A save came back. `doc` is what the server stored and `sent` is the
-   * document the save request carried. Saving is async, so the Staff User may
+   * document the save request carried. Saving is async, so the User may
    * have edited since `sent`.
    */
   | { type: "markSaved"; doc: EditorDocument; sent: EditorDocument }
@@ -453,7 +453,7 @@ export function editorReducer(
     case "markSaved": {
       // What the server stored is always the new baseline. It replaces the
       // document only when nothing changed since the save was sent; otherwise
-      // the Staff User's later edits stay, with their history, and the
+      // the User's later edits stay, with their history, and the
       // document stays dirty against the new baseline. Either way it is not an
       // edit, so the history keeps its steps (undoing past a save makes the
       // document dirty again).

@@ -13,8 +13,8 @@ const PNG = Buffer.from(
 )
 
 let t: TestPayload
-let staff: User & { collection: "users" }
-let asStaff: { overrideAccess: false; user: typeof staff }
+let testUser: User & { collection: "users" }
+let asUser: { overrideAccess: false; user: typeof testUser }
 const asVisitor = { overrideAccess: false, user: null } as const
 
 beforeAll(async () => {
@@ -23,8 +23,8 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  staff = { ...user, collection: "users" }
-  asStaff = { overrideAccess: false, user: staff }
+  testUser = { ...user, collection: "users" }
+  asUser = { overrideAccess: false, user: testUser }
 })
 
 afterAll(async () => {
@@ -38,10 +38,10 @@ afterAll(async () => {
 
 describe("the Brand screen's data", () => {
   it("starts empty before anyone has saved", async () => {
-    expect(await loadBrand(t.payload, asStaff)).toEqual(emptyBrand)
+    expect(await loadBrand(t.payload, asUser)).toEqual(emptyBrand)
   })
 
-  it("saves as the Staff User and reads back what the form shows", async () => {
+  it("saves as the User and reads back what the form shows", async () => {
     const media = await t.payload.create({
       collection: "media",
       data: { alt: "Logo" },
@@ -51,11 +51,11 @@ describe("the Brand screen's data", () => {
         name: `logo-${Date.now()}.png`,
         size: PNG.length,
       },
-      ...asStaff,
+      ...asUser,
     })
     const logo = media.id
 
-    const result = await saveBrandAs(t.payload, asStaff, {
+    const result = await saveBrandAs(t.payload, asUser, {
       name: "  Warren Beach ",
       tagline: "Sand between your toes",
       logo,
@@ -69,7 +69,7 @@ describe("the Brand screen's data", () => {
     expect(result.message).toBe("Brand saved.")
     expect(result.values?.name).toBe("Warren Beach")
     expect(result.values?.logo).toBe(logo)
-    expect(await loadBrand(t.payload, asStaff)).toEqual(result.values)
+    expect(await loadBrand(t.payload, asUser)).toEqual(result.values)
     const stored = await t.payload.findGlobal({ slug: "brand", ...asVisitor })
     expect(stored.name).toBe("Warren Beach")
     expect(stored.contact?.email).toBe("hello@warren.test")
@@ -77,8 +77,8 @@ describe("the Brand screen's data", () => {
   })
 
   it("reports field errors and saves nothing when the form is invalid", async () => {
-    const before = await loadBrand(t.payload, asStaff)
-    const result = await saveBrandAs(t.payload, asStaff, {
+    const before = await loadBrand(t.payload, asUser)
+    const result = await saveBrandAs(t.payload, asUser, {
       ...before,
       name: "Changed",
       social: [{ platform: "x", url: "ftp://nope" }],
@@ -87,30 +87,30 @@ describe("the Brand screen's data", () => {
     expect(result.fieldErrors).toEqual({
       "social.0.url": "Enter an http(s) URL, like https://example.com.",
     })
-    expect(await loadBrand(t.payload, asStaff)).toEqual(before)
+    expect(await loadBrand(t.payload, asUser)).toEqual(before)
   })
 
   it("refuses a visitor, and says so instead of throwing", async () => {
-    const before = await loadBrand(t.payload, asStaff)
+    const before = await loadBrand(t.payload, asUser)
     const result = await saveBrandAs(t.payload, asVisitor, {
       ...before,
       name: "Hacked",
     })
     expect(result.ok).toBe(false)
     expect(result.message).toBeTruthy()
-    expect((await loadBrand(t.payload, asStaff)).name).toBe(before.name)
+    expect((await loadBrand(t.payload, asUser)).name).toBe(before.name)
   })
 })
 
 describe("the SEO screen's data", () => {
   it("starts with indexing on before anyone has saved", async () => {
-    const values = await loadSeo(t.payload, asStaff)
+    const values = await loadSeo(t.payload, asUser)
     expect(values.allowIndexing).toBe(true)
     expect(values.description).toBe("")
   })
 
   it("saves the defaults, including switching indexing off", async () => {
-    const result = await saveSeoAs(t.payload, asStaff, {
+    const result = await saveSeoAs(t.payload, asUser, {
       titlePattern: "%s | {name}",
       description: "Beachfront cabins.",
       image: null,
@@ -121,18 +121,18 @@ describe("the SEO screen's data", () => {
     const stored = await t.payload.findGlobal({ slug: "seo", ...asVisitor })
     expect(stored.allowIndexing).toBe(false)
     expect(stored.titlePattern).toBe("%s | {name}")
-    expect(await loadSeo(t.payload, asStaff)).toEqual(result.values)
+    expect(await loadSeo(t.payload, asUser)).toEqual(result.values)
   })
 
   it("keeps the old defaults when the pattern is invalid", async () => {
-    const before = await loadSeo(t.payload, asStaff)
-    const result = await saveSeoAs(t.payload, asStaff, {
+    const before = await loadSeo(t.payload, asUser)
+    const result = await saveSeoAs(t.payload, asUser, {
       ...emptySeo,
       titlePattern: "no token",
     })
     expect(result.ok).toBe(false)
     expect(result.fieldErrors).toHaveProperty("titlePattern")
-    expect(await loadSeo(t.payload, asStaff)).toEqual(before)
+    expect(await loadSeo(t.payload, asUser)).toEqual(before)
   })
 
   it("refuses a visitor", async () => {

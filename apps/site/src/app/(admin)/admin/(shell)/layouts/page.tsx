@@ -9,7 +9,7 @@ import { LayoutsTable } from "@/admin/dashboard/LayoutsTable"
 import { loadLayoutRows } from "@/admin/dashboard/queries"
 import { NEW_LAYOUT_HREF } from "@/admin/dashboard/rows"
 import { PageHeader, TableSkeleton } from "@/admin/kit"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 import { deleteLayout, duplicateLayout } from "./actions"
 
@@ -38,7 +38,7 @@ export default function LayoutsList() {
 }
 
 async function Rows() {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const rows = await loadLayoutRows(payload, as)
   return (
     <LayoutsTable

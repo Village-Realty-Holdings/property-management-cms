@@ -4,7 +4,7 @@ import type { Payload } from "payload"
 
 import type { Page } from "../payload-types"
 import type { Access } from "./settingsSave"
-import { requireStaff } from "./session"
+import { requireUser } from "./session"
 
 /**
  * SEO health: Published Pages that have no SEO title or no SEO description
@@ -60,9 +60,9 @@ export async function findPagesNeedingSeoAttention(
 
 /**
  * Published Pages needing an SEO title or description, read as the signed-in
- * Staff User. Shared by the SEO screen and the Dashboard's SEO health count.
+ * User. Shared by the SEO screen and the Dashboard's SEO health count.
  */
 export async function getPagesNeedingSeoAttention(): Promise<SeoAttention[]> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   return findPagesNeedingSeoAttention(payload, as)
 }

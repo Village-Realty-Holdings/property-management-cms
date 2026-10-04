@@ -3,7 +3,7 @@ import type { Payload } from "payload"
 import { makeLayoutFromPage } from "../../layouts/duplicate"
 import { layoutOptionOf, type LayoutOption } from "../editor/modes/pageTabModel"
 import { formStateFromError, type FormState } from "../formState"
-import type { StaffAccess } from "../dashboard/queries"
+import type { UserAccess } from "../dashboard/queries"
 
 /**
  * "Make a new Layout from this one", as the Page tab asks for it (spec
@@ -19,7 +19,7 @@ export type MakeLayoutResult = FormState & {
 
 export async function makeLayoutFromPageAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   input: { pageId: number; layoutId: number; name: string }
 ): Promise<MakeLayoutResult> {
   const name = typeof input.name === "string" ? input.name.trim() : ""

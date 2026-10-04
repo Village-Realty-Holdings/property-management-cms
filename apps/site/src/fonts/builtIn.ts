@@ -1,7 +1,7 @@
 import type { FontKind } from "./types"
 
 /**
- * The six built-in fonts, kept as quick picks next to the Fonts staff add.
+ * The six built-in fonts, kept as quick picks next to the Fonts Users add.
  * They are loaded by src/site/fonts.ts (next/font, self-hosted at build), so
  * they have no files to store and can't be deleted. `cssVariable` is the
  * variable that file defines for the font; builtIn.test.ts checks this list

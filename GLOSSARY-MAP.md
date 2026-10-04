@@ -8,5 +8,5 @@
 ## Relationships
 
 - **Multi-Site CMS → Site Builder**: code is ported by copying it and removing tenancy. apps/site never imports apps/cms or its packages (apps/site ADR-0001).
-- **Same word, different meaning**: in the Multi-Site CMS a Site is one of many tenants, and Admin is a Staff User role. In the Site Builder each deployment serves one Site (several Sites run as separate deployments, apps/site ADR-0005), and the Admin is the place staff edit it.
+- **Same word, different meaning**: in the Multi-Site CMS a Site is one of many tenants, and Admin is a Staff User role. In the Site Builder each deployment serves one Site (several Sites run as separate deployments, apps/site ADR-0005), and the Admin is the place Users edit it. The Site Builder's User corresponds to the Multi-Site CMS's Staff User.
 - **ADR numbers are per context.** Cite them with the app, such as "apps/cms ADR-0010".

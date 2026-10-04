@@ -18,12 +18,12 @@ import { FALLBACK_INPUTS, readLiveTheme, saveTheme } from "../theme/record"
 import { parseFontKey } from "../theme/record/fontKeys"
 import type { Swatch } from "./dashboard/site"
 import { formStateFromError, type FormState } from "./formState"
-import type { StaffAccess } from "./theme/themeScreen"
+import type { UserAccess } from "./theme/themeScreen"
 
 /**
  * The Themes screen (Tools): the built-in presets and the Saved Themes, and
  * applying, saving, renaming, deleting, exporting and importing them, through
- * the Local API as the Staff User (apps/site ADR-0002, ADR-0009). The Site
+ * the Local API as the User (apps/site ADR-0002, ADR-0009). The Site
  * has one Theme (ADR-0004): applying one of these saves the Theme, so it is
  * live at once and the Theme's history can put the earlier one back.
  */
@@ -81,7 +81,7 @@ type Entry = Pick<ThemeCard, "id" | "name" | "kind" | "blurb"> & {
 
 async function entries(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   fonts: readonly AvailableFont[]
 ): Promise<Entry[]> {
   const { docs } = await payload.find({
@@ -115,7 +115,7 @@ async function entries(
 /** The Saved Themes, then the general and the brand presets. */
 export async function loadThemes(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<ThemeCard[]> {
   const fonts = await getAvailableFonts(payload)
   const [all, live] = await Promise.all([
@@ -134,7 +134,7 @@ export async function loadThemes(
 
 async function find(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: unknown
 ): Promise<{ entry: Entry; fonts: AvailableFont[] } | null> {
   const fonts = await getAvailableFonts(payload)
@@ -151,7 +151,7 @@ async function find(
  */
 export async function applyThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: unknown
 ): Promise<FormState> {
   try {
@@ -220,7 +220,7 @@ const nameError = (error: unknown, name: string): FormState => {
 /** Keeps the Site's Theme, as it is now, in the list under `name`. */
 export async function saveCurrentThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   input: unknown
 ): Promise<FormState> {
   const named = parseName(input)
@@ -246,7 +246,7 @@ const savedId = (id: unknown): number | null => {
 
 export async function renameSavedThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: unknown,
   input: unknown
 ): Promise<FormState> {
@@ -271,7 +271,7 @@ export async function renameSavedThemeAs(
 /** Deletes a Saved Theme. The Site's Theme is not changed, even if it matches. */
 export async function deleteSavedThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: unknown
 ): Promise<FormState> {
   const docId = savedId(id)
@@ -296,7 +296,7 @@ export type ExportResult =
 /** A Theme from the list as a file another Site can import. */
 export async function exportThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: unknown
 ): Promise<ExportResult> {
   const found = await find(payload, access, id)
@@ -335,7 +335,7 @@ export const IMPORT_MAX_BYTES = 20_000
  */
 export async function importThemeAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   text: unknown
 ): Promise<FormState> {
   if (typeof text !== "string" || text.length > IMPORT_MAX_BYTES) {

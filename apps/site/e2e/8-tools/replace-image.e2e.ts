@@ -37,7 +37,7 @@ let after: number
 let doc: Doc
 
 async function upload(alt: string): Promise<number> {
-  const response = await h.staff.context.request.post(`${ORIGIN}/api/media`, {
+  const response = await h.user.context.request.post(`${ORIGIN}/api/media`, {
     multipart: {
       file: { name: `${alt}.png`, mimeType: "image/png", buffer: PNG },
       _payload: JSON.stringify({ alt }),
@@ -51,7 +51,7 @@ beforeAll(async () => {
   h = await openHarness()
   before = await upload(`e2e-tools-before-${RUN}`)
   after = await upload(`e2e-tools-after-${RUN}`)
-  const made = await h.staff.context.request.post(
+  const made = await h.user.context.request.post(
     `${ORIGIN}/api/pages?draft=false`,
     {
       data: {
@@ -70,7 +70,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (h) {
     // The Page first: an image in use can't be deleted.
-    const request = h.staff.context.request
+    const request = h.user.context.request
     if (doc) await request.delete(`${ORIGIN}/api/pages/${doc.id}`)
     for (const id of [before, after]) {
       if (id) await request.delete(`${ORIGIN}/api/media/${id}`)
@@ -90,7 +90,7 @@ async function pick(page: Page, label: string, alt: string) {
 
 describe("Replace Image", () => {
   it("follows the page-header pattern and passes WCAG 2.2 AA", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     expect(
       await page
@@ -107,14 +107,14 @@ describe("Replace Image", () => {
   })
 
   it("asks for both images", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByRole("button", { name: "Preview" }).click()
     await page.getByText("Choose the image to replace.").waitFor()
   })
 
   it("previews where the image is shown, then swaps it on the Site", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await pick(page, "Replace", `e2e-tools-before-${RUN}`)
     await pick(page, "With", `e2e-tools-after-${RUN}`)
@@ -136,7 +136,7 @@ describe("Replace Image", () => {
 
     const live = await h.api.getPage(doc.id)
     expect((live?.blocks as { image: number }[])[0]?.image).toBe(after)
-    const kept = await h.staff.context.request.get(
+    const kept = await h.user.context.request.get(
       `${ORIGIN}/api/media/${before}`
     )
     expect(kept.ok()).toBe(true)

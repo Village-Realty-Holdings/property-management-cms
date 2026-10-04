@@ -9,7 +9,7 @@ import { AddStarterTemplatesButton } from "@/admin/components/pageTemplates/AddS
 import { PageTemplatesTable } from "@/admin/components/pageTemplates/PageTemplatesTable"
 import { PageHeader, TableSkeleton } from "@/admin/kit"
 import { loadPageTemplateRows, startersMissing } from "@/admin/pageTemplates"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 export const metadata: Metadata = { title: "Page Templates" }
 
@@ -39,7 +39,7 @@ export default function PageTemplatesList() {
 }
 
 async function Rows() {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const [rows, missing] = await Promise.all([
     loadPageTemplateRows(payload, as),
     startersMissing(payload, as),

@@ -42,7 +42,7 @@ const button = (label: string, href: string) => ({
 beforeAll(async () => {
   h = await openHarness()
   await h.api.createPage({ title: `E2E links here ${RUN}`, path: HERE })
-  const made = await h.staff.context.request.post(
+  const made = await h.user.context.request.post(
     `${ORIGIN}/api/pages?draft=false`,
     {
       data: {
@@ -75,7 +75,7 @@ const rowFor = (page: Page, target: string) =>
 
 describe("Links", () => {
   it("follows the page-header pattern and passes WCAG 2.2 AA", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     expect(
       await page.getByRole("heading", { level: 1, name: "Links" }).count()
@@ -90,7 +90,7 @@ describe("Links", () => {
   })
 
   it("lists each link once, with its kind, whether it works and where it is", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     const gone = await rowFor(page, GONE).textContent()
     expect(gone).toContain("Internal")
@@ -114,7 +114,7 @@ describe("Links", () => {
   })
 
   it("filters to Broken, to External, and by a search", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByRole("radio", { name: /^Broken/ }).click()
     expect(await rowFor(page, GONE).count()).toBe(1)
@@ -129,7 +129,7 @@ describe("Links", () => {
   })
 
   it("replaces a URL everywhere after a preview", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByRole("button", { name: `Replace ${GONE}` }).click()
     const with_ = page.getByLabel("With", { exact: true })

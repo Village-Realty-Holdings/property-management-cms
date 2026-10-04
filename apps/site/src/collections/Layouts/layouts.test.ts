@@ -9,12 +9,12 @@ import { layoutSummary } from "./summary"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -26,8 +26,8 @@ beforeEach(async () => {
   await truncateTables(payload, "layouts", "_layouts_v")
 })
 
-const staffUser = () => ({ ...staff, collection: "users" as const })
-const asStaff = () => ({ overrideAccess: false, user: staffUser() }) as const
+const user = () => ({ ...testUser, collection: "users" as const })
+const asUser = () => ({ overrideAccess: false, user: user() }) as const
 const asVisitor = { overrideAccess: false, user: null } as const
 
 const strip = (text: string) => ({ blockType: "utilityStrip" as const, text })
@@ -36,7 +36,7 @@ const make = (name: string, extra: Record<string, unknown> = {}) =>
   payload.create({
     collection: "layouts",
     data: { name, ...extra },
-    ...asStaff(),
+    ...asUser(),
   })
 
 const versionsOf = async (id: number) =>
@@ -46,7 +46,7 @@ const versionsOf = async (id: number) =>
       where: { parent: { equals: id } },
       sort: "createdAt",
       pagination: false,
-      ...asStaff(),
+      ...asUser(),
     })
   ).docs
 
@@ -132,7 +132,7 @@ describe("layoutSummary", () => {
 })
 
 describe("Layouts access", () => {
-  it("lets anyone read a Layout but only Staff write and read versions", async () => {
+  it("lets anyone read a Layout but only Users write and read versions", async () => {
     const layout = await make("Main")
     const read = await payload.findByID({
       collection: "layouts",
@@ -194,7 +194,7 @@ describe("the default Layout", () => {
       collection: "layouts",
       id: second.id,
       data: { isDefault: true },
-      ...asStaff(),
+      ...asUser(),
     })
     expect(updated.isDefault).toBe(true)
     expect((await defaults()).map((d) => d.id)).toEqual([second.id])
@@ -226,7 +226,7 @@ describe("the default Layout", () => {
         collection: "layouts",
         id: first.id,
         data: { isDefault: false },
-        ...asStaff(),
+        ...asUser(),
       })
     ).rejects.toThrow(/default/i)
     expect((await defaults()).map((d) => d.id)).toEqual([first.id])
@@ -238,7 +238,7 @@ describe("the default Layout", () => {
       collection: "layouts",
       id: first.id,
       data: { name: "Renamed" },
-      ...asStaff(),
+      ...asUser(),
     })
     expect(updated.isDefault).toBe(true)
   })
@@ -251,13 +251,13 @@ describe("Layout versions", () => {
       collection: "layouts",
       id: layout.id,
       data: { header: [strip("Sale")] },
-      ...asStaff(),
+      ...asUser(),
     })
     await payload.update({
       collection: "layouts",
       id: layout.id,
       data: { name: "Seasonal", note: "Summer" },
-      ...asStaff(),
+      ...asUser(),
     })
     const versions = await versionsOf(layout.id)
     expect(versions).toHaveLength(3)
@@ -268,7 +268,7 @@ describe("Layout versions", () => {
     ])
     for (const v of versions) {
       const by = v.version.updatedBy
-      expect(typeof by === "object" ? by?.id : by).toBe(staff.id)
+      expect(typeof by === "object" ? by?.id : by).toBe(testUser.id)
     }
   })
 
@@ -290,7 +290,7 @@ describe("Layout versions", () => {
         collection: "layouts",
         id: layout.id,
         data: { name: `Main ${i}` },
-        ...asStaff(),
+        ...asUser(),
       })
     }
     expect(await versionsOf(layout.id)).toHaveLength(26)
@@ -307,9 +307,9 @@ describe("Layout versions", () => {
       collection: "layouts",
       id: layout.id,
       depth: 0,
-      ...asStaff(),
+      ...asUser(),
     })
-    expect(other.updatedBy).toBe(staff.id)
+    expect(other.updatedBy).toBe(testUser.id)
     expect(other.note).toBeNull()
   })
 })
@@ -347,7 +347,7 @@ describe("Layout paths", () => {
       collection: "layouts",
       id: layout.id,
       data: { name: "Stays 2" },
-      ...asStaff(),
+      ...asUser(),
     })
     expect(updated.paths?.map((p) => p.path)).toEqual(["/stays"])
   })
@@ -358,7 +358,7 @@ describe("Layout paths", () => {
       collection: "layouts",
       id: a.id,
       data: { paths: [] },
-      ...asStaff(),
+      ...asUser(),
     })
     const b = await make("B", { paths: [{ path: "/stays" }] })
     expect(b.paths).toHaveLength(1)

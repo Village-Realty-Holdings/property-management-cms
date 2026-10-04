@@ -4,9 +4,9 @@ import { nobody, readOnlyField, signedIn } from "../access"
 import { refreshSession, sessionStrategy } from "../auth"
 
 /**
- * Staff Users (apps/site ADR-0003). They sign in with Entra ID (src/auth)
+ * Users (apps/site ADR-0003). They sign in with Entra ID (src/auth)
  * and have no password: Payload's local strategy is off, and the
- * `site-session` strategy authenticates every request. A Staff User is
+ * `site-session` strategy authenticates every request. A User is
  * created on first sign-in, keyed by Entra `oid`, and never in the Admin.
  */
 export const Users: CollectionConfig = {

@@ -21,7 +21,7 @@ vi.mock("react", async (importOriginal) => ({
   cache: <T>(fn: T) => fn,
 }))
 
-import { isEditingCanvasRequest, isStaffRequest } from "./request"
+import { isEditingCanvasRequest, isUserRequest } from "./request"
 
 const signedInAs = (collection: string | null) => {
   session.read = () =>
@@ -33,29 +33,29 @@ beforeEach(() => {
   signedInAs(null)
 })
 
-describe("isStaffRequest", () => {
-  it("is true for a signed-in Staff User", async () => {
+describe("isUserRequest", () => {
+  it("is true for a signed-in User", async () => {
     signedInAs("users")
-    expect(await isStaffRequest()).toBe(true)
+    expect(await isUserRequest()).toBe(true)
   })
 
   it("is false for a visitor", async () => {
-    expect(await isStaffRequest()).toBe(false)
+    expect(await isUserRequest()).toBe(false)
   })
 
   it("is false for a session of any other kind", async () => {
     signedInAs("other")
-    expect(await isStaffRequest()).toBe(false)
+    expect(await isUserRequest()).toBe(false)
   })
 
   it("is false, not an error, when the session cannot be read", async () => {
     session.read = () => Promise.reject(new Error("database down"))
-    expect(await isStaffRequest()).toBe(false)
+    expect(await isUserRequest()).toBe(false)
   })
 })
 
 describe("isEditingCanvasRequest", () => {
-  it("needs both the flag and a Staff User", async () => {
+  it("needs both the flag and a User", async () => {
     signedInAs("users")
     expect(await isEditingCanvasRequest({ __edit: "1" })).toBe(true)
     expect(await isEditingCanvasRequest({})).toBe(false)

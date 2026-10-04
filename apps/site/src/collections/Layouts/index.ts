@@ -15,7 +15,7 @@ import {
 } from "./hooks"
 import { normalizeLayoutPath, validateLayoutPath } from "./paths"
 
-const staffOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+const usersOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
 
 /**
  * A Layout: the Header and Footer around Pages (apps/site ADR-0006). One is
@@ -100,7 +100,7 @@ export const Layouts: CollectionConfig = {
       name: "note",
       type: "text",
       maxLength: 500,
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: {
         position: "sidebar",
         description:
@@ -110,7 +110,7 @@ export const Layouts: CollectionConfig = {
     {
       name: "changeSummary",
       type: "text",
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: { readOnly: true, position: "sidebar" },
     },
     {
@@ -118,7 +118,7 @@ export const Layouts: CollectionConfig = {
       label: "Saved by",
       type: "relationship",
       relationTo: "users",
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: { readOnly: true, position: "sidebar" },
     },
   ],

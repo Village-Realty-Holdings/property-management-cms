@@ -8,7 +8,7 @@ import { EditorCanvas } from "./EditorCanvas"
 import { readThemeParam } from "./flag"
 
 /**
- * The Site route in its editing mode, for a signed-in Staff User (see
+ * The Site route in its editing mode, for a signed-in User (see
  * flag.ts). It reads only what every Page needs around it: the Brand, the
  * Site's fixtures, the Site's Fonts, which an unsaved Theme may name, and its
  * Media, which the posted Blocks name by id. The

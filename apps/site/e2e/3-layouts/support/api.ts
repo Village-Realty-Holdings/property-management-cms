@@ -4,7 +4,7 @@ import { ORIGIN } from "../../theme/support/env"
 
 /**
  * The Layouts acceptance tests' handle on the Site's data: Payload's REST API
- * (`/api/...`), called as the signed-in Staff User with the browser context's
+ * (`/api/...`), called as the signed-in User with the browser context's
  * session cookie. Everything the tests check is then read back through the
  * browser (the Site and the Admin) or over HTTP; nothing here imports the
  * Site's code.
@@ -195,11 +195,11 @@ function layoutBody(input: Partial<LayoutInput>): Json {
 }
 
 /**
- * The Staff User's REST calls. Every Layout and Page a spec creates is
+ * The User's REST calls. Every Layout and Page a spec creates is
  * remembered, and `cleanUp` removes them and puts the original default Layout
  * back, so each spec leaves the shared scratch schema as it found it.
  */
-export class StaffApi {
+export class UserApi {
   private readonly layouts = new Set<number>()
   private readonly pages = new Set<number>()
 
@@ -209,7 +209,7 @@ export class StaffApi {
     readonly originalDefault: Doc | null
   ) {}
 
-  static async open(request: APIRequestContext): Promise<StaffApi> {
+  static async open(request: APIRequestContext): Promise<UserApi> {
     const response = await request.get(
       `${ORIGIN}/api/layouts?${query({ "where[isDefault][equals]": "true", depth: 0, limit: 10 })}`
     )
@@ -217,7 +217,7 @@ export class StaffApi {
       response,
       "Finding the default Layout"
     )
-    return new StaffApi(request, docs[0] ?? null)
+    return new UserApi(request, docs[0] ?? null)
   }
 
   // Layouts

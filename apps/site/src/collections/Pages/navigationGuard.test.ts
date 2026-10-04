@@ -9,12 +9,12 @@ import { menusLinkingTo } from "./navigationGuard"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -26,24 +26,24 @@ beforeEach(async () => {
   await truncateTables(payload, "layouts", "_layouts_v", "pages", "_pages_v")
 })
 
-const asStaff = () =>
+const asUser = () =>
   ({
     overrideAccess: false,
-    user: { ...staff, collection: "users" as const },
+    user: { ...testUser, collection: "users" as const },
   }) as const
 
 const makePage = (title: string, path: string) =>
   payload.create({
     collection: "pages",
     data: { title, path, _status: "published" },
-    ...asStaff(),
+    ...asUser(),
   })
 
 const makeLayout = (name: string, extra: Partial<Layout> = {}) =>
   payload.create({
     collection: "layouts",
     data: { name, ...extra },
-    ...asStaff(),
+    ...asUser(),
   })
 
 const pageLink = (page: number) => ({ type: "page" as const, page })
@@ -215,7 +215,7 @@ describe("a menu link to a Page", () => {
       collection: "pages",
       id: cottage.id,
       data: { path: "/the-cottage" },
-      ...asStaff(),
+      ...asUser(),
     })
     expect(await hrefs()).toEqual(["/the-cottage"])
 
@@ -234,7 +234,7 @@ describe("a menu link to a Page", () => {
 
 describe("deleting a Page a menu links to", () => {
   const remove = (id: number) =>
-    payload.delete({ collection: "pages", id, ...asStaff() })
+    payload.delete({ collection: "pages", id, ...asUser() })
 
   it("is refused, naming the Layout and the menu", async () => {
     const cottage = await makePage("Cottage", "/cottage")
@@ -308,7 +308,7 @@ describe("deleting a Page a menu links to", () => {
       collection: "layouts",
       id: layout.id,
       data: { header: navigation([]) },
-      ...asStaff(),
+      ...asUser(),
     })
     await remove(cottage.id)
     const left = await payload.find({ collection: "pages", pagination: false })

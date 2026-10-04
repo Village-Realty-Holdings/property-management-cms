@@ -73,7 +73,7 @@ describe("nextPathForTitle", () => {
     ).toBe("/stays")
   })
 
-  it("keeps a path the Staff User typed", () => {
+  it("keeps a path the User typed", () => {
     expect(
       nextPathForTitle({ ...base, path: "/custom", to: "Our story" })
     ).toBeNull()

@@ -7,7 +7,7 @@ import type { Layout, Page, User } from "../payload-types"
 /**
  * The starter Page Templates: Pages (Drafts, marked as Page Templates) that a
  * Site can add to start new Pages from. They are ordinary Pages afterwards:
- * Staff edit, rename or delete them like any other.
+ * Users edit, rename or delete them like any other.
  *
  *   Home      the structure of the seeded Sites' Home Pages
  *   Tuck-in   an announcement that a company has joined the brand, as on
@@ -247,7 +247,7 @@ export async function ensureLayout(
 /**
  * Adds each starter Page Template whose path no Page has yet, as a Draft,
  * with the Layout it picks. A Page already at the path is left as it is,
- * whatever it holds, so Staff's changes to a starter survive and running this
+ * whatever it holds, so Users' changes to a starter survive and running this
  * again changes nothing.
  */
 export async function ensureStarterTemplates(

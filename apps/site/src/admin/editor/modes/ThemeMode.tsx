@@ -30,7 +30,7 @@ import { VisualEditorShell } from "../VisualEditorShell"
  * Theme mode (ADR-0004): the Theme in the Visual Editor, opened from Settings
  * › Theme. The panel holds the Theme controls (with the contrast warnings and
  * their one-click fixes) and History. Block editing is off: the canvas shows a
- * Page's saved Blocks to see the Theme on, and the Staff User moves between
+ * Page's saved Blocks to see the Theme on, and the User moves between
  * Pages with Ctrl-K while the unsaved Theme stays on every one of them, until
  * it is saved (live on every Published Page) or discarded.
  */
@@ -93,7 +93,7 @@ function ThemeModeBody({
   const [preview, setPreview] = useState(home)
   const [canvasSrc, setCanvasSrc] = useState(() => editingUrl(home.path))
   const latestPick = useRef(0)
-  // What the Staff User has unsaved now, for a pick that finishes later.
+  // What the User has unsaved now, for a pick that finishes later.
   const unsaved = useRef<ThemeInputs | undefined>(undefined)
   useEffect(() => {
     unsaved.current = isDirty ? inputs : undefined

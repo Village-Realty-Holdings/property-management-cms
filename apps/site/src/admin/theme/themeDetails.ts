@@ -19,7 +19,7 @@ import {
 
 /**
  * What the Theme screen says about a Theme's non-colour controls, in words a
- * Staff User reads. Pure: the page loads the data, this shapes it.
+ * User reads. Pure: the page loads the data, this shapes it.
  */
 
 export type DetailRow = { label: string; value: string }

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { SeoForm } from "@/admin/components/SeoForm"
 import { mediaOptions } from "@/admin/media"
 import { getPagesNeedingSeoAttention } from "@/admin/seoHealth"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 import { loadBrand, loadSeo } from "@/admin/settingsSave"
 
 import { PagesNeedingAttention } from "./PagesNeedingAttention"
@@ -12,11 +12,11 @@ export const metadata: Metadata = { title: "SEO" }
 
 /** SEO: the Site's search and sharing defaults, and the Pages that need SEO text. */
 export default async function SeoPage() {
-  const staff = await requireStaff()
+  const session = await requireUser()
   const [initial, brand, media, attention] = await Promise.all([
-    loadSeo(staff.payload, staff.as),
-    loadBrand(staff.payload, staff.as),
-    mediaOptions(staff),
+    loadSeo(session.payload, session.as),
+    loadBrand(session.payload, session.as),
+    mediaOptions(session),
     getPagesNeedingSeoAttention(),
   ])
   return (

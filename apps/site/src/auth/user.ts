@@ -5,7 +5,7 @@ import { SITE_USER_ROLE } from "./config"
 import { SignInError, type EntraClaims } from "./oidc"
 
 /**
- * Finds the Staff User for verified Entra claims, keyed by `entraOid`, and
+ * Finds the User for verified Entra claims, keyed by `entraOid`, and
  * creates one on first sign-in. The app role is re-read every time: no
  * `site_user` means no sign-in (apps/site ADR-0003). Email and name follow
  * Entra.
@@ -13,7 +13,7 @@ import { SignInError, type EntraClaims } from "./oidc"
  * An existing record with the same email but another `entraOid` is never
  * linked automatically (the email claim isn't a stable identifier).
  */
-export async function upsertStaffUser(
+export async function upsertUser(
   payload: Payload,
   claims: EntraClaims
 ): Promise<User> {
@@ -30,19 +30,19 @@ export async function upsertStaffUser(
   if (!email) {
     throw new SignInError("token", `Entra user ${claims.oid} has no email`)
   }
-  return findOrCreateStaffUser(payload, {
+  return findOrCreateUser(payload, {
     entraOid: claims.oid,
     email,
     name: claims.name?.trim() || undefined,
   })
 }
 
-type StaffIdentity = { entraOid: string; email: string; name?: string }
+type UserIdentity = { entraOid: string; email: string; name?: string }
 
-/** Finds the Staff User by `entraOid`, creating or updating it to match. */
-export async function findOrCreateStaffUser(
+/** Finds the User by `entraOid`, creating or updating it to match. */
+export async function findOrCreateUser(
   payload: Payload,
-  { entraOid, email, name }: StaffIdentity
+  { entraOid, email, name }: UserIdentity
 ): Promise<User> {
   const { docs } = await payload.find({
     collection: "users",
@@ -75,7 +75,7 @@ export async function findOrCreateStaffUser(
   } catch (error) {
     throw new SignInError(
       "account-conflict",
-      `Could not save Staff User for Entra user ${entraOid} (${email}): ${(error as Error).message}`
+      `Could not save User for Entra user ${entraOid} (${email}): ${(error as Error).message}`
     )
   }
 }

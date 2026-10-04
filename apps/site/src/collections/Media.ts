@@ -27,7 +27,7 @@ function isHttpUrl(value: unknown): boolean {
 }
 
 /**
- * Images uploaded by Staff Users for Pages, the Brand and SEO. No image
+ * Images uploaded by Users for Pages, the Brand and SEO. No image
  * sizes, crop or focal point: sharp isn't available on Workers (apps/cms
  * ADR-0008 and ADR-0015). Files go to R2 or local disk (src/storage.ts).
  */

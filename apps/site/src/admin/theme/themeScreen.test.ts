@@ -15,7 +15,7 @@ import {
 } from "./themeScreen"
 
 // The Theme screen's read and its Restore action, against a real Payload on a
-// throwaway database, as a Staff User (apps/site ADR-0002).
+// throwaway database, as a User (apps/site ADR-0002).
 
 let t: TestPayload
 let payload: Payload

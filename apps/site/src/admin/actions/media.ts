@@ -6,7 +6,7 @@ import { NotFound } from "payload"
 import type { MediaOption } from "../components/MediaSelect"
 import { formStateFromError, type FormState } from "../formState"
 import { toMediaOption } from "../media"
-import { requireStaff } from "../session"
+import { requireUser } from "../session"
 import { loadMediaDependents, mediaInUseMessage } from "../usage"
 
 /** An upload's result: on success, the new image as a picker option. */
@@ -17,7 +17,7 @@ export async function uploadMedia(
   _previous: FormState,
   formData: FormData
 ): Promise<UploadState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const file = formData.get("file")
   const alt = String(formData.get("alt") ?? "").trim()
   if (!(file instanceof File) || file.size === 0) {
@@ -54,7 +54,7 @@ export async function deleteMedia(id: number): Promise<FormState> {
   if (!Number.isInteger(id) || id <= 0) {
     return { ok: false, message: "That image no longer exists." }
   }
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   try {
     const media = await payload.findByID({
       collection: "media",

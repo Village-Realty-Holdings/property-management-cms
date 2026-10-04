@@ -5,14 +5,14 @@ const duplicate = vi.hoisted(() => ({ makeLayoutFromPage: vi.fn() }))
 vi.mock("../../layouts/duplicate", () => duplicate)
 
 import type { Layout } from "../../payload-types"
-import type { StaffAccess } from "../dashboard/queries"
+import type { UserAccess } from "../dashboard/queries"
 import { makeLayoutFromPageAs } from "./makeFromPage"
 
 const payload = {} as Payload
 const as = {
   overrideAccess: false,
   user: { id: 1 },
-} as unknown as StaffAccess
+} as unknown as UserAccess
 
 const copy = {
   id: 9,

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { NotFound } from "payload"
 
 import { formStateFromError, type FormState } from "@/admin/formState"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 import { duplicateLayout as duplicateLayoutAs } from "@/layouts/duplicate"
 
 const gone = (): FormState => ({
@@ -20,12 +20,12 @@ function revalidateLayoutScreens() {
 }
 
 /**
- * Duplicates a Layout under a new name ("Main (copy)"), as the Staff User.
+ * Duplicates a Layout under a new name ("Main (copy)"), as the User.
  * The copy has the same Header and Footer, no paths, and is never the
  * default. The list shows the toast from the message.
  */
 export async function duplicateLayout(id: number): Promise<FormState> {
-  const { payload, user } = await requireStaff()
+  const { payload, user } = await requireUser()
   if (!Number.isInteger(id) || id <= 0) return gone()
   try {
     const copy = await duplicateLayoutAs(payload, { user, id })
@@ -43,7 +43,7 @@ export async function duplicateLayout(id: number): Promise<FormState> {
  * why; it is passed on as the failure.
  */
 export async function deleteLayout(id: number): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   if (!Number.isInteger(id) || id <= 0) return gone()
   try {
     const layout = await payload.findByID({

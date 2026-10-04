@@ -10,7 +10,7 @@ import { AdminNav } from "./AdminNav"
 
 /**
  * The Admin's sidebar: the Site's logo and name with its schema badge, the
- * navigation, and at the foot View Site, the Staff User and sign out.
+ * navigation, and at the foot View Site, the User and sign out.
  */
 export function AdminSidebar({
   site,

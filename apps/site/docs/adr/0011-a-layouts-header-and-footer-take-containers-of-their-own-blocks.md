@@ -15,7 +15,7 @@ The Header and the Footer share one Container definition, holding every region B
 
 ## How it is drawn
 
-In a Footer, Blocks stack, and a Container is one more band. In a Header, Utility strips still stack above everything; after them the Blocks are read in order, a Container is a band of its own, and the Blocks between Containers share a row as before. A Header with no Container draws exactly as it did. A Header that ends in a row has a line under it, as before. A Container draws a line under its band only when its "Line below" setting says so, so a Header that ends in a Container has one or not as Staff choose.
+In a Footer, Blocks stack, and a Container is one more band. In a Header, Utility strips still stack above everything; after them the Blocks are read in order, a Container is a band of its own, and the Blocks between Containers share a row as before. A Header with no Container draws exactly as it did. A Header that ends in a row has a line under it, as before. A Container draws a line under its band only when its "Line below" setting says so, so a Header that ends in a Container has one or not as Users choose.
 
 A region Block inside a Container is drawn for the Container's surface: the Logo picks its image, links and the Legal bar's words take the band's text colour, and a Block that is a bar on the region (the Legal bar, Footer columns) gives up its own padding and rule.
 

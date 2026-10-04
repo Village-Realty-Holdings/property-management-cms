@@ -28,7 +28,7 @@ Prototype code is a reference, not a base. Rewrite it properly: add tests, handl
 
 - **Never touch** the `property_management_site` database or `main`. Work in scratch databases or schemas named `ms_<something>`, and drop them when you're done.
 - **Test-first:** drive `/tdd` for logic. Every phase keeps `pnpm check` green: lint, typecheck and test.
-- **Admin:** it writes only through the Local API as the Staff User (ADR-0002). Blocks render the same way in the Visual Editor and on the Site.
+- **Admin:** it writes only through the Local API as the User (ADR-0002). Blocks render the same way in the Visual Editor and on the Site.
 - **Styling:** it comes from the Theme's tokens. There are no per-brand Block variants and no `brand-*` component variants.
 - **Accessibility:** WCAG 2.2 AA across the Admin and the public Site.
 - **Decisions the spec doesn't cover:** make the most conservative choice consistent with this spec and the ADRs, and report it. The slice reviewer rules on it, and it is recorded in the final PR body under "Decisions made during the build".
@@ -82,7 +82,7 @@ Prototype code is a reference, not a base. Rewrite it properly: add tests, handl
   - **Content:** Layouts, Pages, Media
   - **Settings:** Brand, SEO, Theme, Assets
   - **Tools:** Replace Text, Replace Image, Links, Themes, Starter Kits (added by the Tools milestone, ADR-0008 and ADR-0009)
-  - at the foot, View Site, the Staff User, and sign out
+  - at the foot, View Site, the User, and sign out
 - **The Dashboard, at the Admin root (`/admin`):**
   - a Site card: logo, name, domain, View Site
   - **Continue editing:** the last 5 Pages or Layouts edited
@@ -328,7 +328,7 @@ Every Block renders from Theme tokens, has sensible defaults, and passes AA. It 
   - contrast warnings, with one-click fixes
   - History
 
-  Block editing is off. The unsaved Theme follows the Staff User across Pages through Ctrl-K until it is saved or discarded.
+  Block editing is off. The unsaved Theme follows the User across Pages through Ctrl-K until it is saved or discarded.
 
 - **Keyboard shortcuts:** Ctrl-K (pick a Page), Ctrl-S (save), Ctrl-Z / Ctrl-Shift-Z (undo/redo), Esc (deselect), Delete (remove the Block).
 - **Unsaved-changes guard:** uses the Phase 1 guard.

@@ -20,7 +20,7 @@ import { openScratchSite, type ScratchSite } from "./support/site"
  * Phase 2 acceptance: restoring a Theme version puts the Site back exactly
  * (apps/site ADR-0004). Theme A is saved and the Site is photographed; Theme B
  * is saved, and the Site really does change; then, in the Admin, A is restored
- * from the Theme history as the Staff User would, and the Site is
+ * from the Theme history as the User would, and the Site is
  * photographed again. The two photographs of A must be pixel-identical.
  *
  * Two views are photographed: the sample Page (as a visitor sees it) and the

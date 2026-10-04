@@ -22,7 +22,7 @@ const FORM_ID = "brand-form"
 
 /**
  * The Brand screen: Identity, Contact and Social. Saves through a Server
- * Action as the Staff User, and asks before leaving with unsaved changes.
+ * Action as the User, and asks before leaving with unsaved changes.
  */
 export function BrandForm({
   initial,

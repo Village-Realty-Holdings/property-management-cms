@@ -24,11 +24,11 @@ import { continueEditing, waitingToPublish } from "./summaries"
 
 /**
  * What the Admin's Dashboard and lists read, through the Local API as the
- * Staff User (apps/site ADR-0002). Takes the Payload instance and the
- * `as` options from `requireStaff()` so tests can use their own.
+ * User (apps/site ADR-0002). Takes the Payload instance and the
+ * `as` options from `requireUser()` so tests can use their own.
  */
 
-export type StaffAccess = {
+export type UserAccess = {
   overrideAccess: false
   user: User & { collection: "users" }
 }
@@ -51,7 +51,7 @@ function searchWhere(q: string | undefined): Where | undefined {
  */
 export async function loadPageRows(
   payload: Payload,
-  as: StaffAccess,
+  as: UserAccess,
   { q, layouts }: { q?: string; layouts?: readonly LayoutInfo[] } = {}
 ): Promise<PageRow[]> {
   const [{ docs: latest }, knownLayouts] = await Promise.all([
@@ -104,7 +104,7 @@ export async function loadPageRows(
  */
 export async function loadLayoutRows(
   payload: Payload,
-  as: StaffAccess
+  as: UserAccess
 ): Promise<LayoutRow[]> {
   const usage = await loadLayoutUsage(payload, as)
   const picked = await Promise.all(
@@ -130,7 +130,7 @@ export type DashboardData = {
 /** Everything the Dashboard shows that comes from content. */
 export async function loadDashboard(
   payload: Payload,
-  as: StaffAccess
+  as: UserAccess
 ): Promise<DashboardData> {
   const layouts = await loadLayoutInfos(payload, as.user)
   const [rows, seo] = await Promise.all([

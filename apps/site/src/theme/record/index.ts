@@ -16,7 +16,7 @@ export { FALLBACK_INPUTS }
 
 /**
  * The Theme record, server side (apps/site ADR-0004). The Theme goes live on
- * save and keeps every version. Writes run as the Staff User (ADR-0002);
+ * save and keeps every version. Writes run as the User (ADR-0002);
  * reading the live Theme is public.
  */
 
@@ -47,14 +47,14 @@ export type ThemeVersion = {
   missingFonts: string[]
 }
 
-type Staff = TypedUser
+type User = TypedUser
 
 const FONT_KEYS = ["headingFont", "bodyFont"] as const
 
 /**
  * The live Theme, or the default preset (Classic) when none is saved. Read as
  * a visitor, like every other Site read (apps/site ADR-0001): the Theme is
- * public, so this is the same for a Staff User.
+ * public, so this is the same for a User.
  */
 export async function readLiveTheme(payload: Payload): Promise<LiveTheme> {
   const doc = await payload.findGlobal({
@@ -81,7 +81,7 @@ export async function readLiveTheme(payload: Payload): Promise<LiveTheme> {
  */
 export async function saveTheme(
   payload: Payload,
-  options: { user: Staff; inputs: ThemeInputs; note?: string | null }
+  options: { user: User; inputs: ThemeInputs; note?: string | null }
 ): Promise<SaveResult> {
   const live = await readLiveTheme(payload)
   if (live.source === "saved" && matches(live.inputs, options.inputs)) {
@@ -115,10 +115,10 @@ function matches(live: ThemeInputs, submitted: ThemeInputs): boolean {
   return describeChanges(live, canonical).length === 0
 }
 
-/** Every version, newest first (the first is live). Staff only. */
+/** Every version, newest first (the first is live). Users only. */
 export async function listThemeHistory(
   payload: Payload,
-  options: { user: Staff }
+  options: { user: User }
 ): Promise<ThemeVersion[]> {
   const { docs } = await payload.findGlobalVersions({
     slug: "theme",
@@ -155,11 +155,11 @@ export async function listThemeHistory(
 /**
  * The earlier Theme versions that use each stored Font, by Font id: the ISO
  * time each was saved, newest first. The live version is left out, because
- * the Font usage lock already covers it. Staff only.
+ * the Font usage lock already covers it. Users only.
  */
 export async function earlierVersionsUsingFonts(
   payload: Payload,
-  options: { user: Staff | null }
+  options: { user: User | null }
 ): Promise<Map<number, string[]>> {
   const { docs } = await payload.findGlobalVersions({
     slug: "theme",
@@ -192,7 +192,7 @@ export async function earlierVersionsUsingFonts(
  */
 export async function restoreThemeVersion(
   payload: Payload,
-  options: { user: Staff; versionId: number }
+  options: { user: User; versionId: number }
 ): Promise<SaveResult> {
   const found = await payload
     .findGlobalVersionByID({

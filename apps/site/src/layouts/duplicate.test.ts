@@ -9,12 +9,12 @@ import { listLayoutHistory } from "./record"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -26,14 +26,14 @@ beforeEach(async () => {
   await truncateTables(payload, "layouts", "_layouts_v", "pages", "_pages_v")
 })
 
-const user = () => ({ ...staff, collection: "users" as const })
-const asStaff = () => ({ overrideAccess: false, user: user() }) as const
+const user = () => ({ ...testUser, collection: "users" as const })
+const asUser = () => ({ overrideAccess: false, user: user() }) as const
 
 const makeLayout = (name: string, extra: Record<string, unknown> = {}) =>
   payload.create({
     collection: "layouts",
     data: { name, ...extra },
-    ...asStaff(),
+    ...asUser(),
   })
 
 const names = async () =>
@@ -42,7 +42,7 @@ const names = async () =>
       collection: "layouts",
       pagination: false,
       sort: "id",
-      ...asStaff(),
+      ...asUser(),
     })
   ).docs.map((doc) => doc.name)
 
@@ -69,7 +69,7 @@ describe("duplicateLayout", () => {
     const original = await payload.findByID({
       collection: "layouts",
       id: main.id,
-      ...asStaff(),
+      ...asUser(),
     })
     expect(original.isDefault).toBe(true)
     expect(original.paths?.map((p) => p.path)).toEqual(["/stays"])
@@ -126,7 +126,7 @@ describe("makeLayoutFromPage", () => {
     payload.create({
       collection: "pages",
       data: { title, path, _status: "published" },
-      ...asStaff(),
+      ...asUser(),
     })
 
   it("copies the Layout and switches the Page's Draft to the copy", async () => {
@@ -147,7 +147,7 @@ describe("makeLayoutFromPage", () => {
       id: page.id,
       draft: true,
       depth: 0,
-      ...asStaff(),
+      ...asUser(),
     })
     expect(draft.layout).toMatchObject({ mode: "specific", layout: copy.id })
 
@@ -157,7 +157,7 @@ describe("makeLayoutFromPage", () => {
       id: page.id,
       draft: false,
       depth: 0,
-      ...asStaff(),
+      ...asUser(),
     })
     expect(published.layout?.mode).toBe("route")
   })

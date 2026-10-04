@@ -1,5 +1,5 @@
 /**
- * The icons staff can pick for a Block, by their Lucide names. A curated
+ * The icons users can pick for a Block, by their Lucide names. A curated
  * list for a vacation-rental Site, not the whole of Lucide: the Payload
  * config validates against it (`src/fields/icon.ts`), and `Icon` draws
  * only these, so the Site's bundle carries just these icons.

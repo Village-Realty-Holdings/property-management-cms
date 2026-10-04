@@ -64,14 +64,14 @@ export type CanvasDocument = {
   footer: FooterBlock[]
   theme: ThemeInputs | null
   /**
-   * The Block the Staff User has selected, by id. `useCanvasBridge` fills it
+   * The Block the User has selected, by id. `useCanvasBridge` fills it
    * in from the editor's state; it reads as null when missing.
    */
   selectedId?: string | null
 }
 
 /**
- * The regions a Staff User can edit in the canvas, which the canvas reads
+ * The regions a User can edit in the canvas, which the canvas reads
  * from the document's mode: a Page's Blocks in Page mode, the Header and
  * Footer in Layout mode, and none in Theme mode. The rest is locked.
  */

@@ -131,7 +131,7 @@ export function initialState(content: unknown): string {
 
 /**
  * Shows `content` in `editor`, which is not an edit of it. `tag` marks the
- * update, so a listener can tell it from the Staff User's own changes.
+ * update, so a listener can tell it from the User's own changes.
  */
 export function loadContent(
   editor: LexicalEditor,

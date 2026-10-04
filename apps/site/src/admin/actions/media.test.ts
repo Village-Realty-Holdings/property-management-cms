@@ -13,7 +13,7 @@ import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { emptyBlock } from "../pageForm"
 import { savePageAs } from "../pageSave"
 
-// The delete Server Action, end to end: it runs for real, as a Staff User,
+// The delete Server Action, end to end: it runs for real, as a User,
 // against a real Payload; only the session lookup and Next's cache are
 // stood in for.
 
@@ -27,7 +27,7 @@ const session = vi.hoisted(() => ({
 }))
 const revalidatePath = vi.hoisted(() => vi.fn())
 
-vi.mock("../session", () => ({ requireStaff: async () => session.current }))
+vi.mock("../session", () => ({ requireUser: async () => session.current }))
 vi.mock("next/cache", () => ({ revalidatePath }))
 
 import { deleteMedia, uploadMedia } from "./media"

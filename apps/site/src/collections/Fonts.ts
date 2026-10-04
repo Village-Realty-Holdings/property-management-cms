@@ -27,7 +27,7 @@ export function duplicateFile(rows: readonly FileRow[]): string | null {
 }
 
 /**
- * A Font: a family staff added for the Theme to use, as files of different
+ * A Font: a family Users added for the Theme to use, as files of different
  * weights and styles, uploaded or downloaded from Google Fonts (see
  * src/fonts/importGoogleFont.ts). Not Media: its files live in their own
  * collection (`font-files`) and are served by the Site itself. The built-in

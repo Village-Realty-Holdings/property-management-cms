@@ -7,7 +7,7 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { MediaDeleteButton } from "@/admin/components/MediaDeleteButton"
 import { UploadForm } from "@/admin/components/UploadForm"
 import { CardSkeleton, EmptyState, PageHeader } from "@/admin/kit"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 import { loadMediaDependents } from "@/admin/usage"
 
 export const metadata: Metadata = { title: "Media" }
@@ -36,7 +36,7 @@ export default function MediaLibrary() {
 }
 
 async function MediaGrid() {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const [{ docs }, usedBy] = await Promise.all([
     payload.find({
       collection: "media",

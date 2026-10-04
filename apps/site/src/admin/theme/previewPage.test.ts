@@ -7,14 +7,14 @@ import {
   loadHomePreview,
   loadPagePreview,
 } from "./previewPage"
-import type { StaffAccess } from "./themeScreen"
+import type { UserAccess } from "./themeScreen"
 
 // What Theme mode's canvas reads, against a real Payload on a throwaway
-// database, as a Staff User.
+// database, as a User.
 
 let t: TestPayload
 let payload: Payload
-let as: StaffAccess
+let as: UserAccess
 let aboutId: number
 
 const hero = (heading: string) => ({ blockType: "hero" as const, heading })
@@ -24,11 +24,11 @@ const headings = (blocks: readonly object[] | undefined) =>
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  const staff = await payload.create({
+  const testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  as = { overrideAccess: false, user: { ...staff, collection: "users" } }
+  as = { overrideAccess: false, user: { ...testUser, collection: "users" } }
 
   await payload.create({
     collection: "layouts",

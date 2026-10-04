@@ -1,6 +1,6 @@
 # Audit 1: the Site Builder after Phases 3–6 (Phase 7)
 
-The first look at the whole build running. It covers the Admin, the Visual Editor and the three public Sites: design and UX (for Staff Users who are not designers), code quality against `AGENTS.md` and the ADRs, WCAG 2.2 AA, Home page performance, fidelity to the real Warren Beach and Avada sites, Beachside against its brand, and every "Acceptance for phase" item in the spec.
+The first look at the whole build running. It covers the Admin, the Visual Editor and the three public Sites: design and UX (for Users who are not designers), code quality against `AGENTS.md` and the ADRs, WCAG 2.2 AA, Home page performance, fidelity to the real Warren Beach and Avada sites, Beachside against its brand, and every "Acceptance for phase" item in the spec.
 
 - **Commit audited:** `48d4fcc` (`origin/milestone/site-builder`, 30 Sep 2026)
 - **Screenshots:** `docs/screenshots/audit-1/`
@@ -35,7 +35,7 @@ The biggest problems are in the editor's data path and in mobile layout:
 
 ## Ranked findings
 
-Impact ranks how badly a finding hurts a Staff User or a visitor, and how many of them. Effort: **S** is under half a day, **M** is one to two days, **L** is more.
+Impact ranks how badly a finding hurts a User or a visitor, and how many of them. Effort: **S** is under half a day, **M** is one to two days, **L** is more.
 
 ### 1. The Visual Editor's canvas drops every Media image and every menu link to a Page
 
@@ -48,10 +48,10 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
   - The editor holds Pages and Layouts at depth 0, with Media and Pages as ids (`src/admin/editor/modes/pageDocument.ts`).
   - It casts them to the populated Block types when it posts them to the canvas: `src/admin/editor/bridge.ts:155,164-165` and `src/admin/editor/modes/PageMode.tsx:176-177` (`as unknown as PageBlock[]`).
   - The renderers then drop the ids: `imageOf()` in `src/site/brand.ts:26` returns null for a number, and `hrefOf()` in `src/site/regions/links.ts:23` returns null for a Page id.
-- **Why it matters:** this breaks ADR-0002's promise that Blocks render the same way in the Visual Editor and on the Site, and the spec's instant-preview rule. Staff Users editing a Layout see a broken header, and may "fix" it.
+- **Why it matters:** this breaks ADR-0002's promise that Blocks render the same way in the Visual Editor and on the Site, and the spec's instant-preview rule. Users editing a Layout see a broken header, and may "fix" it.
 - **Overlap:** this extends user note 4 ("a picked image doesn't render live"). It is the root cause, and it also covers stored images and Page links.
 - **Suggested fix:**
-  - Give the canvas a lookup: Media by id (url, alt, size) and Pages by id (path, title). Send it with the document, or load it once on the canvas from the Local API as the Staff User.
+  - Give the canvas a lookup: Media by id (url, alt, size) and Pages by id (path, title). Send it with the document, or load it once on the canvas from the Local API as the User.
   - Resolve ids through the lookup in `imageOf` and `hrefOf`, or in a single `resolveForCanvas(doc, lookup)` step before render.
   - Replace the `as unknown as` casts with a real "depth-0 Block" type, so the compiler catches this.
   - Add an e2e check that the canvas Hero `<img>` and the Navigation items match the public Site.
@@ -63,7 +63,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
   - On Beachside › Media, deleting `amenity-pool.webp` or `amenity-lounge.webp` says "Nothing else uses it", yet both are Amenities tiles on Home (`03-media-delete-says-unused.jpg`).
   - Deleting `hero-shoreline-dawn.webp` lists only "Home (SEO image)" and the SEO share image. It misses that it is Home's Search Hero photo.
 - **Where:** `src/admin/usage.ts:56-64` only looks at a `hero` Block's `image` and a Page's SEO image. It doesn't look at Search Hero, Amenities, Image + text, Owner band, Location, Trust strip logos or Testimonials, nor at Blocks inside Layouts.
-- **Why it matters:** a Staff User trusts the dialog, deletes the image, and the live Home page loses its photos. This breaks the spec's UX rule that destructive actions name what depends on the item.
+- **Why it matters:** a User trusts the dialog, deletes the image, and the live Home page loses its photos. This breaks the spec's UX rule that destructive actions name what depends on the item.
 - **Suggested fix:**
   - Walk every Block's upload fields generically from the Block configs (`src/blocks/catalogue.ts`), in Pages, both Drafts and Published, and in Layouts.
   - Block the delete of an image that is in use, the same way in-use Fonts are blocked, and list each use with a link that opens the Visual Editor on that Block.
@@ -93,7 +93,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
   - Visitors never edit. Mobile Total Blocking Time is low (about 45 ms), but this is download and parse cost on every first visit.
 - **Where:** `src/app/(site)/[[...path]]/page.tsx` imports `EditingPage`, which imports `EditorCanvas`, a client component, and the editing Blocks: `src/site/blocks/RichTextBlock.tsx` imports `RichTextEditing`. The public route's client manifest therefore carries the editor.
 - **Suggested fix:**
-  - Serve the canvas from its own route segment (for example `/(canvas)/__edit/[[...path]]`, still behind the Staff session check) so the public route never imports editing code.
+  - Serve the canvas from its own route segment (for example `/(canvas)/__edit/[[...path]]`, still behind the User session check) so the public route never imports editing code.
   - Or load `EditorCanvas` and `RichTextEditing` with `next/dynamic` only when `editing` is true.
   - Add a size check, such as a test over the build manifest, that fails if `lexical` appears in the public route's chunks.
 - **Effort:** M
@@ -112,7 +112,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
 
 - **Evidence:**
   - On Warren Beach at 1024 px, "About Us" and "Property Management" drop to a second line (`06-nav-wraps-at-1024.jpg`). The header grows from 89 to 109 px.
-  - The Visual Editor's "desktop" canvas is 1120 px wide at a 1440 px screen, so Staff Users always see the wrapped header.
+  - The Visual Editor's "desktop" canvas is 1120 px wide at a 1440 px screen, so Users always see the wrapped header.
   - The same happens on Avada at 768–1024 px.
 - **Where:** `src/site/regions/NavigationMenu.tsx:86`: the inline menu shows from `md` (768 px) with `flex-wrap`.
 - **Suggested fix:**
@@ -126,7 +126,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
 - **Evidence:**
   - axe reports `page-has-heading-one` on Beachside Rentals and Contact, at both widths.
   - Their first heading is an H2 ("All our beach homes", and Location's heading) (`13-beachside-rentals-no-h1-sort-truncated.jpg`).
-  - Any Page a Staff User starts with a Rental grid, Location, Form or Rich text has the same problem.
+  - Any Page a User starts with a Rental grid, Location, Form or Rich text has the same problem.
 - **Where:** every Block except Hero and Search Hero hard-codes `h2` (for example `src/site/blocks/RentalGridBlock.tsx` and `LocationBlock.tsx`, through `BlockSection`).
 - **Suggested fix:** pass a heading level through the Block context: the first Block on a Page renders its heading as `h1`, and the rest as `h2`. Hero already gets `first`, so generalise that. Add a test that every seeded Page has exactly one H1.
 - **Effort:** S
@@ -186,7 +186,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
 - **Suggested fix:** add a Logo Block option, "Show the Site name beside the logo", and seed it on for Avada. Keep the image's alt text short ("Avada Properties"). Today the link's accessible name is the whole image description: "Avada Properties: a hexagon badge with a sunset over mountain ridges".
 - **Effort:** S
 
-### 12. Admin times are in UTC, so Staff Users see tomorrow's date
+### 12. Admin times are in UTC, so Users see tomorrow's date
 
 - **Evidence:** at 18:33 local time on 30 Sep, the Dashboard, the Pages and Layouts lists and the History tabs all say "Oct 1, 2026, 1:33 AM" (`11-admin-dashboard.jpg`). Only the History tab adds "UTC".
 - **Where:** `src/admin/dashboard/UpdatedAt.tsx` formats with `timeZone: "UTC"` "so the server and the browser agree".
@@ -196,7 +196,7 @@ Impact ranks how badly a finding hurts a Staff User or a visitor, and how many o
 ### 13. Layout mode previews another Page, and selecting from the Outline doesn't move the canvas
 
 - **Evidence:**
-  - Choosing "Edit Layout" from Warren Beach Home opens Layout mode on Contact, so the Staff User loses the Page they were looking at. This is also shown in finding 1's screenshot.
+  - Choosing "Edit Layout" from Warren Beach Home opens Layout mode on Contact, so the User loses the Page they were looking at. This is also shown in finding 1's screenshot.
   - Picking "Amenities" in the Outline selects it, but the canvas stays on the Hero. The user has to scroll to find the Block they picked.
 - **Where:** the "Edit Layout" link in `src/admin/editor/modes/PageMode.tsx`, and the preview Page choice in `src/admin/editor/modes/LayoutMode.tsx`. The selection is sent over the bridge in `src/admin/editor/bridge.ts` and `src/site/editing/overlay.tsx`.
 - **Suggested fix:**
@@ -397,7 +397,7 @@ Each item is **Pass** (seen working in this audit), **Covered** (an acceptance s
 
 ## Code quality (AGENTS.md and the ADRs)
 
-- **ADR-0002 (writes as the Staff User):** followed. Every Admin read and write passes `overrideAccess: false` with the Staff User, and the public Site reads as a visitor (`src/site/queries.ts`). `/p-admin` should now go (22).
+- **ADR-0002 (writes as the User):** followed. Every Admin read and write passes `overrideAccess: false` with the User, and the public Site reads as a visitor (`src/site/queries.ts`). `/p-admin` should now go (22).
 - **ADR-0004 and ADR-0006 (live on save, with history):** followed. History and restore exist for the Theme and Layouts, with no Drafts.
 - **ADR-0005 (one schema per Site):** works. No `"public".` in the migrations. The open questions are the number of migrations (30) and the fixtures keyed by schema name (31).
 - **AGENTS.md (this Next.js version):** uses Next 16 conventions: `proxy.ts` (not `middleware`), `connection()`, `preload` on `next/image`, and Turbopack. No deprecation warnings at runtime. The build passes. `DEV_SIGN_IN` is refused in production, as ADR-0003 says.

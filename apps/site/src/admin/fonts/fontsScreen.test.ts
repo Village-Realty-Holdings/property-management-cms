@@ -23,7 +23,7 @@ import {
 } from "./fontsScreen"
 
 // The Fonts screen's actions against a real Payload on a throwaway database,
-// as a Staff User, with a fake fetch standing in for Google: nothing here can
+// as a User, with a fake fetch standing in for Google: nothing here can
 // reach the network.
 
 const MAGIC = {
@@ -82,8 +82,8 @@ const fontFile = (name: string, magic: Buffer) =>
 
 let t: TestPayload
 let payload: Payload
-let staff: User & { collection: "users" }
-let as: { overrideAccess: false; user: typeof staff }
+let testUser: User & { collection: "users" }
+let as: { overrideAccess: false; user: typeof testUser }
 const cleanups: (() => void)[] = []
 
 beforeAll(async () => {
@@ -93,8 +93,8 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  staff = { ...user, collection: "users" }
-  as = { overrideAccess: false, user: staff }
+  testUser = { ...user, collection: "users" }
+  as = { overrideAccess: false, user: testUser }
 })
 
 afterEach(async () => {
@@ -218,7 +218,7 @@ describe("addGoogleFontAs", () => {
     expect(await count("fonts")).toBe(1)
   })
 
-  it("is refused without a signed-in Staff User", async () => {
+  it("is refused without a signed-in User", async () => {
     const result = await addGoogleFontAs(
       payload,
       { overrideAccess: false, user: null },
@@ -399,9 +399,9 @@ describe("loadFontRows and deleteFontAs", () => {
       headingFont: `font:${font.id}`,
       ...over,
     })
-    await saveTheme(payload, { user: staff, inputs: withFont() })
+    await saveTheme(payload, { user: testUser, inputs: withFont() })
     await saveTheme(payload, {
-      user: staff,
+      user: testUser,
       inputs: withFont({ primary: "#0a7d5a" }),
     })
     // Live now uses it too: the two saved versions are the live one's past.
@@ -409,7 +409,7 @@ describe("loadFontRows and deleteFontAs", () => {
     expect(locked!.locked).toBe(true)
     expect(locked!.earlierThemeVersions).toHaveLength(1)
 
-    await saveTheme(payload, { user: staff, inputs: CLASSIC.inputs })
+    await saveTheme(payload, { user: testUser, inputs: CLASSIC.inputs })
     const [row] = await loadFontRows(payload, as)
     expect(row).toMatchObject({ locked: false, deleteBlockedReason: null })
     expect(row!.earlierThemeVersions).toHaveLength(2)
@@ -420,7 +420,7 @@ describe("loadFontRows and deleteFontAs", () => {
 
   it("lists no earlier Theme version when none used the Font", async () => {
     await addSlab()
-    await saveTheme(payload, { user: staff, inputs: HARBOUR.inputs })
+    await saveTheme(payload, { user: testUser, inputs: HARBOUR.inputs })
     const [row] = await loadFontRows(payload, as)
     expect(row!.earlierThemeVersions).toEqual([])
   })
@@ -456,8 +456,8 @@ describe("loadFontRows and deleteFontAs", () => {
     expect(result.message).toBeTruthy()
   })
 
-  it("is refused without a signed-in Staff User", async () => {
-    // Fonts are readable by anyone, but deleting one takes a Staff User.
+  it("is refused without a signed-in User", async () => {
+    // Fonts are readable by anyone, but deleting one takes a User.
     const font = await addSlab()
     const result = await deleteFontAs(
       payload,

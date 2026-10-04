@@ -1,6 +1,6 @@
 # Container Blocks milestone: spec and Definition of Done
 
-Staff can put Blocks side by side and group them: a **Container** Block holds other Blocks as a stack or a grid, up to three levels deep (ADR-0007).
+Users can put Blocks side by side and group them: a **Container** Block holds other Blocks as a stack or a grid, up to three levels deep (ADR-0007).
 
 - **Before building, read:**
   - `GLOSSARY-MAP.md` and `apps/site/GLOSSARY.md` (Container, Block)
@@ -17,7 +17,7 @@ Staff can put Blocks side by side and group them: a **Container** Block holds ot
 - **Never touch** the `property_management_site` database or `main`. Use scratch databases or schemas (`pm_test_*`, `ms_<something>`) and drop them.
 - **A running dev server pushes schema changes** from the working tree into its database and can stop to ask before dropping a column. Build schema slices in a worktree, or with the dev server stopped.
 - **Test-first.** Every slice keeps `pnpm check` green. A slice that changes a migration regenerates it with `DATABASE_SCHEMA` unset and runs `pnpm --filter site genericize` on it.
-- **Admin writes go through the Local API as the Staff User** (ADR-0002). A Block renders the same on the Site and in the Visual Editor.
+- **Admin writes go through the Local API as the User** (ADR-0002). A Block renders the same on the Site and in the Visual Editor.
 - **Styling comes from the Theme's tokens.** WCAG 2.2 AA on the Site and in the Admin.
 - **Decisions the spec doesn't cover:** make the most conservative choice consistent with ADR-0007 and report it for the PR body.
 
@@ -78,6 +78,6 @@ Convert Blocks from viewport breakpoints to container queries, a few per slice, 
 
 ## Definition of Done for the milestone
 
-- A Staff User builds the Tuck-in page from the starter and a two-column page with cards, in the Visual Editor alone.
-- Nothing a Staff User builds can be silently dropped on save.
+- A User builds the Tuck-in page from the starter and a two-column page with cards, in the Visual Editor alone.
+- Nothing a User builds can be silently dropped on save.
 - `pnpm check` and the e2e suites pass; the seeded Sites migrate and seed cleanly.

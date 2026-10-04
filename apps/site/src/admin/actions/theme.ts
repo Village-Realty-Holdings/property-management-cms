@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache"
 
 import type { FormState } from "../formState"
-import { requireStaff } from "../session"
+import { requireUser } from "../session"
 import type { ThemeInputs } from "../../theme"
 import { restoreThemeAs, saveThemeAs } from "../theme/themeScreen"
 
 /**
- * The Theme screen's Server Actions. Each runs as the Staff User (apps/site
+ * The Theme screen's Server Actions. Each runs as the User (apps/site
  * ADR-0002) and validates what the browser sent again.
  */
 
@@ -18,7 +18,7 @@ import { restoreThemeAs, saveThemeAs } from "../theme/themeScreen"
  * and the Dashboard's Theme card are refreshed.
  */
 export async function restoreTheme(versionId: number): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const result = await restoreThemeAs(payload, as, versionId)
   if (result.ok) {
     revalidatePath("/admin/theme")
@@ -37,7 +37,7 @@ export async function saveTheme(
   inputs: ThemeInputs,
   note?: string | null
 ): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const result = await saveThemeAs(payload, as, inputs, note)
   if (result.ok) {
     revalidatePath("/admin/theme")

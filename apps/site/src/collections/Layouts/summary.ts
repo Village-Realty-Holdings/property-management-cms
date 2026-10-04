@@ -29,7 +29,7 @@ const same = (a: unknown, b: unknown) =>
   JSON.stringify(withoutIds(a)) === JSON.stringify(withoutIds(b))
 
 /**
- * The summary of a save: the staff note when there is one, otherwise what
+ * The summary of a save: the User's note when there is one, otherwise what
  * changed from the previous save (`from`, null on the first) to what is saved.
  */
 export function layoutSummary(

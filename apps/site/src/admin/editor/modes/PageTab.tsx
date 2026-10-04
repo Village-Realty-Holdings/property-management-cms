@@ -77,7 +77,7 @@ export function PageTab({
   onLayoutMade: (layout: LayoutOption) => void
 }) {
   const { doc, setField } = useEditor()
-  // A New Page's path follows its title as it is typed, unless the Staff User
+  // A New Page's path follows its title as it is typed, unless the User
   // has written the path themselves. This is the title the path was last made
   // from: a title emptied and typed again still finds the path it moved.
   const pathTitle = useRef<string | null>(null)
@@ -438,7 +438,7 @@ function MakeLayoutFromThis({
       }
       const made = result.layout
       // The server switched the Page's Draft: that is the saved baseline now,
-      // and the Staff User's other unsaved edits stay unsaved.
+      // and the User's other unsaved edits stay unsaved.
       const choice: LayoutChoice = { mode: "layout", layoutId: made.id }
       const baseline = state.baseline
       if (baseline.kind === "page") {

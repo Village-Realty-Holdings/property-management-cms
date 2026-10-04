@@ -9,7 +9,7 @@ import {
 import { LayoutMode } from "@/admin/editor/modes/LayoutMode"
 import { loadLayoutScreen } from "@/admin/layouts/layoutScreen"
 import { mediaOptions } from "@/admin/media"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 export const metadata: Metadata = { title: "Edit Layout" }
 
@@ -28,13 +28,13 @@ const actions = {
  */
 export default async function LayoutEditor({ params }: Props) {
   const { id } = await params
-  const staff = await requireStaff()
-  const screen = await loadLayoutScreen(staff.payload, staff.as, Number(id))
+  const session = await requireUser()
+  const screen = await loadLayoutScreen(session.payload, session.as, Number(id))
   if (!screen) notFound()
   return (
     <LayoutMode
       screen={screen}
-      media={await mediaOptions(staff)}
+      media={await mediaOptions(session)}
       actions={actions}
     />
   )
