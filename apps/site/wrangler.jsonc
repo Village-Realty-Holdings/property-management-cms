@@ -5,7 +5,7 @@
 //
 // HYPERDRIVE pools connections to the database every Site shares (ADR-0005);
 // the app reads its connection string on Workers (src/database.ts). `id` is
-// the Hyperdrive config's (`wrangler hyperdrive create`), one for all Sites.
+// the Hyperdrive config for Neon's live-pm-sites database, one for all Sites.
 // Locally, wrangler connects straight to `localConnectionString` instead.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -13,12 +13,12 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": { "enabled": true },
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // Replace with the id from `wrangler hyperdrive create` before deploying.
-      "id": "00000000000000000000000000000000",
+      "id": "d7af30318e1f4a749ca2e56c5fd19946",
       "localConnectionString": "postgres://postgres:postgres@localhost:5432/property_management_sites",
     },
   ],
