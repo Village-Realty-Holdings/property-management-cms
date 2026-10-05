@@ -97,7 +97,7 @@ The Admin's grouping, under Settings, for the files the Theme draws on. Today th
 _Avoid_: Assets for Media, or as a model name
 
 **Users**:
-The Admin's screen, under Settings, listing the Users of this Site, where a User can be removed. It is a heading in the Admin, not a model. A User is added by signing in, never from this screen, and you can't remove yourself.
+The Admin's screen, under Settings, listing Users from the Registry. A Super Admin sees everyone and adds Users, gives and takes Site Access, sets passwords, and disables or deletes accounts; anyone else sees who can use this Site and changes nothing. Nobody can disable, demote or delete themselves. It is a heading in the Admin, not a model.
 _Avoid_: Team, members, accounts
 
 **Tools**:
@@ -119,5 +119,21 @@ _Avoid_: Page builder, live preview, inline editing (as the feature name)
 ### People
 
 **User**:
-A person who signs into the Admin with their Awayday Microsoft account. Every User can do everything in the Admin. Visitors never sign in.
+A person who signs into the Admin, with their Awayday Microsoft account or an email and password. One User signs in to every Site they may use, with the same credentials. On a Site they may use, a User can do everything in its Admin. Visitors never sign in.
 _Avoid_: Staff (the old name), Admin (for a person), editor, account, member
+
+**Registry**:
+The list of Users and Sites that every Site shares, in the `registry` schema of the one database. It says who a User is, how they sign in, and which Sites they may use. Each Site also keeps its own record of a User who has signed in there, which Pages and Layouts name as "updated by".
+_Avoid_: Directory, central database, public db
+
+**Super Admin**:
+A User who may use every Site and manage Users and Site Access from any Site's Users screen.
+_Avoid_: Admin (for the role), owner, root
+
+**Site Access**:
+Permission for one User to use one Site. A User signs in to a Site only when they are a Super Admin or have Site Access to it, and taking it away, or disabling the User, signs them out of that Site at once.
+_Avoid_: Site Assignment (the old app's word), membership, role
+
+**Switch Site**:
+Going from one Site's Admin to another's, from the sidebar, without signing in again. The first Site hands the User over with a single-use link that lasts a minute and works only on the chosen Site.
+_Avoid_: SSO, impersonation

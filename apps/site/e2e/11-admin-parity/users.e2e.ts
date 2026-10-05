@@ -12,14 +12,14 @@ import { openScratchSite, type ScratchSite } from "../theme/support/site"
 import { addUser, removeUser, signInAs } from "./support/users"
 
 /**
- * The Users screen (Settings, Users).
+ * The Users screen (Settings, Users; apps/site ADR-0015).
  *
- * - It lists the people who can sign in, under one h1 and a captioned table,
- *   and the Settings group of the sidebar marks it as the current screen.
- * - Your own row says "You" and has no Remove, and a User signed in from
- *   another browser can use the Admin.
- * - Remove asks first, and says the person can sign in again while they hold
- *   the Entra app role; confirming removes the User.
+ * - It lists the Registry's Users, under one h1 and a captioned table, and
+ *   the Settings group of the sidebar marks it as the current screen.
+ * - Your own row says "You", and a User signed in from another browser can
+ *   use the Admin.
+ * - Delete, from a User's edit sheet, asks first; confirming deletes them
+ *   from the Registry.
  * - Over `/api` a User still can't delete themselves.
  * - The screen passes WCAG 2.2 AA.
  */
@@ -64,14 +64,12 @@ describe("the Users screen", () => {
         .filter({ has: page.getByRole("rowheader", { name }) })
     const you = row("Dev User")
     expect(await you.getByText("You", { exact: true }).count()).toBe(1)
-    expect(
-      await page.getByRole("button", { name: "Remove Dev User" }).count()
-    ).toBe(0)
+    expect(await you.textContent()).toContain("Super Admin")
 
     const sam = row(SAM_NAME)
     expect(await sam.textContent()).toContain(`sam-${RUN}@awayday.test`)
     expect(
-      await sam.getByRole("button", { name: `Remove ${SAM_NAME}` }).count()
+      await sam.getByRole("button", { name: `Edit ${SAM_NAME}` }).count()
     ).toBe(1)
     expect(await accessibilityProblems(page)).toBe("")
   })
@@ -93,33 +91,31 @@ describe("the Users screen", () => {
     }
   })
 
-  it("asks before removing a User, and removes them when confirmed", async () => {
+  it("asks before deleting a User, and deletes them when confirmed", async () => {
     const { page } = h.user
     await visit(page, "/admin/settings/users")
     const row = page
       .getByRole("row")
       .filter({ has: page.getByRole("rowheader", { name: SAM_NAME }) })
-    await row.getByRole("button", { name: `Remove ${SAM_NAME}` }).click()
+    await row.getByRole("button", { name: `Edit ${SAM_NAME}` }).click()
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Delete" })
+      .click()
     const dialog = page.getByRole("alertdialog")
     await dialog
-      .getByRole("heading", { name: `Remove “${SAM_NAME}”?` })
+      .getByRole("heading", { name: `Delete “${SAM_NAME}”?` })
       .waitFor()
     expect(await dialog.textContent()).toContain(
-      "they can sign in again for as long as they hold the Entra app role"
+      "They can no longer sign in to any Site"
     )
-    await dialog.getByRole("button", { name: "Remove User" }).click()
+    await dialog.getByRole("button", { name: "Delete User" }).click()
     await page
       .locator("[data-sonner-toast]")
-      .filter({ hasText: `Removed ${SAM_NAME}.` })
+      .filter({ hasText: `Deleted ${SAM_NAME}.` })
       .first()
       .waitFor()
     await row.waitFor({ state: "detached" })
-    const found = await site.payload.find({
-      collection: "users",
-      where: { entraOid: { equals: `e2e-${RUN}` } },
-      depth: 0,
-    })
-    expect(found.totalDocs).toBe(0)
   })
 
   it("refuses over /api to delete the signed-in User", async () => {

@@ -1,23 +1,27 @@
 import Link from "next/link"
-import { ExternalLinkIcon, LogOutIcon } from "lucide-react"
+import { ArrowLeftRightIcon, ExternalLinkIcon, LogOutIcon } from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 
 import type { SiteCard } from "../dashboard/site"
-import { SIGN_OUT_PATH } from "@/auth"
+import { HANDOFF_START_PATH, SIGN_OUT_PATH } from "@/auth"
 import { AdminNav } from "./AdminNav"
 
 /**
  * The Admin's sidebar: the Site's logo and name with its schema badge, the
- * navigation, and at the foot View Site, the User and sign out.
+ * navigation, and at the foot the other Sites to switch to (apps/site
+ * ADR-0015), View Site, the User and sign out. Switching signs you in to the
+ * other Site with a one-time handoff, so there's no second sign-in.
  */
 export function AdminSidebar({
   site,
   user,
+  otherSites = [],
 }: {
   site: SiteCard
   user: { name?: string | null; email: string }
+  otherSites?: { id: number; name: string }[]
 }) {
   return (
     <aside
@@ -53,6 +57,28 @@ export function AdminSidebar({
       </div>
       <AdminNav />
       <div className="mt-auto flex flex-col gap-2 px-3 text-sm">
+        {otherSites.length > 0 && (
+          <nav aria-label="Switch Site" className="flex flex-col gap-1 pb-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Switch Site
+            </span>
+            {otherSites.map((other) => (
+              <form key={other.id} action={HANDOFF_START_PATH} method="post">
+                <input type="hidden" name="site" value={other.id} />
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-2 rounded-md text-left text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeftRightIcon
+                    className="size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{other.name}</span>
+                </button>
+              </form>
+            ))}
+          </nav>
+        )}
         <a
           href={site.url}
           target="_blank"
