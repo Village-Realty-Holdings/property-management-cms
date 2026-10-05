@@ -15,7 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { FetchLike } from "../fonts/googleFonts"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import { CLASSIC } from "../theme"
-import { runSeed, seedModuleFor, type SeedModule } from "./index"
+import { runSeed, seedModuleFor, seedSchemas, type SeedModule } from "./index"
 import { createSeeder, sameData, seedUser } from "./upsert"
 
 // Integration test: a real Payload on a throwaway database, a fake fetch
@@ -397,14 +397,23 @@ describe("the seed helpers", () => {
 })
 
 describe("the seed modules", () => {
-  it("has one for each of the three Sites, chosen by schema", () => {
-    for (const schema of ["warren_beach", "avada", "beachside"]) {
-      expect(typeof seedModuleFor(schema)).toBe("function")
+  it("finds one for each Site by its file, chosen by schema", async () => {
+    expect(seedSchemas()).toEqual(
+      expect.arrayContaining(["warren_beach", "avada", "beachside"])
+    )
+    for (const schema of seedSchemas()) {
+      expect(typeof (await seedModuleFor(schema))).toBe("function")
     }
   })
 
-  it("refuses a schema that has no seed", () => {
-    expect(() => seedModuleFor("public")).toThrow(/warren_beach/)
-    expect(() => seedModuleFor("ms_other")).toThrow(/no seed/i)
+  it("does not take tests or helpers for seeds", () => {
+    expect(seedSchemas()).not.toContain("index")
+    expect(seedSchemas()).not.toContain("upsert")
+    expect(seedSchemas().some((schema) => schema.includes("."))).toBe(false)
+  })
+
+  it("refuses a schema that has no seed", async () => {
+    await expect(seedModuleFor("public")).rejects.toThrow(/warren_beach/)
+    await expect(seedModuleFor("ms_other")).rejects.toThrow(/no seed/i)
   })
 })

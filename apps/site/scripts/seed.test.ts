@@ -45,7 +45,7 @@ describe("resolveSeedTarget", () => {
   it("needs a schema that has a seed, and lists the ones that do", () => {
     expect(() =>
       resolveSeedTarget({ ...env, DATABASE_SCHEMA: "ms_seed_runner" })
-    ).toThrow(/warren_beach, avada, beachside/)
+    ).toThrow(/avada, .*beachside, .*warren_beach/)
   })
 
   it("lets a scratch ms_ schema borrow a Site's seed with SEED_SITE", () => {
@@ -68,7 +68,7 @@ describe("resolveSeedTarget", () => {
         DATABASE_SCHEMA: "ms_seed_runner",
         SEED_SITE: "nope",
       })
-    ).toThrow(/warren_beach, avada, beachside/)
+    ).toThrow(/avada, .*beachside, .*warren_beach/)
   })
 
   it("rejects a schema name the Site can't use", () => {

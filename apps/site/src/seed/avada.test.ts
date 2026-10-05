@@ -133,8 +133,8 @@ async function pages() {
 const blockTypes = (page: Page) => (page.blocks ?? []).map((b) => b.blockType)
 
 describe("the Avada seed", () => {
-  it("is the seed of the avada schema", () => {
-    expect(seedModuleFor("avada")).toBe(avadaSeed)
+  it("is the seed of the avada schema", async () => {
+    expect(await seedModuleFor("avada")).toBe(avadaSeed)
   })
 
   it("creates the Brand, SEO, Theme, Font, Media, Layout and Pages on a first run", async () => {

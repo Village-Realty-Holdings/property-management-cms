@@ -16,7 +16,7 @@
 import { pathToFileURL } from "node:url"
 
 import { siteSchema } from "../src/database"
-import { SEED_MODULES } from "../src/seed"
+import { seedSchemas } from "../src/seed"
 
 /** The database Sites in production use: a seed must never run against it. */
 const PROTECTED_DATABASE = "property_management_site"
@@ -29,11 +29,11 @@ export type SeedTarget = {
   site: string
 }
 
-const SITES = Object.keys(SEED_MODULES).join(", ")
-
 export function resolveSeedTarget(
   env: Record<string, string | undefined>
 ): SeedTarget {
+  const schemas = seedSchemas()
+  const SITES = schemas.join(", ")
   const databaseUrl = env.DATABASE_URL?.trim()
   if (!databaseUrl) {
     throw new Error(
@@ -61,14 +61,14 @@ export function resolveSeedTarget(
         `SEED_SITE only applies to a scratch schema named ms_<something>, not "${schema}". A Site's schema runs its own seed.`
       )
     }
-    if (!(borrowed in SEED_MODULES)) {
+    if (!schemas.includes(borrowed)) {
       throw new Error(
         `SEED_SITE=${borrowed} has no seed. Seeds exist for: ${SITES}.`
       )
     }
     return { databaseUrl, database, schema, site: borrowed }
   }
-  if (!(schema in SEED_MODULES)) {
+  if (!schemas.includes(schema)) {
     throw new Error(
       `There is no seed for DATABASE_SCHEMA "${schema}". Seeds exist for: ${SITES}. (A scratch ms_ schema can borrow one with SEED_SITE=<schema>.)`
     )
@@ -104,7 +104,7 @@ async function main() {
     // type takes `unknown`.
     await payload.db.migrate({ migrations: migrations as never })
     const report = await runSeed(payload, {
-      module: seedModuleFor(target.site),
+      module: await seedModuleFor(target.site),
     })
     for (const { kind, key, action } of report) {
       console.log(`  ${action.padEnd(9)} ${kind} ${key}`)
