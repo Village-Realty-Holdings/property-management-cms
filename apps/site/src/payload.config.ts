@@ -11,6 +11,7 @@ import { pgForRuntime, siteSchema } from "./database"
 import { richTextEditor } from "./fields/richText"
 import { globals } from "./globals"
 import { ensureDefaultLayout } from "./layouts/defaultLayout"
+import { ensureRegistry, registryDb } from "./registry"
 import { storagePlugins } from "./storage"
 import { registerThemeFontUsage } from "./theme/record/fontUsage"
 
@@ -82,6 +83,17 @@ function build({
     editor: richTextEditor,
     globals,
     onInit: async (payload) => {
+      // Pushing the schema (dev) skips migrations, which is where the
+      // Registry's tables are made (apps/site ADR-0015): make them here then.
+      // Payload's own rule (db-postgres connect): it pushes outside
+      // production, unless migrating or told not to.
+      if (
+        process.env.NODE_ENV !== "production" &&
+        process.env.PAYLOAD_MIGRATING !== "true" &&
+        (payload.db as { push?: boolean }).push !== false
+      ) {
+        await ensureRegistry(registryDb(payload))
+      }
       if (!seedDefaultLayout) return
       // A Site that only migrated still needs its chrome. Starting must not
       // depend on it, so a failure is logged and the Site starts without.
