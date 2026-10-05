@@ -237,6 +237,25 @@ export async function checkPassword(
   return row.disabled ? null : toUser(row)
 }
 
+/**
+ * Makes the User a Super Admin when the Registry has none yet, enabled or
+ * not: the first person to sign in sets everything else up. Returns the User
+ * as they are now.
+ */
+export async function claimFirstSuperAdmin(
+  db: Db,
+  user: RegistryUser
+): Promise<RegistryUser> {
+  if (user.isSuperAdmin) return user
+  const { rows } = await db.query<UserRow>(
+    `UPDATE registry.users SET is_super_admin = true, updated_at = now()
+     WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM registry.users WHERE is_super_admin)
+     RETURNING ${USER_COLUMNS}`,
+    [user.id]
+  )
+  return rows[0] ? toUser(rows[0]) : user
+}
+
 // ---------------------------------------------------------------- Managing
 
 export type ManagedUser = RegistryUser & { siteIds: number[] }

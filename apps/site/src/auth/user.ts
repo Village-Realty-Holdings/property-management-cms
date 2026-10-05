@@ -3,6 +3,7 @@ import type { Payload } from "payload"
 import type { User } from "../payload-types"
 import {
   canUseSite,
+  claimFirstSuperAdmin,
   registerSite,
   registryDb,
   RegistryError,
@@ -80,18 +81,17 @@ export async function registryUserForEntra(
 
 /**
  * Signs the Registry User in to this Site: refused unless they're enabled
- * and a Super Admin or have Site Access here. Returns this Site's User.
+ * and a Super Admin or have Site Access here. The first User to sign in while
+ * the Registry has no Super Admin becomes one. Returns this Site's User.
  */
 export async function signInAs(
   payload: Payload,
   registryUser: RegistryUser
 ): Promise<User> {
   await registerThisSite(payload)
-  const allowed = await canUseSite(
-    registryDb(payload),
-    registryUser.id,
-    thisSiteSchema(payload)
-  )
+  const db = registryDb(payload)
+  if (!registryUser.disabled) await claimFirstSuperAdmin(db, registryUser)
+  const allowed = await canUseSite(db, registryUser.id, thisSiteSchema(payload))
   if (!allowed) {
     throw new SignInError(
       "not-assigned",

@@ -46,6 +46,8 @@ beforeAll(async () => {
   t = await getTestPayload()
   db = registryDb(t.payload)
   await ensureRegistry(db)
+  // Someone is already Super Admin, so the Users these tests sign in aren't.
+  await createUser(db, { email: "first@awayday.example", isSuperAdmin: true })
   here = await registerSite(db, {
     schema: thisSiteSchema(t.payload),
     url: ORIGIN,
