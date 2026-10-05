@@ -26,7 +26,7 @@ beforeAll(async () => {
   t = await getTestPayload()
   const user = await t.payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", entraOid: "staff" },
+    data: { email: "staff@awayday.test", registryUserId: 368570 },
   })
   asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 })
@@ -410,7 +410,11 @@ describe("a save over someone else's change", () => {
   beforeAll(async () => {
     const user = await t.payload.create({
       collection: "users",
-      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+      data: {
+        email: "sam@awayday.test",
+        name: "Sam Taylor",
+        registryUserId: 824320,
+      },
     })
     sam = { overrideAccess: false, user: { ...user, collection: "users" } }
   })

@@ -29,7 +29,11 @@ beforeAll(async () => {
   payload = t.payload
   const testUser = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", name: "Sam Taylor", entraOid: "s" },
+    data: {
+      email: "staff@awayday.test",
+      name: "Sam Taylor",
+      registryUserId: 356339,
+    },
   })
   as = { overrideAccess: false, user: { ...testUser, collection: "users" } }
 })
@@ -346,7 +350,11 @@ describe("saving a Layout over someone else's change", () => {
   beforeAll(async () => {
     const user = await payload.create({
       collection: "users",
-      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+      data: {
+        email: "sam@awayday.test",
+        name: "Sam Taylor",
+        registryUserId: 824320,
+      },
     })
     sam = { overrideAccess: false, user: { ...user, collection: "users" } }
   })

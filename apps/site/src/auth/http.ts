@@ -39,3 +39,26 @@ export function publicUrl(request: Request): URL {
 }
 
 export const isSecure = (url: URL) => url.protocol === "https:"
+
+/**
+ * Whether a form POST came from this Site's own pages: the browser's Origin
+ * (or, without one, Sec-Fetch-Site) must match. Stops another site posting
+ * the sign-in or Site switcher forms on a visitor's behalf.
+ */
+export function sameOrigin(request: Request, url: URL): boolean {
+  const origin = request.headers.get("origin")
+  if (origin) return origin === url.origin
+  return request.headers.get("sec-fetch-site") === "same-origin"
+}
+
+/** A 303 to a GET after a form POST. */
+export function seeOther(location: string): Response {
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: location,
+      "Cache-Control": "no-store",
+      "Referrer-Policy": "no-referrer",
+    },
+  })
+}

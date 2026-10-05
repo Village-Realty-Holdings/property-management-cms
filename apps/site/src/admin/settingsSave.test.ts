@@ -22,7 +22,7 @@ beforeAll(async () => {
   t = await getTestPayload()
   const user = await t.payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", entraOid: "staff" },
+    data: { email: "staff@awayday.test", registryUserId: 368570 },
   })
   testUser = { ...user, collection: "users" }
   asUser = { overrideAccess: false, user: testUser }

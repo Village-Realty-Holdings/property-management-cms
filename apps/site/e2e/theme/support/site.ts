@@ -4,7 +4,6 @@ import { SCHEMA, databaseUrl } from "./env"
 import { getPayload, type Payload } from "payload"
 
 import { DEV_USER } from "../../../src/auth/devSignIn"
-import { findOrCreateUser } from "../../../src/auth/user"
 import { importGoogleFont } from "../../../src/fonts/importGoogleFont"
 import type { FontKind } from "../../../src/fonts/types"
 import { buildPayloadConfig } from "../../../src/payload.config"
@@ -14,6 +13,7 @@ import {
   SAMPLE_PAGE_TITLE,
 } from "../../../src/site/dev/samplePage"
 import { readSiteTheme, type LiveSiteTheme } from "../../../src/site/read"
+import { registeredUser } from "../../../src/test/registeredUser"
 import { saveTheme } from "../../../src/theme/record"
 import type { ThemeInputs } from "../../../src/theme"
 
@@ -26,7 +26,7 @@ import type { ThemeInputs } from "../../../src/theme"
 
 export type ScratchSite = {
   payload: Payload
-  user: Awaited<ReturnType<typeof findOrCreateUser>>
+  user: Awaited<ReturnType<typeof registeredUser>>
   /**
    * Saves `inputs` as the newest Theme version; it is live at once. Resolves
    * to false when the Site already looked like that: a save that changes
@@ -56,7 +56,7 @@ export async function openScratchSite(): Promise<ScratchSite> {
       push: false,
     }),
   })
-  const record = await findOrCreateUser(payload, DEV_USER)
+  const record = await registeredUser(payload, DEV_USER)
   const user = { ...record, collection: "users" as const }
 
   return {

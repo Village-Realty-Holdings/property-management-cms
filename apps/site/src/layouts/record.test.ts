@@ -18,7 +18,7 @@ beforeAll(async () => {
     data: {
       email: "staff@awayday.test",
       name: "Sam Taylor",
-      entraOid: "staff",
+      registryUserId: 368570,
     },
   })
 })

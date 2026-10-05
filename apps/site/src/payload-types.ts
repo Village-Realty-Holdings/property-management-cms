@@ -1354,11 +1354,11 @@ export interface RegionContainerBlockLevel3 {
 export interface User {
   id: number;
   /**
-   * From Entra ID.
+   * From the Registry.
    */
   email: string;
   name?: string | null;
-  entraOid: string;
+  registryUserId: number;
   updatedAt: string;
   createdAt: string;
   collection: 'users';
@@ -2494,7 +2494,7 @@ export interface SavedThemesSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   email?: T;
   name?: T;
-  entraOid?: T;
+  registryUserId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -4,7 +4,7 @@ import path from "node:path"
 
 import type { DataFromCollectionSlug, Payload, TypedUser } from "payload"
 
-import { findOrCreateUser } from "../auth/user"
+import { localUserFor } from "../auth/user"
 import type { FetchLike } from "../fonts/googleFonts"
 import {
   importGoogleFont,
@@ -89,15 +89,23 @@ export type Seeder = {
   page: (data: PageData) => Promise<Upserted<Page>>
 }
 
-/** The seed's own User. */
+/**
+ * The seed's own User, shown as "updated by" on what the seed writes. It is
+ * no one in the Registry (apps/site ADR-0015): id 0, which the Registry never
+ * hands out, so nobody can sign in as it.
+ */
 export const SEED_USER = {
-  entraOid: "seed",
+  id: 0,
   email: "seed@awayday.test",
   name: "Seed",
+  entraOid: null,
+  hasPassword: false,
+  isSuperAdmin: false,
+  disabled: false,
 } as const
 
 export async function seedUser(payload: Payload): Promise<SeedUser> {
-  const user = await findOrCreateUser(payload, SEED_USER)
+  const user = await localUserFor(payload, SEED_USER)
   return { ...user, collection: "users" }
 }
 

@@ -22,6 +22,7 @@ import {
   restoreThemeVersion,
   saveTheme,
 } from "./index"
+import { testRegistryUserId } from "../../test/registryUserId"
 
 // Integration tests: a real Payload on a throwaway database. The Theme
 // record is live on save (apps/site ADR-0004): every save is a version, and
@@ -60,7 +61,11 @@ beforeAll(async () => {
   const make = async (name: string) => {
     const user = await payload.create({
       collection: "users",
-      data: { email: `${name}@awayday.test`, entraOid: name, name },
+      data: {
+        email: `${name}@awayday.test`,
+        registryUserId: testRegistryUserId(name),
+        name,
+      },
     })
     return { ...user, collection: "users" as const }
   }

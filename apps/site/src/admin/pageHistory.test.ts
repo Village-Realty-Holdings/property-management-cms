@@ -7,6 +7,7 @@ import type { PageDocument } from "./editor/state"
 import { emptyBlock, type HeroValues } from "./pageForm"
 import { readPageVersionRows, restorePageVersionAs } from "./pageHistory"
 import { savePageAs } from "./pageSave"
+import { testRegistryUserId } from "../test/registryUserId"
 
 type Access = { overrideAccess: false; user: User & { collection: "users" } }
 
@@ -32,7 +33,11 @@ beforeAll(async () => {
   const make = async (name: string, oid: string) => {
     const user = await t.payload.create({
       collection: "users",
-      data: { name, email: `${oid}@awayday.test`, entraOid: oid },
+      data: {
+        name,
+        email: `${oid}@awayday.test`,
+        registryUserId: testRegistryUserId(oid),
+      },
     })
     return {
       overrideAccess: false,

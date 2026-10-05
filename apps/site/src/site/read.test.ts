@@ -51,7 +51,7 @@ beforeAll(async () => {
   payload = t.payload
   testUser = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", entraOid: "staff" },
+    data: { email: "staff@awayday.test", registryUserId: 368570 },
   })
 })
 

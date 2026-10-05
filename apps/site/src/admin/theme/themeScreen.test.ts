@@ -29,7 +29,7 @@ beforeAll(async () => {
   payload = t.payload
   const user = await payload.create({
     collection: "users",
-    data: { email: "ada@awayday.test", entraOid: "ada", name: "Ada" },
+    data: { email: "ada@awayday.test", registryUserId: 563152, name: "Ada" },
   })
   ada = { ...user, collection: "users" }
 })
@@ -190,7 +190,11 @@ describe("saving the Theme over someone else's change", () => {
   beforeAll(async () => {
     const user = await payload.create({
       collection: "users",
-      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+      data: {
+        email: "sam@awayday.test",
+        name: "Sam Taylor",
+        registryUserId: 824320,
+      },
     })
     sam = { overrideAccess: false, user: { ...user, collection: "users" } }
   })

@@ -204,7 +204,7 @@ describe("the Links list", () => {
     t = await getTestPayload()
     const user = await t.payload.create({
       collection: "users",
-      data: { email: "staff@awayday.test", entraOid: "staff" },
+      data: { email: "staff@awayday.test", registryUserId: 368570 },
     })
     asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 
@@ -348,7 +348,7 @@ describe("what links to a path", () => {
     t = await getTestPayload()
     const user = await t.payload.create({
       collection: "users",
-      data: { email: "path@awayday.test", entraOid: "path" },
+      data: { email: "path@awayday.test", registryUserId: 190999 },
     })
     asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
     const button = (href: string) => ({

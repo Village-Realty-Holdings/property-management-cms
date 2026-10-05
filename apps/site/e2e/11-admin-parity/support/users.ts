@@ -4,7 +4,7 @@ import type { BrowserContext, Page } from "playwright-core"
 import type { Payload } from "payload"
 
 import { issueSession, SESSION_COOKIE } from "../../../src/auth/session"
-import { findOrCreateUser } from "../../../src/auth/user"
+import { registeredUser } from "../../../src/test/registeredUser"
 import { ORIGIN, PAYLOAD_SECRET } from "../../theme/support/env"
 
 /**
@@ -29,8 +29,7 @@ export function addUser(
   run: string | number,
   name = `Sam Example ${run}`
 ) {
-  return findOrCreateUser(payload, {
-    entraOid: `e2e-${run}`,
+  return registeredUser(payload, {
     email: `sam-${run}@awayday.test`,
     name,
   })

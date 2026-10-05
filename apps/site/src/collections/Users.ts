@@ -15,10 +15,12 @@ const removeOthers: Access = ({ req, id }) => {
 }
 
 /**
- * Users (apps/site ADR-0003). They sign in with Entra ID (src/auth)
- * and have no password: Payload's local strategy is off, and the
- * `site-session` strategy authenticates every request. A User is
- * created on first sign-in, keyed by Entra `oid`, and never in the Admin.
+ * This Site's Users (apps/site ADR-0015). Who someone is and which Sites they
+ * may use lives in the Registry, shared by every Site; this collection keeps
+ * one record per Registry User who has signed in here, for Pages and Layouts
+ * to point at. Payload's local strategy is off (passwords are the Registry's),
+ * and the `site-session` strategy authenticates every request. A record is
+ * created on first sign-in, keyed by `registryUserId`, and never in the Admin.
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -43,13 +45,13 @@ export const Users: CollectionConfig = {
       required: true,
       unique: true,
       access: { update: readOnlyField },
-      admin: { readOnly: true, description: "From Entra ID." },
+      admin: { readOnly: true, description: "From the Registry." },
     },
     { name: "name", type: "text" },
     {
-      name: "entraOid",
-      label: "Entra object ID",
-      type: "text",
+      name: "registryUserId",
+      label: "Registry User",
+      type: "number",
       required: true,
       unique: true,
       access: { update: readOnlyField },

@@ -2,6 +2,9 @@ import { jwtVerify, SignJWT } from "jose"
 import type { AuthStrategy, Payload, TypedUser } from "payload"
 import { parseCookies } from "payload/shared"
 
+import { canUseSite, registryDb } from "../registry"
+import { thisSiteSchema } from "./user"
+
 /**
  * User sessions (apps/site ADR-0003). Payload's local strategy is disabled,
  * and with it Payload's own JWT check, so sessions are ours: a signed
@@ -10,7 +13,9 @@ import { parseCookies } from "payload/shared"
  * `payload.auth`). Access rules then apply as usual.
  *
  * A session lasts SESSION_SECONDS from sign-in and is never extended, so
- * removing someone's app role in Entra takes effect within that time.
+ * removing someone's app role in Entra takes effect within that time. The
+ * Registry is asked on every request (apps/site ADR-0015): disabling a User
+ * or taking away their Site Access ends their session at once.
  */
 
 export const SESSION_COOKIE = "site-session"
@@ -84,7 +89,13 @@ export const sessionStrategy: AuthStrategy = {
       collection: USERS,
       where: { id: { equals: numericOr(session.userId) } },
     })
-    return { user: user ? { ...user, collection: USERS } : null }
+    if (!user) return { user: null }
+    const allowed = await canUseSite(
+      registryDb(payload),
+      user.registryUserId,
+      thisSiteSchema(payload)
+    )
+    return { user: allowed ? { ...user, collection: USERS } : null }
   },
 }
 

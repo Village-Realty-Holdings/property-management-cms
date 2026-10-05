@@ -18,16 +18,20 @@ beforeAll(async () => {
   t = await getTestPayload()
   const mine = await t.payload.create({
     collection: "users",
-    data: { email: "robin@awayday.test", name: "Robin", entraOid: "robin" },
+    data: {
+      email: "robin@awayday.test",
+      name: "Robin",
+      registryUserId: 134240,
+    },
   })
   me = asUser(mine)
   sam = await t.payload.create({
     collection: "users",
-    data: { email: "sam@awayday.test", name: "Sam", entraOid: "sam" },
+    data: { email: "sam@awayday.test", name: "Sam", registryUserId: 824320 },
   })
   await t.payload.create({
     collection: "users",
-    data: { email: "nameless@awayday.test", entraOid: "nameless" },
+    data: { email: "nameless@awayday.test", registryUserId: 333715 },
   })
 })
 

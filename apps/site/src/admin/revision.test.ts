@@ -12,6 +12,7 @@ import { emptySeo } from "./seoForm"
 import { readRevision, staleSaveRefusal } from "./revision"
 import { saveBrandAs, saveSeoAs } from "./settingsSave"
 import { latestRevision } from "./staleSave"
+import { testRegistryUserId } from "../test/registryUserId"
 
 type Access = { overrideAccess: false; user: User & { collection: "users" } }
 
@@ -24,7 +25,11 @@ beforeAll(async () => {
   const make = async (name: string, oid: string) => {
     const user = await t.payload.create({
       collection: "users",
-      data: { name, email: `${oid}@awayday.test`, entraOid: oid },
+      data: {
+        name,
+        email: `${oid}@awayday.test`,
+        registryUserId: testRegistryUserId(oid),
+      },
     })
     return {
       overrideAccess: false,

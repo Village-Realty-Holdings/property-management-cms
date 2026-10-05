@@ -529,7 +529,7 @@ describe("looking things up in the database", () => {
     t = await getTestPayload()
     const user = await t.payload.create({
       collection: "users",
-      data: { email: "staff@awayday.test", entraOid: "staff" },
+      data: { email: "staff@awayday.test", registryUserId: 368570 },
     })
     access = { overrideAccess: false, user: { ...user, collection: "users" } }
     const media = await t.payload.create({

@@ -1,11 +1,13 @@
 /**
- * User sign-in (apps/site ADR-0003). The interface: the route handlers,
- * the config reader, the session strategy for Users, and the dev
+ * User sign-in (apps/site ADR-0003, ADR-0015). The interface: the route
+ * handlers, the config reader, the session strategy for Users, and the dev
  * sign-in guards.
  */
 export {
   AFTER_SIGN_IN,
   DEV_PATH,
+  HANDOFF_START_PATH,
+  PASSWORD_PATH,
   readEntraConfig,
   SIGN_IN_PAGE,
   SIGN_OUT_PATH,
@@ -25,5 +27,8 @@ export {
   SESSION_SECONDS,
   sessionStrategy,
 } from "./session"
+export { finishHandoff, startHandoff } from "./handoff"
+export { passwordSignIn } from "./password"
 export { finishSignIn, startSignIn } from "./signIn"
+export { registerThisSite, thisSiteSchema } from "./user"
 export { signOut } from "./signOut"

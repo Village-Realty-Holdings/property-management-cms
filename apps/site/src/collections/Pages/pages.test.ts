@@ -14,7 +14,7 @@ beforeAll(async () => {
   payload = t.payload
   testUser = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", entraOid: "staff" },
+    data: { email: "staff@awayday.test", registryUserId: 368570 },
   })
 })
 
@@ -329,7 +329,7 @@ describe("access", () => {
     await expect(
       payload.create({
         collection: "users",
-        data: { email: "new@awayday.test", entraOid: "new" },
+        data: { email: "new@awayday.test", registryUserId: 157261 },
         overrideAccess: false,
         user: user(),
       })
@@ -338,14 +338,18 @@ describe("access", () => {
     const updated = await payload.update({
       collection: "users",
       id: testUser.id,
-      data: { name: "Renamed", email: "other@awayday.test", entraOid: "x" },
+      data: {
+        name: "Renamed",
+        email: "other@awayday.test",
+        registryUserId: 734923,
+      },
       overrideAccess: false,
       user: user(),
     })
     expect(updated).toMatchObject({
       name: "Renamed",
       email: "staff@awayday.test",
-      entraOid: "staff",
+      registryUserId: 368570,
     })
 
     await expect(

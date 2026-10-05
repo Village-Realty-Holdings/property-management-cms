@@ -38,7 +38,10 @@ export type SignInErrorCode =
   | "state"
   | "token"
   | "not-allowed"
+  | "not-assigned"
   | "account-conflict"
+  | "password"
+  | "handoff"
 
 const discoveries = new Map<string, Promise<Discovery>>()
 const keySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()

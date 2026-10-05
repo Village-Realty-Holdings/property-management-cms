@@ -82,7 +82,7 @@ beforeAll(async () => {
   payload = t.payload
   const user = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", entraOid: "staff" },
+    data: { email: "staff@awayday.test", registryUserId: 368570 },
   })
   testUser = { ...user, collection: "users" }
 })

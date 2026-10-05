@@ -2,18 +2,20 @@ import type { Payload } from "payload"
 
 import { isSecure, notFound, publicUrl, redirect, safeReturnTo } from "./http"
 import { issueSession } from "./session"
-import { findOrCreateUser } from "./user"
+import { createUser, findUser, registryDb, updateUser } from "../registry"
+import { signInAs } from "./user"
 
 /**
  * The dev sign-in (apps/site ADR-0003): signs in a fixed dev User
  * through the same session code as Entra, until the Entra app
- * registration's credentials are available locally. Remove it once they are.
+ * registration's credentials are available locally. The dev User is a
+ * Super Admin in the Registry (apps/site ADR-0015), so it can open every
+ * Site and manage Users & Sites.
  */
 
 type Env = Record<string, string | undefined>
 
 export const DEV_USER = {
-  entraOid: "dev",
   email: "dev@awayday.test",
   name: "Dev User",
 } as const
@@ -40,7 +42,15 @@ export async function devSignIn(
 ): Promise<Response> {
   if (!devSignInEnabled(env)) return notFound()
   const url = publicUrl(request)
-  const user = await findOrCreateUser(payload, DEV_USER)
+  const db = registryDb(payload)
+  const found =
+    (await findUser(db, { email: DEV_USER.email })) ??
+    (await createUser(db, { ...DEV_USER, isSuperAdmin: true }))
+  const devUser =
+    found.isSuperAdmin && !found.disabled
+      ? found
+      : await updateUser(db, found.id, { isSuperAdmin: true, disabled: false })
+  const user = await signInAs(payload, devUser)
   const response = redirect(safeReturnTo(url.searchParams.get("redirect")))
   response.headers.append(
     "Set-Cookie",

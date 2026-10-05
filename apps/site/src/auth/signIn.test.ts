@@ -1,17 +1,33 @@
 import type { JWTPayload } from "jose"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 
+import {
+  createUser,
+  ensureRegistry,
+  findUser,
+  grantSite,
+  registerSite,
+  registryDb,
+  revokeSite,
+  updateUser,
+  type Db,
+  type RegistrySite,
+} from "../registry"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import {
   assertNoDevSignInInProduction,
   DEV_USER,
   devSignIn,
   devSignInEnabled,
+  finishHandoff,
   finishSignIn,
+  passwordSignIn,
   readEntraConfig,
   SESSION_COOKIE,
   signOut,
+  startHandoff,
   startSignIn,
+  thisSiteSchema,
   type EntraConfig,
 } from "."
 import { startMockIssuer, type MockIssuer } from "./test/mockIssuer"
@@ -22,9 +38,17 @@ const DEV_ENV = { NODE_ENV: "development", DEV_SIGN_IN: "1" }
 let t: TestPayload
 let mock: MockIssuer
 let config: EntraConfig
+let db: Db
+let here: RegistrySite
 
 beforeAll(async () => {
   t = await getTestPayload()
+  db = registryDb(t.payload)
+  await ensureRegistry(db)
+  here = await registerSite(db, {
+    schema: thisSiteSchema(t.payload),
+    url: ORIGIN,
+  })
   mock = await startMockIssuer()
   config = {
     tenantId: mock.tenantId,
@@ -39,8 +63,15 @@ afterAll(async () => {
   await t?.teardown()
 })
 
+/** A Registry User with Site Access to this Site, as a Super Admin adds one. */
+async function allowed(email: string, password?: string) {
+  const user = await createUser(db, { email, password })
+  await grantSite(db, user.id, here.id)
+  return user
+}
+
 let oidCounter = 0
-beforeEach(() => {
+beforeEach(async () => {
   oidCounter += 1
   mock.user = {
     oid: `oid-${oidCounter}`,
@@ -48,6 +79,7 @@ beforeEach(() => {
     name: `User ${oidCounter}`,
     roles: ["site_user"],
   }
+  await allowed(`staff${oidCounter}@awayday.example`)
 })
 
 const cookieHeader = (response: Response) =>
@@ -125,11 +157,15 @@ describe("Entra sign-in", () => {
         .some((c) => c.startsWith("entra-signin=;") && /Max-Age=0/.test(c))
     ).toBe(true)
 
+    const registryUser = await findUser(db, {
+      email: `staff${oidCounter}@awayday.example`,
+    })
+    expect(registryUser).toMatchObject({ entraOid: `oid-${oidCounter}` })
     expect(await me(response)).toMatchObject({
       collection: "users",
       email: `staff${oidCounter}@awayday.example`,
       name: `User ${oidCounter}`,
-      entraOid: `oid-${oidCounter}`,
+      registryUserId: registryUser?.id,
     })
   })
 
@@ -142,9 +178,9 @@ describe("Entra sign-in", () => {
     expect(second).toMatchObject({ email: "renamed@awayday.example" })
     const { totalDocs } = await t.payload.count({
       collection: "users",
-      where: { entraOid: { equals: `oid-${oidCounter}` } },
+      where: { email: { equals: `staff${oidCounter}@awayday.example` } },
     })
-    expect(totalDocs).toBe(1)
+    expect(totalDocs).toBe(0)
   })
 
   it("rejects users without the site_user app role", async () => {
@@ -155,9 +191,19 @@ describe("Entra sign-in", () => {
     )
     const { totalDocs } = await t.payload.count({
       collection: "users",
-      where: { entraOid: { equals: `oid-${oidCounter}` } },
+      where: { email: { equals: `staff${oidCounter}@awayday.example` } },
     })
     expect(totalDocs).toBe(0)
+  })
+
+  it("rejects an Entra user with no Site Access, and remembers them", async () => {
+    rejectedWith(
+      await signIn({ claims: { email: "newcomer@awayday.example" } }),
+      "not-assigned"
+    )
+    expect(
+      await findUser(db, { email: "newcomer@awayday.example" })
+    ).toMatchObject({ entraOid: `oid-${oidCounter}`, isSuperAdmin: false })
   })
 
   it("rejects a callback whose state doesn't match", async () => {
@@ -198,15 +244,12 @@ describe("Entra sign-in", () => {
     rejectedWith(response, "entra")
   })
 
-  it("rejects an email already used by another Entra user", async () => {
-    await t.payload.create({
-      collection: "users",
-      data: {
-        email: `staff${oidCounter}@awayday.example`,
-        entraOid: "someone-else",
-      },
-    })
-    rejectedWith(await signIn(), "account-conflict")
+  it("rejects an email already linked to another Entra user", async () => {
+    await signIn()
+    rejectedWith(
+      await signIn({ claims: { oid: "someone-else" } }),
+      "account-conflict"
+    )
   })
 
   it("returns to a same-origin path only", async () => {
@@ -264,7 +307,33 @@ describe("sessions", () => {
     expect(user).toBeNull()
   })
 
-  it("has no password login", async () => {
+  it("ends at once when Site Access is taken away or the User is disabled", async () => {
+    const response = await signIn()
+    const registryUser = await findUser(db, {
+      email: `staff${oidCounter}@awayday.example`,
+    })
+    expect(await me(response)).not.toBeNull()
+
+    await revokeSite(db, registryUser!.id, here.id)
+    expect(await me(response)).toBeNull()
+
+    await grantSite(db, registryUser!.id, here.id)
+    expect(await me(response)).not.toBeNull()
+    await updateUser(db, registryUser!.id, { disabled: true })
+    expect(await me(response)).toBeNull()
+  })
+
+  it("lets a Super Admin in without Site Access", async () => {
+    const response = await signIn()
+    const registryUser = await findUser(db, {
+      email: `staff${oidCounter}@awayday.example`,
+    })
+    await revokeSite(db, registryUser!.id, here.id)
+    await updateUser(db, registryUser!.id, { isSuperAdmin: true })
+    expect(await me(response)).not.toBeNull()
+  })
+
+  it("has no Payload password login", async () => {
     await expect(
       t.payload.login({
         collection: "users",
@@ -288,9 +357,9 @@ describe("dev sign-in", () => {
       DEV_ENV
     )
     expect(response.headers.get("location")).toBe("/admin/pages")
-    expect(await me(response)).toMatchObject({
-      email: DEV_USER.email,
-      entraOid: DEV_USER.entraOid,
+    expect(await me(response)).toMatchObject({ email: DEV_USER.email })
+    expect(await findUser(db, { email: DEV_USER.email })).toMatchObject({
+      isSuperAdmin: true,
     })
   })
 
@@ -325,3 +394,160 @@ describe("dev sign-in", () => {
     expect(() => assertNoDevSignInInProduction(DEV_ENV)).not.toThrow()
   })
 })
+
+describe("password sign-in", () => {
+  const PASSWORD = "correct horse battery"
+
+  function post(
+    fields: Record<string, string>,
+    origin: string | null = ORIGIN
+  ): Request {
+    return new Request(`${ORIGIN}/auth/password`, {
+      method: "POST",
+      headers: origin ? { origin } : {},
+      body: new URLSearchParams(fields),
+    })
+  }
+
+  it("signs in with the Registry's email and password", async () => {
+    const email = `pw${oidCounter}@awayday.example`
+    await allowed(email, PASSWORD)
+    const response = await passwordSignIn(
+      post({
+        email: email.toUpperCase(),
+        password: PASSWORD,
+        redirect: "/admin/pages",
+      }),
+      t.payload
+    )
+    expect(response.status).toBe(303)
+    expect(response.headers.get("location")).toBe("/admin/pages")
+    expect(await me(response)).toMatchObject({ email })
+  })
+
+  it("gives one answer for a wrong password, an unknown email and a disabled User", async () => {
+    const email = `pw${oidCounter}@awayday.example`
+    const user = await allowed(email, PASSWORD)
+    const failed = (response: Response) => {
+      expect(response.status).toBe(303)
+      expect(response.headers.get("location")).toMatch(
+        /^\/admin\/sign-in\?error=password/
+      )
+      expect(sessionCookie(response)).toBeUndefined()
+    }
+    failed(
+      await passwordSignIn(
+        post({ email, password: "wrong password!" }),
+        t.payload
+      )
+    )
+    failed(
+      await passwordSignIn(
+        post({ email: "nobody@awayday.example", password: PASSWORD }),
+        t.payload
+      )
+    )
+    await updateUser(db, user.id, { disabled: true })
+    failed(await passwordSignIn(post({ email, password: PASSWORD }), t.payload))
+  })
+
+  it("refuses a User without Site Access", async () => {
+    const email = `pw${oidCounter}@awayday.example`
+    await createUser(db, { email, password: PASSWORD })
+    rejectedSeeOther(
+      await passwordSignIn(post({ email, password: PASSWORD }), t.payload),
+      "not-assigned"
+    )
+  })
+
+  it("refuses a form posted from another site", async () => {
+    const email = `pw${oidCounter}@awayday.example`
+    await allowed(email, PASSWORD)
+    const response = await passwordSignIn(
+      post({ email, password: PASSWORD }, "https://evil.example"),
+      t.payload
+    )
+    expect(sessionCookie(response)).toBeUndefined()
+  })
+})
+
+describe("Site handoff", () => {
+  async function signedIn(email: string) {
+    const user = await allowed(email, "correct horse battery")
+    const response = await passwordSignIn(
+      new Request(`${ORIGIN}/auth/password`, {
+        method: "POST",
+        headers: { origin: ORIGIN },
+        body: new URLSearchParams({ email, password: "correct horse battery" }),
+      }),
+      t.payload
+    )
+    return { user, cookie: cookieHeader(response) }
+  }
+
+  function start(cookie: string, siteId: number) {
+    return startHandoff(
+      new Request(`${ORIGIN}/auth/handoff/start`, {
+        method: "POST",
+        headers: { origin: ORIGIN, cookie },
+        body: new URLSearchParams({ site: String(siteId) }),
+      }),
+      t.payload
+    )
+  }
+
+  it("sends a User to another Site they may use, with a single-use token", async () => {
+    const other = await registerSite(db, {
+      schema: `other_${oidCounter}`,
+      url: "https://other.example/",
+    })
+    const { user, cookie } = await signedIn(`hand${oidCounter}@awayday.example`)
+    await grantSite(db, user.id, other.id)
+
+    const response = await start(cookie, other.id)
+    expect(response.status).toBe(303)
+    const location = new URL(response.headers.get("location") ?? "")
+    expect(location.origin + location.pathname).toBe(
+      "https://other.example/auth/handoff"
+    )
+    expect(location.searchParams.get("token")).toBeTruthy()
+  })
+
+  it("won't hand off to a Site the User can't use", async () => {
+    const other = await registerSite(db, {
+      schema: `other_${oidCounter}`,
+      url: "https://other.example",
+    })
+    const { cookie } = await signedIn(`hand${oidCounter}@awayday.example`)
+    const response = await start(cookie, other.id)
+    expect(response.headers.get("location")).toBe("/admin")
+  })
+
+  it("signs in on arrival, once, and only on the Site it was made for", async () => {
+    const { user, cookie } = await signedIn(`hand${oidCounter}@awayday.example`)
+    // A handoff to this same Site, to redeem it here.
+    const response = await start(cookie, here.id)
+    expect(response.status).toBe(303)
+    const token = new URL(
+      response.headers.get("location") ?? ORIGIN,
+      ORIGIN
+    ).searchParams.get("token")
+
+    const arrive = () =>
+      finishHandoff(
+        new Request(`${ORIGIN}/auth/handoff?token=${token}`),
+        t.payload
+      )
+    const first = await arrive()
+    expect(first.headers.get("location")).toBe("/admin")
+    expect(await me(first)).toMatchObject({ registryUserId: user.id })
+
+    rejectedWith(await arrive(), "handoff")
+  })
+})
+
+const rejectedSeeOther = (response: Response, error: string) => {
+  expect(response.status).toBe(303)
+  expect(response.headers.get("location")).toBe(`/admin/sign-in?error=${error}`)
+  expect(sessionCookie(response)).toBeUndefined()
+}

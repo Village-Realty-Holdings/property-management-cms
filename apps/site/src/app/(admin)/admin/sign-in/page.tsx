@@ -4,12 +4,16 @@ import config from "@payload-config"
 import { headers } from "next/headers"
 import { getPayload } from "payload"
 
-import { buttonVariants } from "@workspace/ui/components/button"
+import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { Input } from "@workspace/ui/components/input"
+import { Label } from "@workspace/ui/components/label"
+import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
   DEV_PATH,
   devSignInEnabled,
+  PASSWORD_PATH,
   readEntraConfig,
   START_PATH,
   type SignInErrorCode,
@@ -23,6 +27,11 @@ const messages: Record<SignInErrorCode, string> = {
   token: "Microsoft sign-in couldn't be verified. Please try again.",
   "not-allowed":
     "Your Microsoft account doesn't have access to this Admin. Ask IT for the site_user role.",
+  "not-assigned":
+    "You don't have access to this Site. Ask a Super Admin to give you access.",
+  password: "That email and password didn't match. Please try again.",
+  handoff:
+    "That link to this Site expired or was already used. Sign in here, or switch Sites again.",
   "account-conflict":
     "Another account already uses your email. Ask a colleague to remove it, then sign in again.",
 }
@@ -34,7 +43,11 @@ type Props = {
 const first = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value
 
-/** Sign-in for Users: Microsoft (Entra ID), and the dev sign-in when on. */
+/**
+ * Sign-in for Users (apps/site ADR-0015): Microsoft (Entra ID) when it is
+ * set up, an email and password from the Registry, and the dev sign-in when
+ * on. The same credentials work on every Site.
+ */
 export default async function SignInPage({ searchParams }: Props) {
   const params = await searchParams
   const returnTo = first(params.redirect)
@@ -56,7 +69,7 @@ export default async function SignInPage({ searchParams }: Props) {
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold">Sign in to the Admin</h1>
           <p className="text-sm text-muted-foreground">
-            Use your Awayday Microsoft account.
+            The same account works on every Awayday Site.
           </p>
         </div>
         {message && (
@@ -87,13 +100,42 @@ export default async function SignInPage({ searchParams }: Props) {
               Dev sign-in
             </a>
           )}
-          {!entra && !dev && (
-            <p className="text-sm text-muted-foreground">
-              Sign-in isn&apos;t set up. Set the ENTRA_* variables, or
-              DEV_SIGN_IN=1 in local development.
-            </p>
-          )}
         </div>
+        {(entra || dev) && <Separator />}
+        <form
+          action={PASSWORD_PATH}
+          method="post"
+          className="flex flex-col gap-4"
+        >
+          <input type="hidden" name="redirect" value={returnTo ?? ""} />
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="username"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            variant={entra ? "outline" : "default"}
+            size="lg"
+          >
+            Sign in with email
+          </Button>
+        </form>
       </div>
     </main>
   )

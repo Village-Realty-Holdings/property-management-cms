@@ -36,6 +36,9 @@ export const START_PATH = "/auth/entra/start"
 export const CALLBACK_PATH = "/auth/entra/callback"
 export const DEV_PATH = "/auth/dev"
 export const SIGN_OUT_PATH = "/auth/sign-out"
+export const PASSWORD_PATH = "/auth/password"
+export const HANDOFF_START_PATH = "/auth/handoff/start"
+export const HANDOFF_PATH = "/auth/handoff"
 
 /** Where sign-in failures land, with `?error=<code>`. */
 export const SIGN_IN_PAGE = "/admin/sign-in"

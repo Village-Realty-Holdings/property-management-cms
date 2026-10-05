@@ -14,6 +14,7 @@ import {
   touchPresenceAs,
   type PresenceTarget,
 } from "./presence"
+import { testRegistryUserId } from "../test/registryUserId"
 
 /** Presence: who else is editing, stored as Payload's document locks. */
 
@@ -30,7 +31,7 @@ const theme: PresenceTarget = { kind: "theme" }
 async function makeUser(email: string, name?: string): Promise<Access> {
   const user = await payload.create({
     collection: "users",
-    data: { email, name, entraOid: email },
+    data: { email, name, registryUserId: testRegistryUserId(email) },
   })
   return { overrideAccess: false, user: { ...user, collection: "users" } }
 }

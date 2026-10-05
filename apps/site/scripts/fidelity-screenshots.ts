@@ -274,7 +274,7 @@ async function runBlocks(
   const { getPayload } = await import("payload")
   const { buildPayloadConfig } = await import("../src/payload.config")
   const { DEV_USER } = await import("../src/auth/devSignIn")
-  const { findOrCreateUser } = await import("../src/auth/user")
+  const { registeredUser } = await import("../src/test/registeredUser")
   const { readSiteTheme } = await import("../src/site/read")
   const { saveTheme } = await import("../src/theme/record")
   const { CLASSIC, HARBOUR, TERRACOTTA, presetInputs } =
@@ -297,7 +297,7 @@ async function runBlocks(
       push: false,
     }),
   })
-  const record = await findOrCreateUser(payload, DEV_USER)
+  const record = await registeredUser(payload, DEV_USER)
   const user = { ...record, collection: "users" as const }
   const before = await readSiteTheme(payload)
   try {
