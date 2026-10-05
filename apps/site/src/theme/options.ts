@@ -2,7 +2,7 @@
  * The choices for every Theme control that is a pick from a short list. The
  * single source of truth: the Theme record's select fields, the editor's
  * controls and the input types all come from these arrays. Values are stored;
- * labels are what Staff Users read; hints are one short line under a choice.
+ * labels are what Users read; hints are one short line under a choice.
  */
 
 type Option<V extends string> = {

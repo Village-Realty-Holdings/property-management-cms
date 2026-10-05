@@ -160,7 +160,7 @@ describe("the live Theme", () => {
     expect((await readLiveTheme(payload)).source).toBe("default")
   })
 
-  it("can only be changed by a Staff User", async () => {
+  it("can only be changed by a User", async () => {
     await expect(
       payload.updateGlobal({
         slug: "theme",
@@ -262,7 +262,7 @@ describe("Theme history", () => {
     expect(await listThemeHistory(payload, { user: ada })).toHaveLength(1)
   })
 
-  it("lets staff replace the automatic summary with a note, and the note is not carried to the next save", async () => {
+  it("lets users replace the automatic summary with a note, and the note is not carried to the next save", async () => {
     await saveTheme(payload, {
       user: ada,
       inputs: change({ primary: "#0a7d5a" }),

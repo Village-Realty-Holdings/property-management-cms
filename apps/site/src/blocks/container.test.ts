@@ -254,7 +254,7 @@ describe("refusedBlock, for a Block that needs the page's full width", () => {
 describe("a Page with Containers", () => {
   let t: TestPayload
   let payload: Payload
-  let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 
   beforeAll(async () => {
     t = await getTestPayload()
@@ -263,7 +263,7 @@ describe("a Page with Containers", () => {
       collection: "users",
       data: { email: "staff@awayday.test", entraOid: "staff" },
     })
-    asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
   })
 
   afterAll(() => t?.teardown())
@@ -272,7 +272,7 @@ describe("a Page with Containers", () => {
     const page = await payload.create({
       collection: "pages",
       data: { title: "Tree", path: "/tree", blocks: tree() },
-      ...asStaff,
+      ...asUser,
     })
     const read = await payload.findByID({ collection: "pages", id: page.id })
     expect(shapeOf(read.blocks as Row[])).toEqual(shapeOf(tree() as Row[]))
@@ -291,7 +291,7 @@ describe("a Page with Containers", () => {
         blocks: tree(),
         _status: "published",
       },
-      ...asStaff,
+      ...asUser,
     })
     const changed = tree()
     const inner = (changed[1] as ContainerBlock).children!
@@ -301,13 +301,13 @@ describe("a Page with Containers", () => {
       id: page.id,
       data: { blocks: changed },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     const draft = await payload.findByID({
       collection: "pages",
       id: page.id,
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     expect(shapeOf(draft.blocks as Row[])).toEqual(shapeOf(changed as Row[]))
     const published = await payload.findByID({
@@ -325,7 +325,7 @@ describe("a Page with Containers", () => {
       payload.create({
         collection: "pages",
         data: { title: "Too deep", path: "/too-deep", blocks },
-        ...asStaff,
+        ...asUser,
       })
     ).rejects.toMatchObject({
       data: {
@@ -353,7 +353,7 @@ describe("a Page with Containers", () => {
         collection: "pages",
         data: { title: "Logo", path: "/logo", blocks: [hero("ok"), logo] },
         draft: true,
-        ...asStaff,
+        ...asUser,
       })
     ).rejects.toMatchObject({
       data: {
@@ -371,7 +371,7 @@ describe("a Page with Containers", () => {
         collection: "pages",
         data: { title: "Logo", path: "/logo", blocks: [container([logo])] },
         draft: true,
-        ...asStaff,
+        ...asUser,
       })
     ).rejects.toMatchObject({
       data: {
@@ -396,7 +396,7 @@ describe("a Page with Containers", () => {
           blocks: blocks as ContainerBlock[],
         },
         draft: true,
-        ...asStaff,
+        ...asUser,
       })
     const testimonials = { ...catalogue.testimonials.defaults }
     await expect(
@@ -461,7 +461,7 @@ describe("a Page with Containers", () => {
           ),
         ],
       },
-      ...asStaff,
+      ...asUser,
     })
     expect(shapeOf(page.blocks as Row[])).toEqual([
       ["container", [["steps", "How it works"]]],

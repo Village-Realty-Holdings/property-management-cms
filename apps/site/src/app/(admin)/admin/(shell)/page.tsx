@@ -12,7 +12,7 @@ import {
 import { getSiteCard, getThemeCard } from "@/admin/dashboard/getSiteCard"
 import { loadDashboard } from "@/admin/dashboard/queries"
 import { CardSkeleton, PageHeader } from "@/admin/kit"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 export const metadata: Metadata = { title: "Dashboard" }
 
@@ -47,7 +47,7 @@ export default async function Dashboard() {
 
 /** The cards that read Pages; they stream in after the rest. */
 async function ContentCards() {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const data = await loadDashboard(payload, as)
   return (
     <>

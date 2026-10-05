@@ -22,7 +22,7 @@ export function formatSavedAt(iso: string): string {
 }
 
 /**
- * The summary of a save: the staff note when there is one, otherwise the
+ * The summary of a save: the User's note when there is one, otherwise the
  * controls that changed from the live Theme (`from`) to what is saved (`to`).
  */
 export function saveSummary(

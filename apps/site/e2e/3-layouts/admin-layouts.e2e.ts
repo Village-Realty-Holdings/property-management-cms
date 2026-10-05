@@ -91,7 +91,7 @@ async function rowText(row: ReturnType<typeof layoutRow>) {
 
 describe("the Layouts list", () => {
   it("follows the page-header pattern: title, description, New Layout", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     expect(
       await page.getByRole("heading", { level: 1, name: "Layouts" }).count()
@@ -105,7 +105,7 @@ describe("the Layouts list", () => {
   })
 
   it("lists every Layout, the default among them", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     const all = await h.api.findLayouts()
     for (const layout of all)
@@ -116,7 +116,7 @@ describe("the Layouts list", () => {
   })
 
   it("shows each Layout's paths", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     const text = await rowText(layoutRow(page, LISTINGS))
     expect(text).toContain("/e2e-admin/listings")
@@ -125,7 +125,7 @@ describe("the Layouts list", () => {
   })
 
   it("shows how many Pages use each Layout", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     // Two by path, one picked explicitly.
     expect(await rowText(layoutRow(page, LISTINGS))).toContain(
@@ -138,7 +138,7 @@ describe("the Layouts list", () => {
 
   it("updates the usage when a Page stops using a Layout", async () => {
     await h.api.updatePage(pinned.id, { layout: { mode: "none" } })
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     expect(await rowText(layoutRow(page, LISTINGS))).toContain(
       "Used by 2 Pages"
@@ -149,7 +149,7 @@ describe("the Layouts list", () => {
   })
 
   it("passes WCAG 2.2 AA (axe)", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     expect(await accessibilityProblems(page)).toBe("")
   })
@@ -159,7 +159,7 @@ describe("Duplicate on the Layouts list", () => {
   let copy: Doc | undefined
 
   it("copies a Layout under a new name, from the keyboard alone", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     const before = await h.api.findLayouts()
     await visit(page, "/admin/layouts")
 
@@ -202,13 +202,13 @@ describe("Duplicate on the Layouts list", () => {
   })
 
   it("shows the copy in the list", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/layouts")
     expect(await layoutRow(page, String(copy!.name)).count()).toBe(1)
   })
 
   it("puts the copy in Continue editing on the Dashboard", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin")
     const card = page.getByRole("region", { name: "Continue editing" })
     const link = card.getByRole("link", { name: String(copy!.name) })
@@ -221,7 +221,7 @@ describe("Duplicate on the Layouts list", () => {
 
 describe("the Pages list's Layout column", () => {
   async function layoutCell(title: string) {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, `/admin/pages?q=${encodeURIComponent("e2e-admin")}`)
     return rowText(pageRow(page, title))
   }
@@ -253,7 +253,7 @@ describe("the Pages list's Layout column", () => {
   })
 
   it("passes WCAG 2.2 AA (axe)", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, `/admin/pages?q=${encodeURIComponent("e2e-admin")}`)
     expect(await accessibilityProblems(page)).toBe("")
   })
@@ -261,7 +261,7 @@ describe("the Pages list's Layout column", () => {
 
 describe("the Dashboard with Layouts", () => {
   it("passes WCAG 2.2 AA (axe)", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin")
     expect(await accessibilityProblems(page)).toBe("")
   })

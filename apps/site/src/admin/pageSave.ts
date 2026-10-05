@@ -11,7 +11,10 @@ import {
 } from "./editor/modes/pageDocument"
 import type { PageDocument } from "./editor/state"
 import { formStateFromError, type FormState } from "./formState"
+import { readPageVersionRows, type PageVersionRow } from "./pageHistory"
+import { staleSaveRefusal } from "./revision"
 import type { Access } from "./settingsSave"
+import { latestRevision, type Revision, type RevisionResult } from "./staleSave"
 
 /**
  * Saving and deleting a Page for the Visual Editor's Page mode, through the Local
@@ -30,13 +33,16 @@ const MESSAGES: Record<PageIntent, string> = {
 }
 
 /** What a save returns to the editor: the state, and the Page as stored. */
-export type PageSaveResult = FormState & {
-  /** The saved Page's id (a new Page gets one on its first save). */
-  id?: number
-  status?: PageStatus
-  /** The Page as stored: generated path, Block ids. */
-  document?: PageDocument
-}
+export type PageSaveResult = FormState &
+  RevisionResult & {
+    /** The saved Page's id (a new Page gets one on its first save). */
+    id?: number
+    status?: PageStatus
+    /** The Page as stored: generated path, Block ids. */
+    document?: PageDocument
+    /** The Page's versions after the save, newest first. */
+    history?: PageVersionRow[]
+  }
 
 /**
  * Saves a Page as a Draft, publishes it, or takes it off the Site. `id` is
@@ -49,7 +55,16 @@ export async function savePageAs(
     id,
     intent,
     document,
-  }: { id: number | null; intent: PageIntent; document: PageDocument }
+    expected,
+    force,
+  }: {
+    id: number | null
+    intent: PageIntent
+    document: PageDocument
+    /** The revision the editor opened; a newer one refuses the save. */
+    expected?: Revision | null
+    force?: boolean
+  }
 ): Promise<PageSaveResult> {
   if (!INTENTS.includes(intent)) {
     return { ok: false, message: "Choose Save draft, Publish or Unpublish." }
@@ -62,6 +77,16 @@ export async function savePageAs(
   const refused = refusedBlock(document.blocks, pageBlocks)
   if (refused) return { ok: false, message: refused.message }
   try {
+    // A new Page has nothing to be stale against.
+    if (id) {
+      const stale = await staleSaveRefusal(
+        payload,
+        access,
+        { kind: "page", id },
+        { expected, force }
+      )
+      if (stale) return stale
+    }
     // A Page Template stays off the Site: a live Page is unpublished first.
     if (document.isTemplate && id && intent === "draft") {
       const live = await payload.findByID({
@@ -99,13 +124,16 @@ export async function savePageAs(
           depth: 0,
           ...access,
         })
-    const published = await payload.findByID({
-      collection: "pages",
-      id: saved.id,
-      draft: false,
-      depth: 0,
-      ...access,
-    })
+    const [published, history] = await Promise.all([
+      payload.findByID({
+        collection: "pages",
+        id: saved.id,
+        draft: false,
+        depth: 0,
+        ...access,
+      }),
+      readPageVersionRows(payload, access, saved.id),
+    ])
     return {
       ok: true,
       message: MESSAGES[intent],
@@ -115,6 +143,8 @@ export async function savePageAs(
         latest: saved._status,
       }),
       document: pageDocumentFromPage(saved),
+      history,
+      revision: latestRevision(history),
     }
   } catch (error) {
     return formStateFromError(error)

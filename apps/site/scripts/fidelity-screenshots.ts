@@ -273,8 +273,8 @@ async function runBlocks(
   // Loaded late: they read DATABASE_SCHEMA and need the database.
   const { getPayload } = await import("payload")
   const { buildPayloadConfig } = await import("../src/payload.config")
-  const { DEV_STAFF_USER } = await import("../src/auth/devSignIn")
-  const { findOrCreateStaffUser } = await import("../src/auth/staffUser")
+  const { DEV_USER } = await import("../src/auth/devSignIn")
+  const { findOrCreateUser } = await import("../src/auth/user")
   const { readSiteTheme } = await import("../src/site/read")
   const { saveTheme } = await import("../src/theme/record")
   const { CLASSIC, HARBOUR, TERRACOTTA, presetInputs } =
@@ -297,8 +297,8 @@ async function runBlocks(
       push: false,
     }),
   })
-  const staff = await findOrCreateStaffUser(payload, DEV_STAFF_USER)
-  const user = { ...staff, collection: "users" as const }
+  const record = await findOrCreateUser(payload, DEV_USER)
+  const user = { ...record, collection: "users" as const }
   const before = await readSiteTheme(payload)
   try {
     for (const preset of [CLASSIC, HARBOUR, TERRACOTTA]) {

@@ -86,7 +86,7 @@ const documentOf = (over: Partial<Doc> = {}): Doc => ({
 })
 
 let browser: Browser
-let staff: Session
+let user: Session
 let page: Page
 
 const send = (doc: Doc) =>
@@ -121,10 +121,10 @@ async function centreOf(locator: Locator) {
 
 beforeAll(async () => {
   browser = await launchBrowser()
-  staff = await openSession(browser)
-  page = staff.page
+  user = await openSession(browser)
+  page = user.page
   await signIn(page)
-  await staff.context.route(HARNESS, (route) =>
+  await user.context.route(HARNESS, (route) =>
     route.fulfill({ contentType: "text/html", body: HARNESS_HTML })
   )
   await page.goto(HARNESS, { waitUntil: "networkidle" })

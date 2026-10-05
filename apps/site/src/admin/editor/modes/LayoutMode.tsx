@@ -4,17 +4,24 @@ import { useMemo, useRef, useState, type RefObject } from "react"
 import { SaveIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
+import { Input } from "@workspace/ui/components/input"
 
 import { footerBlocks, headerBlocks } from "../../../blocks/region"
 import { editingUrl } from "../../../site/editing/flag"
 import type { MediaOption } from "../../components/MediaSelect"
-import { notify, type SaveResult } from "../../kit"
+import {
+  notify,
+  StaleSaveDialog,
+  useStaleSave,
+  type SaveResult,
+} from "../../kit"
 import type {
   LayoutResult,
   LayoutScreen,
   LayoutVersionRow,
   PreviewPage,
 } from "../../layouts/layoutScreen"
+import type { SaveGuard } from "../../staleSave"
 import { BlockPanel } from "../BlockPanel"
 import { canvasDocument } from "../bridge"
 import { EditorProvider, useEditor } from "../EditorProvider"
@@ -24,13 +31,23 @@ import type { PickerPage } from "../PagePicker"
 import type { EditorDocument, LayoutDocument } from "../state"
 import { useCanvasBridge } from "../useCanvasBridge"
 import { VisualEditorShell } from "../VisualEditorShell"
+import { PresenceBanner } from "../PresenceBanner"
+import { usePresence } from "../usePresence"
 import { LayoutHistoryTab } from "./LayoutHistoryTab"
 import { LayoutSettingsTab } from "./LayoutSettingsTab"
 
 /** The Server Actions Layout mode talks to; passed in so a test can stand in. */
 export type LayoutModeActions = {
-  save: (id: number, doc: LayoutDocument) => Promise<LayoutResult>
-  restore: (id: number, versionId: number) => Promise<LayoutResult>
+  save: (
+    id: number,
+    doc: LayoutDocument,
+    options?: { note?: string | null } & SaveGuard
+  ) => Promise<LayoutResult>
+  restore: (
+    id: number,
+    versionId: number,
+    guard?: SaveGuard
+  ) => Promise<LayoutResult>
   /** The Page, with its Blocks, that Ctrl-K picked to preview the Layout on. */
   loadPage: (pageId: number) => Promise<PreviewPage | null>
 }
@@ -83,6 +100,11 @@ function LayoutModeBody({
   actions: LayoutModeActions
 }) {
   const { doc, state, isDirty, markSaved, discard } = useEditor()
+  const stale = useStaleSave({
+    initial: screen.revision,
+    dirty: isDirty,
+    discard,
+  })
   const [tab, setTab] = useState("outline")
   const [usedBy, setUsedBy] = useState(screen.usedBy)
   const [history, setHistory] = useState<LayoutVersionRow[]>(screen.history)
@@ -90,6 +112,14 @@ function LayoutModeBody({
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [note, setNote] = useState("")
+  // Who else is editing this Layout. A save or restore clears every hold on
+  // it, so this editor claims it again afterwards.
+  const presenceTarget = useMemo(
+    () => ({ kind: "layout", id: screen.id }) as const,
+    [screen.id]
+  )
+  const presence = usePresence(presenceTarget)
 
   // The shell draws the canvas and does not hand out its iframe, so it is
   // found inside the wrapper when the bridge needs it.
@@ -122,19 +152,31 @@ function LayoutModeBody({
     if (result.history) setHistory(result.history)
   }
 
-  const save = async (): Promise<SaveResult> => {
+  const save = async ({ force = false } = {}): Promise<SaveResult> => {
     const sent: EditorDocument = doc
     setSaving(true)
     setSaveError(null)
     try {
-      const result = await actions.save(screen.id, doc)
+      const result = await actions.save(screen.id, doc, {
+        note: note.trim() || null,
+        expected: stale.expected(),
+        ...(force ? { force: true } : {}),
+      })
+      // Someone saved since this was opened: the dialog decides what next.
+      if (stale.settle(result, () => save({ force: true }))) {
+        const message = failureText(result)
+        setSaveError(message)
+        return { ok: false, message }
+      }
       if (!result.ok || !result.doc) {
         const message = failureText(result)
         setSaveError(message)
         return { ok: false, message }
       }
       markSaved(result.doc, sent)
+      presence.refresh()
       apply(result)
+      setNote("")
       notify.success(result.message || "Layout saved")
       return { ok: true }
     } catch {
@@ -145,8 +187,16 @@ function LayoutModeBody({
     }
   }
 
-  const restore = async (row: LayoutVersionRow) => {
-    const result = await actions.restore(screen.id, row.id)
+  const restore = async (
+    row: LayoutVersionRow,
+    force = false
+  ): Promise<SaveResult> => {
+    const result = await actions.restore(screen.id, row.id, {
+      expected: stale.expected(),
+      ...(force ? { force: true } : {}),
+    })
+    // The History confirm closes; the dialog decides what next.
+    if (stale.settle(result, () => restore(row, true))) return undefined
     if (!result.ok || !result.doc) {
       return { ok: false, message: failureText(result) }
     }
@@ -154,6 +204,7 @@ function LayoutModeBody({
     const before = state.baseline
     discard()
     markSaved(result.doc, before)
+    presence.refresh()
     apply(result)
     notify.success(result.message || "Version restored")
     return { ok: true }
@@ -198,7 +249,7 @@ function LayoutModeBody({
           rows={history}
           usedBy={usedBy}
           dirty={isDirty}
-          onRestore={restore}
+          onRestore={(row) => restore(row)}
         />
       ),
     },
@@ -215,7 +266,14 @@ function LayoutModeBody({
         tab={tab}
         onTabChange={setTab}
         canvasSrc={CANVAS_SRC}
-        onSave={save}
+        notice={
+          <PresenceBanner
+            view={presence.view}
+            kind="layout"
+            onTakeOver={presence.takeOver}
+          />
+        }
+        onSave={() => save()}
         canSave={isDirty && !saving}
         onPickPage={pickPage}
         actions={
@@ -225,6 +283,17 @@ function LayoutModeBody({
                 {saveError}
               </p>
             )}
+            <label className="sr-only" htmlFor="layout-save-note">
+              Note for History (optional)
+            </label>
+            <Input
+              id="layout-save-note"
+              value={note}
+              maxLength={200}
+              placeholder="Note (optional)"
+              className="h-7 w-44 text-xs"
+              onChange={(event) => setNote(event.target.value)}
+            />
             <Button
               type="button"
               size="sm"
@@ -237,6 +306,7 @@ function LayoutModeBody({
           </>
         }
       />
+      <StaleSaveDialog {...stale.dialog} />
     </div>
   )
 }

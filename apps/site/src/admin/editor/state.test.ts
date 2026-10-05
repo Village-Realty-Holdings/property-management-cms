@@ -633,7 +633,7 @@ describe("markSaved and dirty tracking", () => {
     let state = createEditorState(pageDoc([hero("a")]))
     state = run(state, { type: "setField", path: "title", value: "Sent" })
     const sent = state.doc
-    // The Staff User keeps typing while the save is on its way.
+    // The User keeps typing while the save is on its way.
     state = run(state, { type: "setField", path: "path", value: "/later" })
     const past = state.past
     state = run(state, { type: "markSaved", doc: sent, sent })

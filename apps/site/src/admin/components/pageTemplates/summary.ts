@@ -5,9 +5,20 @@
 
 export const NEW_PAGE_HREF = "/admin/pages/new"
 
-/** Where a New Page that starts from the Page Template opens. */
-export const newPageFromTemplateHref = (id: number) =>
-  `${NEW_PAGE_HREF}?template=${id}`
+/**
+ * Where a New Page opens, with what the New Page dialog asked for. The route
+ * checks each again, so these are only a starting point.
+ */
+export function newPageHref(input: {
+  title: string
+  path: string
+  /** A Page Template's id; none for a blank Page. */
+  templateId?: number | null
+}): string {
+  const params = new URLSearchParams({ title: input.title, path: input.path })
+  if (input.templateId != null) params.set("template", String(input.templateId))
+  return `${NEW_PAGE_HREF}?${params}`
+}
 
 /** "3 Blocks: Hero, Rich text, Call to action". */
 export function blocksSummary(blocks: readonly string[]): string {

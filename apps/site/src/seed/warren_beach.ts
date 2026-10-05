@@ -130,7 +130,7 @@ export const seed: SeedModule = async (seed) => {
     "owners-hero-house.webp",
     "A modern white beach house at dusk"
   )
-  // Two more photos from the Owners page, kept in Media for the Staff to use.
+  // Two more photos from the Owners page, kept in Media for Users to use.
   await photo(
     "beach-houses-banner.webp",
     "A row of beach houses along the Emerald Coast"

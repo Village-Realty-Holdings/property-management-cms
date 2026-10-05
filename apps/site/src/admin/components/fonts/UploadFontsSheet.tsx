@@ -25,7 +25,7 @@ import { faceLabel } from "../../fonts/labels"
 import { InlineError } from "../../kit"
 import { describedBy, FormField } from "../FormBits"
 import { FontKindSelect } from "./FontKindSelect"
-import { useFontForm } from "./useFontForm"
+import { useFormAction } from "../useFormAction"
 
 const FORM_ID = "upload-fonts"
 const ACCEPT = ".woff2,.woff,.ttf,.otf"
@@ -52,7 +52,7 @@ export function UploadFontsSheet({
 }
 
 function UploadFontsForm({ onDone }: { onDone: () => void }) {
-  const { state, pending, submit, errors } = useFontForm(uploadFonts, onDone)
+  const { state, pending, submit, errors } = useFormAction(uploadFonts, onDone)
   // Rows are told apart by a key, not their place, so removing one keeps the
   // files chosen in the others.
   const [keys, setKeys] = useState([0])

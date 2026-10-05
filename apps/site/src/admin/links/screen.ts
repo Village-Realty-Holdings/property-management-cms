@@ -17,8 +17,8 @@ import {
 /**
  * The Links tool (Tools): every link on the Site, grouped by where it leads,
  * with whether an internal one still leads to a Published Page, read through
- * the Local API as the Staff User (apps/site ADR-0002). Pages are read in
- * their newest copy, the Draft Staff edit, as Replace Text reads them.
+ * the Local API as the User (apps/site ADR-0002). Pages are read in
+ * their newest copy, the Draft Users edit, as Replace Text reads them.
  */
 
 /**
@@ -92,7 +92,7 @@ export async function loadLinks(
     }),
   ])
 
-  // What visitors can open, and what only Staff can.
+  // What visitors can open, and what only Users can.
   const publishedPaths = new Set<string>()
   const publishedIds = new Set<number>()
   for (const page of served.docs) {

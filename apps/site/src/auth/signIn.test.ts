@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import {
   assertNoDevSignInInProduction,
-  DEV_STAFF_USER,
+  DEV_USER,
   devSignIn,
   devSignInEnabled,
   finishSignIn,
@@ -45,7 +45,7 @@ beforeEach(() => {
   mock.user = {
     oid: `oid-${oidCounter}`,
     email: `Staff${oidCounter}@Awayday.example`,
-    name: `Staff ${oidCounter}`,
+    name: `User ${oidCounter}`,
     roles: ["site_user"],
   }
 })
@@ -97,7 +97,7 @@ const sessionCookie = (response: Response) =>
     .getSetCookie()
     .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
 
-/** The Staff User Payload authenticates from the response's cookies. */
+/** The User Payload authenticates from the response's cookies. */
 async function me(response: Response) {
   const { user } = await t.payload.auth({
     headers: new Headers({ cookie: cookieHeader(response) }),
@@ -112,7 +112,7 @@ const rejectedWith = (response: Response, error: string) => {
 }
 
 describe("Entra sign-in", () => {
-  it("creates a Staff User and a working session", async () => {
+  it("creates a User and a working session", async () => {
     const response = await signIn()
 
     expect(response.status).toBe(302)
@@ -128,12 +128,12 @@ describe("Entra sign-in", () => {
     expect(await me(response)).toMatchObject({
       collection: "users",
       email: `staff${oidCounter}@awayday.example`,
-      name: `Staff ${oidCounter}`,
+      name: `User ${oidCounter}`,
       entraOid: `oid-${oidCounter}`,
     })
   })
 
-  it("signs the same Entra user into the same Staff User", async () => {
+  it("signs the same Entra user into the same User", async () => {
     const first = await me(await signIn())
     const second = await me(
       await signIn({ claims: { email: "renamed@awayday.example" } })
@@ -281,7 +281,7 @@ describe("sessions", () => {
 })
 
 describe("dev sign-in", () => {
-  it("signs in the dev Staff User when enabled", async () => {
+  it("signs in the dev User when enabled", async () => {
     const response = await devSignIn(
       new Request(`${ORIGIN}/auth/dev?redirect=%2Fadmin%2Fpages`),
       t.payload,
@@ -289,8 +289,8 @@ describe("dev sign-in", () => {
     )
     expect(response.headers.get("location")).toBe("/admin/pages")
     expect(await me(response)).toMatchObject({
-      email: DEV_STAFF_USER.email,
-      entraOid: DEV_STAFF_USER.entraOid,
+      email: DEV_USER.email,
+      entraOid: DEV_USER.entraOid,
     })
   })
 

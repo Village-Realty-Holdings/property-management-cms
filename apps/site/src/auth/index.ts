@@ -1,6 +1,6 @@
 /**
- * Staff sign-in (apps/site ADR-0003). The interface: the route handlers,
- * the config reader, the session strategy and hooks for Users, and the dev
+ * User sign-in (apps/site ADR-0003). The interface: the route handlers,
+ * the config reader, the session strategy for Users, and the dev
  * sign-in guards.
  */
 export {
@@ -14,14 +14,13 @@ export {
 } from "./config"
 export {
   assertNoDevSignInInProduction,
-  DEV_STAFF_USER,
+  DEV_USER,
   devSignIn,
   devSignInEnabled,
 } from "./devSignIn"
 export type { SignInErrorCode } from "./oidc"
 export {
   readSession,
-  refreshSession,
   SESSION_COOKIE,
   SESSION_SECONDS,
   sessionStrategy,

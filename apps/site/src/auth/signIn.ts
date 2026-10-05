@@ -21,7 +21,7 @@ import {
   type SignInErrorCode,
 } from "./oidc"
 import { issueSession } from "./session"
-import { upsertStaffUser } from "./staffUser"
+import { upsertUser } from "./user"
 
 /**
  * The two Entra sign-in routes (apps/site ADR-0003): `/auth/entra/start`
@@ -75,7 +75,7 @@ export async function startSignIn(
 
 /**
  * Completes sign-in: checks state against the flow cookie, redeems the code,
- * verifies the ID token, finds or creates the Staff User and starts a
+ * verifies the ID token, finds or creates the User and starts a
  * session. Any failure lands on the sign-in page with `?error=<code>`.
  */
 export async function finishSignIn(
@@ -113,7 +113,7 @@ export async function finishSignIn(
       verifier: flow.verifier,
       nonce: flow.nonce,
     })
-    const user = await upsertStaffUser(payload, claims)
+    const user = await upsertUser(payload, claims)
 
     response = redirect(flow.returnTo)
     response.headers.append(

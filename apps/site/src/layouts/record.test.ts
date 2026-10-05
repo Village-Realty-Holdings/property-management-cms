@@ -8,14 +8,18 @@ import { listLayoutHistory, restoreLayoutVersion, saveLayout } from "./record"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
-    data: { email: "staff@awayday.test", name: "Sam Staff", entraOid: "staff" },
+    data: {
+      email: "staff@awayday.test",
+      name: "Sam Taylor",
+      entraOid: "staff",
+    },
   })
 })
 
@@ -25,7 +29,7 @@ beforeEach(async () => {
   await truncateTables(payload, "layouts", "_layouts_v")
 })
 
-const user = () => ({ ...staff, collection: "users" as const })
+const user = () => ({ ...testUser, collection: "users" as const })
 const strip = (text: string) => [{ blockType: "utilityStrip" as const, text }]
 const legal = (text: string) => [{ blockType: "legalBar" as const, text }]
 
@@ -83,7 +87,7 @@ describe("saveLayout", () => {
     expect(newest!.summary).toBe("Black Friday")
   })
 
-  it("refuses a write without a Staff User", async () => {
+  it("refuses a write without a User", async () => {
     await expect(
       saveLayout(payload, { user: null as never, data: { name: "Main" } })
     ).rejects.toThrow()
@@ -114,8 +118,8 @@ describe("listLayoutHistory", () => {
     ])
     expect(history.map((v) => v.isLive)).toEqual([true, false])
     expect(history[0]!.author).toMatchObject({
-      id: staff.id,
-      name: "Sam Staff",
+      id: testUser.id,
+      name: "Sam Taylor",
     })
     for (const version of history) {
       expect(Number.isNaN(Date.parse(version.savedAt))).toBe(false)

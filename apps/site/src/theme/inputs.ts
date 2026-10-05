@@ -17,7 +17,7 @@ import {
 } from "./options"
 
 /**
- * The Theme's controls: everything a Staff User sets. There is no per-token
+ * The Theme's controls: everything a User sets. There is no per-token
  * editing. Colours are `#rrggbb`. A font is an `AvailableFont.key`
  * (`built-in:<family>` or `font:<id>`).
  */
@@ -52,7 +52,7 @@ export type ThemeInputs = {
 
 export type ThemeInputKey = keyof ThemeInputs
 
-/** What Staff Users call each control, in the order the editor shows them. */
+/** What Users call each control, in the order the editor shows them. */
 export const INPUT_LABELS: Record<ThemeInputKey, string> = {
   primary: "Primary colour",
   accent: "Accent colour",

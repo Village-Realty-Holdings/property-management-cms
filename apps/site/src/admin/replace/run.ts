@@ -14,9 +14,9 @@ import type { Hit, Rewritten } from "./text"
  * caller's access: what it would change (the preview) and changing it. Both
  * read the Site again, so applying never trusts what a preview showed.
  *
- * A Page is changed in its Draft, or in its Published copy too, as the Staff
+ * A Page is changed in its Draft, or in its Published copy too, as the
  * User chooses. Layouts, the Brand and SEO have no Drafts: they go live.
- * Page Templates are left as they are unless the Staff User includes them.
+ * Page Templates are left as they are unless the User includes them.
  */
 
 /** What to replace: a rewrite of one document's data, and what to call it. */
@@ -39,7 +39,7 @@ export type ReplaceRow = {
   kind: Kind
   title: string
   href: string
-  /** Replacements in the copy Staff edit: the Draft of a Page. */
+  /** Replacements in the copy Users edit: the Draft of a Page. */
   matches: number
   /** Where: "Block 2, Hero: Heading". */
   places: string[]

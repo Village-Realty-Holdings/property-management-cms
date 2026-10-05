@@ -4,7 +4,7 @@ import type { Page } from "../../payload-types"
 import type { PageBlock } from "../../site/blocks/types"
 import { readLayoutFor } from "../../site/read"
 import type { FooterBlock, HeaderBlock } from "../../site/regions/types"
-import type { StaffAccess } from "./themeScreen"
+import type { UserAccess } from "./themeScreen"
 
 /**
  * A Page as Theme mode's canvas shows it: its saved Blocks between the Header
@@ -44,7 +44,7 @@ async function previewOf(
  */
 export async function loadHomePreview(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<PreviewPage> {
   const { docs } = await payload.find({
     collection: "pages",
@@ -60,7 +60,7 @@ export async function loadHomePreview(
 /** The Page `id`, or null when there is no such Page. */
 export async function loadPagePreview(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   id: number
 ): Promise<PreviewPage | null> {
   if (!Number.isInteger(id) || id <= 0) return null
@@ -73,7 +73,7 @@ export async function loadPagePreview(
 /** How many Pages a Theme save reaches: every Published Page. */
 export async function countPublishedPages(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<number> {
   const { totalDocs } = await payload.count({
     collection: "pages",

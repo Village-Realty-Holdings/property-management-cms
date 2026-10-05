@@ -5,7 +5,7 @@
  *
  * It creates the Site's schema and migrates it (the one schema-agnostic
  * migration creates the schema when it is missing), then runs the Site's seed
- * module, src/seed/<DATABASE_SCHEMA>.ts, as the seed Staff User through the
+ * module, src/seed/<DATABASE_SCHEMA>.ts, as the seed User through the
  * Local API. Every step looks a record up by its natural key and writes only
  * what differs, so a second run changes nothing (src/seed/upsert.ts).
  *

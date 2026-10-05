@@ -94,11 +94,11 @@ describe("loadLayoutUsage", () => {
   beforeAll(async () => {
     t = await getTestPayload()
     payload = t.payload
-    const staff = await payload.create({
+    const testUser = await payload.create({
       collection: "users",
       data: { email: "staff@awayday.test", entraOid: "staff" },
     })
-    as = { overrideAccess: false, user: { ...staff, collection: "users" } }
+    as = { overrideAccess: false, user: { ...testUser, collection: "users" } }
   })
   afterAll(() => t?.teardown())
   beforeEach(async () => {

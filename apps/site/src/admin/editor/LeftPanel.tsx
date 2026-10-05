@@ -17,7 +17,7 @@ export type PanelTab = { id: string; label: string; content: ReactNode }
  * on the first tab; pass `tab` and `onTabChange` to let the editor switch tabs
  * itself (selecting a Block opens the Block tab).
  *
- * When the editor switches the tab under the Staff User's focus (a row of
+ * When the editor switches the tab under the User's focus (a row of
  * the Outline selected with a click or Enter), the focus would fall to the
  * page with the panel it was in: it goes to the new tab's panel instead.
  */

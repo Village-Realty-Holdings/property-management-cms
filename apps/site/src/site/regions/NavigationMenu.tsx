@@ -231,7 +231,7 @@ const COLUMN_LINKS = 4
 /**
  * A mega menu's links with no heading would share one column, which a
  * plain dropdown already is: flow a long one into evenly filled columns of
- * at most four links, so the menu is columns even when staff give none a
+ * at most four links, so the menu is columns even when users give none a
  * heading. A group with a heading stays one column.
  */
 function columnsOf(groups: MenuGroup[]): MenuGroup[] {

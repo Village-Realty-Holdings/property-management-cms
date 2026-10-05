@@ -12,7 +12,7 @@
     "check": "turbo lint typecheck test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate": "pnpm --filter site generate:types && pnpm --filter site generate:importmap",
+    "generate": "pnpm --filter site generate:types",
     "migrate": "pnpm --filter site migrate",
     "migrate:create": "pnpm --filter site migrate:create",
     "site": "pnpm --filter site site",

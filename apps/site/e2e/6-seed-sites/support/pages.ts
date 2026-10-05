@@ -43,7 +43,7 @@ export async function loadLazyContent(page: Page) {
 }
 
 /**
- * Signs the dev Staff User in the way a person would: the Admin's sign-in
+ * Signs the dev User in the way a person would: the Admin's sign-in
  * screen, then its "Dev sign-in" button (`DEV_SIGN_IN=1`, the same session
  * code as Entra). Resolves once the Dashboard is open.
  */
@@ -198,7 +198,7 @@ export async function headerLogo(
 
 /**
  * Opens a Page in the Visual Editor from the Admin's Pages list, by its
- * title, as a Staff User would.
+ * title, as a User would.
  */
 export async function openPageInEditor(
   page: Page,

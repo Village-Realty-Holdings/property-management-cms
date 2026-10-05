@@ -34,7 +34,7 @@ describe("saveSummary", () => {
     expect(SAVED_AGAIN_SUMMARY).not.toMatch(/no changes/i)
   })
 
-  it("prefers a staff note, trimmed", () => {
+  it("prefers a User's note, trimmed", () => {
     expect(saveSummary(classic, HARBOUR.inputs, { note: "  Spring  " })).toBe(
       "Spring"
     )

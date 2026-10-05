@@ -46,12 +46,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 /**
  * A Published Page at its path; "/" is Home. It renders inside the Layout it
  * resolves to: the one it picks, none, the longest path prefix's, or the
- * default (apps/site ADR-0006). With the editing flag and a Staff User's
+ * default (apps/site ADR-0006). With the editing flag and a User's
  * session it is the Visual Editor's canvas instead, which shows whatever the
  * Admin posts to it, not this path's Page.
  */
 export default async function SitePage(props: Props) {
-  // Only for a signed-in Staff User; the flag is ignored for anyone else.
+  // Only for a signed-in User; the flag is ignored for anyone else.
   if (await isEditingCanvasRequest(await props.searchParams)) {
     return <EditingPage searchParams={await props.searchParams} />
   }

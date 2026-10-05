@@ -44,6 +44,11 @@ vi.mock("../../actions/themePreview", () => ({
 vi.mock("../../actions/pagePicker", () => ({
   searchPages: actions.searchPages,
 }))
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const toast = vi.hoisted(() => ({ success: vi.fn(), info: vi.fn() }))
 vi.mock("sonner", () => ({ toast }))
 
@@ -54,6 +59,7 @@ import { DEFAULT_INPUTS, HARBOUR, type ThemeInputs } from "../../../theme"
 import type { PreviewPage } from "../../theme/previewPage"
 import type { HistoryRow } from "../../theme/themeScreen"
 import { BRIDGE_CHANNEL } from "../bridge"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { ThemeMode } from "./ThemeMode"
 
 const hero = (heading: string) =>
@@ -111,6 +117,8 @@ beforeEach(() => {
     fn.mockReset()
   }
   toast.success.mockReset()
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   actions.searchPages.mockResolvedValue([
     { id: 9, title: "Stays", path: "/stays", status: "published" },
   ])
@@ -152,6 +160,26 @@ async function setPrimary(
   await user.clear(primary())
   await user.type(primary(), hex)
 }
+
+describe("who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims the Theme as who is editing it", async () => {
+    mount()
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({ kind: "theme" })
+    )
+  })
+})
 
 describe("opening Theme mode", () => {
   it("names the mode, says how many Pages a save reaches, and has no Block tab", () => {
@@ -350,7 +378,8 @@ describe("saving", () => {
     )
     expect(actions.saveTheme).toHaveBeenCalledWith(
       { ...DEFAULT_INPUTS, primary: "#8a1f5c" },
-      "Warmer"
+      "Warmer",
+      {}
     )
     await waitFor(() =>
       expect(saveButton().hasAttribute("disabled")).toBe(true)
@@ -423,5 +452,79 @@ describe("the live Theme changing under the editor", () => {
     )
     expect(primary().value).toBe("#8a1f5c")
     expect(saveButton().hasAttribute("disabled")).toBe(false)
+  })
+})
+
+describe("when someone else saved first", () => {
+  const conflict = {
+    ok: false,
+    message: "The Theme changed since you opened it.",
+    conflict: {
+      kind: "theme",
+      by: "Sam Taylor",
+      byYou: false,
+      at: "2026-10-04T14:32:00.000Z",
+    },
+  }
+
+  it("sends the revision it opened, and the one a save returned next time", async () => {
+    const user = userEvent.setup()
+    actions.saveTheme.mockResolvedValue({
+      ok: true,
+      message: "Theme saved.",
+      revision: "8",
+    })
+    mount({ revision: "2" })
+    await setPrimary(user, "#8a1f5c")
+    await user.click(saveButton())
+    await waitFor(() =>
+      expect(actions.saveTheme).toHaveBeenLastCalledWith(
+        { ...DEFAULT_INPUTS, primary: "#8a1f5c" },
+        null,
+        { expected: "2" }
+      )
+    )
+    await waitFor(() => expect(toast.success).toHaveBeenCalled())
+    await setPrimary(user, "#112233")
+    await user.click(saveButton())
+    await waitFor(() => expect(actions.saveTheme).toHaveBeenCalledTimes(2))
+    expect(actions.saveTheme).toHaveBeenLastCalledWith(
+      { ...DEFAULT_INPUTS, primary: "#112233" },
+      null,
+      { expected: "8" }
+    )
+  })
+
+  it("opens the dialog when a save is refused, then saves with force on Save anyway", async () => {
+    const user = userEvent.setup()
+    actions.saveTheme
+      .mockResolvedValueOnce(conflict)
+      .mockResolvedValueOnce({ ok: true, message: "Theme saved." })
+    mount({ revision: "2" })
+    await setPrimary(user, "#8a1f5c")
+    await user.type(
+      within(bar()).getByRole("textbox", { name: /Note/ }),
+      "Warmer"
+    )
+    await user.click(saveButton())
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("The Theme changed since you opened it")
+    ).toBeTruthy()
+    expect(toast.success).not.toHaveBeenCalled()
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save anyway" })
+    )
+    await waitFor(() => expect(actions.saveTheme).toHaveBeenCalledTimes(2))
+    expect(actions.saveTheme).toHaveBeenLastCalledWith(
+      { ...DEFAULT_INPUTS, primary: "#8a1f5c" },
+      "Warmer",
+      { expected: "2", force: true }
+    )
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("Theme saved.")
+    )
   })
 })

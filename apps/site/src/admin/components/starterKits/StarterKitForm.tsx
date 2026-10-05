@@ -88,7 +88,7 @@ export function StarterKitForm({
     setAnswers((a) => ({
       ...a,
       kit: id,
-      // The kit suggests a Theme until the Staff User picks one.
+      // The kit suggests a Theme until the User picks one.
       theme: chosen ? `preset:${chosen.theme}` : a.theme,
       details: {},
     }))

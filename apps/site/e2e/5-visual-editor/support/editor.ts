@@ -15,8 +15,8 @@ import { ORIGIN } from "../../theme/support/env"
  * Helpers for the Phase 5 acceptance tests (the Visual Editor). They were
  * written before the Visual Editor, from the spec only
  * (docs/plans/site-builder-milestone.md, "Phase 5"), so they reach it the way
- * a Staff User does: by role, by label and by the names the spec uses. Data is
- * set up and checked over HTTP, through Payload's REST API with the Staff
+ * a User does: by role, by label and by the names the spec uses. Data is
+ * set up and checked over HTTP, through Payload's REST API with the
  * User's session cookie, never through the Site's own modules.
  *
  * Where a selector below turns out not to match the real UI, fix the selector
@@ -79,7 +79,7 @@ export const FOOTER_BLOCKS = [
   "Container",
 ] as const
 
-// ── HTTP: Payload's REST API as the signed-in Staff User ─────────────────────
+// ── HTTP: Payload's REST API as the signed-in User ─────────────────────
 
 export type Doc = { id: number | string } & Record<string, unknown>
 
@@ -759,7 +759,7 @@ export async function pickLayout(
 export const firstTextField = (blockTab: Locator) =>
   blockTab.getByRole("textbox").first()
 
-/** The Staff User's document-level focus is in editable text. */
+/** The User's document-level focus is in editable text. */
 export async function editingInPlace(page: Page): Promise<boolean> {
   const frame = await canvasFrame(page)
   return frame.evaluate(

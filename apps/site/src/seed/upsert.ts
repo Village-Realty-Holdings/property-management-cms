@@ -4,7 +4,7 @@ import path from "node:path"
 
 import type { DataFromCollectionSlug, Payload, TypedUser } from "payload"
 
-import { findOrCreateStaffUser } from "../auth/staffUser"
+import { findOrCreateUser } from "../auth/user"
 import type { FetchLike } from "../fonts/googleFonts"
 import {
   importGoogleFont,
@@ -36,7 +36,7 @@ import { saveTheme } from "../theme/record"
  *   Layout       the name
  *   Page         the path
  *
- * Everything goes through the Local API as a seed Staff User (ADR-0002), so
+ * Everything goes through the Local API as a seed User (ADR-0002), so
  * the same access rules and hooks apply as in the Admin.
  */
 
@@ -89,15 +89,15 @@ export type Seeder = {
   page: (data: PageData) => Promise<Upserted<Page>>
 }
 
-/** The seed's own Staff User. */
-export const SEED_STAFF_USER = {
+/** The seed's own User. */
+export const SEED_USER = {
   entraOid: "seed",
   email: "seed@awayday.test",
   name: "Seed",
 } as const
 
-export async function seedStaffUser(payload: Payload): Promise<SeedUser> {
-  const user = await findOrCreateStaffUser(payload, SEED_STAFF_USER)
+export async function seedUser(payload: Payload): Promise<SeedUser> {
+  const user = await findOrCreateUser(payload, SEED_USER)
   return { ...user, collection: "users" }
 }
 

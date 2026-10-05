@@ -5,7 +5,7 @@ import type { Payload } from "payload"
 import { readLayouts } from "../../../site/read"
 import type { MediaOption } from "../../components/MediaSelect"
 import { mediaOptions } from "../../media"
-import type { StaffContext } from "../../session"
+import type { UserContext } from "../../session"
 import type { PageOption } from "../fields/context"
 import { layoutOptionOf, type LayoutOption } from "./pageTabModel"
 
@@ -27,7 +27,7 @@ export async function loadLayoutOptions(
 export async function pageOptions({
   payload,
   as,
-}: StaffContext): Promise<PageOption[]> {
+}: UserContext): Promise<PageOption[]> {
   const { docs } = await payload.find({
     collection: "pages",
     where: { isTemplate: { not_equals: true } },
@@ -46,13 +46,13 @@ export type PageModeContext = {
   pages: PageOption[]
 }
 
-/** The pickers' options for the Staff User. */
+/** The pickers' options for the User. */
 export async function loadPickers(
-  staff: StaffContext
+  session: UserContext
 ): Promise<PageModeContext> {
   const [media, pages] = await Promise.all([
-    mediaOptions(staff),
-    pageOptions(staff),
+    mediaOptions(session),
+    pageOptions(session),
   ])
   return { media, pages }
 }

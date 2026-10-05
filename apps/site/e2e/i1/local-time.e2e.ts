@@ -21,7 +21,7 @@ import { openScratchSite, type ScratchSite } from "../theme/support/site"
 
 /**
  * Iteration 1, audit finding 12: Admin times are in the viewer's time zone,
- * not UTC ("Staff Users see tomorrow's date"). The browser runs in
+ * not UTC ("Users see tomorrow's date"). The browser runs in
  * America/Chicago (UTC-5 in September and October), where a Page saved at
  * 23:30 UTC was saved at 6:30 PM, and one saved at 03:30 UTC on 1 Oct was
  * saved at 10:30 PM on 30 Sep. The Pages list, the Layouts list, the Dashboard
@@ -41,7 +41,7 @@ const LATE_TITLE = `Late save ${RUN}`
 const LAYOUT_NAME = `Evening Layout ${RUN}`
 
 let browser: Browser
-let staff: Session
+let user: Session
 let page: Page
 let site: ScratchSite
 let layoutId: number
@@ -108,13 +108,13 @@ beforeAll(async () => {
   await site.saveTheme(HARBOUR.inputs, `Local time ${RUN}`)
 
   browser = await launchBrowser()
-  staff = await openSession(browser, { timezoneId: ZONE })
-  page = staff.page
+  user = await openSession(browser, { timezoneId: ZONE })
+  page = user.page
   await signIn(page)
 })
 
 afterAll(async () => {
-  if (staff) await deleteCreatedSince(staff.context.request, STARTED)
+  if (user) await deleteCreatedSince(user.context.request, STARTED)
   await browser?.close()
   await site?.close()
 })
@@ -215,6 +215,6 @@ describe("Admin times are in the viewer's time zone", () => {
   })
 
   it("none of those screens reported a hydration mismatch", () => {
-    expect(hydrationWarnings(staff)).toEqual([])
+    expect(hydrationWarnings(user)).toEqual([])
   })
 })

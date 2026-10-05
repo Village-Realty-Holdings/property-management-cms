@@ -10,8 +10,7 @@ import { NewPageButton } from "@/admin/components/pageTemplates/NewPageButton"
 import { PagesSearch, PagesTable } from "@/admin/dashboard/PagesTable"
 import { loadPageRows } from "@/admin/dashboard/queries"
 import { PageHeader, TableSkeleton } from "@/admin/kit"
-import { loadPageTemplateRows } from "@/admin/pageTemplates"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 export const metadata: Metadata = { title: "Pages" }
 
@@ -39,9 +38,7 @@ export default async function PagesList({
               <LayoutPanelTopIcon aria-hidden="true" /> Page Templates
             </Link>
             <ImportPageButton />
-            <Suspense fallback={<NewPageButton templates={[]} />}>
-              <NewPage />
-            </Suspense>
+            <NewPageButton />
           </div>
         }
       />
@@ -56,14 +53,8 @@ export default async function PagesList({
   )
 }
 
-/** New Page, which offers the Page Templates when there are some. */
-async function NewPage() {
-  const { payload, as } = await requireStaff()
-  return <NewPageButton templates={await loadPageTemplateRows(payload, as)} />
-}
-
 async function Rows({ query }: { query: string }) {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const rows = await loadPageRows(payload, as, { q: query })
   return <PagesTable rows={rows} query={query} />
 }

@@ -64,13 +64,13 @@ async function layoutsTableExists(payload: Payload): Promise<boolean> {
 /**
  * Creates the default Layout when the Site has no Layouts at all, so a Site
  * that has only been migrated shows the Brand's header and footer. A Site
- * that has any Layout is left alone, so staff who edit, replace or rename the
+ * that has any Layout is left alone, so users who edit, replace or rename the
  * default never get it back. Safe to call any number of times, and when the
  * Layouts table does not exist yet it does nothing.
  *
  * Runs from Payload's `onInit` and from the seeds. It writes through the
  * Local API without a user: it is the Site setting itself up, not a visitor,
- * and there is no Staff User to write as.
+ * and there is no User to write as.
  */
 export async function ensureDefaultLayout(
   payload: Payload

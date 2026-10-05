@@ -29,7 +29,7 @@ describe("missingSeo", () => {
 
 describe("findPagesNeedingSeoAttention", () => {
   let t: TestPayload
-  let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 
   beforeAll(async () => {
     t = await getTestPayload()
@@ -37,7 +37,7 @@ describe("findPagesNeedingSeoAttention", () => {
       collection: "users",
       data: { email: "staff@awayday.test", entraOid: "staff" },
     })
-    asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
   })
 
   afterAll(() => t?.teardown())
@@ -52,11 +52,11 @@ describe("findPagesNeedingSeoAttention", () => {
       collection: "pages",
       data: { title, path, seo, _status: status },
       draft: status === "draft",
-      ...asStaff,
+      ...asUser,
     })
 
   it("lists Published Pages missing SEO text, and only those", async () => {
-    expect(await findPagesNeedingSeoAttention(t.payload, asStaff)).toEqual([])
+    expect(await findPagesNeedingSeoAttention(t.payload, asUser)).toEqual([])
 
     await create("Complete", "/complete", "published", {
       title: "Complete",
@@ -72,7 +72,7 @@ describe("findPagesNeedingSeoAttention", () => {
     // Drafts are not on the Site, so they are not "needing attention".
     await create("Draft page", "/draft", "draft")
 
-    const rows = await findPagesNeedingSeoAttention(t.payload, asStaff)
+    const rows = await findPagesNeedingSeoAttention(t.payload, asUser)
     expect(rows).toEqual([
       {
         id: neither.id,
@@ -103,18 +103,18 @@ describe("findPagesNeedingSeoAttention", () => {
       id: page.id,
       data: { seo: { title: "T", description: "D" }, _status: "draft" },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
-    let rows = await findPagesNeedingSeoAttention(t.payload, asStaff)
+    let rows = await findPagesNeedingSeoAttention(t.payload, asUser)
     expect(rows.map((r) => r.id)).toContain(page.id)
 
     await t.payload.update({
       collection: "pages",
       id: page.id,
       data: { seo: { title: "T", description: "D" }, _status: "published" },
-      ...asStaff,
+      ...asUser,
     })
-    rows = await findPagesNeedingSeoAttention(t.payload, asStaff)
+    rows = await findPagesNeedingSeoAttention(t.payload, asUser)
     expect(rows.map((r) => r.id)).not.toContain(page.id)
   })
 })

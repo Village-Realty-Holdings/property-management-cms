@@ -6,6 +6,7 @@ import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { applyReplace, previewReplace } from "../replace/run"
 import { kindOf, linksIn, replaceLink, sitePath } from "./collect"
+import { linksToPathAs } from "./pathLinks"
 import { isBroken, linkReplacement, loadLinks } from "./screen"
 
 const text = (value: string) => ({
@@ -197,7 +198,7 @@ describe("replacing a link", () => {
 
 describe("the Links list", () => {
   let t: TestPayload
-  let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 
   beforeAll(async () => {
     t = await getTestPayload()
@@ -205,18 +206,18 @@ describe("the Links list", () => {
       collection: "users",
       data: { email: "staff@awayday.test", entraOid: "staff" },
     })
-    asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 
     const about = await t.payload.create({
       collection: "pages",
       data: { title: "About", path: "/about", _status: "published" },
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.create({
       collection: "pages",
       data: { title: "Soon", path: "/soon", _status: "draft" },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     const button = (label: string, href: string) => ({
       blockType: "button" as const,
@@ -238,7 +239,7 @@ describe("the Links list", () => {
           button("Media", "/media/file.pdf"),
         ],
       },
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.create({
       collection: "pages",
@@ -250,7 +251,7 @@ describe("the Links list", () => {
         blocks: [button("Gone", "/gone")],
       },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.create({
       collection: "layouts",
@@ -267,7 +268,7 @@ describe("the Links list", () => {
           },
         ],
       },
-      ...asStaff,
+      ...asUser,
     })
   })
 
@@ -276,7 +277,7 @@ describe("the Links list", () => {
   })
 
   it("groups links by target, broken ones first, with where each is", async () => {
-    const rows = await loadLinks(t.payload, asStaff)
+    const rows = await loadLinks(t.payload, asUser)
     expect(
       rows.map((row) => [row.target, row.kind, row.status, row.uses.length])
     ).toEqual([
@@ -313,14 +314,14 @@ describe("the Links list", () => {
   it("replaces a URL on Pages and Layouts, and leaves Page Templates alone", async () => {
     const loaded = linkReplacement({ from: "/gone", to: "/about" })
     if (!loaded.ok) throw new Error(loaded.message)
-    const preview = await previewReplace(t.payload, asStaff, loaded.replacement)
+    const preview = await previewReplace(t.payload, asUser, loaded.replacement)
     expect(preview.rows.map((row) => [row.kind, row.title, row.live])).toEqual([
       ["Page", "Home", false],
       ["Layout", "Main", true],
     ])
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       loaded.replacement,
       "publish"
     )
@@ -328,7 +329,7 @@ describe("the Links list", () => {
       ok: true,
       message: "Replaced in 1 Page and 1 Layout.",
     })
-    const rows = await loadLinks(t.payload, asStaff)
+    const rows = await loadLinks(t.payload, asUser)
     expect(rows.find((row) => row.target === "/gone")?.uses).toMatchObject([
       { kind: "Page Template", title: "Starter" },
     ])
@@ -336,5 +337,85 @@ describe("the Links list", () => {
       status: "ok",
       uses: [{ title: "Home" }, { title: "Main" }],
     })
+  })
+})
+
+describe("what links to a path", () => {
+  let t: TestPayload
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
+
+  beforeAll(async () => {
+    t = await getTestPayload()
+    const user = await t.payload.create({
+      collection: "users",
+      data: { email: "path@awayday.test", entraOid: "path" },
+    })
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
+    const button = (href: string) => ({
+      blockType: "button" as const,
+      link: { label: "Go", href },
+      style: "primary" as const,
+      align: "start" as const,
+    })
+    const stays = await t.payload.create({
+      collection: "pages",
+      data: { title: "Stays", path: "/stays", _status: "published" },
+      ...asUser,
+    })
+    await t.payload.create({
+      collection: "pages",
+      data: {
+        title: "Home",
+        path: "/",
+        _status: "published",
+        blocks: [
+          button("/stays/"),
+          button("https://site.test/stays#rooms"),
+          button("/about"),
+        ],
+      },
+      ...asUser,
+    })
+    await t.payload.create({
+      collection: "layouts",
+      data: {
+        name: "Main",
+        footer: [
+          {
+            blockType: "legalBar",
+            text: "©",
+            links: [
+              { label: "Stays", link: { type: "url", url: "/stays" } },
+              { label: "Stays", link: { type: "page", page: stays.id } },
+            ],
+          },
+        ],
+      },
+      ...asUser,
+    })
+  })
+
+  afterAll(async () => {
+    await t?.teardown()
+  })
+
+  it("lists every use of the path, however the link is spelled, and leaves menu links to Pages out", async () => {
+    const uses = await linksToPathAs(t.payload, asUser, "/stays", {
+      siteUrl: "https://site.test",
+    })
+    expect(uses.map((use) => [use.kind, use.title])).toEqual([
+      ["Layout", "Main"],
+      ["Page", "Home"],
+      ["Page", "Home"],
+    ])
+    expect(uses[1]).toMatchObject({
+      href: expect.stringMatching(/^\/admin\/pages\/\d+$/),
+      place: "Block 1, Button: Link: Link",
+    })
+  })
+
+  it("finds nothing for a path nothing links to, or one that is not a path", async () => {
+    expect(await linksToPathAs(t.payload, asUser, "/nobody")).toEqual([])
+    expect(await linksToPathAs(t.payload, asUser, "not a path")).toEqual([])
   })
 })

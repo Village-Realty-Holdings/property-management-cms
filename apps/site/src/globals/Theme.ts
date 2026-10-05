@@ -138,7 +138,7 @@ const recordVersionDetails: GlobalBeforeChangeHook = ({
   }
 }
 
-const staffOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+const usersOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
 
 /**
  * The Theme: the Site's look, set by the Theme controls in
@@ -194,7 +194,7 @@ export const Theme: GlobalConfig = {
       name: "note",
       type: "text",
       maxLength: 500,
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: {
         description:
           "Optional. Replaces the automatic summary of this save in the history.",
@@ -203,7 +203,7 @@ export const Theme: GlobalConfig = {
     {
       name: "changeSummary",
       type: "text",
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: { readOnly: true },
     },
     {
@@ -211,7 +211,7 @@ export const Theme: GlobalConfig = {
       label: "Saved by",
       type: "relationship",
       relationTo: "users",
-      access: { read: staffOnly },
+      access: { read: usersOnly },
       admin: { readOnly: true },
     },
   ],

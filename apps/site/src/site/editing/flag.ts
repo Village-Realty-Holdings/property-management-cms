@@ -3,7 +3,7 @@ import { DEFAULT_INPUTS } from "../../theme/presets"
 
 /**
  * The editing flag: a Site route requested with `?__edit=1` by a signed-in
- * Staff User renders the Visual Editor's canvas instead of the Page (see
+ * User renders the Visual Editor's canvas instead of the Page (see
  * EditingPage). Pure, so both the route and the Admin can share it. A request
  * without the flag, or by anyone else, is an ordinary Site request.
  */

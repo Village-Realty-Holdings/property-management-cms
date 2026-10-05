@@ -39,7 +39,7 @@ import {
  * discard" (ADR-0004), with the spec's Theme mode: opened from Settings ›
  * Theme; the left panel holds the Theme controls, the contrast warnings with
  * one-click fixes, and History; Block editing is off; and the unsaved Theme
- * follows the Staff User across Pages through Ctrl-K until it is saved or
+ * follows the User across Pages through Ctrl-K until it is saved or
  * discarded. Visitors see nothing until Save, and then every Page changes.
  */
 
@@ -192,7 +192,7 @@ describe("Theme mode", () => {
     expect(recording.stop(), "round trips made for the preview").toEqual([])
   })
 
-  it("follows the Staff User to another Page through Ctrl-K, unsaved", async () => {
+  it("follows the User to another Page through Ctrl-K, unsaved", async () => {
     await goToPage(page, P2.title, P2.title)
     await expect
       .poll(async () => new URL((await canvasFrame(page)).url()).pathname, {

@@ -12,7 +12,7 @@ import {
 import { FONT_KINDS, type FontKind } from "./types"
 
 export type ImportGoogleFontInput = GoogleFontRequest & {
-  /** Serif, sans or slab: Google's data doesn't say, so staff choose. */
+  /** Serif, sans or slab: Google's data doesn't say, so users choose. */
   kind: FontKind
 }
 
@@ -21,7 +21,7 @@ export type ImportGoogleFontOptions = Pick<
   "fetch" | "maxFileBytes"
 > & {
   /**
-   * Local API options that apply a Staff User's access rules, as `requireStaff()`
+   * Local API options that apply a User's access rules, as `requireUser()`
    * returns in `as`. Leave out for server code that has already checked.
    */
   as?: { overrideAccess: false; user: NonNullable<unknown> }
@@ -35,7 +35,7 @@ export type ImportGoogleFontOptions = Pick<
  *
  * All or nothing. Everything is downloaded before anything is stored, and if
  * storing fails partway the files already stored are removed. Throws a
- * `GoogleFontError` (with a message a Staff User can read) for bad input, an
+ * `GoogleFontError` (with a message a User can read) for bad input, an
  * unknown family, a weight the family doesn't have, a family that is already
  * a Font, or a failed download.
  *

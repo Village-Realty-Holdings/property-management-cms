@@ -37,7 +37,7 @@ type Found = { docs: Doc[] }
 const pagesAt = async (path: string): Promise<Doc[]> =>
   (
     (await (
-      await h.staff.context.request.get(
+      await h.user.context.request.get(
         `${ORIGIN}/api/pages?where[path][equals]=${encodeURIComponent(path)}&draft=true&depth=0`
       )
     ).json()) as Found
@@ -45,7 +45,7 @@ const pagesAt = async (path: string): Promise<Doc[]> =>
 
 beforeAll(async () => {
   h = await openHarness()
-  const made = await h.staff.context.request.post(
+  const made = await h.user.context.request.post(
     `${ORIGIN}/api/pages?draft=false`,
     {
       data: {
@@ -85,7 +85,7 @@ let exported = ""
 
 describe("exporting a Page", () => {
   it("downloads it from its row, as a file with nothing of this Site's in it", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, `/admin/pages?q=${encodeURIComponent(TITLE)}`)
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -111,7 +111,7 @@ describe("exporting a Page", () => {
 
 describe("importing a Page", () => {
   it("adds it as a new Draft at the next free path, and says so", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/pages")
     await page.getByLabel("Page file to import").setInputFiles({
       name: "page.json",
@@ -138,7 +138,7 @@ describe("importing a Page", () => {
   })
 
   it("refuses a file that isn't a Page, with the reason", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/pages")
     await page.getByLabel("Page file to import").setInputFiles({
       name: "notes.json",

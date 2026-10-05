@@ -5,9 +5,12 @@ import { pageBlocks } from "../../blocks"
 import { takesOnly } from "../../blocks/Container"
 import { NOT_PROSE } from "../../fields/prose"
 import { seoField } from "../../fields/seo"
+import { recordUpdatedBy } from "./hooks"
 import { layoutField } from "./layoutField"
 import { refuseDeleteWhenLinked } from "./navigationGuard"
 import { defaultPathFromTitle, validatePagePath } from "./path"
+
+const usersOnly = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
 
 /** Why a Page Template won't publish. */
 export const TEMPLATE_IS_NOT_PUBLISHED =
@@ -15,7 +18,7 @@ export const TEMPLATE_IS_NOT_PUBLISHED =
 
 /**
  * A page of the Site at its own path, composed from Blocks: "/" for Home,
- * "/about", "/company/team". Staff Users edit the Draft; visitors see the
+ * "/about", "/company/team". Users edit the Draft; visitors see the
  * Published version only.
  */
 export const Pages: CollectionConfig = {
@@ -32,11 +35,14 @@ export const Pages: CollectionConfig = {
     delete: signedIn,
     readVersions: signedIn,
   },
-  hooks: { beforeDelete: [refuseDeleteWhenLinked] },
+  hooks: {
+    beforeChange: [recordUpdatedBy],
+    beforeDelete: [refuseDeleteWhenLinked],
+  },
   versions: {
     // Validate Drafts too, so a Draft can't hold a path that won't publish.
     drafts: { autosave: false, validate: true },
-    maxPerDoc: 20,
+    maxPerDoc: 50,
   },
   fields: [
     { name: "title", type: "text", required: true },
@@ -82,6 +88,14 @@ export const Pages: CollectionConfig = {
         description:
           "New Pages can start from a copy of this Page. A Page Template is never published.",
       },
+    },
+    {
+      name: "updatedBy",
+      label: "Saved by",
+      type: "relationship",
+      relationTo: "users",
+      access: { read: usersOnly },
+      admin: { readOnly: true, position: "sidebar" },
     },
   ],
 }

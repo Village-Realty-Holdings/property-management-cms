@@ -1,18 +1,20 @@
 import Link from "next/link"
-import { FileTextIcon, PlusIcon, SearchIcon } from "lucide-react"
+import { FileTextIcon, SearchIcon } from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { buttonVariants } from "@workspace/ui/components/button"
 
-import { ExportPageButton } from "../components/pages/PageTransfer"
+import { NewPageButton } from "../components/pageTemplates/NewPageButton"
 import { EmptyState } from "../kit/EmptyState"
+import { PageRowActions } from "./PageRowActions"
 import type { PageRow } from "./rows"
 import { StatusChip } from "./StatusChip"
 import { UpdatedAt } from "./UpdatedAt"
 
 /**
  * The Pages list: title, path, status, the Layout it uses, last updated, and
- * Export, which downloads the Page as a file another Site can import.
+ * Duplicate, which adds a Draft copy, and Export, which downloads the Page
+ * as a file another Site can import.
  * With no rows it offers New Page, or Clear search when a search found nothing.
  */
 export function PagesTable({
@@ -43,11 +45,7 @@ export function PagesTable({
         icon={<FileTextIcon />}
         title="No Pages yet"
         description='Create the Home Page with the path "/" to start the Site.'
-        action={
-          <Link href="/admin/pages/new" className={buttonVariants()}>
-            <PlusIcon aria-hidden="true" /> New Page
-          </Link>
-        }
+        action={<NewPageButton />}
       />
     )
   }
@@ -107,7 +105,7 @@ export function PagesTable({
                 <UpdatedAt iso={row.updatedAt} />
               </td>
               <td className="px-4 py-2 text-right">
-                <ExportPageButton id={row.id} title={row.title} />
+                <PageRowActions id={row.id} title={row.title} />
               </td>
             </tr>
           ))}

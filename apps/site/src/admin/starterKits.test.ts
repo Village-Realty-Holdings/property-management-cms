@@ -12,7 +12,7 @@ import {
 } from "./starterKits"
 
 let t: TestPayload
-let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 
 beforeAll(async () => {
   t = await getTestPayload()
@@ -20,7 +20,7 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 })
 
 afterAll(async () => {
@@ -49,13 +49,13 @@ const pageAt = async (path: string) =>
       where: { path: { equals: path } },
       draft: true,
       depth: 0,
-      ...asStaff,
+      ...asUser,
     })
   ).docs[0]
 
 describe("a Starter Kit's form", () => {
   it("starts from the Site's Brand and SEO", async () => {
-    expect(await loadKitDefaults(t.payload, asStaff)).toEqual({
+    expect(await loadKitDefaults(t.payload, asUser)).toEqual({
       brand: { name: "", tagline: "", logo: null, phone: "", email: "" },
       seo: { titlePattern: "%s · {name}", description: "", favicon: null },
     })
@@ -68,7 +68,7 @@ describe("a Starter Kit's form", () => {
       theme: "preset:nope",
     })
     for (const run of [reviewKitAs, applyKitAs]) {
-      const result = await run(t.payload, asStaff, bad)
+      const result = await run(t.payload, asUser, bad)
       expect(result).toMatchObject({
         ok: false,
         message: "Some answers need attention.",
@@ -81,7 +81,7 @@ describe("a Starter Kit's form", () => {
       })
     }
     expect(
-      (await applyKitAs(t.payload, asStaff, answers({ kit: "nope" }))).message
+      (await applyKitAs(t.payload, asUser, answers({ kit: "nope" }))).message
     ).toBe("Choose a Starter Kit.")
     expect(await pageAt("/")).toBeUndefined()
     expect((await readLiveTheme(t.payload)).source).toBe("default")
@@ -90,7 +90,7 @@ describe("a Starter Kit's form", () => {
 
 describe("the Tuck-in kit on a new Site", () => {
   it("reviews what it will do before doing it", async () => {
-    const review = await reviewKitAs(t.payload, asStaff, answers())
+    const review = await reviewKitAs(t.payload, asUser, answers())
     expect(review).toEqual({
       ok: true,
       steps: [
@@ -115,7 +115,7 @@ describe("the Tuck-in kit on a new Site", () => {
   })
 
   it("saves the Brand, SEO and Theme, and adds the Layout and the Home Page as a Draft", async () => {
-    const result = await applyKitAs(t.payload, asStaff, answers())
+    const result = await applyKitAs(t.payload, asUser, answers())
     expect(result.ok).toBe(true)
     expect(result.message).toBe("Your Site is set up from the Tuck-in kit.")
     expect(result.outcomes.map((o) => [o.kind, o.ok])).toEqual([
@@ -139,7 +139,7 @@ describe("the Tuck-in kit on a new Site", () => {
       collection: "layouts",
       id: (home!.layout as { layout: number }).layout,
       depth: 0,
-      ...asStaff,
+      ...asUser,
     })
     expect(layout.name).toBe("Tuck-in Layout")
     expect(result.outcomes.at(-1)?.href).toBe(`/admin/pages/${home!.id}`)
@@ -169,7 +169,7 @@ describe("a kit on a Site that already has content", () => {
       brand: { ...answers().brand, name: "Pine Creek Rentals" },
       theme: "preset:meadow",
     })
-    const review = await reviewKitAs(t.payload, asStaff, again)
+    const review = await reviewKitAs(t.payload, asUser, again)
     expect(review.ok && review.steps.filter((s) => s.warning)).toEqual([
       {
         kind: "Brand",
@@ -185,7 +185,7 @@ describe("a kit on a Site that already has content", () => {
     ])
 
     const before = await pageAt("/")
-    const result = await applyKitAs(t.payload, asStaff, again)
+    const result = await applyKitAs(t.payload, asUser, again)
     expect(result.ok).toBe(true)
     expect(result.outcomes.at(-1)).toEqual({
       kind: "Page",
@@ -201,14 +201,14 @@ describe("a kit on a Site that already has content", () => {
     const about = await t.payload.create({
       collection: "pages",
       data: { title: "Taken", path: "/taken", _status: "published" },
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.update({
       collection: "pages",
       id: about.id,
       data: { path: "/moved", _status: "draft" },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     const { STARTER_KITS } = await import("../starterKits")
     const kit = STARTER_KITS.find((k) => k.id === "rental-site")!
@@ -218,7 +218,7 @@ describe("a kit on a Site that already has content", () => {
     try {
       const review = await reviewKitAs(
         t.payload,
-        asStaff,
+        asUser,
         answers({ kit: "rental-site", theme: "preset:meadow" })
       )
       expect(
@@ -232,18 +232,18 @@ describe("a kit on a Site that already has content", () => {
   it("leaves alone what the answers don't change", async () => {
     const live = (await readLiveTheme(t.payload)).savedAt
     const same = {
-      ...(await loadKitDefaults(t.payload, asStaff)),
+      ...(await loadKitDefaults(t.payload, asUser)),
       kit: "rental-site",
       theme: "preset:meadow",
       details: {},
     }
-    const review = await reviewKitAs(t.payload, asStaff, same)
+    const review = await reviewKitAs(t.payload, asUser, same)
     expect(review.ok && review.steps.slice(0, 3).map((s) => s.text)).toEqual([
       "The Brand stays as it is.",
       "SEO stays as it is.",
       "The Theme stays “Meadow”.",
     ])
-    const result = await applyKitAs(t.payload, asStaff, same)
+    const result = await applyKitAs(t.payload, asUser, same)
     expect(result.outcomes.map((o) => o.kind)).toEqual(["Page"])
     expect((await readLiveTheme(t.payload)).savedAt).toBe(live)
   })
@@ -254,11 +254,11 @@ describe("a kit's placeholders", () => {
     await t.payload.delete({
       collection: "pages",
       where: { path: { equals: "/" } },
-      ...asStaff,
+      ...asUser,
     })
     const result = await applyKitAs(
       t.payload,
-      asStaff,
+      asUser,
       answers({
         brand: { ...answers().brand, name: "Pine Creek Rentals", phone: "" },
         theme: "preset:meadow",

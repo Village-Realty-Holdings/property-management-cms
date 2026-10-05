@@ -13,7 +13,7 @@ The browser never learns where the platform is. The Block's form posts to the Si
 - **Send email from the Site.** Rejected. The Site has no mail transport, and the Workflows platform exists to own SMTP credentials, retries and a log of what ran.
 - **Store feedback in a collection and list it in the Admin.** Rejected for now. It makes the Site a system of record for guests' contact details, with retention and access rules to match, and nobody asked for an inbox. It can be added beside the forwarding later.
 - **Post from the browser straight to the platform.** Rejected. It would publish the platform's address, need CORS there, and skip the Site's checks.
-- **One Block per step.** Rejected. The steps depend on each other, so separate Blocks would let Staff build a survey with no form, or two.
+- **One Block per step.** Rejected. The steps depend on each other, so separate Blocks would let Users build a survey with no form, or two.
 
 ## Consequences
 

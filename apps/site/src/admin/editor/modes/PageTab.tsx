@@ -1,6 +1,8 @@
 "use client"
 
-import { useId, useRef, useState, type ReactNode } from "react"
+import Link from "next/link"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import { TriangleAlertIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -22,11 +24,18 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { checkPagePath } from "../../../collections/Pages/path"
 import { SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from "../../../fields/seo"
 import { makeLayoutFromPageDocument } from "../../actions/layouts"
+import { linksToPath } from "../../actions/links"
 import { DeletePageButton } from "../../components/DeletePageButton"
 import { describedBy, FormField } from "../../components/FormBits"
 import { MediaSelect, type MediaOption } from "../../components/MediaSelect"
 import type { PageStatus } from "../../dashboard/pageStatus"
-import { InlineError, notify, type Dependent } from "../../kit"
+import {
+  InlineError,
+  notify,
+  type Dependent,
+  type useStaleSave,
+} from "../../kit"
+import type { LinkUse } from "../../links/screen"
 import { useEditor } from "../EditorProvider"
 import type { LayoutChoice, PageDocument } from "../state"
 import {
@@ -39,6 +48,8 @@ import {
 } from "./pageTabModel"
 import { fieldErrorFor, type SaveProblem } from "./saveProblem"
 
+type StaleSave = Pick<ReturnType<typeof useStaleSave>, "expected" | "settle">
+
 /**
  * The Page tab: the Page's own settings (title, path), the Layout it uses
  * (by its path, a specific one, or none, with "Make a new Layout from this
@@ -50,12 +61,14 @@ import { fieldErrorFor, type SaveProblem } from "./saveProblem"
 export function PageTab({
   id,
   status,
+  publishedPath,
   layouts,
   layout,
   media,
   dependents,
   problem,
   busy,
+  stale,
   onUnpublish,
   onDeleted,
   onLayoutMade,
@@ -63,6 +76,8 @@ export function PageTab({
   /** Null while the Page has not been saved yet. */
   id: number | null
   status: PageStatus
+  /** The path visitors are served the Page at; null while it is not Published. */
+  publishedPath: string | null
   /** Every Layout the Page can pick. */
   layouts: readonly LayoutOption[]
   /** The Layout the Page resolves to now; null for none. */
@@ -71,13 +86,15 @@ export function PageTab({
   dependents: readonly Dependent[]
   problem: SaveProblem | null
   busy: boolean
+  /** The stale-save check, for "Make a new Layout from this one". */
+  stale?: StaleSave
   onUnpublish: () => void
   onDeleted: () => void
   /** The Draft was switched to a Layout made from the Page's own. */
   onLayoutMade: (layout: LayoutOption) => void
 }) {
   const { doc, setField } = useEditor()
-  // A New Page's path follows its title as it is typed, unless the Staff User
+  // A New Page's path follows its title as it is typed, unless the User
   // has written the path themselves. This is the title the path was last made
   // from: a title emptied and typed again still finds the path it moved.
   const pathTitle = useRef<string | null>(null)
@@ -138,9 +155,18 @@ export function PageTab({
           {...describedBy("page-path", {
             description: true,
             error: pathError,
+            also: [PATH_NOTICE_ID],
           })}
         />
       </FormField>
+      <PathChangeNotice
+        // A Page not yet on the Site has no visitors or links to lose.
+        oldPath={
+          id !== null && publishedPath !== null && page.path !== publishedPath
+            ? publishedPath
+            : null
+        }
+      />
 
       <LayoutSection
         pageId={id}
@@ -150,6 +176,7 @@ export function PageTab({
         resolved={layout}
         onChoose={(choice) => setField("layout", choice)}
         onMade={onLayoutMade}
+        stale={stale}
       />
 
       <section aria-labelledby="page-seo-heading" className="grid gap-3">
@@ -277,6 +304,88 @@ export function PageTab({
   )
 }
 
+/** The notice's id, so the Path field is described by it when it shows. */
+const PATH_NOTICE_ID = "page-path-change-notice"
+
+/** The most links the notice lists; the Links tool has the rest. */
+const NOTICE_LIMIT = 5
+
+/**
+ * Under Path, when a Published Page's path is being changed: what still links
+ * to the old path. Visitors who follow those links reach no Page once the new
+ * path is published, and nothing changes them for the User. It never blocks
+ * Save; it says where to look. Silent when nothing links there, and when the
+ * lookup fails: it is advice, not a check.
+ */
+function PathChangeNotice({ oldPath }: { oldPath: string | null }) {
+  // The lookup's answer, with the old path it was asked for.
+  const [found, setFound] = useState<{
+    path: string
+    uses: readonly LinkUse[]
+  } | null>(null)
+
+  useEffect(() => {
+    if (oldPath === null || found?.path === oldPath) return
+    let current = true
+    linksToPath(oldPath)
+      .then((uses) => current && setFound({ path: oldPath, uses }))
+      .catch(() => {})
+    return () => {
+      current = false
+    }
+  }, [oldPath, found?.path])
+
+  if (oldPath === null || found?.path !== oldPath || found.uses.length === 0) {
+    return null
+  }
+  const { uses } = found
+  const shown = uses.slice(0, NOTICE_LIMIT)
+  const more = uses.length - shown.length
+
+  return (
+    <div
+      id={PATH_NOTICE_ID}
+      role="status"
+      data-slot="path-change-notice"
+      className="grid gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+    >
+      <p className="flex items-start gap-2">
+        <TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <span>
+          {uses.length === 1
+            ? `1 link still leads to “${oldPath}”.`
+            : `${uses.length} links still lead to “${oldPath}”.`}{" "}
+          They will not follow the Page to its new path, and visitors who use
+          them will not find it. Saving does not change them.
+        </span>
+      </p>
+      <ul className="grid gap-0.5 pl-6">
+        {shown.map((use) => (
+          <li key={`${use.href}|${use.place}`}>
+            <Link href={use.href} className="underline underline-offset-2">
+              {use.title}
+            </Link>
+            <span>
+              {" "}
+              ({use.kind}, {use.place})
+            </span>
+          </li>
+        ))}
+      </ul>
+      {more > 0 && <p className="pl-6">and {more} more.</p>}
+      <p className="pl-6">
+        <Link
+          href="/admin/tools/links"
+          className="underline underline-offset-2"
+        >
+          Open Tools, Links
+        </Link>{" "}
+        to see them all and point them at the new path.
+      </p>
+    </div>
+  )
+}
+
 /** "12 / 60", in the warning colour, with advice, once it is over. Never blocks. */
 function Counter({
   id,
@@ -314,6 +423,7 @@ function LayoutSection({
   resolved,
   onChoose,
   onMade,
+  stale,
 }: {
   pageId: number | null
   pageTitle: string
@@ -322,6 +432,7 @@ function LayoutSection({
   resolved: ResolvedLayout | null
   onChoose: (choice: LayoutChoice) => void
   onMade: (layout: LayoutOption) => void
+  stale?: StaleSave
 }) {
   const group = useId()
 
@@ -388,6 +499,7 @@ function LayoutSection({
         source={resolved}
         layouts={layouts}
         onMade={onMade}
+        stale={stale}
       />
     </fieldset>
   )
@@ -404,12 +516,14 @@ function MakeLayoutFromThis({
   source,
   layouts,
   onMade,
+  stale,
 }: {
   pageId: number | null
   pageTitle: string
   source: ResolvedLayout | null
   layouts: readonly LayoutOption[]
   onMade: (layout: LayoutOption) => void
+  stale?: StaleSave
 }) {
   const { state, markSaved, setField } = useEditor()
   const [open, setOpen] = useState(false)
@@ -422,7 +536,10 @@ function MakeLayoutFromThis({
   if (pageId === null) why = "Save the Page first."
   else if (!source) why = "The Page has no Layout to copy."
 
-  const submit = async () => {
+  // Resolves to a failure when "Save anyway" (which calls this again) fails.
+  const submit = async (
+    force = false
+  ): Promise<{ ok: false; message: string } | void> => {
     if (!source || pageId === null || pending) return
     setPending(true)
     setError(null)
@@ -431,14 +548,22 @@ function MakeLayoutFromThis({
         pageId,
         layoutId: source.id,
         name,
+        expected: stale?.expected(),
+        ...(force ? { force: true } : {}),
       })
+      // Someone saved the Page since it was opened: the stale dialog takes over.
+      if (stale?.settle(result, () => submit(true))) {
+        setOpen(false)
+        return { ok: false, message: result.message ?? "" }
+      }
       if (!result.ok || !result.layout) {
-        setError(result.message || "Could not make the Layout.")
-        return
+        const message = result.message || "Could not make the Layout."
+        setError(message)
+        return { ok: false, message }
       }
       const made = result.layout
       // The server switched the Page's Draft: that is the saved baseline now,
-      // and the Staff User's other unsaved edits stay unsaved.
+      // and the User's other unsaved edits stay unsaved.
       const choice: LayoutChoice = { mode: "layout", layoutId: made.id }
       const baseline = state.baseline
       if (baseline.kind === "page") {
@@ -450,7 +575,9 @@ function MakeLayoutFromThis({
       setOpen(false)
       notify.success(result.message || "Layout made")
     } catch {
-      setError("Could not make the Layout. Please try again.")
+      const message = "Could not make the Layout. Please try again."
+      setError(message)
+      return { ok: false, message }
     } finally {
       setPending(false)
     }

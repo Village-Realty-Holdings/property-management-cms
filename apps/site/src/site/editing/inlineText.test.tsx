@@ -25,6 +25,8 @@ import {
   createHeadlessEditor,
   loadContent,
   readContent,
+  readFormat,
+  setBlockType,
   toggleFormat,
   toggleList,
 } from "./richTextModel"
@@ -477,6 +479,133 @@ describe("rich text as Lexical JSON", () => {
     expect(linesOf(editor)).toEqual(["First item"])
   })
 
+  it("changes a paragraph to a heading, a quote and back, keeping its text", () => {
+    const editor = editorWith("Some words")
+    const block = () => editor.getEditorState().read(readFormat).block
+
+    setBlockType(editor, "h2")
+    expect(nodesOf(readContent(editor), "heading")[0]?.tag).toBe("h2")
+    expect(block()).toBe("h2")
+
+    setBlockType(editor, "quote")
+    let json = readContent(editor)
+    expect(nodesOf(json, "heading")).toHaveLength(0)
+    expect(nodesOf(json, "quote")).toHaveLength(1)
+    expect(block()).toBe("quote")
+
+    setBlockType(editor, "paragraph")
+    json = readContent(editor)
+    expect(nodesOf(json, "quote")).toHaveLength(0)
+    expect(nodesOf(json, "paragraph")).toHaveLength(1)
+    expect(nodesOf(json, "text").map((n) => n.text)).toEqual(["Some words"])
+    expect(block()).toBe("paragraph")
+
+    for (const tag of ["h3", "h4"] as const) {
+      setBlockType(editor, tag)
+      expect(nodesOf(readContent(editor), "heading")[0]?.tag).toBe(tag)
+    }
+  })
+
+  it("lifts a list item out of its list when it becomes a heading", () => {
+    const editor = editorWith("Item")
+    toggleList(editor, "bullet")
+    expect(editor.getEditorState().read(readFormat).block).toBe("list")
+    setBlockType(editor, "h3")
+    const json = readContent(editor)
+    expect(nodesOf(json, "list")).toHaveLength(0)
+    expect(nodesOf(json, "heading")[0]?.tag).toBe("h3")
+    expect(linesOf(editor)).toEqual(["Item"])
+  })
+
+  it("lifts only the selected item out of a list, and splits the list around it", () => {
+    const item = (text: string, value: number) => ({
+      type: "listitem",
+      value,
+      version: 1,
+      direction: "ltr",
+      format: "",
+      indent: 0,
+      children: [textNode(text)],
+    })
+    const editor = editorWith(
+      "",
+      0,
+      0,
+      doc({
+        type: "list",
+        listType: "bullet",
+        tag: "ul",
+        start: 1,
+        version: 1,
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        children: [item("One", 1), item("Two", 2), item("Three", 3)],
+      })
+    )
+    editor.update(
+      () => {
+        const texts = $getRoot().getAllTextNodes()
+        texts[1]!.select(1, 1)
+      },
+      { discrete: true }
+    )
+    setBlockType(editor, "h2")
+    const kinds = editor.getEditorState().read(() =>
+      $getRoot()
+        .getChildren()
+        .map((node) => [node.getType(), node.getTextContent()])
+    )
+    expect(kinds).toEqual([
+      ["list", "One"],
+      ["heading", "Two"],
+      ["list", "Three"],
+    ])
+    const json = readContent(editor)
+    expect(nodesOf(json, "list").map((n) => n.listType)).toEqual([
+      "bullet",
+      "bullet",
+    ])
+    expect(nodesOf(json, "heading")[0]?.tag).toBe("h2")
+    expect(nodesOf(json, "text").map((n) => n.text)).toEqual([
+      "One",
+      "Two",
+      "Three",
+    ])
+  })
+
+  it("keeps an H1 document H1, and reports it", () => {
+    const h1 = {
+      type: "heading",
+      tag: "h1",
+      version: 1,
+      direction: "ltr",
+      format: "",
+      indent: 0,
+      children: [textNode("Big heading")],
+    }
+    const editor = editorWith("Big heading", 0, 3, doc(h1))
+    expect(nodesOf(readContent(editor), "heading")[0]?.tag).toBe("h1")
+    expect(editor.getEditorState().read(readFormat).block).toBe("h1")
+  })
+
+  it("keeps an H5 document H5, and reports it", () => {
+    const h5 = {
+      type: "heading",
+      tag: "h5",
+      version: 1,
+      direction: "ltr",
+      format: "",
+      indent: 0,
+      children: [textNode("Small heading")],
+    }
+    const editor = editorWith("Small heading", 0, 5, doc(h5))
+    expect(nodesOf(readContent(editor), "heading")[0]?.tag).toBe("h5")
+    expect(editor.getEditorState().read(readFormat).block).toBe("h5")
+    toggleFormat(editor, "bold")
+    expect(nodesOf(readContent(editor), "heading")[0]?.tag).toBe("h5")
+  })
+
   it("renders everything it writes, through the Site's own RichText", () => {
     const editor = editorWith("Plain words then bold")
     select(editor, 17, 21)
@@ -570,6 +699,9 @@ describe("<RichTextEditing>", () => {
     const toolbar = await screen.findByRole("toolbar", {
       name: /text formatting/i,
     })
+    expect(
+      within(toolbar).getByRole("combobox", { name: "Text style" })
+    ).toBeTruthy()
     for (const name of [
       "Bold",
       "Italic",
@@ -579,6 +711,121 @@ describe("<RichTextEditing>", () => {
     ]) {
       expect(within(toolbar).getByRole("button", { name })).toBeTruthy()
     }
+  })
+
+  it("changes the text style from the select, and sends the Lexical JSON", async () => {
+    const { send } = mount()
+    const box = await selectWords(5, 10)
+    const select = (await screen.findByRole("combobox", {
+      name: "Text style",
+    })) as HTMLSelectElement
+    expect(select.value).toBe("paragraph")
+    expect([...select.options].map((o) => [o.textContent, o.disabled])).toEqual(
+      [
+        ["Paragraph", false],
+        ["Heading 2", false],
+        ["Heading 3", false],
+        ["Heading 4", false],
+        ["Quote", false],
+      ]
+    )
+
+    fireEvent.focus(select)
+    act(() => select.focus())
+    fireEvent.change(select, { target: { value: "h2" } })
+    await waitFor(() => expect(send).toHaveBeenCalled())
+    let { value } = send.mock.calls.at(-1)![0] as { value: unknown }
+    expect(nodesOf(value, "heading")[0]?.tag).toBe("h2")
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Text style",
+          }) as HTMLSelectElement
+        ).value
+      ).toBe("h2")
+    )
+    // Focus stays on the select: a change is not a move to the text.
+    expect(document.activeElement).toBe(select)
+
+    // A second change applies to the same text.
+    fireEvent.change(select, { target: { value: "h3" } })
+    await waitFor(() => {
+      ;({ value } = send.mock.calls.at(-1)![0] as { value: unknown })
+      expect(nodesOf(value, "heading")[0]?.tag).toBe("h3")
+    })
+    expect(document.activeElement).toBe(select)
+
+    fireEvent.change(select, { target: { value: "quote" } })
+    await waitFor(() => {
+      ;({ value } = send.mock.calls.at(-1)![0] as { value: unknown })
+      expect(nodesOf(value, "quote")).toHaveLength(1)
+    })
+    fireEvent.change(select, { target: { value: "paragraph" } })
+    await waitFor(() => {
+      ;({ value } = send.mock.calls.at(-1)![0] as { value: unknown })
+      expect(nodesOf(value, "quote")).toHaveLength(0)
+    })
+    expect(nodesOf(value, "heading")).toHaveLength(0)
+    expect(nodesOf(value, "text").map((n) => n.text)).toEqual([
+      "Some words here",
+    ])
+    expect(document.activeElement).toBe(select)
+
+    // Escape returns to the text.
+    fireEvent.keyDown(select, { key: "Escape" })
+    await waitFor(() => expect(document.activeElement).toBe(box))
+  })
+
+  it("shows a list as a disabled option of the select, with the five styles offered", async () => {
+    const { send } = mount()
+    const box = await selectWords(5, 10)
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Bulleted list" })
+    )
+    await waitFor(() => expect(send).toHaveBeenCalled())
+    await waitFor(() => {
+      const select = screen.getByRole("combobox", {
+        name: "Text style",
+      }) as HTMLSelectElement
+      expect(select.value).toBe("list")
+    })
+    const select = screen.getByRole("combobox", {
+      name: "Text style",
+    }) as HTMLSelectElement
+    expect([...select.options].map((o) => [o.textContent, o.disabled])).toEqual(
+      [
+        ["List", true],
+        ["Paragraph", false],
+        ["Heading 2", false],
+        ["Heading 3", false],
+        ["Heading 4", false],
+        ["Quote", false],
+      ]
+    )
+    expect(box.querySelector("ul")).not.toBeNull()
+  })
+
+  it("shows an H5 as a disabled option of the select, and keeps it", async () => {
+    mount({
+      content: doc({
+        type: "heading",
+        tag: "h5",
+        version: 1,
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        children: [textNode("Small heading")],
+      }),
+    })
+    await selectWords(2, 5)
+    const select = (await screen.findByRole("combobox", {
+      name: "Text style",
+    })) as HTMLSelectElement
+    expect(select.value).toBe("h5")
+    const current = [...select.options].find((o) => o.value === "h5")
+    expect(current?.textContent).toBe("Heading 5")
+    expect(current?.disabled).toBe(true)
   })
 
   it("sends the new Lexical JSON when a format is applied", async () => {
@@ -676,26 +923,30 @@ describe("<RichTextEditing>", () => {
     expect(box.getAttribute("aria-keyshortcuts")).toContain("Alt+F10")
 
     fireEvent.keyDown(box, { key: "F10", altKey: true })
-    expect(name()).toBe("Bold")
+    expect(name()).toBe("Text style")
     // The toolbar stays open while focus is in it.
     expect(screen.queryByRole("toolbar")).toBe(toolbar)
 
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
+    expect(name()).toBe("Bold")
     fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
     expect(name()).toBe("Italic")
     fireEvent.keyDown(document.activeElement!, { key: "End" })
     expect(name()).toBe("Numbered list")
     fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
-    expect(name()).toBe("Bold")
+    expect(name()).toBe("Text style")
     fireEvent.keyDown(document.activeElement!, { key: "ArrowLeft" })
     expect(name()).toBe("Numbered list")
     fireEvent.keyDown(document.activeElement!, { key: "Home" })
-    expect(name()).toBe("Bold")
+    expect(name()).toBe("Text style")
 
     // Only one button is in the Tab order at a time.
-    const tabbable = within(toolbar)
-      .getAllByRole("button")
-      .filter((b) => b.tabIndex === 0)
-    expect(tabbable.map((b) => b.getAttribute("aria-label"))).toEqual(["Bold"])
+    const tabbable = [
+      ...toolbar.querySelectorAll<HTMLElement>("button, select"),
+    ].filter((el) => el.tabIndex === 0)
+    expect(tabbable.map((el) => el.getAttribute("aria-label"))).toEqual([
+      "Text style",
+    ])
   })
 
   it("uses the toolbar's buttons from the keyboard", async () => {
@@ -703,6 +954,8 @@ describe("<RichTextEditing>", () => {
     const box = await selectWords(5, 10)
     await screen.findByRole("toolbar")
     fireEvent.keyDown(box, { key: "F10", altKey: true })
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Bold")
     fireEvent.click(document.activeElement!)
     await waitFor(() => expect(send).toHaveBeenCalled())
     const { value } = send.mock.calls.at(-1)![0] as { value: unknown }
@@ -718,7 +971,9 @@ describe("<RichTextEditing>", () => {
     const box = await selectWords(5, 10)
     await screen.findByRole("toolbar")
     fireEvent.keyDown(box, { key: "F10", altKey: true })
-    expect(document.activeElement?.getAttribute("aria-label")).toBe("Bold")
+    expect(document.activeElement?.getAttribute("aria-label")).toBe(
+      "Text style"
+    )
     fireEvent.keyDown(document.activeElement!, { key: "Escape" })
     await waitFor(() => expect(document.activeElement).toBe(box))
     expect(screen.queryByRole("toolbar")).not.toBeNull()

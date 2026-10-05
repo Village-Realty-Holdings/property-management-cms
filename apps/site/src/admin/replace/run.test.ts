@@ -6,7 +6,7 @@ import { applyReplace, previewReplace } from "./run"
 import { textReplacement } from "./text"
 
 let t: TestPayload
-let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+let asUser: { overrideAccess: false; user: User & { collection: "users" } }
 const asVisitor = { overrideAccess: false, user: null } as const
 
 beforeAll(async () => {
@@ -15,7 +15,7 @@ beforeAll(async () => {
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+  asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
 })
 
 afterAll(async () => {
@@ -45,7 +45,7 @@ async function makePage(
       _status: status,
     },
     draft: status === "draft",
-    ...asStaff,
+    ...asUser,
   })
 }
 
@@ -66,7 +66,7 @@ const draftOf = (id: number) =>
     id,
     draft: true,
     depth: 0,
-    ...asStaff,
+    ...asUser,
   })
 
 const heading = (page: { blocks?: unknown } | null) =>
@@ -77,7 +77,7 @@ describe("a Page that was never published", () => {
     const page = await makePage("Unseen", "Alpha stays", "draft")
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Alpha", "Beta"),
       "publish"
     )
@@ -96,7 +96,7 @@ describe("a Published Page with nothing waiting", () => {
     const page = await makePage("Live one", "Gamma stays", "published")
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Gamma", "Delta"),
       "draft"
     )
@@ -111,7 +111,7 @@ describe("a Published Page with nothing waiting", () => {
     const page = await makePage("Live two", "Epsilon stays", "published")
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Epsilon", "Zeta"),
       "publish"
     )
@@ -133,7 +133,7 @@ describe("a Published Page with changes not yet published", () => {
         _status: "draft",
       },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     return page
   }
@@ -142,7 +142,7 @@ describe("a Published Page with changes not yet published", () => {
     await pending("Both", "Eta")
     const preview = await previewReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Eta", "Theta")
     )
     expect(preview).toEqual({
@@ -168,11 +168,11 @@ describe("a Published Page with changes not yet published", () => {
       id: page.id,
       data: { blocks: [hero("Rewritten")], _status: "draft" },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     const preview = await previewReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Omega", "Alef")
     )
     expect(preview).toMatchObject({
@@ -181,16 +181,16 @@ describe("a Published Page with changes not yet published", () => {
     })
     // Saved as Drafts there is nothing to change; published now there is.
     expect(
-      await applyReplace(t.payload, asStaff, swap("Omega", "Alef"), "draft")
+      await applyReplace(t.payload, asUser, swap("Omega", "Alef"), "draft")
     ).toMatchObject({ message: "Nothing to replace.", outcomes: [] })
-    await applyReplace(t.payload, asStaff, swap("Omega", "Alef"), "publish")
+    await applyReplace(t.payload, asUser, swap("Omega", "Alef"), "publish")
     expect(heading(await onSite(page.id))).toBe("Alef stays")
     expect(heading(await draftOf(page.id))).toBe("Rewritten")
   })
 
   it("saved as a Draft, changes the Draft only", async () => {
     const page = await pending("Waiting", "Iota")
-    await applyReplace(t.payload, asStaff, swap("Iota", "Kappa"), "draft")
+    await applyReplace(t.payload, asUser, swap("Iota", "Kappa"), "draft")
     expect(heading(await onSite(page.id))).toBe("Iota stays")
     expect(heading(await draftOf(page.id))).toBe("Kappa stays, rewritten")
   })
@@ -199,7 +199,7 @@ describe("a Published Page with changes not yet published", () => {
     const page = await pending("Split", "Lambda")
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Lambda", "Mu"),
       "publish"
     )
@@ -228,18 +228,18 @@ describe("a Page Template", () => {
         _status: "draft",
       },
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
 
   it("is left as it is, and isn't in the preview, unless asked", async () => {
     const template = await makeTemplate("Upsilon")
     const replacement = swap("Upsilon", "Phi")
-    expect(await previewReplace(t.payload, asStaff, replacement)).toEqual({
+    expect(await previewReplace(t.payload, asUser, replacement)).toEqual({
       rows: [],
       total: 0,
     })
     expect(
-      await applyReplace(t.payload, asStaff, replacement, "publish")
+      await applyReplace(t.payload, asUser, replacement, "publish")
     ).toMatchObject({ message: "Nothing to replace.", outcomes: [] })
     const after = await draftOf(template.id)
     expect(after.title).toBe("Upsilon starter")
@@ -249,16 +249,11 @@ describe("a Page Template", () => {
   it("is replaced when it is included, and stays unpublished", async () => {
     const template = await makeTemplate("Chi")
     const replacement = swap("Chi", "Psi", true)
-    const preview = await previewReplace(t.payload, asStaff, replacement)
+    const preview = await previewReplace(t.payload, asUser, replacement)
     expect(preview.rows).toMatchObject([
       { kind: "Page Template", title: "Chi starter", matches: 2 },
     ])
-    const result = await applyReplace(
-      t.payload,
-      asStaff,
-      replacement,
-      "publish"
-    )
+    const result = await applyReplace(t.payload, asUser, replacement, "publish")
     expect(result).toMatchObject({
       message: "Replaced in 1 Page Template.",
       outcomes: [{ kind: "Page Template", message: "Draft saved" }],
@@ -279,9 +274,9 @@ describe("a Layout", () => {
         name: "Main",
         footer: [{ blockType: "legalBar", text: "© Nu Rentals" }],
       },
-      ...asStaff,
+      ...asUser,
     })
-    const preview = await previewReplace(t.payload, asStaff, swap("Nu", "Xi"))
+    const preview = await previewReplace(t.payload, asUser, swap("Nu", "Xi"))
     expect(preview.rows).toEqual([
       {
         kind: "Layout",
@@ -294,7 +289,7 @@ describe("a Layout", () => {
     ])
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Nu", "Xi"),
       "draft"
     )
@@ -306,7 +301,7 @@ describe("a Layout", () => {
       collection: "layouts",
       id: layout.id,
       depth: 0,
-      ...asStaff,
+      ...asUser,
     })
     expect(saved.footer?.[0]).toMatchObject({ text: "© Xi Rentals" })
     expect(saved.name).toBe("Main")
@@ -320,7 +315,7 @@ describe("when a document can't be saved", () => {
     const fine = await makePage("Fine", "Omicron stays", "draft")
     const result = await applyReplace(
       t.payload,
-      asStaff,
+      asUser,
       swap("Omicron", ""),
       "draft"
     )
@@ -352,7 +347,7 @@ describe("someone who isn't signed in", () => {
 describe("when nothing matches", () => {
   it("says so", async () => {
     expect(
-      await applyReplace(t.payload, asStaff, swap("Sigma", "Tau"), "publish")
+      await applyReplace(t.payload, asUser, swap("Sigma", "Tau"), "publish")
     ).toEqual({ ok: true, message: "Nothing to replace.", outcomes: [] })
   })
 })

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -27,10 +28,16 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }))
 const actions = vi.hoisted(() => ({
   savePage: vi.fn(),
   deletePage: vi.fn(),
+  restorePageVersion: vi.fn(),
 }))
 vi.mock("../../actions/pages", () => actions)
 vi.mock("../../actions/pagePicker", () => ({ searchPages: async () => [] }))
 
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const toast = vi.hoisted(() => ({
   success: vi.fn(),
   info: vi.fn(),
@@ -38,8 +45,13 @@ const toast = vi.hoisted(() => ({
 }))
 vi.mock("sonner", () => ({ toast }))
 
+import { setTimeZone } from "../../../test/timeZone"
 import type { PageDocument } from "../state"
+import type { PageVersionRow } from "../../pageHistory"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { PageMode, type PageModeProps } from "./PageMode"
+
+setTimeZone("UTC")
 
 const about: PageDocument = {
   kind: "page",
@@ -74,6 +86,7 @@ function mount(props: Partial<PageModeProps> = {}) {
       id={4}
       initial={about}
       status="draft"
+      publishedPath={null}
       layouts={[main]}
       media={[]}
       pages={[]}
@@ -105,12 +118,56 @@ const edit = async (title: string) => {
 }
 
 beforeEach(() => {
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   actions.savePage.mockResolvedValue(saved())
 })
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+})
+
+describe("<PageMode> who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims a saved Page", async () => {
+    mount({ id: 4 })
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({
+        kind: "page",
+        id: 4,
+      })
+    )
+  })
+
+  it("claims nothing for a New Page", async () => {
+    mount({ id: null })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(presence.touchPresence).not.toHaveBeenCalled()
+  })
+
+  it("shows who holds the Page when someone else does", async () => {
+    presence.touchPresence.mockResolvedValue({
+      status: "other",
+      name: "Sam Taylor",
+    })
+    mount()
+    await firstTouch()
+    expect(
+      await screen.findByText("Sam Taylor is editing this Page.")
+    ).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Take over" })).toBeTruthy()
+  })
 })
 
 describe("<PageMode> status chip", () => {
@@ -408,5 +465,265 @@ describe("<PageMode> Blocks", () => {
       within(outline).getByRole("treeitem", { name: "Container" })
     )
     expect(within(outline).getByText("Rich text removed.")).toBeTruthy()
+  })
+})
+
+const version = (over: Partial<PageVersionRow>): PageVersionRow => ({
+  id: 1,
+  savedAt: "2026-03-02T09:00:00.000Z",
+  author: "Sam Taylor",
+  status: "draft",
+  isLatest: false,
+  ...over,
+})
+
+const versions = [
+  version({
+    id: 3,
+    savedAt: "2026-03-03T09:00:00.000Z",
+    author: "Ava Stone",
+    isLatest: true,
+  }),
+  version({ id: 2, status: "published" }),
+  version({ id: 1, savedAt: "2026-03-01T09:00:00.000Z", author: null }),
+]
+
+const openHistory = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByRole("tab", { name: "History" }))
+  return screen.getByRole("tabpanel", { name: "History" })
+}
+
+describe("<PageMode> the History tab", () => {
+  it("is a fourth tab, and lists the versions with when, who and status", async () => {
+    mount({ history: versions })
+    const user = userEvent.setup()
+    const panel = await openHistory(user)
+    const items = within(panel).getAllByRole("listitem")
+    expect(items).toHaveLength(3)
+    expect(items[0]!.textContent).toContain("Ava Stone")
+    expect(items[0]!.textContent).toContain("Draft")
+    expect(items[1]!.textContent).toContain("Mar 2, 2026, 9:00 AM UTC")
+    expect(items[1]!.textContent).toContain("Sam Taylor")
+    expect(items[1]!.textContent).toContain("Published")
+  })
+
+  it("offers Restore on every version but the latest", async () => {
+    mount({ history: versions })
+    const user = userEvent.setup()
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    expect(within(items[0]!).queryByRole("button")).toBeNull()
+    expect(
+      within(items[1]!).getByRole("button", { name: /Restore/ })
+    ).toBeTruthy()
+    expect(
+      within(items[2]!).getByRole("button", { name: /Restore/ })
+    ).toBeTruthy()
+  })
+
+  it("says so when a New Page has no versions yet", async () => {
+    mount({ id: null })
+    const user = userEvent.setup()
+    const panel = await openHistory(user)
+    expect(panel.textContent).toContain("No versions yet")
+  })
+
+  it("asks before restoring, and restores nothing on Cancel", async () => {
+    mount({ history: versions })
+    const user = userEvent.setup()
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    await user.click(within(items[1]!).getByRole("button", { name: /Restore/ }))
+    const confirm = await screen.findByRole("alertdialog")
+    expect(confirm.textContent).toContain("Mar 2, 2026, 9:00 AM UTC")
+    expect(confirm.textContent).toContain("Draft")
+    await user.click(within(confirm).getByRole("button", { name: "Cancel" }))
+    expect(actions.restorePageVersion).not.toHaveBeenCalled()
+  })
+
+  it("restores the version into the editor as a clean Draft, and grows the history", async () => {
+    const older = { ...about, title: "About (older)" }
+    actions.restorePageVersion.mockResolvedValue({
+      ok: true,
+      id: 4,
+      message: "Restored the version from Mar 2, 2026. It is saved as a Draft.",
+      status: "changes",
+      document: older,
+      history: [version({ id: 4, isLatest: true }), ...versions],
+    })
+    mount({ history: versions, status: "published" })
+    const user = userEvent.setup()
+    const panel = await openHistory(user)
+    await user.click(
+      within(within(panel).getAllByRole("listitem")[1]!).getByRole("button", {
+        name: /Restore/,
+      })
+    )
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+
+    await waitFor(() =>
+      expect(actions.restorePageVersion).toHaveBeenCalledWith(4, 2, {})
+    )
+    await waitFor(() => expect(toast.success).toHaveBeenCalled())
+    expect(
+      within(topBar()).getByRole("heading", { name: "About (older)" })
+    ).toBeTruthy()
+    expect(
+      within(topBar()).getByText("Changes not published", { exact: true })
+    ).toBeTruthy()
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(4)
+    const save = within(topBar()).getByRole("button", { name: "Save" })
+    expect((save as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it("warns that unsaved changes are replaced", async () => {
+    mount({ history: versions })
+    const user = await edit("Scratch")
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    await user.click(within(items[1]!).getByRole("button", { name: /Restore/ }))
+    const confirm = await screen.findByRole("alertdialog")
+    expect(confirm.textContent).toContain("unsaved changes")
+  })
+
+  it("keeps the dialog open and shows why a restore failed", async () => {
+    actions.restorePageVersion.mockResolvedValue({
+      ok: false,
+      message: "That version no longer exists.",
+    })
+    mount({ history: versions })
+    const user = userEvent.setup()
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    await user.click(within(items[1]!).getByRole("button", { name: /Restore/ }))
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    expect(await within(confirm).findByText(/no longer exists/)).toBeTruthy()
+  })
+
+  it("names the field that stopped a restore, and keeps the dialog open", async () => {
+    actions.restorePageVersion.mockResolvedValue({
+      ok: false,
+      message: "Some fields need attention.",
+      fieldErrors: { path: "Another Page uses this path." },
+    })
+    mount({ history: versions })
+    const user = userEvent.setup()
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    await user.click(within(items[1]!).getByRole("button", { name: /Restore/ }))
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    expect(
+      await within(confirm).findByText(/Path: Another Page uses this path\./)
+    ).toBeTruthy()
+    expect(screen.getByRole("alertdialog")).toBeTruthy()
+  })
+
+  it("shows the new version after a save", async () => {
+    actions.savePage.mockResolvedValue(
+      saved({ history: [version({ id: 9, isLatest: true }), ...versions] })
+    )
+    mount({ history: versions })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(toast.success).toHaveBeenCalled())
+    const items = within(await openHistory(user)).getAllByRole("listitem")
+    expect(items).toHaveLength(4)
+  })
+})
+
+const conflictResult = {
+  ok: false,
+  message: "This Page changed since you opened it.",
+  conflict: {
+    kind: "page",
+    by: "Sam Taylor",
+    byYou: false,
+    at: "2026-10-04T14:32:00.000Z",
+  },
+}
+
+describe("<PageMode> someone else saved first", () => {
+  it("sends the revision it opened, and keeps the one a save returns", async () => {
+    actions.savePage.mockResolvedValue(saved({ revision: "6" }))
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await waitFor(() =>
+      expect(actions.savePage).toHaveBeenCalledWith(
+        expect.objectContaining({ expected: "5" })
+      )
+    )
+    await waitFor(() => expect(toast.success).toHaveBeenCalled())
+    await edit("About v3")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(actions.savePage).toHaveBeenCalledTimes(2))
+    expect(actions.savePage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ expected: "6" })
+    )
+  })
+
+  it("opens the dialog when a save is refused", async () => {
+    actions.savePage.mockResolvedValue(conflictResult)
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("This Page changed since you opened it")
+    ).toBeTruthy()
+    expect(dialog.textContent).toContain(
+      "Sam Taylor saved it at Oct 4, 2026, 2:32 PM UTC."
+    )
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("saves again with force, the same intent, on Save anyway", async () => {
+    actions.savePage
+      .mockResolvedValueOnce(conflictResult)
+      .mockResolvedValueOnce(saved({ status: "published", revision: "7" }))
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Publish" }))
+    const dialog = await screen.findByRole("alertdialog")
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save anyway" })
+    )
+    await waitFor(() => expect(actions.savePage).toHaveBeenCalledTimes(2))
+    expect(actions.savePage).toHaveBeenLastCalledWith({
+      id: 4,
+      intent: "publish",
+      document: expect.objectContaining({ title: "About v2" }),
+      expected: "5",
+      force: true,
+    })
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+  })
+
+  it("keeps editing when the dialog is dismissed", async () => {
+    actions.savePage.mockResolvedValue(conflictResult)
+    mount({ revision: "5" })
+    const user = await edit("About v2")
+    await user.click(within(topBar()).getByRole("button", { name: "Save" }))
+    await screen.findByRole("alertdialog")
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+    expect(actions.savePage).toHaveBeenCalledTimes(1)
+  })
+
+  it("closes the History confirm and opens the dialog when a restore is refused", async () => {
+    actions.restorePageVersion.mockResolvedValue(conflictResult)
+    mount({ history: versions, revision: "3" })
+    const user = userEvent.setup()
+    const panel = await openHistory(user)
+    await user.click(
+      within(within(panel).getAllByRole("listitem")[1]!).getByRole("button", {
+        name: /Restore/,
+      })
+    )
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    await screen.findByText("This Page changed since you opened it")
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1)
+    expect(actions.restorePageVersion).toHaveBeenCalledWith(4, 2, {
+      expected: "3",
+    })
   })
 })

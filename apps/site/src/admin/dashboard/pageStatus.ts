@@ -6,7 +6,7 @@ type Status = "draft" | "published" | null | undefined
 /**
  * A Page's status from two facts: the status of the document visitors are
  * served (the published copy; `draft` when it was never published) and the
- * status of its newest version (the Draft a Staff User last saved).
+ * status of its newest version (the Draft a User last saved).
  */
 export function derivePageStatus({
   published,

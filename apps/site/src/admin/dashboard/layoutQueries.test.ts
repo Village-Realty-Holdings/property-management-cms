@@ -16,11 +16,11 @@ let listingsId: number
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  const staff = await payload.create({
+  const testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
-  as = { overrideAccess: false, user: { ...staff, collection: "users" } }
+  as = { overrideAccess: false, user: { ...testUser, collection: "users" } }
 
   const layout = (data: Record<string, unknown>) =>
     payload.create({ collection: "layouts", data: data as never, ...as })

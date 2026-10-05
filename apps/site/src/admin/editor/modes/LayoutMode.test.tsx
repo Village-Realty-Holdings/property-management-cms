@@ -37,6 +37,11 @@ vi.mock("../../actions/pagePicker", () => ({
     { id: 9, title: "Stays", path: "/stays", status: "published" },
   ],
 }))
+const presence = vi.hoisted(() => ({
+  touchPresence: vi.fn(),
+  readPresence: vi.fn(),
+}))
+vi.mock("../../actions/presence", () => presence)
 const success = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast: { success } }))
 
@@ -49,6 +54,7 @@ import type {
 } from "../../layouts/layoutScreen"
 import { BRIDGE_CHANNEL } from "../bridge"
 import type { LayoutDocument } from "../state"
+import { FIRST_TOUCH_MS } from "../usePresence"
 import { LayoutMode, type LayoutModeActions } from "./LayoutMode"
 
 const hero = (heading: string) =>
@@ -70,7 +76,7 @@ const doc: LayoutDocument = {
 const version = (over: Partial<LayoutVersionRow>): LayoutVersionRow => ({
   id: 1,
   savedAt: "2026-03-01T10:00:00.000Z",
-  author: "Sam Staff",
+  author: "Sam Taylor",
   summary: "Saved again",
   isLive: false,
   ...over,
@@ -132,6 +138,8 @@ beforeAll(() => {
 })
 beforeEach(() => {
   success.mockReset()
+  presence.touchPresence.mockReset().mockResolvedValue({ status: "yours" })
+  presence.readPresence.mockReset().mockResolvedValue({ status: "yours" })
   for (const fn of Object.values(router)) fn.mockReset()
   actions = {
     save: vi.fn<LayoutModeActions["save"]>(async () => saved()),
@@ -162,6 +170,36 @@ const rename = async (
   await user.clear(field)
   await user.type(field, name)
 }
+
+describe("who else is editing", () => {
+  // The first touch waits FIRST_TOUCH_MS after load: run the clock past it.
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+  const firstTouch = () =>
+    act(() => vi.advanceTimersByTimeAsync(FIRST_TOUCH_MS))
+
+  it("claims the Layout, and shows who holds it when someone else does", async () => {
+    presence.touchPresence.mockResolvedValue({
+      status: "other",
+      name: "Ada Lovelace",
+    })
+    mount({ id: 7 })
+    await firstTouch()
+    await waitFor(() =>
+      expect(presence.touchPresence).toHaveBeenCalledWith({
+        kind: "layout",
+        id: 7,
+      })
+    )
+    expect(
+      (await screen.findByText("Ada Lovelace is editing this Layout.")).tagName
+    ).toBe("SPAN")
+  })
+})
 
 describe("the top bar", () => {
   it("names the Layout, shows the Layout chip and how far a save reaches", () => {
@@ -362,7 +400,8 @@ describe("the Layout tab", () => {
     await user.click(saveButton())
     expect(actions.save).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({ isDefault: true })
+      expect.objectContaining({ isDefault: true }),
+      { note: null }
     )
   })
 
@@ -412,11 +451,45 @@ describe("Save", () => {
     )
     expect(actions.save).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({ kind: "layout", name: "Listings" })
+      expect.objectContaining({ kind: "layout", name: "Listings" }),
+      { note: null }
     )
     expect(saveButton().disabled).toBe(true)
     // What the save reached is what the bar says now.
     expect(within(bar()).getByText("Used by 3 Pages")).toBeTruthy()
+  })
+
+  it("saves with the note, trimmed, and clears it once saved", async () => {
+    const user = userEvent.setup()
+    mount()
+    await rename(user, "Listings")
+    const note = within(bar()).getByRole<HTMLInputElement>("textbox", {
+      name: /Note/,
+    })
+    await user.type(note, "  Summer offers  ")
+    await user.click(saveButton())
+
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(1))
+    expect(actions.save).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ name: "Listings" }),
+      { note: "Summer offers" }
+    )
+    await waitFor(() => expect(note.value).toBe(""))
+  })
+
+  it("keeps the note when the save fails", async () => {
+    actions.save.mockResolvedValue({ ok: false, message: "Nope." })
+    const user = userEvent.setup()
+    mount()
+    await rename(user, "Listings")
+    const note = within(bar()).getByRole<HTMLInputElement>("textbox", {
+      name: /Note/,
+    })
+    await user.type(note, "Try")
+    await user.click(saveButton())
+    await screen.findByRole("alert")
+    expect(note.value).toBe("Try")
   })
 
   it("fails inline, keeps the changes and stays on", async () => {
@@ -470,7 +543,7 @@ describe("the History tab", () => {
     expect(items[0]!.textContent).toContain("Header changed")
     expect(items[1]!.textContent).toContain("Footer changed")
     expect(items[1]!.textContent).toContain("Mar 2, 2026, 9:00 AM UTC")
-    expect(items[1]!.textContent).toContain("Sam Staff")
+    expect(items[1]!.textContent).toContain("Sam Taylor")
   })
 
   it("offers Restore on every version but the live one", async () => {
@@ -528,7 +601,7 @@ describe("the History tab", () => {
     const confirm = await screen.findByRole("alertdialog")
     await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
 
-    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith(7, 2))
+    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith(7, 2, {}))
     await waitFor(() =>
       expect(success).toHaveBeenCalledWith("Version restored: 2 Pages changed.")
     )
@@ -608,4 +681,82 @@ describe("accessibility", () => {
       expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
     }
   )
+})
+
+describe("when someone else saved first", () => {
+  const conflict: LayoutResult = {
+    ok: false,
+    message: "This Layout changed since you opened it.",
+    conflict: {
+      kind: "layout",
+      by: "Sam Taylor",
+      byYou: false,
+      at: "2026-10-04T14:32:00.000Z",
+    },
+  }
+
+  it("sends the revision it opened, and the one a save returned next time", async () => {
+    const user = userEvent.setup()
+    actions.save.mockResolvedValue(saved({ revision: "9" }))
+    mount({ revision: "3" })
+    await rename(user, "Listings")
+    await user.click(saveButton())
+    await waitFor(() => expect(success).toHaveBeenCalled())
+    expect(actions.save).toHaveBeenLastCalledWith(7, expect.anything(), {
+      note: null,
+      expected: "3",
+    })
+    await rename(user, "Listings 2")
+    await user.click(saveButton())
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(2))
+    expect(actions.save).toHaveBeenLastCalledWith(7, expect.anything(), {
+      note: null,
+      expected: "9",
+    })
+  })
+
+  it("opens the dialog when a save is refused, and saves with force on Save anyway", async () => {
+    const user = userEvent.setup()
+    actions.save
+      .mockResolvedValueOnce(conflict)
+      .mockResolvedValueOnce(saved({ revision: "10" }))
+    mount({ revision: "3" })
+    await rename(user, "Listings")
+    await user.click(saveButton())
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      within(dialog).getByText("This Layout changed since you opened it")
+    ).toBeTruthy()
+    expect(dialog.textContent).toContain("Sam Taylor saved it at")
+    expect(success).not.toHaveBeenCalled()
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Save anyway" })
+    )
+    await waitFor(() => expect(actions.save).toHaveBeenCalledTimes(2))
+    expect(actions.save).toHaveBeenLastCalledWith(
+      7,
+      expect.objectContaining({ name: "Listings" }),
+      { note: null, expected: "3", force: true }
+    )
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+    await waitFor(() => expect(success).toHaveBeenCalled())
+  })
+
+  it("closes the History confirm and opens the dialog when a restore is refused", async () => {
+    const user = userEvent.setup()
+    actions.restore.mockResolvedValue(conflict)
+    mount({ revision: "3" })
+    const panel = await openTab(user, "History")
+    await user.click(
+      within(within(panel).getAllByRole("listitem")[1]!).getByRole("button", {
+        name: /Restore/,
+      })
+    )
+    const confirm = await screen.findByRole("alertdialog")
+    await user.click(within(confirm).getByRole("button", { name: /Restore/ }))
+    await screen.findByText("This Layout changed since you opened it")
+    expect(screen.getAllByRole("alertdialog")).toHaveLength(1)
+    expect(actions.restore).toHaveBeenCalledWith(7, 2, { expected: "3" })
+  })
 })

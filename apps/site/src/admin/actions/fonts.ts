@@ -8,10 +8,10 @@ import {
   deleteFontAs,
   uploadFontAs,
 } from "../fonts/fontsScreen"
-import { requireStaff } from "../session"
+import { requireUser } from "../session"
 
 /**
- * The Fonts screen's Server Actions. Each runs as the Staff User (apps/site
+ * The Fonts screen's Server Actions. Each runs as the User (apps/site
  * ADR-0002) and validates what the browser sent again. After a change the
  * Fonts screen and the Site are refreshed: the Site's layout inlines the
  * `@font-face` rules for the stored Fonts.
@@ -29,7 +29,7 @@ export async function addGoogleFont(
   _previous: FormState,
   data: FormData
 ): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const result = await addGoogleFontAs(payload, as, data)
   if (result.ok) refresh()
   return result
@@ -40,7 +40,7 @@ export async function uploadFonts(
   _previous: FormState,
   data: FormData
 ): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const result = await uploadFontAs(payload, as, data)
   if (result.ok) refresh()
   return result
@@ -51,7 +51,7 @@ export async function uploadFonts(
  * uses it.
  */
 export async function deleteFont(id: number): Promise<FormState> {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   if (!Number.isInteger(id) || id <= 0) {
     return { ok: false, message: "That Font no longer exists." }
   }

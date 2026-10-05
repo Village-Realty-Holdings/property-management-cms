@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { createUntitledLayout } from "@/admin/layouts/layoutScreen"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
 export const metadata: Metadata = { title: "New Layout" }
 
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"
  * Page picks it or a path covers the Page.
  */
 export default async function NewLayout() {
-  const { payload, as } = await requireStaff()
+  const { payload, as } = await requireUser()
   const id = await createUntitledLayout(payload, as)
   redirect(`/admin/layouts/${id}`)
 }

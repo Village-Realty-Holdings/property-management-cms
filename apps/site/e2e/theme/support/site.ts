@@ -3,8 +3,8 @@ import { SCHEMA, databaseUrl } from "./env"
 
 import { getPayload, type Payload } from "payload"
 
-import { DEV_STAFF_USER } from "../../../src/auth/devSignIn"
-import { findOrCreateStaffUser } from "../../../src/auth/staffUser"
+import { DEV_USER } from "../../../src/auth/devSignIn"
+import { findOrCreateUser } from "../../../src/auth/user"
 import { importGoogleFont } from "../../../src/fonts/importGoogleFont"
 import type { FontKind } from "../../../src/fonts/types"
 import { buildPayloadConfig } from "../../../src/payload.config"
@@ -19,14 +19,14 @@ import type { ThemeInputs } from "../../../src/theme"
 
 /**
  * The tests' own handle on the scratch Site: the same database and schema the
- * dev server uses, reached through the Local API as the Staff User. Staff
+ * dev server uses, reached through the Local API as the User. User
  * writes (saving a Theme, publishing a Page, adding a Font) go through here;
- * everything visitors and Staff see is read back through the browser.
+ * everything visitors and Users see is read back through the browser.
  */
 
 export type ScratchSite = {
   payload: Payload
-  staff: Awaited<ReturnType<typeof findOrCreateStaffUser>>
+  user: Awaited<ReturnType<typeof findOrCreateUser>>
   /**
    * Saves `inputs` as the newest Theme version; it is live at once. Resolves
    * to false when the Site already looked like that: a save that changes
@@ -56,12 +56,12 @@ export async function openScratchSite(): Promise<ScratchSite> {
       push: false,
     }),
   })
-  const staff = await findOrCreateStaffUser(payload, DEV_STAFF_USER)
-  const user = { ...staff, collection: "users" as const }
+  const record = await findOrCreateUser(payload, DEV_USER)
+  const user = { ...record, collection: "users" as const }
 
   return {
     payload,
-    staff,
+    user: record,
     async saveTheme(inputs, note) {
       const saved = await saveTheme(payload, {
         user,

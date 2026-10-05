@@ -6,9 +6,18 @@ import {
   ListItemNode,
   ListNode,
 } from "@lexical/list"
-import { HeadingNode, QuoteNode } from "@lexical/rich-text"
+import {
+  $createHeadingNode,
+  $createQuoteNode,
+  $isHeadingNode,
+  $isQuoteNode,
+  HeadingNode,
+  QuoteNode,
+} from "@lexical/rich-text"
+import { $setBlocksType } from "@lexical/selection"
 import { $findMatchingParent } from "@lexical/utils"
 import {
+  $createParagraphNode,
   $getSelection,
   $isRangeSelection,
   $setSelection,
@@ -131,7 +140,7 @@ export function initialState(content: unknown): string {
 
 /**
  * Shows `content` in `editor`, which is not an edit of it. `tag` marks the
- * update, so a listener can tell it from the Staff User's own changes.
+ * update, so a listener can tell it from the User's own changes.
  */
 export function loadContent(
   editor: LexicalEditor,
@@ -182,6 +191,34 @@ export function toggleList(
   }, now)
 }
 
+/** The block types a User can pick: Paragraph, H2, H3, H4 and Quote. */
+export const BLOCK_TYPES = ["paragraph", "h2", "h3", "h4", "quote"] as const
+export type BlockType = (typeof BLOCK_TYPES)[number]
+
+/**
+ * Makes the selected lines `type`: a paragraph, a heading or a quote. Only the
+ * selected lines leave a list they are in: the list splits around them and the
+ * other items keep their bullets.
+ */
+export function setBlockType(
+  editor: LexicalEditor,
+  type: BlockType,
+  selection?: BaseSelection | null
+): void {
+  editor.update(() => {
+    if (selection) $setSelection(selection.clone())
+    const current = $getSelection()
+    if (!$isRangeSelection(current)) return
+    $setBlocksType(current, () =>
+      type === "paragraph"
+        ? $createParagraphNode()
+        : type === "quote"
+          ? $createQuoteNode()
+          : $createHeadingNode(type)
+    )
+  }, now)
+}
+
 /**
  * Links the selected text to `url`, changes the link it is in, or takes the
  * link off when `url` is empty. `selection` puts the selection back first, for
@@ -206,8 +243,16 @@ export function applyLink(
   return true
 }
 
+/**
+ * What the selection's block is: one a User can pick, or one the editor keeps
+ * and shows but does not offer (H1, H5, H6, a list).
+ */
+export type BlockState = BlockType | "h1" | "h5" | "h6" | "list"
+
 /** What the toolbar shows about the selection. */
 export type FormatState = {
+  /** The block the selection starts in. */
+  block: BlockState
   bold: boolean
   italic: boolean
   list: "bullet" | "number" | null
@@ -218,6 +263,7 @@ export type FormatState = {
 }
 
 export const NO_FORMAT: FormatState = {
+  block: "paragraph",
   bold: false,
   italic: false,
   list: null,
@@ -232,7 +278,16 @@ export function readFormat(): FormatState {
   const node = selection.anchor.getNode()
   const list = $findMatchingParent(node, $isListNode)?.getListType()
   const link = $findMatchingParent(node, $isLinkNode)
+  const top = node.getTopLevelElement()
+  const block: BlockState = $isListNode(top)
+    ? "list"
+    : $isQuoteNode(top)
+      ? "quote"
+      : $isHeadingNode(top)
+        ? top.getTag()
+        : "paragraph"
   return {
+    block,
     bold: selection.hasFormat("bold"),
     italic: selection.hasFormat("italic"),
     list: list === "bullet" || list === "number" ? list : null,

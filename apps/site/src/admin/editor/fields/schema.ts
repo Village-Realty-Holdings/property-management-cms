@@ -77,6 +77,6 @@ export function valueOrDefault(field: Field, value: unknown): unknown {
     : undefined
 }
 
-/** Whether Staff Users may not change the field. */
+/** Whether Users may not change the field. */
 export const isReadOnly = (field: Field): boolean =>
   (field.admin as { readOnly?: boolean } | undefined)?.readOnly === true

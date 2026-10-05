@@ -65,7 +65,7 @@ export async function readSiteTheme(payload: Payload): Promise<LiveSiteTheme> {
  * Every Layout, with the Pages its menus link to populated (depth 1), so a
  * link follows its Page's current path. A link to a Page a visitor cannot
  * read (one that is not Published) stays an id, and renders nothing. Only
- * what the Site draws is selected: the history details are staff-only.
+ * what the Site draws is selected: the history details are users-only.
  * Oldest first, so on a tie between path prefixes the first Layout keeps it.
  */
 export async function readLayouts(payload: Payload): Promise<Layout[]> {

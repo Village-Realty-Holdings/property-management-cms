@@ -12,10 +12,10 @@ import { childrenOf, type LayoutChoice, type PageDocument } from "../state"
  * server reads and writes with it, the editor holds it.
  */
 
-/** What a New Page is called until its Staff User names it. */
+/** What a New Page is called until its User names it. */
 export const NEW_PAGE_TITLE = "Untitled Page"
 
-const NEW_PAGE_PATH = "/untitled-page"
+export const NEW_PAGE_PATH = "/untitled-page"
 
 /** The editor gives Blocks it adds an id like `new-3`; Payload makes the real one. */
 const isEditorId = (id: unknown) =>
@@ -104,7 +104,3 @@ export function newPageDocument(path: string = NEW_PAGE_PATH): PageDocument {
     isTemplate: false,
   }
 }
-
-/** The path a New Page starts with, given the paths Pages already use. */
-export const newPagePath = (taken: readonly string[]) =>
-  freePath(NEW_PAGE_PATH, taken)

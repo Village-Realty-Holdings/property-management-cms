@@ -11,7 +11,7 @@
  * it prints the ports: 3001, 3002 and 3003.
  *
  * It is safe to run again. A worktree, an install or an env file that is
- * already there is left alone (an env file is never overwritten, so a Staff
+ * already there is left alone (an env file is never overwritten, so a
  * User's own database URL and secret survive), and an env file that names the
  * property_management_site database is refused.
  *
@@ -187,7 +187,7 @@ function refuseProtectedDatabase(contents: string, source: string) {
   }
 }
 
-/** What to tell the Staff User when the worktrees are ready. */
+/** What to tell the User when the worktrees are ready. */
 export function summarize(mainRoot: string): string {
   const lines = ["Site worktrees:"]
   for (const { slug, port } of SITES) {

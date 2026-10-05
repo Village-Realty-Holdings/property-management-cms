@@ -35,7 +35,7 @@ let original: Json
 
 const theme = async (): Promise<Json> =>
   (
-    await h.staff.context.request.get(`${ORIGIN}/api/globals/theme?depth=0`)
+    await h.user.context.request.get(`${ORIGIN}/api/globals/theme?depth=0`)
   ).json()
 
 beforeAll(async () => {
@@ -45,7 +45,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (h) {
-    const request = h.staff.context.request
+    const request = h.user.context.request
     if (original?.id) {
       // The Theme's inputs: everything but what the record sets itself.
       const record = ["id", "createdAt", "updatedAt", "globalType"]
@@ -72,7 +72,7 @@ const cardOf = (page: Page, name: string) =>
 
 describe("Themes", () => {
   it("follows the page-header pattern and passes WCAG 2.2 AA", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     expect(
       await page.getByRole("heading", { level: 1, name: "Themes" }).count()
@@ -87,7 +87,7 @@ describe("Themes", () => {
   })
 
   it("lists the built-in Themes", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     for (const name of ["Harbour", "Terracotta", "Classic", "Meadow"]) {
       expect(await cardOf(page, name).count(), name).toBe(1)
@@ -95,7 +95,7 @@ describe("Themes", () => {
   })
 
   it("applies a Theme after asking, and marks it Live", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     // Start from another Theme, so applying Harbour is a change.
     await visit(page, SCREEN)
     if ((await theme()).primary === "#2d4447") {
@@ -119,7 +119,7 @@ describe("Themes", () => {
   })
 
   it("keeps the current Theme in the list under a name", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     // The header's button; the empty list offers the same action.
     await page
@@ -136,7 +136,7 @@ describe("Themes", () => {
   })
 
   it("exports a Theme as a file and imports it under a free name", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -161,7 +161,7 @@ describe("Themes", () => {
   })
 
   it("says why a file can't be imported", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByLabel("Theme file to import").setInputFiles({
       name: "notes.json",
@@ -172,7 +172,7 @@ describe("Themes", () => {
   })
 
   it("renames and deletes a Saved Theme", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByRole("button", { name: `Rename ${NAME}` }).click()
     const dialog = page.getByRole("dialog")

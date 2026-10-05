@@ -24,7 +24,7 @@ Inside a Container a Block has no background of its own (ADR-0007), so only its 
 
 ## Consequences
 
-- Staff can make text that is hard to read by setting White or Dark. Automatic never does.
+- Users can make text that is hard to read by setting White or Dark. Automatic never does.
 - A Block that hard-codes a colour instead of reading the Theme's variables will not follow these settings. The Block tests that forbid raw colours guard this.
 - One migration adds the two background values to every Block's background and the text colour column to every Block that has a background, on Pages and Layouts and their versions.
 - New Blocks get the settings by spreading `surfaceFields` into their config.

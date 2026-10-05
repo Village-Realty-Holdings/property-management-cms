@@ -15,7 +15,7 @@ import { DEFAULT_INPUTS } from "./presets"
 /**
  * Token derivation, in three tiers:
  *
- * 1. brand inputs (`ThemeInputs`), the only thing a Staff User edits;
+ * 1. brand inputs (`ThemeInputs`), the only thing a User edits;
  * 2. semantic tokens: the shadcn set plus `--link`, `--surface-dark`,
  *    `--third`, `--radius`, the fonts, heading style, shadows, durations;
  * 3. component tokens: `--btn-*`, `--card-*`, `--input-*`, `--section-y`,

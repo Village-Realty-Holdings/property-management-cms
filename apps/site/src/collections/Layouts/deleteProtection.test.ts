@@ -8,12 +8,12 @@ import { layoutDependents } from "./deleteProtection"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -25,14 +25,14 @@ beforeEach(async () => {
   await truncateTables(payload, "layouts", "_layouts_v", "pages", "_pages_v")
 })
 
-const user = () => ({ ...staff, collection: "users" as const })
-const asStaff = () => ({ overrideAccess: false, user: user() }) as const
+const user = () => ({ ...testUser, collection: "users" as const })
+const asUser = () => ({ overrideAccess: false, user: user() }) as const
 
 const makeLayout = (name: string, extra: Record<string, unknown> = {}) =>
   payload.create({
     collection: "layouts",
     data: { name, ...extra },
-    ...asStaff(),
+    ...asUser(),
   })
 
 const makePage = (
@@ -45,18 +45,18 @@ const makePage = (
     collection: "pages",
     data: { title, path, layout, _status: status },
     draft: status === "draft",
-    ...asStaff(),
+    ...asUser(),
   })
 
 const deleteLayout = (id: number) =>
-  payload.delete({ collection: "layouts", id, ...asStaff() })
+  payload.delete({ collection: "layouts", id, ...asUser() })
 
 const exists = async (id: number) =>
   (
     await payload.find({
       collection: "layouts",
       where: { id: { equals: id } },
-      ...asStaff(),
+      ...asUser(),
     })
   ).totalDocs === 1
 
@@ -115,7 +115,7 @@ describe("deleting a Layout that Pages pick", () => {
       id: page.id,
       data: { layout: { mode: "specific", layout: picked.id } },
       draft: true,
-      ...asStaff(),
+      ...asUser(),
     })
     const { message } = await refusal(deleteLayout(picked.id))
     expect(message).toContain("Home (/)")
@@ -133,7 +133,7 @@ describe("deleting a Layout that Pages pick", () => {
       id: page.id,
       data: { layout: { mode: "route" } },
       draft: true,
-      ...asStaff(),
+      ...asUser(),
     })
     const { message } = await refusal(deleteLayout(picked.id))
     expect(message).toContain("Home (/)")
@@ -151,7 +151,7 @@ describe("deleting a Layout that Pages pick", () => {
       id: page.id,
       data: { title: "Home again" },
       draft: true,
-      ...asStaff(),
+      ...asUser(),
     })
     const dependents = await layoutDependents(payload, {
       id: picked.id,
@@ -171,7 +171,7 @@ describe("deleting a Layout that Pages pick", () => {
       collection: "pages",
       id: page.id,
       data: { layout: { mode: "route" } },
-      ...asStaff(),
+      ...asUser(),
     })
     await deleteLayout(picked.id)
     expect(await exists(picked.id)).toBe(false)

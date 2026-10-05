@@ -6,10 +6,10 @@ import { formatSavedAt } from "../theme/record/summary"
 /**
  * The Layout record, server side (apps/site ADR-0006). A Layout goes live on
  * save and keeps every version, like the Theme (ADR-0004). Writes run as the
- * Staff User (ADR-0002), never around access.
+ * User (ADR-0002), never around access.
  */
 
-type Staff = TypedUser
+type User = TypedUser
 
 /** What a save sets. On an update, what is left out stays as it is. */
 export type LayoutData = {
@@ -44,7 +44,7 @@ export type LayoutVersion = {
 export async function saveLayout(
   payload: Payload,
   options: {
-    user: Staff
+    user: User
     note?: string | null
   } & (
     | { id?: undefined; data: LayoutData & { name: string } }
@@ -72,10 +72,10 @@ export async function saveLayout(
   })
 }
 
-/** Every version of a Layout, newest first (the first is live). Staff only. */
+/** Every version of a Layout, newest first (the first is live). Users only. */
 export async function listLayoutHistory(
   payload: Payload,
-  options: { user: Staff; id: number }
+  options: { user: User; id: number }
 ): Promise<LayoutVersion[]> {
   const { docs } = await payload.findVersions({
     collection: "layouts",
@@ -119,7 +119,7 @@ export async function listLayoutHistory(
  */
 export async function restoreLayoutVersion(
   payload: Payload,
-  options: { user: Staff; id: number; versionId: number }
+  options: { user: User; id: number; versionId: number }
 ): Promise<Layout> {
   const found = await payload
     .findVersionByID({

@@ -4,7 +4,7 @@ import { BUILT_IN_FONTS } from "./builtIn"
 import type { FontKind, FontStyle } from "./types"
 
 /**
- * Every Font staff added, with the public URL of each file. Read as a
+ * Every Font Users added, with the public URL of each file. Read as a
  * visitor, like every other Site read (apps/site ADR-0001): Fonts and their
  * files are public.
  */
@@ -36,7 +36,7 @@ export async function getAvailableFonts(
   return combineFonts(await readStoredFonts(payload))
 }
 
-/** A Font staff added, with its files' public URLs. */
+/** A Font Users added, with its files' public URLs. */
 export type StoredFont = {
   id: number
   family: string
@@ -62,7 +62,7 @@ export type AvailableFont = {
 
 /**
  * The fonts to offer in a picker. A stored Font wins over a built-in quick
- * pick of the same family, because staff added it deliberately: the built-in
+ * pick of the same family, because Users added it deliberately: the built-in
  * one is hidden while a stored Font with that family (and files to serve)
  * exists. A Theme that already names the built-in one keeps working: this
  * only shortens the list, `combineFonts` still resolves every key.

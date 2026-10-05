@@ -199,11 +199,11 @@ export function CanvasOverlay({
   selectedId,
   send,
 }: {
-  /** The regions a Staff User can edit now; the rest is locked. */
+  /** The regions a User can edit now; the rest is locked. */
   editable: readonly Region[]
   /** The selected Block, by id. */
   selectedId: string | null
-  /** Tells the Admin what the Staff User asked for. */
+  /** Tells the Admin what the User asked for. */
   send: (request: CanvasRequest) => void
 }) {
   const editableKey = editable.join(",")

@@ -4,10 +4,10 @@ import { signedIn } from "../access"
 import { inputProblems } from "../theme/inputs"
 
 /**
- * A Saved Theme: a named copy of the Theme's inputs that Staff Users keep, to
+ * A Saved Theme: a named copy of the Theme's inputs that Users keep, to
  * apply later or to move to another Site (apps/site ADR-0009). The Site still
  * has one Theme (ADR-0004): applying a Saved Theme saves the Theme with these
- * inputs. Staff only: visitors see the Theme, never this list.
+ * inputs. Users only: visitors see the Theme, never this list.
  */
 export const SavedThemes: CollectionConfig = {
   slug: "saved-themes",

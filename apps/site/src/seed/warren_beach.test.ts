@@ -6,7 +6,7 @@ import { getTestPayload, type TestPayload } from "../test/getTestPayload"
 import { CLASSIC, WARREN_BEACH } from "../theme"
 import { readLiveTheme } from "../theme/record"
 import { runSeed } from "./index"
-import { createSeeder, seedStaffUser } from "./upsert"
+import { createSeeder, seedUser } from "./upsert"
 import { seed as warrenBeach } from "./warren_beach"
 
 // Integration test: a real Payload on a throwaway database, a fake fetch
@@ -60,7 +60,7 @@ afterAll(async () => {
   try {
     // Removes the uploaded files from local disk too. The Theme uses Fonts,
     // and a Font the live Theme uses can't be deleted: put Classic back first.
-    const seeder = createSeeder(payload, await seedStaffUser(payload))
+    const seeder = createSeeder(payload, await seedUser(payload))
     await seeder.theme(CLASSIC.inputs)
     await payload.delete({
       collection: "media",

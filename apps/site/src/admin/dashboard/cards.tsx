@@ -4,11 +4,11 @@ import {
   FileTextIcon,
   ImageUpIcon,
   LayoutTemplateIcon,
-  PlusIcon,
 } from "lucide-react"
 
 import { buttonVariants } from "@workspace/ui/components/button"
 
+import { NewPageButton } from "../components/pageTemplates/NewPageButton"
 import { EmptyState } from "../kit/EmptyState"
 import { DashboardCard } from "./DashboardCard"
 import { NEW_LAYOUT_HREF, type PageRow, type RecentItem } from "./rows"
@@ -65,11 +65,7 @@ export function ContinueEditingCard({ items }: { items: RecentItem[] }) {
           icon={<FileTextIcon />}
           title="Nothing to edit yet"
           description="Create your first Page and it shows up here."
-          action={
-            <Link href="/admin/pages/new" className={buttonVariants()}>
-              <PlusIcon aria-hidden="true" /> New Page
-            </Link>
-          }
+          action={<NewPageButton />}
         />
       ) : (
         <ul className="flex flex-col divide-y">
@@ -230,9 +226,7 @@ export function QuickActionsCard() {
   return (
     <DashboardCard id="dash-quick" title="Quick actions">
       <div className="flex flex-wrap gap-2">
-        <Link href="/admin/pages/new" className={buttonVariants()}>
-          <PlusIcon aria-hidden="true" /> New Page
-        </Link>
+        <NewPageButton />
         <Link
           href={NEW_LAYOUT_HREF}
           className={buttonVariants({ variant: "outline" })}

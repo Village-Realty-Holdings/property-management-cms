@@ -27,7 +27,7 @@ import { openScratchSite, type ScratchSite } from "./support/site"
  * Phase 2 acceptance: a saved Theme renders on the Site exactly as previewed
  * (apps/site ADR-0004). The preview is the Theme module's derivation
  * (src/theme), which is also what the Visual Editor will draw from. For each
- * Theme the test saves it as the Staff User, opens the sample bench on the
+ * Theme the test saves it as the User, opens the sample bench on the
  * Site as a visitor, and checks that what the browser computed matches the
  * derivation: the variables at :root, then a button, a card, an input and a
  * heading, then a dialog and a sheet, which portal out of the Site's wrapper.

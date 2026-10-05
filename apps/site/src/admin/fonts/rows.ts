@@ -124,7 +124,7 @@ export function sampleCss(rows: readonly FontRow[]): string {
 
 /**
  * The built-in quick picks. A stored Font wins over a built-in one of the
- * same family, because staff added it deliberately, so the built-in one is
+ * same family, because Users added it deliberately, so the built-in one is
  * hidden while a stored Font with that family (and files to serve) exists.
  */
 export function builtInRows(

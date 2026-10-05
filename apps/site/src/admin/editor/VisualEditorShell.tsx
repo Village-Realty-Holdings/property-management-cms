@@ -32,6 +32,7 @@ const NOT_SAVABLE: SaveResult = {
  * and each mode (Page, Layout, Theme) fills in what differs:
  *
  *  - `actions`: Save, and Publish for a Page, for the top bar;
+ *  - `notice`: shown full width under the top bar (who else is editing);
  *  - `tabs`: the panel's tabs and what is in them;
  *  - `canvasSrc`: the real Site route the canvas shows, in its editing mode;
  *  - `onSave`: what "Save" in the unsaved-changes dialog does (the same save
@@ -54,6 +55,7 @@ export function VisualEditorShell({
   goesLiveOn,
   backHref = BACK_HREF[mode],
   actions,
+  notice,
   tabs,
   tab,
   onTabChange,
@@ -71,6 +73,8 @@ export function VisualEditorShell({
   goesLiveOn?: number
   backHref?: string
   actions?: ReactNode
+  /** Shown full width under the top bar: who else is editing. */
+  notice?: ReactNode
   tabs: readonly PanelTab[]
   /** Controls which tab is open; omit to let the panel keep its own. */
   tab?: string
@@ -114,6 +118,7 @@ export function VisualEditorShell({
         pickerOpen={picking}
         onPickerOpenChange={setPicking}
       />
+      {notice}
       <div className="flex min-h-0 flex-1">
         <LeftPanel tabs={tabs} tab={tab} onTabChange={onTabChange} />
         <main

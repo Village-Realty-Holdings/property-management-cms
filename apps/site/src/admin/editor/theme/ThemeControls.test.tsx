@@ -47,7 +47,7 @@ function setup(value: ThemeInputs = DEFAULT_INPUTS, available = fonts) {
   return { onChange, user, ...view }
 }
 
-/** The controls as a Staff User edits them: each change feeds the next render. */
+/** The controls as a User edits them: each change feeds the next render. */
 function Harness({ initial }: { initial: ThemeInputs }) {
   const [value, setValue] = useState(initial)
   return <ThemeControls value={value} onChange={setValue} fonts={fonts} />

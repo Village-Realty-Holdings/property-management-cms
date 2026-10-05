@@ -43,7 +43,7 @@ const LAYOUTS = "/api/layouts?limit=100&depth=0"
 
 async function ids(path: string): Promise<number[]> {
   const found = (await (
-    await h.staff.context.request.get(`${ORIGIN}${path}`)
+    await h.user.context.request.get(`${ORIGIN}${path}`)
   ).json()) as { docs: Doc[] }
   return found.docs.map((item) => item.id)
 }
@@ -54,7 +54,7 @@ beforeAll(async () => {
     pages: new Set(await ids(TEMPLATES)),
     layouts: new Set(await ids(LAYOUTS)),
   }
-  const made = await h.staff.context.request.post(
+  const made = await h.user.context.request.post(
     `${ORIGIN}/api/pages?draft=false`,
     {
       data: {
@@ -257,7 +257,7 @@ describe("the route that receives feedback", () => {
 
 describe("the Guest feedback survey Page Template", () => {
   it("is added with the starters, with its Survey Layout", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin/pages/templates")
     const add = page.getByRole("button", { name: "Add starter templates" })
     if ((await add.count()) > 0) {
@@ -268,7 +268,7 @@ describe("the Guest feedback survey Page Template", () => {
       await page.getByText("Guest feedback survey template").count()
     ).toBeGreaterThan(0)
     const layouts = (await (
-      await h.staff.context.request.get(
+      await h.user.context.request.get(
         `${ORIGIN}/api/layouts?where[name][equals]=Survey%20Layout&depth=0`
       )
     ).json()) as { docs: Doc[] }

@@ -12,10 +12,10 @@ import type { Access } from "./settingsSave"
 
 /**
  * A Page as a file, to move it to another Site or keep a copy (Pages list,
- * Export and Import), through the Local API as the Staff User (apps/site
+ * Export and Import), through the Local API as the User (apps/site
  * ADR-0002).
  *
- * The file is the Page as Staff edit it (its newest copy): title, path,
+ * The file is the Page as Users edit it (its newest copy): title, path,
  * Blocks, SEO and Layout choice. What belongs to one Site is written by name,
  * since an id means nothing on another: an image is its Media file name, and
  * a picked Layout is its name. Importing looks those up again. An image or a
@@ -162,7 +162,7 @@ export async function exportPageAs(
 }
 
 /** The first path from `wanted`, "wanted-2", "wanted-3"… that no Page has. */
-async function freePath(
+export async function freePagePath(
   payload: Payload,
   access: Access,
   wanted: string
@@ -299,7 +299,7 @@ export async function importPageAs(
       }
     }
 
-    const path = await freePath(payload, access, wanted)
+    const path = await freePagePath(payload, access, wanted)
     if (path !== wanted) {
       notes.push(`“${wanted}” is taken, so the Page is at “${path}”.`)
     }

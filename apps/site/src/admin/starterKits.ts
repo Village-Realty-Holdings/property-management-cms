@@ -14,11 +14,11 @@ import { replaceText } from "./replace/text"
 import { applyThemeAs, loadThemes } from "./savedThemes"
 import { parseSeoValues, type SeoValues } from "./seoForm"
 import { loadBrand, loadSeo, saveBrandAs, saveSeoAs } from "./settingsSave"
-import type { StaffAccess } from "./theme/themeScreen"
+import type { UserAccess } from "./theme/themeScreen"
 
 /**
  * Setting a Site up from a Starter Kit (apps/site ADR-0009), through the
- * Local API as the Staff User (ADR-0002): what the form starts with, what
+ * Local API as the User (ADR-0002): what the form starts with, what
  * applying would do (the review), and doing it. Nothing is written until
  * every answer is valid. A kit never replaces a Page: one whose path is taken
  * is skipped, and the review says so beforehand.
@@ -64,7 +64,7 @@ export type KitResult = {
 /** The form's starting answers: the Site's Brand and SEO as they are. */
 export async function loadKitDefaults(
   payload: Payload,
-  access: StaffAccess
+  access: UserAccess
 ): Promise<Omit<KitAnswers, "kit" | "theme" | "details">> {
   const [brand, seo] = await Promise.all([
     loadBrand(payload, access),
@@ -107,7 +107,7 @@ type Problem = Extract<KitReview, { ok: false }>
  */
 async function prepare(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   input: unknown
 ): Promise<Prepared | Problem> {
   const answers = record(input)
@@ -163,7 +163,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 async function pathTaken(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   path: string
 ): Promise<string | null> {
   // Either copy holds the path: a Published Page keeps its path while a Draft
@@ -185,7 +185,7 @@ async function pathTaken(
 
 async function layoutExists(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   name: string
 ): Promise<boolean> {
   const { totalDocs } = await payload.count({
@@ -202,7 +202,7 @@ const pageName = (page: KitPage) =>
 /** What applying the kit with these answers will do, step by step. */
 export async function reviewKitAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   input: unknown
 ): Promise<KitReview> {
   const prepared = await prepare(payload, access, input)
@@ -285,7 +285,7 @@ function filled(page: KitPage, prepared: Prepared): KitPage["blocks"] {
   )
   let data: unknown = { blocks: page.blocks }
   for (const [find, replaceWith] of pairs) {
-    // An answer left empty keeps the placeholder, for Staff to fill in.
+    // An answer left empty keeps the placeholder, for a User to fill in.
     if (!replaceWith) continue
     data = replaceText(fields, data, {
       find,
@@ -304,7 +304,7 @@ function filled(page: KitPage, prepared: Prepared): KitPage["blocks"] {
  */
 export async function applyKitAs(
   payload: Payload,
-  access: StaffAccess,
+  access: UserAccess,
   input: unknown
 ): Promise<KitResult> {
   const prepared = await prepare(payload, access, input)

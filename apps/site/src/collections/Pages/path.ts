@@ -3,7 +3,7 @@ import type { FieldHook, TextFieldSingleValidation } from "payload"
 import { slugify } from "../../fields/slug"
 
 /**
- * Top-level paths the app routes itself (the Admin, Payload's admin, REST,
+ * Top-level paths the app routes itself (the Admin, the old Payload admin path, REST,
  * sign-in, Media files). A Page can't live at or under them.
  */
 export const RESERVED_PATH_PREFIXES = [

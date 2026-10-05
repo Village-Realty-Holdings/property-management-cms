@@ -16,7 +16,7 @@ export type FieldsEnv = {
   block: Record<string, unknown>
   media: readonly MediaOption[]
   pages: readonly PageOption[]
-  /** Fields the Staff User has touched; only those show their errors. */
+  /** Fields the User has touched; only those show their errors. */
   touched: ReadonlySet<string>
   touch: (path: readonly Segment[]) => void
   /** Puts `value` at `path`, which is relative to the Block. */

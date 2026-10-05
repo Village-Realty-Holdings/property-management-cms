@@ -2,7 +2,7 @@
 
 ## Summary
 
-Staff can put Blocks side by side and group them. A **Container** Block holds other Blocks as a stack or as columns, up to three levels deep (ADR-0007). Two small Blocks, **Button** and **Image**, come with it. The Visual Editor edits nested Blocks everywhere it edits top-level ones: state, Outline, Block tab, picker, canvas and save.
+Users can put Blocks side by side and group them. A **Container** Block holds other Blocks as a stack or as columns, up to three levels deep (ADR-0007). Two small Blocks, **Button** and **Image**, come with it. The Visual Editor edits nested Blocks everywhere it edits top-level ones: state, Outline, Block tab, picker, canvas and save.
 
 ```text
 Page
@@ -102,7 +102,7 @@ This is the full `pnpm --filter site test:e2e` run after the fixes, on scratch d
 
 **Door:** one-way for the schema, two-way for the rest.
 
-Two migrations add tables: `pages_blocks_container`, `_2` and `_3`, `pages_blocks_button`, `pages_blocks_image`, and their `_pages_v_` copies. They only create tables, but once Staff store Containers, rolling back drops their content. The rendering and editor changes can be reverted with no data loss.
+Two migrations add tables: `pages_blocks_container`, `_2` and `_3`, `pages_blocks_button`, `pages_blocks_image`, and their `_pages_v_` copies. They only create tables, but once Users store Containers, rolling back drops their content. The rendering and editor changes can be reverted with no data loss.
 
 **Blast Radius:** wide.
 
@@ -180,7 +180,7 @@ Two migrations add tables: `pages_blocks_container`, `_2` and `_3`, `pages_block
 - Regions: inside a Container, `BlockSection`'s fallback `label` names nothing. A Block there is a region only when its own heading labels it (`aria-labelledby`). A Container inside a Container (a card) is `role="group"`, unnamed. The top-level Container is still a plain div, and top-level Blocks keep their names.
 - The canvas fills Media ids from the Site's whole Media library. `EditingPage` reads it (`getMediaLibrary`, as a visitor) and `withMedia` walks the data alongside `pageBlocks`' config.
 - An Image Block with no image renders a placeholder only while editing; on the Site it still renders nothing.
-- A Button with an empty label or link still renders nothing in the canvas, as do other Blocks without their required text (a Call to action without a heading). The Button starts with catalogue defaults, so it only disappears when Staff clear its label or link.
+- A Button with an empty label or link still renders nothing in the canvas, as do other Blocks without their required text (a Call to action without a heading). The Button starts with catalogue defaults, so it only disappears when Users clear its label or link.
 - Reading width counts as narrow, following ADR-0007's "narrower than the page". This reverses the Phase 2 decision. The server message now ends "Move it out of the Container, or set the Container to 1 column at Page width." The editor's message is unchanged.
 - Outline keyboard:
   - The tab stop follows the row focus was last in; a new selection resets it.

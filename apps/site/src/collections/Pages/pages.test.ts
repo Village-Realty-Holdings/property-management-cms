@@ -7,12 +7,12 @@ import { checkPagePath, defaultPagePath } from "./path"
 
 let t: TestPayload
 let payload: Payload
-let staff: User
+let testUser: User
 
 beforeAll(async () => {
   t = await getTestPayload()
   payload = t.payload
-  staff = await payload.create({
+  testUser = await payload.create({
     collection: "users",
     data: { email: "staff@awayday.test", entraOid: "staff" },
   })
@@ -20,7 +20,7 @@ beforeAll(async () => {
 
 afterAll(() => t?.teardown())
 
-const staffUser = () => ({ ...staff, collection: "users" as const })
+const user = () => ({ ...testUser, collection: "users" as const })
 const asVisitor = { overrideAccess: false, user: null } as const
 
 const heroBlocks = [{ blockType: "hero" as const, heading: "Welcome" }]
@@ -53,7 +53,7 @@ describe("Page paths", () => {
       collection: "pages",
       data: { title: "Our Story", path: "", blocks: heroBlocks },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(page.path).toBe("/our-story")
   })
@@ -63,7 +63,7 @@ describe("Page paths", () => {
       collection: "pages",
       data: { title: "Blocks page", path: "/blocks-page", blocks: heroBlocks },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     const read = await payload.findByID({ collection: "pages", id: page.id })
     expect(read.blocks?.map((b) => b.blockType)).toEqual(["hero"])
@@ -74,14 +74,14 @@ describe("Page paths", () => {
       collection: "pages",
       data: { title: "Contact", path: "/contact" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     await expect(
       payload.create({
         collection: "pages",
         data: { title: "Contact again", path: "/contact" },
         overrideAccess: false,
-        user: staffUser(),
+        user: user(),
       })
     ).rejects.toMatchObject({
       data: {
@@ -99,7 +99,7 @@ describe("a Page's Layout", () => {
       collection: "layouts",
       data: { name },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
 
   it("defaults to the Layout for the Page's path", async () => {
@@ -107,7 +107,7 @@ describe("a Page's Layout", () => {
       collection: "pages",
       data: { title: "Plain", path: "/plain" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(page.layout?.mode).toBe("route")
     expect(page.layout?.layout ?? null).toBeNull()
@@ -123,7 +123,7 @@ describe("a Page's Layout", () => {
           layout: { mode: "specific" },
         },
         overrideAccess: false,
-        user: staffUser(),
+        user: user(),
       })
     ).rejects.toMatchObject({
       data: {
@@ -142,7 +142,7 @@ describe("a Page's Layout", () => {
         layout: { mode: "specific", layout: chosen.id },
       },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     const read = await payload.findByID({
       collection: "pages",
@@ -157,7 +157,7 @@ describe("a Page's Layout", () => {
       collection: "pages",
       data: { title: "Bare", path: "/bare", layout: { mode: "none" } },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(page.layout?.mode).toBe("none")
   })
@@ -172,9 +172,62 @@ describe("a Page's Layout", () => {
           layout: { mode: "specific", layout: 999999 },
         },
         overrideAccess: false,
-        user: staffUser(),
+        user: user(),
       })
     ).rejects.toThrow()
+  })
+})
+
+describe("who saved a Page", () => {
+  it("records the signed-in User on the Page and on each version", async () => {
+    const page = await payload.create({
+      collection: "pages",
+      data: { title: "Saved By", path: "/saved-by", blocks: heroBlocks },
+      draft: true,
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(page.updatedBy).toBe(testUser.id)
+    const { docs } = await payload.findVersions({
+      collection: "pages",
+      where: { parent: { equals: page.id } },
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(docs.length).toBeGreaterThan(0)
+    expect(docs.every((v) => v.version.updatedBy === testUser.id)).toBe(true)
+  })
+
+  it("keeps nothing a client sends for it, and leaves it empty for a script", async () => {
+    const forged = await payload.create({
+      collection: "pages",
+      data: {
+        title: "Forged",
+        path: "/forged",
+        blocks: heroBlocks,
+        updatedBy: 999_999,
+      },
+      depth: 0,
+      overrideAccess: false,
+      user: user(),
+    })
+    expect(forged.updatedBy).toBe(testUser.id)
+    const script = await payload.update({
+      collection: "pages",
+      id: forged.id,
+      data: { title: "Forged again" },
+      depth: 0,
+    })
+    expect(script.updatedBy ?? null).toBeNull()
+  })
+
+  it("keeps the last 50 versions", async () => {
+    const config = payload.collections.pages.config
+    expect(
+      typeof config.versions === "object" ? config.versions.maxPerDoc : null
+    ).toBe(50)
   })
 })
 
@@ -184,14 +237,14 @@ describe("access", () => {
       collection: "pages",
       data: { title: "Live", path: "/live", _status: "published" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     await payload.create({
       collection: "pages",
       data: { title: "Hidden", path: "/hidden", _status: "draft" },
       draft: true,
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
 
     const seen = await payload.find({ collection: "pages", ...asVisitor })
@@ -200,7 +253,7 @@ describe("access", () => {
     const all = await payload.find({
       collection: "pages",
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(all.docs.map((doc) => doc.path)).toEqual(
       expect.arrayContaining(["/live", "/hidden"])
@@ -212,7 +265,7 @@ describe("access", () => {
       collection: "pages",
       data: { title: "Before", path: "/versioned", _status: "published" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     await payload.update({
       collection: "pages",
@@ -220,7 +273,7 @@ describe("access", () => {
       data: { title: "After" },
       draft: true,
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     const visitor = await payload.findByID({
       collection: "pages",
@@ -233,12 +286,12 @@ describe("access", () => {
       id: page.id,
       draft: true,
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(draft.title).toBe("After")
   })
 
-  it("lets only Staff Users change content", async () => {
+  it("lets only Users change content", async () => {
     await expect(
       payload.create({
         collection: "pages",
@@ -265,29 +318,29 @@ describe("access", () => {
       slug: "brand",
       data: { name: "Awayday" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(brand.name).toBe("Awayday")
     const read = await payload.findGlobal({ slug: "brand", ...asVisitor })
     expect(read.name).toBe("Awayday")
   })
 
-  it("never lets anyone create a Staff User or change its Entra identity", async () => {
+  it("never lets anyone create a User or change its Entra identity", async () => {
     await expect(
       payload.create({
         collection: "users",
         data: { email: "new@awayday.test", entraOid: "new" },
         overrideAccess: false,
-        user: staffUser(),
+        user: user(),
       })
     ).rejects.toThrow()
 
     const updated = await payload.update({
       collection: "users",
-      id: staff.id,
+      id: testUser.id,
       data: { name: "Renamed", email: "other@awayday.test", entraOid: "x" },
       overrideAccess: false,
-      user: staffUser(),
+      user: user(),
     })
     expect(updated).toMatchObject({
       name: "Renamed",
@@ -306,7 +359,7 @@ describe("access", () => {
         slug: "seo",
         data: { titlePattern: "Just the name" },
         overrideAccess: false,
-        user: staffUser(),
+        user: user(),
       })
     ).rejects.toThrow()
   })

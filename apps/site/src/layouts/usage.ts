@@ -103,7 +103,7 @@ export async function loadLayoutInfos(
   }))
 }
 
-/** All Layouts, and how the Site's Pages use them. Staff only. */
+/** All Layouts, and how the Site's Pages use them. Users only. */
 export async function loadLayoutUsage(
   payload: Payload,
   as: { overrideAccess: false; user: TypedUser }

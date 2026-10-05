@@ -49,7 +49,7 @@ beforeAll(async () => {
     name: "E2E tools layout",
     footer: [blocks.legalBar("© Quokka Rentals")],
   })
-  const made = await h.staff.context.request.post(
+  const made = await h.user.context.request.post(
     `${ORIGIN}/api/pages?draft=true`,
     {
       data: {
@@ -85,7 +85,7 @@ const rowFor = (page: Page, name: string) =>
 
 describe("the Tools group", () => {
   it("sits below Settings in the sidebar and links Replace Text", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, "/admin")
     const groups = await page
       .getByRole("navigation", { name: "Admin" })
@@ -103,7 +103,7 @@ describe("the Tools group", () => {
 
 describe("Replace Text", () => {
   it("follows the page-header pattern and passes WCAG 2.2 AA", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     expect(
       await page
@@ -114,7 +114,7 @@ describe("Replace Text", () => {
   })
 
   it("says so when nothing matches", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByLabel("Find", { exact: true }).fill("Zzyzx-not-there")
     await page.getByRole("button", { name: "Preview" }).click()
@@ -122,14 +122,14 @@ describe("Replace Text", () => {
   })
 
   it("asks for the text to find", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByRole("button", { name: "Preview" }).click()
     await page.getByText("Enter the text to find.").waitFor()
   })
 
   it("previews every Page and Layout the text is in, and where", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await preview(page, "Quokka", "Wombat")
     expect(
       await rowFor(page, "E2E tools Quokka lodge").textContent()
@@ -142,7 +142,7 @@ describe("Replace Text", () => {
   })
 
   it("leaves Page Templates out unless they are included", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     const include = page.getByRole("switch", { name: "Include Page Templates" })
     expect(await include.isChecked()).toBe(false)
@@ -160,7 +160,7 @@ describe("Replace Text", () => {
   })
 
   it("saved as Drafts, leaves the Published Page alone and changes the Layout", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await preview(page, "Quokka", "Wombat")
     await page.getByRole("button", { name: "Replace…" }).click()
     const dialog = page.getByRole("alertdialog")
@@ -188,7 +188,7 @@ describe("Replace Text", () => {
   })
 
   it("published now, changes the Page on the Site, from the keyboard alone", async () => {
-    const { page } = h.staff
+    const { page } = h.user
     await visit(page, SCREEN)
     await page.getByLabel("Find", { exact: true }).focus()
     await page.keyboard.type("Numbat")

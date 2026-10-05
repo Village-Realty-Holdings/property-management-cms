@@ -290,7 +290,7 @@ export function standInFor(
 }
 
 /**
- * The inputs a Staff User gets by picking `preset`: its preferred fonts where
+ * The inputs a User gets by picking `preset`: its preferred fonts where
  * the Site has them (matched by family name, case-insensitively), otherwise
  * the preset's built-in stand-ins. A stored Font with no files (`files` is
  * empty) can't be served, so it does not count as the Site having the font.

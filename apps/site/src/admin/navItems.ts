@@ -7,6 +7,7 @@ export type NavIcon =
   | "seo"
   | "theme"
   | "assets"
+  | "users"
   | "replaceText"
   | "replaceImage"
   | "links"
@@ -49,6 +50,7 @@ export const navGroups: NavGroup[] = [
         icon: "assets",
         section: "/admin/settings/assets",
       },
+      { label: "Users", href: "/admin/settings/users", icon: "users" },
     ],
   },
   {

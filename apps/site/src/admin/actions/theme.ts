@@ -2,13 +2,17 @@
 
 import { revalidatePath } from "next/cache"
 
-import type { FormState } from "../formState"
-import { requireStaff } from "../session"
+import { requireUser } from "../session"
+import type { SaveGuard } from "../staleSave"
 import type { ThemeInputs } from "../../theme"
-import { restoreThemeAs, saveThemeAs } from "../theme/themeScreen"
+import {
+  restoreThemeAs,
+  saveThemeAs,
+  type ThemeSaveResult,
+} from "../theme/themeScreen"
 
 /**
- * The Theme screen's Server Actions. Each runs as the Staff User (apps/site
+ * The Theme screen's Server Actions. Each runs as the User (apps/site
  * ADR-0002) and validates what the browser sent again.
  */
 
@@ -17,9 +21,12 @@ import { restoreThemeAs, saveThemeAs } from "../theme/themeScreen"
  * the Site shows it on the next request; the Site's layout, the Theme screen
  * and the Dashboard's Theme card are refreshed.
  */
-export async function restoreTheme(versionId: number): Promise<FormState> {
-  const { payload, as } = await requireStaff()
-  const result = await restoreThemeAs(payload, as, versionId)
+export async function restoreTheme(
+  versionId: number,
+  guard?: SaveGuard
+): Promise<ThemeSaveResult> {
+  const { payload, as } = await requireUser()
+  const result = await restoreThemeAs(payload, as, versionId, guard)
   if (result.ok) {
     revalidatePath("/admin/theme")
     revalidatePath("/admin")
@@ -35,10 +42,11 @@ export async function restoreTheme(versionId: number): Promise<FormState> {
  */
 export async function saveTheme(
   inputs: ThemeInputs,
-  note?: string | null
-): Promise<FormState> {
-  const { payload, as } = await requireStaff()
-  const result = await saveThemeAs(payload, as, inputs, note)
+  note?: string | null,
+  guard?: SaveGuard
+): Promise<ThemeSaveResult> {
+  const { payload, as } = await requireUser()
+  const result = await saveThemeAs(payload, as, inputs, note, guard)
   if (result.ok) {
     revalidatePath("/admin/theme")
     revalidatePath("/admin")

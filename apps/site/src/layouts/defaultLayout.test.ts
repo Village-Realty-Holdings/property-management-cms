@@ -107,7 +107,7 @@ describe("ensureDefaultLayout", () => {
     ])
   })
 
-  it("does not bring the default back after staff edit it", async () => {
+  it("does not bring the default back after users edit it", async () => {
     await ensureDefaultLayout(payload)
     const [layout] = await allLayouts()
     await payload.update({

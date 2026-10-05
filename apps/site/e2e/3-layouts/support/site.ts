@@ -9,28 +9,28 @@ import {
   type AxeViolation,
   type Session,
 } from "../../theme/support/browser"
-import { StaffApi } from "./api"
+import { UserApi } from "./api"
 
 /**
  * What the Layouts acceptance specs share: a browser with a visitor and a
- * signed-in Staff User (whose cookie the REST calls use), and reading which
+ * signed-in User (whose cookie the REST calls use), and reading which
  * Header and Footer a Page of the Site was rendered with.
  */
 
 export type Harness = {
   browser: Browser
   visitor: Session
-  staff: Session
-  api: StaffApi
+  user: Session
+  api: UserApi
 }
 
 export async function openHarness(): Promise<Harness> {
   const browser = await launchBrowser()
   const visitor = await openSession(browser)
-  const staff = await openSession(browser)
-  await signIn(staff.page)
-  const api = await StaffApi.open(staff.context.request)
-  return { browser, visitor, staff, api }
+  const user = await openSession(browser)
+  await signIn(user.page)
+  const api = await UserApi.open(user.context.request)
+  return { browser, visitor, user, api }
 }
 
 export async function closeHarness(harness: Harness | undefined) {

@@ -12,7 +12,7 @@ describe("navGroups", () => {
     ).toEqual([
       [null, ["Dashboard"]],
       ["Content", ["Layouts", "Pages", "Media"]],
-      ["Settings", ["Brand", "SEO", "Theme", "Assets"]],
+      ["Settings", ["Brand", "SEO", "Theme", "Assets", "Users"]],
       [
         "Tools",
         ["Replace Text", "Replace Image", "Links", "Themes", "Starter Kits"],
@@ -30,6 +30,7 @@ describe("navGroups", () => {
       "/admin/settings/seo",
       "/admin/theme",
       "/admin/settings/assets/fonts",
+      "/admin/settings/users",
       "/admin/tools/replace-text",
       "/admin/tools/replace-image",
       "/admin/tools/links",

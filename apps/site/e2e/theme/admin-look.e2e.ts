@@ -71,13 +71,13 @@ const SCREENS: Screen[] = [
 
 let browser: Browser
 let anonymous: Session
-let staff: Session
+let user: Session
 
 beforeAll(async () => {
   browser = await launchBrowser()
   anonymous = await openSession(browser)
-  staff = await openSession(browser)
-  await signIn(staff.page)
+  user = await openSession(browser)
+  await signIn(user.page)
 })
 
 afterAll(async () => {
@@ -88,7 +88,7 @@ describe.each(SCREENS.map((screen) => [screen.name, screen] as const))(
   "the Admin's %s screen",
   (name, screen) => {
     it(UPDATE ? "is written as the baseline" : "looks as it did", async () => {
-      const { page } = screen.signedIn ? staff : anonymous
+      const { page } = screen.signedIn ? user : anonymous
       await visit(page, screen.path)
       await screen.prepare?.(page)
       const image = await screenshot(page)

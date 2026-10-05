@@ -59,7 +59,7 @@ describe("replaceMedia", () => {
 
 describe("Replace Image across the Site", () => {
   let t: TestPayload
-  let asStaff: { overrideAccess: false; user: User & { collection: "users" } }
+  let asUser: { overrideAccess: false; user: User & { collection: "users" } }
   let from: number
   let to: number
   let replacement: Replacement
@@ -75,7 +75,7 @@ describe("Replace Image across the Site", () => {
           name: `${name}-${Date.now()}.png`,
           size: PNG.length,
         },
-        ...asStaff,
+        ...asUser,
       })
     ).id
 
@@ -85,10 +85,10 @@ describe("Replace Image across the Site", () => {
       collection: "users",
       data: { email: "staff@awayday.test", entraOid: "staff" },
     })
-    asStaff = { overrideAccess: false, user: { ...user, collection: "users" } }
+    asUser = { overrideAccess: false, user: { ...user, collection: "users" } }
     from = await upload("old")
     to = await upload("new")
-    const loaded = await loadMediaReplacement(t.payload, asStaff, { from, to })
+    const loaded = await loadMediaReplacement(t.payload, asUser, { from, to })
     if (!loaded.ok) throw new Error(loaded.message)
     replacement = loaded.replacement
   })
@@ -104,7 +104,7 @@ describe("Replace Image across the Site", () => {
 
   it("needs two different images that are in Media", async () => {
     const load = (input: unknown) =>
-      loadMediaReplacement(t.payload, asStaff, input)
+      loadMediaReplacement(t.payload, asUser, input)
     expect(await load({ from: null, to })).toEqual({
       ok: false,
       message: "Choose the image to replace.",
@@ -132,20 +132,20 @@ describe("Replace Image across the Site", () => {
         blocks: [{ blockType: "hero", heading: "Hello", image: from }],
         _status: "published",
       },
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.updateGlobal({
       slug: "brand",
       data: { name: "Awayday", logo: from },
-      ...asStaff,
+      ...asUser,
     })
     await t.payload.updateGlobal({
       slug: "seo",
       data: { image: from, favicon: to },
-      ...asStaff,
+      ...asUser,
     })
 
-    const preview = await previewReplace(t.payload, asStaff, replacement)
+    const preview = await previewReplace(t.payload, asUser, replacement)
     expect(preview.rows.map((row) => [row.kind, row.places, row.live])).toEqual(
       [
         ["Page", ["Block 1, Hero: Image"], false],
@@ -154,7 +154,7 @@ describe("Replace Image across the Site", () => {
       ]
     )
 
-    const result = await applyReplace(t.payload, asStaff, replacement, "draft")
+    const result = await applyReplace(t.payload, asUser, replacement, "draft")
     expect(result).toMatchObject({
       ok: true,
       message: "Replaced in 1 Page, the Brand and SEO.",
@@ -165,14 +165,14 @@ describe("Replace Image across the Site", () => {
       collection: "pages",
       id: page.id,
       depth: 0,
-      ...asStaff,
+      ...asUser,
     })
     const draft = await t.payload.findByID({
       collection: "pages",
       id: page.id,
       depth: 0,
       draft: true,
-      ...asStaff,
+      ...asUser,
     })
     expect(live.blocks?.[0]).toMatchObject({ image: from })
     expect(draft.blocks?.[0]).toMatchObject({ image: to })

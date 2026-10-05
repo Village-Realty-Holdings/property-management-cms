@@ -128,7 +128,11 @@ describe("the routes that open the Visual Editor", () => {
   it("opens New Page from the Pages list in the Visual Editor, not a form", async () => {
     await page.goto(`${ORIGIN}/admin/pages`)
     await control(page, "New Page").click()
-    await page.waitForURL(/\/admin\/pages\/[^/]+$/)
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("Title", { exact: true }).fill(`Shell ${RUN} new`)
+    await dialog.getByLabel("Path", { exact: true }).fill(runPath("shell-new"))
+    await control(dialog, "Continue").click()
+    await page.waitForURL((url) => url.pathname === "/admin/pages/new")
     await canvasFrame(page)
     await expectVisible(modeChip(page, "Page"), "the Page mode chip")
     // The form-based PageEditor listed Blocks as a form with "Move up" /
@@ -233,7 +237,7 @@ describe("the top bar", () => {
 })
 
 describe("the panel", () => {
-  it("is docked on the left of the canvas, with the Outline, Block and Page tabs for a Page", async () => {
+  it("is docked on the left of the canvas, with the Outline, Block, Page and History tabs for a Page", async () => {
     await openEditor(page, editorUrl.page(shellPage.id))
     const tablist = page.getByRole("tablist").first()
     const panel = await tablist.boundingBox()
@@ -248,11 +252,10 @@ describe("the panel", () => {
       "the panel ends before the canvas starts"
     ).toBeLessThanOrEqual(frame!.x + 1)
 
-    for (const name of ["Outline", "Block", "Page"]) {
+    // Pages have History too: their saved versions, with Restore.
+    for (const name of ["Outline", "Block", "Page", "History"]) {
       await expectVisible(panelTab(page, name), `the ${name} tab`)
     }
-    // History is for Layouts and the Theme: Pages have Drafts instead.
-    expect(await panelTab(page, "History").count()).toBe(0)
   })
 
   it("has a History tab in Layout mode", async () => {

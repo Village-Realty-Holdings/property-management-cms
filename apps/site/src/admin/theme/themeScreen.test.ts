@@ -5,6 +5,7 @@ import type { User } from "../../payload-types"
 import { getTestPayload, type TestPayload } from "../../test/getTestPayload"
 import { truncateTables } from "../../test/truncateTables"
 import { CLASSIC, HARBOUR } from "../../theme"
+import { latestRevision } from "../staleSave"
 import { listThemeHistory, readLiveTheme, saveTheme } from "../../theme/record"
 import {
   loadThemeScreen,
@@ -15,7 +16,7 @@ import {
 } from "./themeScreen"
 
 // The Theme screen's read and its Restore action, against a real Payload on a
-// throwaway database, as a Staff User (apps/site ADR-0002).
+// throwaway database, as a User (apps/site ADR-0002).
 
 let t: TestPayload
 let payload: Payload
@@ -107,6 +108,7 @@ describe("restoreThemeAs", () => {
     expect(result).toEqual({
       ok: true,
       message: "Your Site already looks like that version. Nothing to restore.",
+      revision: expect.any(String),
     })
     expect(
       await listThemeHistory(payload, { user: ada }).then((h) => h.length)
@@ -146,6 +148,7 @@ describe("saveThemeAs", () => {
     expect(result).toEqual({
       ok: true,
       message: "Theme saved. It is live on your Site.",
+      revision: expect.any(String),
     })
     expect((await readLiveTheme(payload)).inputs).toEqual(HARBOUR.inputs)
   })
@@ -153,7 +156,11 @@ describe("saveThemeAs", () => {
   it("says there is nothing to save, and makes no version, when nothing changed", async () => {
     await saveThemeAs(payload, access(), HARBOUR.inputs)
     const result = await saveThemeAs(payload, access(), HARBOUR.inputs)
-    expect(result).toEqual({ ok: true, message: "No changes to save" })
+    expect(result).toEqual({
+      ok: true,
+      message: "No changes to save",
+      revision: expect.any(String),
+    })
     expect(NO_CHANGES_MESSAGE).toBe("No changes to save")
     expect(
       await listThemeHistory(payload, { user: ada }).then((h) => h.length)
@@ -174,5 +181,107 @@ describe("substituteFamily", () => {
   it("is the Classic font of the slot a restore replaces", () => {
     expect(substituteFamily("Heading font")).toBe("Newsreader")
     expect(substituteFamily("Body font")).toBe("Public Sans")
+  })
+})
+
+describe("saving the Theme over someone else's change", () => {
+  let sam: ReturnType<typeof access>
+
+  beforeAll(async () => {
+    const user = await payload.create({
+      collection: "users",
+      data: { email: "sam@awayday.test", name: "Sam Taylor", entraOid: "sam" },
+    })
+    sam = { overrideAccess: false, user: { ...user, collection: "users" } }
+  })
+
+  const current = async () =>
+    latestRevision(await listThemeHistory(payload, { user: ada }))
+
+  it("saves when `expected` is the opened revision, and returns the new one", async () => {
+    await saveTheme(payload, { user: ada, inputs: CLASSIC.inputs })
+    const opened = await current()
+    const result = await saveThemeAs(payload, access(), HARBOUR.inputs, null, {
+      expected: opened,
+    })
+    expect(result.ok).toBe(true)
+    expect(result.revision).toBe(await current())
+    expect(result.revision).not.toBe(opened)
+  })
+
+  it("refuses when someone saved since, and changes nothing", async () => {
+    await saveTheme(payload, { user: ada, inputs: CLASSIC.inputs })
+    const opened = await current()
+    await saveThemeAs(payload, sam, HARBOUR.inputs)
+    const result = await saveThemeAs(
+      payload,
+      access(),
+      { ...CLASSIC.inputs, primary: "#123456" },
+      null,
+      { expected: opened }
+    )
+    expect(result).toMatchObject({
+      ok: false,
+      message: "The Theme changed since you opened it.",
+      conflict: { kind: "theme", by: "Sam Taylor", byYou: false },
+    })
+    expect((await readLiveTheme(payload)).inputs).toEqual(HARBOUR.inputs)
+  })
+
+  it("saves over it when forced", async () => {
+    await saveTheme(payload, { user: ada, inputs: CLASSIC.inputs })
+    const opened = await current()
+    await saveThemeAs(payload, sam, HARBOUR.inputs)
+    const result = await saveThemeAs(payload, access(), CLASSIC.inputs, null, {
+      expected: opened,
+      force: true,
+    })
+    expect(result.ok).toBe(true)
+    expect((await readLiveTheme(payload)).inputs).toEqual(CLASSIC.inputs)
+  })
+
+  it("refuses a Theme opened before anyone saved, once someone has", async () => {
+    await saveThemeAs(payload, sam, HARBOUR.inputs)
+    const result = await saveThemeAs(payload, access(), CLASSIC.inputs, null, {
+      expected: null,
+    })
+    expect(result).toMatchObject({ ok: false, conflict: { kind: "theme" } })
+  })
+
+  it("checks a save that changes nothing, and returns the revision when it passes", async () => {
+    await saveTheme(payload, { user: ada, inputs: HARBOUR.inputs })
+    const opened = await current()
+    const same = await saveThemeAs(payload, access(), HARBOUR.inputs, null, {
+      expected: opened,
+    })
+    expect(same).toMatchObject({ ok: true, message: NO_CHANGES_MESSAGE })
+    expect(same.revision).toBe(opened)
+    await saveThemeAs(payload, sam, CLASSIC.inputs)
+    const stale = await saveThemeAs(payload, access(), HARBOUR.inputs, null, {
+      expected: opened,
+    })
+    expect(stale.ok).toBe(false)
+  })
+
+  it("refuses a stale restore, and restores when forced", async () => {
+    const [first] = await twoVersions()
+    const opened = await current()
+    await saveThemeAs(payload, sam, { ...CLASSIC.inputs, primary: "#123456" })
+    const refused = await restoreThemeAs(payload, access(), first!, {
+      expected: opened,
+    })
+    expect(refused).toMatchObject({
+      ok: false,
+      conflict: { kind: "theme", by: "Sam Taylor" },
+    })
+    expect(
+      await listThemeHistory(payload, { user: ada }).then((h) => h.length)
+    ).toBe(3)
+    const forced = await restoreThemeAs(payload, access(), first!, {
+      expected: opened,
+      force: true,
+    })
+    expect(forced.ok).toBe(true)
+    expect(forced.revision).toBe(await current())
   })
 })

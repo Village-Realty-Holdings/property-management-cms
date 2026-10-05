@@ -3,15 +3,15 @@ import type { ReactNode } from "react"
 import { AdminSidebar } from "@/admin/components/AdminSidebar"
 import { getSiteCard } from "@/admin/dashboard/getSiteCard"
 import { MAIN_CONTENT_ID } from "@/admin/kit"
-import { requireStaff } from "@/admin/session"
+import { requireUser } from "@/admin/session"
 
-/** The signed-in Admin: sidebar with navigation and the Staff User. */
+/** The signed-in Admin: sidebar with navigation and the User. */
 export default async function AdminShellLayout({
   children,
 }: {
   children: ReactNode
 }) {
-  const [{ user }, site] = await Promise.all([requireStaff(), getSiteCard()])
+  const [{ user }, site] = await Promise.all([requireUser(), getSiteCard()])
   return (
     <div className="flex min-h-svh flex-col md:flex-row">
       <AdminSidebar site={site} user={user} />

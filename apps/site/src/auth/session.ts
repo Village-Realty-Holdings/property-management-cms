@@ -1,17 +1,12 @@
 import { jwtVerify, SignJWT } from "jose"
-import type {
-  AuthStrategy,
-  CollectionRefreshHook,
-  Payload,
-  TypedUser,
-} from "payload"
+import type { AuthStrategy, Payload, TypedUser } from "payload"
 import { parseCookies } from "payload/shared"
 
 /**
- * Staff sessions (apps/site ADR-0003). Payload's local strategy is disabled,
+ * User sessions (apps/site ADR-0003). Payload's local strategy is disabled,
  * and with it Payload's own JWT check, so sessions are ours: a signed
- * `site-session` cookie naming the Staff User, read by `sessionStrategy` on
- * every Payload request (the Admin, /p-admin, REST and the Local API with
+ * `site-session` cookie naming the User, read by `sessionStrategy` on
+ * every Payload request (the Admin, REST and the Local API with
  * `payload.auth`). Access rules then apply as usual.
  *
  * A session lasts SESSION_SECONDS from sign-in and is never extended, so
@@ -26,7 +21,7 @@ const USERS = "users"
 const sessionKey = (secret: string) =>
   new TextEncoder().encode(`${secret}:site-session`)
 
-/** The `Set-Cookie` value that starts a session for the Staff User. */
+/** The `Set-Cookie` value that starts a session for the User. */
 export async function issueSession(
   payload: Payload,
   userId: number | string,
@@ -79,7 +74,7 @@ export async function readSession(
   }
 }
 
-/** The Payload auth strategy for Staff Users, registered on `users`. */
+/** The Payload auth strategy for Users, registered on `users`. */
 export const sessionStrategy: AuthStrategy = {
   name: "site-session",
   authenticate: async ({ headers, payload }) => {
@@ -91,22 +86,6 @@ export const sessionStrategy: AuthStrategy = {
     })
     return { user: user ? { ...user, collection: USERS } : null }
   },
-}
-
-/**
- * `refresh` hook on Users: /p-admin refreshes its session on a timer.
- * Payload would answer with one of its own JWTs, which nothing here
- * accepts, so the refresh returns the session as it is, never extended.
- */
-export const refreshSession: CollectionRefreshHook = async ({ args, user }) => {
-  const session = await readSession(args.req.headers, args.req.payload.secret)
-  if (!session) return
-  return {
-    exp: session.exp,
-    refreshedToken: session.token,
-    setCookie: false,
-    user,
-  }
 }
 
 const numericOr = (id: string): number | string =>

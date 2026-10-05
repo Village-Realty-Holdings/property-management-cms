@@ -8,7 +8,9 @@ import {
   loadPickers,
 } from "@/admin/editor/modes/loadPageMode"
 import { PageMode } from "@/admin/editor/modes/PageMode"
-import { requireStaff } from "@/admin/session"
+import { readPageVersionRows } from "@/admin/pageHistory"
+import { requireUser } from "@/admin/session"
+import { latestRevision } from "@/admin/staleSave"
 import { loadPageDependents } from "@/admin/usage"
 import { editingUrl } from "@/site/editing/flag"
 
@@ -26,8 +28,8 @@ type Props = {
 export default async function EditPage({ params, searchParams }: Props) {
   const { id } = await params
   const { tab } = await searchParams
-  const staff = await requireStaff()
-  const { payload, as } = staff
+  const session = await requireUser()
+  const { payload, as } = session
 
   const pageId = Number(id)
   if (!Number.isInteger(pageId)) notFound()
@@ -42,10 +44,11 @@ export default async function EditPage({ params, searchParams }: Props) {
     ...as,
   })
 
-  const [layouts, pickers, dependents] = await Promise.all([
+  const [layouts, pickers, dependents, history] = await Promise.all([
     loadLayoutOptions(payload),
-    loadPickers(staff),
+    loadPickers(session),
     loadPageDependents(payload, as, { id: pageId, path: draft.path }),
+    readPageVersionRows(payload, as, pageId),
   ])
 
   return (
@@ -57,9 +60,12 @@ export default async function EditPage({ params, searchParams }: Props) {
         published: published._status,
         latest: draft._status,
       })}
+      publishedPath={published._status === "published" ? published.path : null}
       layouts={layouts}
       initialTab={tab === "page" ? "page" : undefined}
       dependents={dependents}
+      history={history}
+      revision={latestRevision(history)}
       canvasSrc={editingUrl(draft.path)}
       {...pickers}
     />

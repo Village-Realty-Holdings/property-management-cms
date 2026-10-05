@@ -7,7 +7,7 @@ import {
 
 /**
  * Downloads a font family's WOFF2 files from Google Fonts so the Site can
- * store and serve them itself. This runs on the server when a Staff User adds
+ * store and serve them itself. This runs on the server when a User adds
  * a Google Font, never in a visitor's browser: the Site makes no calls to
  * Google at runtime.
  *
@@ -51,7 +51,7 @@ export type GoogleFontErrorCode =
   | "network"
   | "bad-response"
 
-/** A failure with a message a Staff User can read. */
+/** A failure with a message a User can read. */
 export class GoogleFontError extends Error {
   constructor(
     readonly code: GoogleFontErrorCode,
@@ -81,7 +81,7 @@ const USER_AGENT =
 const FAMILY = /^[A-Za-z0-9]+(?: [A-Za-z0-9]+)*$/
 const MAX_FAMILY_LENGTH = 60
 
-/** Checks a family name typed by a Staff User. Returns it trimmed. */
+/** Checks a family name typed by a User. Returns it trimmed. */
 export function validateFamily(family: string): string {
   const name = family.trim()
   if (!name || name.length > MAX_FAMILY_LENGTH || !FAMILY.test(name)) {

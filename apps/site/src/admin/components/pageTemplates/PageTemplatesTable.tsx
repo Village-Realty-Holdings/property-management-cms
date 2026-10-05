@@ -1,12 +1,13 @@
 import Link from "next/link"
-import { LayoutPanelTopIcon, PencilIcon, PlusIcon } from "lucide-react"
+import { LayoutPanelTopIcon, PencilIcon } from "lucide-react"
 
 import { buttonVariants } from "@workspace/ui/components/button"
 
 import { UpdatedAt } from "../../dashboard/UpdatedAt"
 import { EmptyState } from "../../kit/EmptyState"
 import type { PageTemplateRow } from "../../pageTemplates"
-import { blocksSummary, newPageFromTemplateHref } from "./summary"
+import { NewPageButton } from "./NewPageButton"
+import { blocksSummary } from "./summary"
 
 /**
  * The Page Templates list: each one's name and Blocks, with New Page (from
@@ -79,13 +80,13 @@ export function PageTemplatesTable({
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-1">
-                  <Link
-                    href={newPageFromTemplateHref(row.id)}
-                    aria-label={`New Page from ${row.name}`}
-                    className={buttonVariants({ variant: "ghost", size: "sm" })}
-                  >
-                    <PlusIcon aria-hidden="true" /> New Page
-                  </Link>
+                  <NewPageButton
+                    templates={rows}
+                    initialTemplateId={row.id}
+                    ariaLabel={`New Page from ${row.name}`}
+                    variant="ghost"
+                    size="sm"
+                  />
                   <Link
                     href={`/admin/pages/${row.id}?tab=page`}
                     aria-label={`Edit ${row.name}`}

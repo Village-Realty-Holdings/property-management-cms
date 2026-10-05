@@ -13,7 +13,7 @@ import {
 } from "../../../theme"
 
 /**
- * The colours a Staff User set that are hard to read, each with a one-click
+ * The colours a User set that are hard to read, each with a one-click
  * fix. A warning never blocks saving. Shows nothing when there is none.
  */
 export function ContrastWarnings({

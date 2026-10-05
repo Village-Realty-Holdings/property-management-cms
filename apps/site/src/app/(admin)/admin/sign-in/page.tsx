@@ -34,7 +34,7 @@ type Props = {
 const first = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value
 
-/** Sign-in for Staff Users: Microsoft (Entra ID), and the dev sign-in when on. */
+/** Sign-in for Users: Microsoft (Entra ID), and the dev sign-in when on. */
 export default async function SignInPage({ searchParams }: Props) {
   const params = await searchParams
   const returnTo = first(params.redirect)

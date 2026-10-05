@@ -11,8 +11,6 @@ apps/cms/src/app/(payload)/layout.tsx
 apps/cms/src/app/(payload)/admin/
 apps/cms/src/app/(payload)/api/\[...slug\]/
 apps/site/src/payload-types.ts
-apps/site/src/app/(payload)/layout.tsx
-apps/site/src/app/(payload)/p-admin/
 apps/site/src/app/(payload)/api/\[...slug\]/
 apps/site/src/migrations/
 # Vendored agent skills, kept as upstream ships them
