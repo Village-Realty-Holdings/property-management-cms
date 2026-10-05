@@ -17,14 +17,14 @@ describe("resolveSeedTarget", () => {
     })
   })
 
-  it("refuses the property_management_site database", () => {
+  it("refuses the live-pm-sites database", () => {
     expect(() =>
       resolveSeedTarget({
         ...env,
         DATABASE_URL:
-          "postgres://postgres:postgres@localhost:5432/property_management_site",
+          "postgres://postgres:postgres@localhost:5432/live-pm-sites",
       })
-    ).toThrow(/property_management_site/)
+    ).toThrow(/live-pm-sites/)
   })
 
   it("needs a DATABASE_URL", () => {

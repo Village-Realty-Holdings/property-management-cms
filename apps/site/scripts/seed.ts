@@ -9,7 +9,7 @@
  * Local API. Every step looks a record up by its natural key and writes only
  * what differs, so a second run changes nothing (src/seed/upsert.ts).
  *
- * It never touches the property_management_site database, and never seeds the
+ * It never touches the live-pm-sites database, and never seeds the
  * public schema. A scratch schema named ms_<something> has no seed of its own:
  * SEED_SITE=avada borrows the seed of a Site for it, for testing.
  */
@@ -19,7 +19,7 @@ import { siteSchema } from "../src/database"
 import { seedSchemas } from "../src/seed"
 
 /** The database Sites in production use: a seed must never run against it. */
-const PROTECTED_DATABASE = "property_management_site"
+const PROTECTED_DATABASE = "live-pm-sites"
 
 export type SeedTarget = {
   databaseUrl: string

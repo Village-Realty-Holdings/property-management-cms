@@ -13,7 +13,7 @@
  * It is safe to run again. A worktree, an install or an env file that is
  * already there is left alone (an env file is never overwritten, so a
  * User's own database URL and secret survive), and an env file that names the
- * property_management_site database is refused.
+ * live-pm-sites database is refused.
  *
  * Git keeps a branch checked out in one worktree at a time, and the main
  * checkout usually has milestone/site-builder, so the Sites' worktrees are
@@ -36,7 +36,7 @@ export const SITES = [
   { slug: "beachside", port: 3003 },
 ] as const
 
-const PROTECTED_DATABASE = "property_management_site"
+const PROTECTED_DATABASE = "live-pm-sites"
 
 export type Worktree = { path: string; branch: string | undefined }
 

@@ -21,7 +21,7 @@
  *   preset in turn, and put back as it was at the end. Use a scratch schema
  *   (ms_<something>), not a Site's own.
  *
- * It never touches the property_management_site database.
+ * It never touches the live-pm-sites database.
  */
 import { execFile } from "node:child_process"
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs"
@@ -287,8 +287,8 @@ async function runBlocks(
   if (!url || !schema || schema === "public") {
     throw new Error("Set DATABASE_URL and DATABASE_SCHEMA (a scratch schema).")
   }
-  if (new URL(url).pathname.replace(/^\//, "") === "property_management_site") {
-    throw new Error("Refusing to use the property_management_site database.")
+  if (new URL(url).pathname.replace(/^\//, "") === "live-pm-sites") {
+    throw new Error("Refusing to use the live-pm-sites database.")
   }
   const payload = await getPayload({
     config: buildPayloadConfig({

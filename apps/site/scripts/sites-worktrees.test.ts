@@ -244,14 +244,12 @@ describe("runPlan", () => {
     )
   })
 
-  it("refuses an env file that names the property_management_site database", () => {
+  it("refuses an env file that names the live-pm-sites database", () => {
     const { io, files } = memoryIo({
       [`${MAIN}/apps/site/.env.avada`]:
-        "DATABASE_URL=postgres://u:p@localhost:5432/property_management_site\nDATABASE_SCHEMA=avada\n",
+        "DATABASE_URL=postgres://u:p@localhost:5432/live-pm-sites\nDATABASE_SCHEMA=avada\n",
     })
-    expect(() => runPlan([envStep("avada")], io)).toThrow(
-      /property_management_site/
-    )
+    expect(() => runPlan([envStep("avada")], io)).toThrow(/live-pm-sites/)
     expect(files["/code/pm-avada/apps/site/.env.avada"]).toBeUndefined()
   })
 
