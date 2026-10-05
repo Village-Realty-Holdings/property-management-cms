@@ -1,7 +1,7 @@
 import type { Access, CollectionConfig } from "payload"
 
 import { nobody, readOnlyField, signedIn } from "../access"
-import { refreshSession, sessionStrategy } from "../auth"
+import { sessionStrategy } from "../auth"
 
 /**
  * A signed-in User can delete any User but themselves, so the Users screen's
@@ -29,9 +29,6 @@ export const Users: CollectionConfig = {
   auth: {
     disableLocalStrategy: true,
     strategies: [sessionStrategy],
-  },
-  hooks: {
-    refresh: [refreshSession],
   },
   access: {
     create: nobody,

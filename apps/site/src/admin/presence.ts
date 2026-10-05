@@ -5,8 +5,7 @@ import type { UserAccess } from "./dashboard/queries"
 /**
  * Presence: who else has a Page, a Layout or the Theme open in the Visual
  * Editor. It is stored as Payload's own document locks (the
- * `payload-locked-documents` collection, which any signed-in User may write),
- * so Payload's /p-admin shows the same holder.
+ * `payload-locked-documents` collection, which any signed-in User may write).
  *
  * Presence is information only. Payload deletes a target's lock rows on every
  * write to it, so a lock can never guard a save; that is the stale-save

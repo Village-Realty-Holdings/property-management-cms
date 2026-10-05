@@ -4,13 +4,13 @@ The first slice of the Site Builder. A User signs in to the Admin, creates a Pag
 
 ## Decisions
 
-- One Next.js app (`apps/site`) with three root layouts in route groups:
-  - `(payload)`: Payload's admin at `/p-admin` and REST at `/api`. Reference only (ADR-0002).
+- One Next.js app (`apps/site`) with two root layouts in route groups, plus `(payload)` for REST:
+  - `(payload)`: REST at `/api`. Payload's admin was at `/p-admin` until it was removed (ADR-0002).
   - `(admin)`: the Admin at `/admin`, built with shadcn/ui from `packages/ui`.
   - `(site)`: the public Site, as a catch-all route. `/` is Home.
 - Top-level paths the Site can't use for Pages: `admin`, `p-admin`, `api`, `auth`, `media`.
 - The Admin reads and writes through Payload's Local API as the signed-in User (`overrideAccess: false`), from Server Components and Server Actions. There is no REST client.
-- User sessions come from our own auth strategy. Payload's local strategy is disabled (ADR-0003), and that also disables Payload's built-in JWT check. `auth/` issues a signed `site-session` cookie (HS256 with the Payload secret, 8 hours), and a custom Payload strategy reads it. Every Payload request, the Admin, and `/p-admin` authenticate the same way.
+- User sessions come from our own auth strategy. Payload's local strategy is disabled (ADR-0003), and that also disables Payload's built-in JWT check. `auth/` issues a signed `site-session` cookie (HS256 with the Payload secret, 8 hours), and a custom Payload strategy reads it. Every Payload request (the Admin, REST and the Local API) authenticates the same way.
 - Sign-in routes: `/auth/entra/start`, `/auth/entra/callback`, `/auth/dev` (dev only, ADR-0003) and `/auth/sign-out`.
 - Entra decides who may sign in, through the `site_user` app role. There are no roles in the app.
 - Media uses the S3 adapter against R2 when `S3_*` is set, and local disk otherwise. Keys are plain filenames.

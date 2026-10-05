@@ -134,7 +134,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@20.19.41)(happy-dom@20.14.5)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.23.15)(yaml@2.9.1))
+        version: 4.1.11(@types/node@20.19.41)(happy-dom@20.14.5)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.23.15)(yaml@2.9.1))
       wrangler:
         specifier: 4.143.0
         version: 4.143.0(@types/node@20.19.41)
@@ -178,9 +178,6 @@ importers:
         specifier: 3.90.2
         version: 3.90.2(@faceless-ui/modal@3.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@faceless-ui/scroll-info@2.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@payloadcms/next@3.90.2(@types/react@19.2.15)(graphql@16.14.2)(monaco-editor@0.57.0)(next@16.3.3(@types/node@20.19.41)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(payload@3.90.2(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(@types/react@19.2.15)(monaco-editor@0.57.0)(next@16.3.3(@types/node@20.19.41)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(payload@3.90.2(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(yjs@13.6.33)
       '@payloadcms/storage-s3':
-        specifier: 3.90.2
-        version: 3.90.2(@types/react@19.2.15)(monaco-editor@0.57.0)(next@16.3.3(@types/node@20.19.41)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(payload@3.90.2(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
-      '@payloadcms/ui':
         specifier: 3.90.2
         version: 3.90.2(@types/react@19.2.15)(monaco-editor@0.57.0)(next@16.3.3(@types/node@20.19.41)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.77.4))(payload@3.90.2(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@workspace/ui':
@@ -288,7 +285,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@20.19.41)(happy-dom@20.14.5)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.41)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.23.15)(yaml@2.9.1))
+        version: 4.1.11(@types/node@20.19.41)(happy-dom@20.14.5)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.23.15)(yaml@2.9.1))
       wrangler:
         specifier: 4.143.0
         version: 4.143.0(@types/node@20.19.41)

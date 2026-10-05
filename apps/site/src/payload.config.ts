@@ -64,21 +64,12 @@ function build({
   // The Fonts collection refuses to delete a Font the live Theme uses.
   registerThemeFontUsage()
   return buildConfig({
-    // Payload's own admin, kept as a reference while the Admin at /admin is
-    // built (apps/site ADR-0002).
-    routes: { admin: "/p-admin" },
+    // No Payload admin UI: the Admin at /admin is our own (apps/site
+    // ADR-0002). `admin.user` names the auth collection; the import map is
+    // never generated because nothing renders Payload's admin.
     admin: {
       user: Users.slug,
-      importMap: {
-        baseDir: path.resolve(dirname),
-      },
-      meta: {
-        titleSuffix: " — Payload admin",
-      },
-      components: {
-        afterLogin: ["/auth/PayloadAdminSignIn#PayloadAdminSignIn"],
-        logout: { Button: "/auth/PayloadAdminSignIn#PayloadAdminSignOut" },
-      },
+      importMap: { autoGenerate: false },
     },
     collections: [...collections],
     db: postgresAdapter({
