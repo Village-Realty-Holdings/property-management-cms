@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev --filter=site",
-    "dev:cms": "turbo dev --filter=property-management-cms",
     "build": "turbo build --filter=site",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",

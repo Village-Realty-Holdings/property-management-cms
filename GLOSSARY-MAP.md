@@ -2,11 +2,9 @@
 
 ## Contexts
 
-- [Site Builder](./apps/site/GLOSSARY.md): the single-Site builder being built now. Payload, the Admin with its Visual Editor, and the public Site in one app. Decisions: `apps/site/docs/adr/`.
-- [Multi-Site CMS](./apps/cms/GLOSSARY.md) (reference only): the multi-site MVP from tag `archive/mvp-2026-09`, together with the packages it uses (`packages/content`, `packages/cms-types`, `packages/site-views`). It is kept while its code is ported into apps/site, then removed. Decisions: `apps/cms/docs/adr/`. Design: `apps/cms/docs/module-layout.md`. Plans: `apps/cms/docs/plans/`.
+- [Site Builder](./apps/site/GLOSSARY.md): Payload, the Admin with its Visual Editor, and the public Site in one app, deployed once per Site. Decisions: `apps/site/docs/adr/`.
 
-## Relationships
+## History
 
-- **Multi-Site CMS → Site Builder**: code is ported by copying it and removing tenancy. apps/site never imports apps/cms or its packages (apps/site ADR-0001).
-- **Same word, different meaning**: in the Multi-Site CMS a Site is one of many tenants, and Admin is a Staff User role. In the Site Builder each deployment serves one Site (several Sites run as separate deployments, apps/site ADR-0005), and the Admin is the place Users edit it. The Site Builder's User corresponds to the Multi-Site CMS's Staff User.
-- **ADR numbers are per context.** Cite them with the app, such as "apps/cms ADR-0010".
+- **Multi-Site CMS** (apps/cms): the multi-site MVP that came before the Site Builder. It was removed; its code, GLOSSARY.md and ADRs are at tag `archive/mvp-2026-09`. Citations like "apps/cms ADR-0015" refer to that tag.
+- **Same word, different meaning**: in the Multi-Site CMS a Site was one of many tenants of one deployment. In the Site Builder each deployment serves one Site, and the shared Registry (apps/site ADR-0015) lists them all.

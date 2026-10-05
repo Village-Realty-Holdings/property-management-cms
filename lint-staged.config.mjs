@@ -2,7 +2,7 @@ import path from "node:path"
 
 // Each workspace has its own eslint.config.js, so run ESLint from inside the
 // workspace that owns the staged files.
-const workspaces = ["apps/cms", "apps/site", "packages/content", "packages/ui"]
+const workspaces = ["apps/site", "packages/ui"]
 
 const eslint = (files) =>
   workspaces.flatMap((workspace) => {

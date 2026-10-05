@@ -55,11 +55,5 @@ next-env.d.ts
 # claude code
 .claude/settings.local.json
 
-# payload local uploads (dev)
-apps/cms/media/
-
-# demo seed output (secrets)
-apps/cms/.seed-output.json
-
 # Agent worktrees
 .claude/worktrees/

@@ -8,4 +8,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Domain docs
 
-Each app is its own context. Read `GLOSSARY-MAP.md` first, then the app's `GLOSSARY.md` and `apps/<app>/docs/adr/`. New work goes in apps/site. apps/cms is reference only (apps/site ADR-0001).
+Read `GLOSSARY-MAP.md` first, then `apps/site/GLOSSARY.md` and `apps/site/docs/adr/`. The old multi-site MVP (apps/cms) was removed; its code and ADRs are at tag `archive/mvp-2026-09`, which is what "apps/cms ADR-…" citations refer to.
