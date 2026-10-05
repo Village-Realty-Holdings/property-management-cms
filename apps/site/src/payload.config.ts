@@ -7,7 +7,7 @@ import { buildConfig } from "payload"
 import { assertNoDevSignInInProduction } from "./auth"
 import { collections } from "./collections"
 import { Users } from "./collections/Users"
-import { pgForRuntime, siteSchema } from "./database"
+import { databaseUrlForRuntime, pgForRuntime, siteSchema } from "./database"
 import { richTextEditor } from "./fields/richText"
 import { globals } from "./globals"
 import { ensureDefaultLayout } from "./layouts/defaultLayout"
@@ -116,6 +116,6 @@ function build({
   })
 }
 
-export default buildPayloadConfig({
-  databaseUrl: process.env.DATABASE_URL || "",
-})
+export default databaseUrlForRuntime().then((databaseUrl) =>
+  buildPayloadConfig({ databaseUrl })
+)

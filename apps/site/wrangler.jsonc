@@ -1,7 +1,12 @@
-// apps/site as a Cloudflare Worker (apps/site ADR-0001). Used locally for
-// now: `pnpm worker:build && pnpm worker:dev` runs the OpenNext build on
-// workerd with the env from .env. Deploy settings (routes, Hyperdrive for
-// DATABASE_URL, R2) come with the first deploy.
+// apps/site as a Cloudflare Worker (apps/site ADR-0001), one Worker per Site:
+// deploy with `wrangler deploy --name pm-<slug>` so every fork keeps this file
+// as it is. `pnpm worker:build && pnpm worker:dev` runs the OpenNext build on
+// workerd locally, with the vars from .dev.vars.
+//
+// HYPERDRIVE pools connections to the database every Site shares (ADR-0005);
+// the app reads its connection string on Workers (src/database.ts). `id` is
+// the Hyperdrive config's (`wrangler hyperdrive create`), one for all Sites.
+// Locally, wrangler connects straight to `localConnectionString` instead.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "awayday-site",
@@ -9,4 +14,12 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // Replace with the id from `wrangler hyperdrive create` before deploying.
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/property_management_sites",
+    },
+  ],
 }

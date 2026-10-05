@@ -38,6 +38,28 @@ export function pgForRuntime(runtime: Runtime = currentRuntime()): typeof pg {
   return runtime === "workers" ? { ...pg, Pool: ConnectionPerCheckoutPool } : pg
 }
 
+/**
+ * The Postgres connection string for this runtime. On Workers it is the
+ * `HYPERDRIVE` binding's (wrangler.jsonc), which pools the real connections
+ * to the shared database; a Worker without the binding falls back to
+ * DATABASE_URL. Everywhere else (dev, tests, scripts, Containers) it is
+ * DATABASE_URL.
+ */
+export async function databaseUrlForRuntime(
+  env: Record<string, string | undefined> = process.env,
+  runtime: Runtime = currentRuntime()
+): Promise<string> {
+  if (runtime === "workers") {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare")
+    const { env: bindings } = await getCloudflareContext({ async: true })
+    const hyperdrive = (
+      bindings as { HYPERDRIVE?: { connectionString?: string } }
+    ).HYPERDRIVE
+    if (hyperdrive?.connectionString) return hyperdrive.connectionString
+  }
+  return env.DATABASE_URL || ""
+}
+
 export type Runtime = "workers" | "node"
 
 export function currentRuntime(): Runtime {
