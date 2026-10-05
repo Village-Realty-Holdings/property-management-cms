@@ -45,7 +45,7 @@ export async function registerThisSite(
 }
 
 /**
- * The Registry User for verified Entra claims. The `site_user` app role is
+ * The Registry User for verified Entra claims. The `bds_campaign_user` app role is
  * re-read every time: without it, Entra doesn't let you in at all. Which
  * Sites you may use is the Registry's to say.
  */

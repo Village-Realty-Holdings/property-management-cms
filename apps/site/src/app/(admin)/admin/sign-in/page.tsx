@@ -26,7 +26,7 @@ const messages: Record<SignInErrorCode, string> = {
   state: "Your sign-in expired or was interrupted. Please try again.",
   token: "Microsoft sign-in couldn't be verified. Please try again.",
   "not-allowed":
-    "Your Microsoft account doesn't have access to this Admin. Ask IT for the site_user role.",
+    "Your Microsoft account doesn't have access to this Admin. Ask IT for the bds_campaign_user role.",
   "not-assigned":
     "You don't have access to this Site. Ask a Super Admin to give you access.",
   password: "That email and password didn't match. Please try again.",

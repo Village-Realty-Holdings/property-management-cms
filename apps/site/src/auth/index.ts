@@ -11,6 +11,7 @@ export {
   readEntraConfig,
   SIGN_IN_PAGE,
   SIGN_OUT_PATH,
+  SITE_USER_ROLE,
   START_PATH,
   type EntraConfig,
 } from "./config"

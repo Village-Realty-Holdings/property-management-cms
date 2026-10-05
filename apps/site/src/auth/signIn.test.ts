@@ -24,6 +24,7 @@ import {
   passwordSignIn,
   readEntraConfig,
   SESSION_COOKIE,
+  SITE_USER_ROLE,
   signOut,
   startHandoff,
   startSignIn,
@@ -77,7 +78,7 @@ beforeEach(async () => {
     oid: `oid-${oidCounter}`,
     email: `Staff${oidCounter}@Awayday.example`,
     name: `User ${oidCounter}`,
-    roles: ["site_user"],
+    roles: [SITE_USER_ROLE],
   }
   await allowed(`staff${oidCounter}@awayday.example`)
 })
@@ -183,7 +184,7 @@ describe("Entra sign-in", () => {
     expect(totalDocs).toBe(0)
   })
 
-  it("rejects users without the site_user app role", async () => {
+  it("rejects users without the required app role", async () => {
     rejectedWith(await signIn({ claims: { roles: [] } }), "not-allowed")
     rejectedWith(
       await signIn({ claims: { roles: ["cms_user"] } }),

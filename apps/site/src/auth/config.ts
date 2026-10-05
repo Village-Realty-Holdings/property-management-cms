@@ -29,8 +29,11 @@ export function readEntraConfig(env: Env = process.env): EntraConfig | null {
   return { tenantId, clientId, clientSecret, issuer, redirectUri }
 }
 
-/** Entra app role required to sign in at all. */
-export const SITE_USER_ROLE = "site_user"
+/**
+ * Entra app role required to sign in at all: the same role the Awayday
+ * Workflows platform requires (its AUTH_REQUIRED_ROLE default).
+ */
+export const SITE_USER_ROLE = "bds_campaign_user"
 
 export const START_PATH = "/auth/entra/start"
 export const CALLBACK_PATH = "/auth/entra/callback"

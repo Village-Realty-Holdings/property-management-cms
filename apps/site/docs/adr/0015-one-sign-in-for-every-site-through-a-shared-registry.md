@@ -12,7 +12,7 @@ Users sign in to every Site with the same account, by Microsoft (Entra ID) or by
 
 ## Consequences
 
-- The Entra `site_user` app role still decides whether a Microsoft account can sign in at all. Which Sites it may use is the Registry's to say. A new Entra User is remembered with no Site Access until a Super Admin grants it. A User a Super Admin added by email is linked to their Entra account the first time they sign in with it.
+- The Entra app role `bds_campaign_user`, the same one the Awayday Workflows platform requires, decides whether a Microsoft account can sign in at all. The role must be defined on the Site's app registration and assigned to the User there: Entra puts only that registration's roles in its tokens. Which Sites it may use is the Registry's to say. A new Entra User is remembered with no Site Access until a Super Admin grants it. A User a Super Admin added by email is linked to their Entra account the first time they sign in with it.
 - Removing someone's Entra role doesn't stop a password they also have. To lock someone out everywhere, disable them in Users.
 - A wrong email, a wrong password and a disabled User get the same answer and take the same time. There is no rate limit in the app: that belongs at the edge.
 - The Registry's tables are created by each Site's migration with idempotent SQL (`src/registry/schema.ts`), so whichever Site migrates first creates them. A later change to them is appended there and run from a new migration. A migration's `down()` never drops the Registry, because other Sites use it.
