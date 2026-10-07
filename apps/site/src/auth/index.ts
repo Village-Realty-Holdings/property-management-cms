@@ -12,7 +12,8 @@ export {
   SIGN_IN_PAGE,
   SIGN_OUT_PATH,
   SITE_USER_ROLE,
-  START_PATH,
+  CALLBACK_PATH,
+  FINISH_PATH,
   type EntraConfig,
 } from "./config"
 export {
@@ -30,6 +31,6 @@ export {
 } from "./session"
 export { finishHandoff, startHandoff } from "./handoff"
 export { passwordSignIn } from "./password"
-export { finishSignIn, startSignIn } from "./signIn"
+export { entraCallback, finishSignIn } from "./signIn"
 export { registerThisSite, thisSiteSchema } from "./user"
 export { signOut } from "./signOut"

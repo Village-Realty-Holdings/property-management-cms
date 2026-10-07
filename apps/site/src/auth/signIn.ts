@@ -1,82 +1,50 @@
-import { timingSafeEqual } from "node:crypto"
-
-import { jwtVerify, SignJWT } from "jose"
 import type { Payload } from "payload"
-import { parseCookies } from "payload/shared"
 
-import { CALLBACK_PATH, type EntraConfig } from "./config"
+import type { EntraConfig } from "./config"
 import {
   isSecure,
   notFound,
   publicUrl,
-  redirect,
   safeReturnTo,
+  sameOrigin,
   signInPage,
 } from "./http"
-import {
-  authorizeUrl,
-  randomToken,
-  redeemCode,
-  SignInError,
-  type SignInErrorCode,
-} from "./oidc"
+import { SignInError, verifyEntraToken, type SignInErrorCode } from "./oidc"
 import { issueSession } from "./session"
 import { registryUserForEntra, signInAs } from "./user"
 
 /**
- * The two Entra sign-in routes (apps/site ADR-0003): `/auth/entra/start`
- * and `/auth/entra/callback`. Both answer 404 when Entra isn't configured.
+ * Sign-in with Microsoft (apps/site ADR-0003, ADR-0017). The sign-in page
+ * signs in with Entra in the browser through MSAL's popup, as the Awayday
+ * Workflows platform does, and posts the token it gets to
+ * `/auth/entra/finish` as a Bearer token. Both routes answer 404 when Entra
+ * isn't configured.
  */
 
-/** Holds state, nonce, PKCE verifier and return path between the two routes. */
-const FLOW_COOKIE = "entra-signin"
-const FLOW_TTL_SECONDS = 10 * 60
-
-type Flow = {
-  state: string
-  nonce: string
-  verifier: string
-  redirectUri: string
-  returnTo: string
-}
-
-/** Redirects to Entra's authorize endpoint with state, nonce and PKCE. */
-export async function startSignIn(
-  request: Request,
-  payload: Payload,
-  config: EntraConfig | null
-): Promise<Response> {
+/**
+ * The popup's redirect URI. MSAL in the sign-in page reads Entra's answer
+ * from the popup's address, so the page itself only has to be on this
+ * origin.
+ */
+export function entraCallback(config: EntraConfig | null): Response {
   if (!config) return notFound()
-  const url = publicUrl(request)
-
-  const flow: Flow = {
-    state: randomToken(),
-    nonce: randomToken(),
-    verifier: randomToken(),
-    redirectUri: config.redirectUri ?? `${url.origin}${CALLBACK_PATH}`,
-    returnTo: safeReturnTo(url.searchParams.get("redirect")),
-  }
-
-  let location: string
-  try {
-    location = await authorizeUrl(config, flow)
-  } catch (error) {
-    payload.logger.error({ err: error }, "Entra sign-in could not start")
-    return redirect(signInPage("entra"))
-  }
-
-  const response = redirect(location)
-  response.headers.append(
-    "Set-Cookie",
-    flowCookie(url, await sealFlow(flow, payload.secret), FLOW_TTL_SECONDS)
+  return new Response(
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Signing in…</title></head><body></body></html>',
+    {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Referrer-Policy": "no-referrer",
+      },
+    }
   )
-  return response
 }
 
 /**
- * Completes sign-in: checks state against the flow cookie, redeems the code,
- * verifies the ID token, checks the Registry User may use this Site, and
- * starts a session. Any failure lands on the sign-in page with `?error=<code>`.
+ * Takes the Entra token from the sign-in page, verifies it, checks the
+ * Registry User may use this Site, and starts a session. Answers JSON with
+ * where to go next: the page asked for, or the sign-in page with
+ * `?error=<code>`.
  */
 export async function finishSignIn(
   request: Request,
@@ -86,103 +54,52 @@ export async function finishSignIn(
   if (!config) return notFound()
   const url = publicUrl(request)
 
-  let response: Response
   try {
-    const flow = await openFlow(
-      parseCookies(request.headers).get(FLOW_COOKIE),
-      payload.secret
-    )
-
-    const entraError = url.searchParams.get("error")
-    if (entraError) {
-      throw new SignInError(
-        "entra",
-        `Entra returned ${entraError}: ${url.searchParams.get("error_description") ?? ""}`
-      )
+    // Only this Site's own sign-in page may post here.
+    if (!sameOrigin(request, url)) {
+      throw new SignInError("token", "Cross-origin sign-in post")
     }
-    const state = url.searchParams.get("state")
-    if (!state || !safeEqual(state, flow.state)) {
-      throw new SignInError("state", "State mismatch")
+    const header = request.headers.get("authorization") ?? ""
+    if (!header.startsWith("Bearer ")) {
+      throw new SignInError("token", "No Bearer token")
     }
-    const code = url.searchParams.get("code")
-    if (!code) throw new SignInError("entra", "No authorization code")
-
-    const claims = await redeemCode(config, {
-      code,
-      redirectUri: flow.redirectUri,
-      verifier: flow.verifier,
-      nonce: flow.nonce,
-    })
+    const claims = await verifyEntraToken(config, header.slice(7).trim())
     const user = await signInAs(
       payload,
       await registryUserForEntra(payload, claims, config)
     )
 
-    response = redirect(flow.returnTo)
+    const body = await request.formData().catch(() => new FormData())
+    const returnTo = body.get("redirect")
+    const response = answer(
+      200,
+      safeReturnTo(typeof returnTo === "string" ? returnTo : null)
+    )
     response.headers.append(
       "Set-Cookie",
       await issueSession(payload, user.id, { secure: isSecure(url) })
     )
+    return response
   } catch (error) {
-    let code: SignInErrorCode = "entra"
-    if (error instanceof SignInError) {
-      code = error.code
-      payload.logger.warn(`Entra sign-in rejected (${code}): ${error.message}`)
-    } else {
-      payload.logger.error({ err: error }, "Entra sign-in failed")
-    }
-    response = redirect(signInPage(code))
+    return answer(401, signInPage(failure(payload, error)))
   }
-
-  // The flow cookie is single-use, whatever the outcome.
-  response.headers.append("Set-Cookie", flowCookie(url, "", 0))
-  return response
 }
 
-function flowCookie(url: URL, value: string, maxAge: number): string {
-  return [
-    `${FLOW_COOKIE}=${value}`,
-    "Path=/auth/entra",
-    `Max-Age=${maxAge}`,
-    "HttpOnly",
-    // Lax: the callback is a top-level GET navigation from Entra.
-    "SameSite=Lax",
-    ...(isSecure(url) ? ["Secure"] : []),
-  ].join("; ")
+function answer(status: number, location: string): Response {
+  return Response.json(
+    { location },
+    { status, headers: { "Cache-Control": "no-store" } }
+  )
 }
 
-const flowKey = (secret: string) =>
-  new TextEncoder().encode(`${secret}:entra-signin`)
-
-/** Signed, so the flow can't be forged or altered in the browser. */
-function sealFlow(flow: Flow, secret: string): Promise<string> {
-  return new SignJWT({ ...flow })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${FLOW_TTL_SECONDS}s`)
-    .sign(flowKey(secret))
-}
-
-async function openFlow(
-  value: string | undefined,
-  secret: string
-): Promise<Flow> {
-  if (!value) throw new SignInError("state", "No sign-in flow cookie")
-  try {
-    const { payload } = await jwtVerify<Flow>(value, flowKey(secret), {
-      algorithms: ["HS256"],
-    })
-    return payload
-  } catch (error) {
-    throw new SignInError(
-      "state",
-      `Invalid sign-in flow cookie: ${(error as Error).message}`
+/** Logs a failed sign-in and returns the code the sign-in page shows. */
+function failure(payload: Payload, error: unknown): SignInErrorCode {
+  if (error instanceof SignInError) {
+    payload.logger.warn(
+      `Entra sign-in rejected (${error.code}): ${error.message}`
     )
+    return error.code
   }
-}
-
-function safeEqual(a: string, b: string): boolean {
-  const left = Buffer.from(a)
-  const right = Buffer.from(b)
-  return left.length === right.length && timingSafeEqual(left, right)
+  payload.logger.error({ err: error }, "Entra sign-in failed")
+  return "entra"
 }

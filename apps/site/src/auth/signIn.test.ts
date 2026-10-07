@@ -19,6 +19,7 @@ import {
   DEV_USER,
   devSignIn,
   devSignInEnabled,
+  entraCallback,
   finishHandoff,
   finishSignIn,
   passwordSignIn,
@@ -27,7 +28,6 @@ import {
   SITE_USER_ROLE,
   signOut,
   startHandoff,
-  startSignIn,
   thisSiteSchema,
   type EntraConfig,
 } from "."
@@ -54,12 +54,11 @@ beforeAll(async () => {
   })
   mock = await startMockIssuer()
   config = {
-    tenantId: mock.tenantId,
-    clientId: mock.clientId,
-    clientSecret: mock.clientSecret,
-    issuer: mock.issuer,
-    requiredRole: SITE_USER_ROLE,
-    roleClaim: "roles",
+    ...readEntraConfig({
+      ENTRA_TENANT_ID: mock.tenantId,
+      ENTRA_CLIENT_ID: mock.clientId,
+      ENTRA_ISSUER: mock.issuer,
+    })!,
   }
 })
 
@@ -75,10 +74,12 @@ async function allowed(email: string, password?: string) {
   return user
 }
 
+/** The Microsoft account the next sign-in is for. */
+let person: JWTPayload
 let oidCounter = 0
 beforeEach(async () => {
   oidCounter += 1
-  mock.user = {
+  person = {
     oid: `oid-${oidCounter}`,
     email: `Staff${oidCounter}@Awayday.example`,
     name: `User ${oidCounter}`,
@@ -93,43 +94,40 @@ const cookieHeader = (response: Response) =>
     .map((cookie) => cookie.split(";")[0])
     .join("; ")
 
-/** Runs the whole flow against the mock issuer and returns the callback's response. */
+/**
+ * What the sign-in page does once MSAL has a token: posts it to the Site.
+ * Returns the Site's answer.
+ */
 async function signIn({
   claims = {},
-  startPath = "/auth/entra/start",
-  tamper,
   entra = config,
+  redirect = "",
+  headers = {},
 }: {
   claims?: JWTPayload
-  startPath?: string
   entra?: EntraConfig
-  tamper?: (callback: URL, cookie: string) => { url: URL; cookie: string }
+  redirect?: string
+  headers?: Record<string, string>
 } = {}): Promise<Response> {
-  mock.user = { ...mock.user, ...claims }
-  const start = await startSignIn(
-    new Request(`${ORIGIN}${startPath}`),
-    t.payload,
-    entra
-  )
-  expect(start.status).toBe(302)
-  const authorize = new URL(start.headers.get("location") ?? "")
-  expect(authorize.origin + authorize.pathname).toBe(`${mock.issuer}/authorize`)
-  expect(authorize.searchParams.get("code_challenge_method")).toBe("S256")
-  expect(authorize.searchParams.get("redirect_uri")).toBe(
-    `${ORIGIN}/auth/entra/callback`
-  )
-
-  const fromEntra = await fetch(authorize, { redirect: "manual" })
-  let url = new URL(fromEntra.headers.get("location") ?? "")
-  let cookie = cookieHeader(start)
-  if (tamper) ({ url, cookie } = tamper(url, cookie))
-
+  person = { ...person, ...claims }
   return finishSignIn(
-    new Request(url, { headers: { cookie } }),
+    new Request(`${ORIGIN}/auth/entra/finish`, {
+      method: "POST",
+      headers: {
+        origin: ORIGIN,
+        authorization: `Bearer ${await mock.token(person)}`,
+        ...headers,
+      },
+      body: new URLSearchParams({ redirect }),
+    }),
     t.payload,
     entra
   )
 }
+
+/** Where the Site's answer sends the browser. */
+const locationOf = async (response: Response) =>
+  ((await response.clone().json()) as { location: string }).location
 
 const sessionCookie = (response: Response) =>
   response.headers
@@ -144,9 +142,9 @@ async function me(response: Response) {
   return user
 }
 
-const rejectedWith = (response: Response, error: string) => {
-  expect(response.status).toBe(302)
-  expect(response.headers.get("location")).toBe(`/admin/sign-in?error=${error}`)
+async function rejectedWith(response: Response, error: string) {
+  expect(response.status).toBe(401)
+  expect(await locationOf(response)).toBe(`/admin/sign-in?error=${error}`)
   expect(sessionCookie(response)).toBeUndefined()
 }
 
@@ -154,15 +152,9 @@ describe("Entra sign-in", () => {
   it("creates a User and a working session", async () => {
     const response = await signIn()
 
-    expect(response.status).toBe(302)
-    expect(response.headers.get("location")).toBe("/admin")
+    expect(response.status).toBe(200)
+    expect(await locationOf(response)).toBe("/admin")
     expect(sessionCookie(response)).toMatch(/HttpOnly/)
-    // The single-use flow cookie is cleared.
-    expect(
-      response.headers
-        .getSetCookie()
-        .some((c) => c.startsWith("entra-signin=;") && /Max-Age=0/.test(c))
-    ).toBe(true)
 
     const registryUser = await findUser(db, {
       email: `staff${oidCounter}@awayday.example`,
@@ -192,7 +184,7 @@ describe("Entra sign-in", () => {
 
   it("requires the configured app role, read from the configured claim", async () => {
     const entra = { ...config, requiredRole: "cms_user", roleClaim: "groups" }
-    rejectedWith(
+    await rejectedWith(
       await signIn({
         entra,
         claims: { roles: ["cms_user"], groups: [SITE_USER_ROLE] },
@@ -203,12 +195,12 @@ describe("Entra sign-in", () => {
       entra,
       claims: { roles: [], groups: ["cms_user"] },
     })
-    expect(response.headers.get("location")).toBe("/admin")
+    expect(await locationOf(response)).toBe("/admin")
   })
 
   it("rejects users without the required app role", async () => {
-    rejectedWith(await signIn({ claims: { roles: [] } }), "not-allowed")
-    rejectedWith(
+    await rejectedWith(await signIn({ claims: { roles: [] } }), "not-allowed")
+    await rejectedWith(
       await signIn({ claims: { roles: ["cms_user"] } }),
       "not-allowed"
     )
@@ -221,9 +213,7 @@ describe("Entra sign-in", () => {
 
   it("gives a new Entra user Site Access here, once", async () => {
     const email = "newcomer@awayday.example"
-    expect((await signIn({ claims: { email } })).headers.get("location")).toBe(
-      "/admin"
-    )
+    expect(await locationOf(await signIn({ claims: { email } }))).toBe("/admin")
     const newcomer = await findUser(db, { email })
     expect(newcomer).toMatchObject({
       entraOid: `oid-${oidCounter}`,
@@ -232,7 +222,7 @@ describe("Entra sign-in", () => {
 
     // Taken away in the Users screen, it stays taken away.
     await revokeSite(db, newcomer!.id, here.id)
-    rejectedWith(await signIn({ claims: { email } }), "not-assigned")
+    await rejectedWith(await signIn({ claims: { email } }), "not-assigned")
   })
 
   it("makes a new Entra user with the admin role a Super Admin, once", async () => {
@@ -252,7 +242,7 @@ describe("Entra sign-in", () => {
   it("leaves a User added by email as they were", async () => {
     const email = "added@awayday.example"
     const added = await createUser(db, { email })
-    rejectedWith(
+    await rejectedWith(
       await signIn({
         entra: { ...config, adminRole: "cms_admin" },
         claims: { email, roles: [SITE_USER_ROLE, "cms_admin"] },
@@ -266,86 +256,97 @@ describe("Entra sign-in", () => {
     })
   })
 
-  it("rejects a callback whose state doesn't match", async () => {
-    const response = await signIn({
-      tamper: (url, cookie) => {
-        url.searchParams.set("state", "forged")
-        return { url, cookie }
-      },
-    })
-    rejectedWith(response, "state")
-  })
-
-  it("rejects a callback without the flow cookie", async () => {
-    rejectedWith(
-      await signIn({ tamper: (url) => ({ url, cookie: "" }) }),
-      "state"
+  it("rejects a token with the wrong audience, tenant or issuer, or expired", async () => {
+    await rejectedWith(
+      await signIn({ claims: { aud: "someone-else" } }),
+      "token"
     )
-  })
-
-  it("rejects an ID token with the wrong nonce, audience, tenant or issuer", async () => {
-    rejectedWith(await signIn({ claims: { nonce: "replayed" } }), "token")
-    rejectedWith(await signIn({ claims: { aud: "someone-else" } }), "token")
-    rejectedWith(await signIn({ claims: { tid: "other-tenant" } }), "token")
-    rejectedWith(
+    await rejectedWith(
+      await signIn({ claims: { tid: "other-tenant" } }),
+      "token"
+    )
+    await rejectedWith(
       await signIn({ claims: { iss: "https://evil.example/v2.0" } }),
+      "token"
+    )
+    await rejectedWith(
+      await signIn({ claims: { exp: Math.floor(Date.now() / 1000) - 600 } }),
       "token"
     )
   })
 
-  it("reports errors returned by Entra", async () => {
+  it("rejects a forged token or none", async () => {
+    const forged = (await mock.token(person)).replace(/.$/, "x")
+    await rejectedWith(
+      await signIn({ headers: { authorization: `Bearer ${forged}` } }),
+      "token"
+    )
+    await rejectedWith(
+      await signIn({ headers: { authorization: "" } }),
+      "token"
+    )
+  })
+
+  it("requires the API scope when one is set", async () => {
+    const entra = readEntraConfig({
+      ENTRA_TENANT_ID: mock.tenantId,
+      ENTRA_CLIENT_ID: mock.clientId,
+      ENTRA_ISSUER: mock.issuer,
+      AUTH_REQUIRED_SCOPE: "payload.access",
+    })!
+    const aud = `api://${mock.clientId}`
+    await rejectedWith(
+      await signIn({ entra, claims: { aud, scp: "User.Read" } }),
+      "token"
+    )
     const response = await signIn({
-      tamper: (url, cookie) => {
-        url.searchParams.delete("code")
-        url.searchParams.set("error", "access_denied")
-        return { url, cookie }
-      },
+      entra,
+      claims: { aud, scp: "User.Read payload.access" },
     })
-    rejectedWith(response, "entra")
+    expect(await locationOf(response)).toBe("/admin")
+  })
+
+  it("only takes a token posted from this Site", async () => {
+    await rejectedWith(
+      await signIn({ headers: { origin: "https://evil.example" } }),
+      "token"
+    )
   })
 
   it("rejects an email already linked to another Entra user", async () => {
     await signIn()
-    rejectedWith(
+    await rejectedWith(
       await signIn({ claims: { oid: "someone-else" } }),
       "account-conflict"
     )
   })
 
   it("returns to a same-origin path only", async () => {
-    const back = await signIn({
-      startPath: "/auth/entra/start?redirect=%2Fadmin%2Fpages",
-    })
-    expect(back.headers.get("location")).toBe("/admin/pages")
-
-    const offsite = await signIn({
-      startPath: "/auth/entra/start?redirect=%2F%2Fevil.example",
-    })
-    expect(offsite.headers.get("location")).toBe("/admin")
+    expect(await locationOf(await signIn({ redirect: "/admin/pages" }))).toBe(
+      "/admin/pages"
+    )
+    expect(await locationOf(await signIn({ redirect: "//evil.example" }))).toBe(
+      "/admin"
+    )
   })
 
-  it("derives an https redirect URI behind a TLS-terminating proxy", async () => {
-    const start = await startSignIn(
-      new Request(`${ORIGIN}/auth/entra/start`, {
-        headers: { "x-forwarded-proto": "https" },
-      }),
-      t.payload,
-      config
-    )
-    const authorize = new URL(start.headers.get("location") ?? "")
-    expect(authorize.searchParams.get("redirect_uri")).toBe(
-      "https://site.test/auth/entra/callback"
-    )
-    expect(start.headers.getSetCookie()[0]).toMatch(/; Secure/)
+  it("sets a Secure session cookie behind a TLS-terminating proxy", async () => {
+    const response = await signIn({
+      headers: { "x-forwarded-proto": "https", origin: "https://site.test" },
+    })
+    expect(sessionCookie(response)).toMatch(/; Secure/)
   })
 
-  it("reads the required role and its claim, with defaults", () => {
-    const base = {
-      ENTRA_TENANT_ID: "t",
-      ENTRA_CLIENT_ID: "c",
-      ENTRA_CLIENT_SECRET: "s",
-    }
+  it("reads the Entra settings, with defaults", () => {
+    const base = { ENTRA_TENANT_ID: "t", ENTRA_CLIENT_ID: "c" }
     expect(readEntraConfig(base)).toMatchObject({
+      issuer: "https://login.microsoftonline.com/t/v2.0",
+      issuers: [
+        "https://login.microsoftonline.com/t/v2.0",
+        "https://sts.windows.net/t/",
+      ],
+      audiences: ["c", "api://c"],
+      requiredScope: undefined,
       requiredRole: SITE_USER_ROLE,
       roleClaim: "roles",
       adminRole: undefined,
@@ -353,31 +354,37 @@ describe("Entra sign-in", () => {
     expect(
       readEntraConfig({
         ...base,
+        AUTH_AUDIENCE: "api://cms, c",
+        AUTH_REQUIRED_SCOPE: "payload.access",
         AUTH_REQUIRED_ROLE: " payload_cms_user ",
         AUTH_ROLE_CLAIM: "groups",
         AUTH_ADMIN_ROLE: "payload_cms_admin",
       })
     ).toMatchObject({
+      audiences: ["api://cms", "c"],
+      requiredScope: { uri: "api://c/payload.access", name: "payload.access" },
       requiredRole: "payload_cms_user",
       roleClaim: "groups",
       adminRole: "payload_cms_admin",
     })
+    expect(
+      readEntraConfig({
+        ...base,
+        AUTH_REQUIRED_SCOPE: "api://cms/payload.access",
+      })?.requiredScope
+    ).toEqual({ uri: "api://cms/payload.access", name: "payload.access" })
   })
 
   it("answers 404 when Entra isn't configured", async () => {
     expect(readEntraConfig({})).toBeNull()
-    const start = await startSignIn(
-      new Request(`${ORIGIN}/auth/entra/start`),
-      t.payload,
-      readEntraConfig({ ENTRA_TENANT_ID: "t", ENTRA_CLIENT_ID: "c" })
-    )
-    expect(start.status).toBe(404)
-    const callback = await finishSignIn(
-      new Request(`${ORIGIN}/auth/entra/callback?code=x&state=y`),
+    expect(readEntraConfig({ ENTRA_TENANT_ID: "t" })).toBeNull()
+    expect(entraCallback(null).status).toBe(404)
+    const finish = await finishSignIn(
+      new Request(`${ORIGIN}/auth/entra/finish`, { method: "POST" }),
       t.payload,
       null
     )
-    expect(callback.status).toBe(404)
+    expect(finish.status).toBe(404)
   })
 })
 
@@ -627,7 +634,10 @@ describe("Site handoff", () => {
     expect(first.headers.get("location")).toBe("/admin")
     expect(await me(first)).toMatchObject({ registryUserId: user.id })
 
-    rejectedWith(await arrive(), "handoff")
+    const again = await arrive()
+    expect(again.status).toBe(302)
+    expect(again.headers.get("location")).toBe("/admin/sign-in?error=handoff")
+    expect(sessionCookie(again)).toBeUndefined()
   })
 })
 

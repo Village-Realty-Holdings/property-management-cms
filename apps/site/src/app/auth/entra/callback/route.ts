@@ -1,8 +1,5 @@
-import config from "@payload-config"
-import { getPayload } from "payload"
+import { entraCallback, readEntraConfig } from "@/auth"
 
-import { finishSignIn, readEntraConfig } from "@/auth"
-
-export async function GET(request: Request) {
-  return finishSignIn(request, await getPayload({ config }), readEntraConfig())
+export function GET() {
+  return entraCallback(readEntraConfig())
 }

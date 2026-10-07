@@ -11,22 +11,23 @@ import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
+  CALLBACK_PATH,
   DEV_PATH,
   devSignInEnabled,
+  FINISH_PATH,
   PASSWORD_PATH,
   readEntraConfig,
-  START_PATH,
   type SignInErrorCode,
 } from "@/auth"
 
+import { MicrosoftSignIn } from "./MicrosoftSignIn"
+
 export const metadata: Metadata = { title: "Sign in" }
 
-const messages: Record<SignInErrorCode, string> = {
+const messages = (requiredRole: string): Record<SignInErrorCode, string> => ({
   entra: "Microsoft sign-in didn't complete. Please try again.",
-  state: "Your sign-in expired or was interrupted. Please try again.",
   token: "Microsoft sign-in couldn't be verified. Please try again.",
-  "not-allowed":
-    "Your Microsoft account doesn't have access to this Admin. Ask IT for the bds_campaign_user role.",
+  "not-allowed": `Your Microsoft account doesn't have access to this Admin. Ask IT for the ${requiredRole} role.`,
   "not-assigned":
     "You don't have access to this Site. Ask a Super Admin to give you access.",
   password: "That email and password didn't match. Please try again.",
@@ -34,7 +35,7 @@ const messages: Record<SignInErrorCode, string> = {
     "That link to this Site expired or was already used. Sign in here, or switch Sites again.",
   "account-conflict":
     "Another account already uses your email. Ask a colleague to remove it, then sign in again.",
-}
+})
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -55,12 +56,13 @@ export default async function SignInPage({ searchParams }: Props) {
   const { user } = await payload.auth({ headers: await headers() })
   if (user) redirect(returnTo?.startsWith("/admin") ? returnTo : "/admin")
 
+  const entra = readEntraConfig()
   const error = first(params.error)
+  const texts = messages(entra?.requiredRole ?? "")
   const message =
-    error && error in messages ? messages[error as SignInErrorCode] : null
+    error && error in texts ? texts[error as SignInErrorCode] : null
   const withRedirect = (path: string) =>
     returnTo ? `${path}?${new URLSearchParams({ redirect: returnTo })}` : path
-  const entra = readEntraConfig()
   const dev = devSignInEnabled()
 
   return (
@@ -82,12 +84,15 @@ export default async function SignInPage({ searchParams }: Props) {
         )}
         <div className="flex flex-col gap-2">
           {entra && (
-            <a
-              href={withRedirect(START_PATH)}
-              className={cn(buttonVariants({ size: "lg" }), "w-full")}
-            >
-              Sign in with Microsoft
-            </a>
+            <MicrosoftSignIn
+              clientId={entra.clientId}
+              authority={entra.issuer.replace(/\/v2\.0\/?$/, "")}
+              redirectUri={entra.redirectUri}
+              callbackPath={CALLBACK_PATH}
+              finishPath={FINISH_PATH}
+              scope={entra.requiredScope?.uri}
+              returnTo={returnTo}
+            />
           )}
           {dev && (
             <a

@@ -11,7 +11,7 @@ The first slice of the Site Builder. A User signs in to the Admin, creates a Pag
 - Top-level paths the Site can't use for Pages: `admin`, `p-admin`, `api`, `auth`, `media`.
 - The Admin reads and writes through Payload's Local API as the signed-in User (`overrideAccess: false`), from Server Components and Server Actions. There is no REST client.
 - User sessions come from our own auth strategy. Payload's local strategy is disabled (ADR-0003), and that also disables Payload's built-in JWT check. `auth/` issues a signed `site-session` cookie (HS256 with the Payload secret, 8 hours), and a custom Payload strategy reads it. Every Payload request (the Admin, REST and the Local API) authenticates the same way.
-- Sign-in routes: `/auth/entra/start`, `/auth/entra/callback`, `/auth/dev` (dev only, ADR-0003) and `/auth/sign-out`.
+- Sign-in routes: `/auth/entra/callback` and `/auth/entra/finish` (sign-in with MSAL in the browser, ADR-0017), `/auth/dev` (dev only, ADR-0003) and `/auth/sign-out`.
 - Entra decides who may sign in, through the `site_user` app role. There are no roles in the app.
 - Media uses the S3 adapter against R2 when `S3_*` is set, and local disk otherwise. Keys are plain filenames.
 - Site Settings is a Payload global. The Site reads it for its name and branding, and branding becomes CSS variables on the Site's root layout.

@@ -69,7 +69,6 @@ export function siteEnv(): NodeJS.ProcessEnv {
     // only the dev sign-in button).
     ENTRA_TENANT_ID: "",
     ENTRA_CLIENT_ID: "",
-    ENTRA_CLIENT_SECRET: "",
     // No Workflows platform: the Guest feedback survey's feedback can't be passed on,
     // whatever the machine's .env says.
     WORKFLOWS_URL: "",

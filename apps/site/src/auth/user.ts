@@ -69,7 +69,12 @@ export async function registryUserForEntra(
       `Entra user ${claims.oid} lacks the ${requiredRole} app role`
     )
   }
-  const email = (claims.email || claims.preferred_username || "").trim()
+  const email = (
+    claims.email ||
+    claims.upn ||
+    claims.preferred_username ||
+    ""
+  ).trim()
   if (!email) {
     throw new SignInError("token", `Entra user ${claims.oid} has no email`)
   }
