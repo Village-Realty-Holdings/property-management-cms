@@ -5,7 +5,9 @@
 //
 // HYPERDRIVE pools connections to the database every Site shares (ADR-0005);
 // the app reads its connection string on Workers (src/database.ts). `id` is
-// the Hyperdrive config for Neon's live-pm-sites database, one for all Sites.
+// the Hyperdrive config (payload-cms-sites, in the Tech@vrobx.com account) for
+// the neondb database of Neon project payload-cms-sites (spring-salad-55976645),
+// over its direct, unpooled host: Hyperdrive pools. One for all Sites.
 // Locally, wrangler connects straight to `localConnectionString` instead.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -18,7 +20,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "d7af30318e1f4a749ca2e56c5fd19946",
+      "id": "a4a923b598e84c2ca3b55f109ffb1c44",
       "localConnectionString": "postgres://postgres:postgres@localhost:5432/property_management_sites",
     },
   ],
