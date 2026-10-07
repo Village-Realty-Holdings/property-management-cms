@@ -11,7 +11,7 @@ The sign-in page signs in with Entra in the browser, through MSAL's popup, the w
 ## Consequences
 
 - Each Site's origin has `<origin>/auth/entra/callback` registered as a **single-page application** redirect URI. That page is blank: MSAL reads Entra's answer from the popup's address.
-- `ENTRA_CLIENT_SECRET` is gone. Only the tenant and client id are needed to turn sign-in with Microsoft on.
+- `ENTRA_CLIENT_SECRET` is gone. The settings take the Workflows platform's names (`AUTH_TENANT_ID`, `AUTH_CLIENT_ID`, `AUTH_ISSUER`, `AUTH_AUDIENCE`, `AUTH_REQUIRED_SCOPE` and the role settings), so one set of values serves both. Only the tenant and client id are needed to turn sign-in with Microsoft on.
 - MSAL keeps its tokens in the browser's sessionStorage, on the sign-in page only. The Site never uses them after sign-in: the Admin runs on its own HttpOnly session cookie, as before.
 - There is no nonce or state shared between the Site and the popup any more. `/auth/entra/finish` takes only posts from the Site's own origin, and a token is short-lived and only for this app. Someone holding a stolen token could start a session with it until it expires, which is the same exposure the Workflows platform's API has.
 - v1 access tokens (the default for a custom API scope) come from `https://sts.windows.net/<tenant>/` with the audience `api://<client id>`, so both issuers and both audiences are accepted by default.

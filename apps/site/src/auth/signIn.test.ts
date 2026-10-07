@@ -55,9 +55,9 @@ beforeAll(async () => {
   mock = await startMockIssuer()
   config = {
     ...readEntraConfig({
-      ENTRA_TENANT_ID: mock.tenantId,
-      ENTRA_CLIENT_ID: mock.clientId,
-      ENTRA_ISSUER: mock.issuer,
+      AUTH_TENANT_ID: mock.tenantId,
+      AUTH_CLIENT_ID: mock.clientId,
+      AUTH_ISSUER: mock.issuer,
     })!,
   }
 })
@@ -289,9 +289,9 @@ describe("Entra sign-in", () => {
 
   it("requires the API scope when one is set", async () => {
     const entra = readEntraConfig({
-      ENTRA_TENANT_ID: mock.tenantId,
-      ENTRA_CLIENT_ID: mock.clientId,
-      ENTRA_ISSUER: mock.issuer,
+      AUTH_TENANT_ID: mock.tenantId,
+      AUTH_CLIENT_ID: mock.clientId,
+      AUTH_ISSUER: mock.issuer,
       AUTH_REQUIRED_SCOPE: "payload.access",
     })!
     const aud = `api://${mock.clientId}`
@@ -338,7 +338,7 @@ describe("Entra sign-in", () => {
   })
 
   it("reads the Entra settings, with defaults", () => {
-    const base = { ENTRA_TENANT_ID: "t", ENTRA_CLIENT_ID: "c" }
+    const base = { AUTH_TENANT_ID: "t", AUTH_CLIENT_ID: "c" }
     expect(readEntraConfig(base)).toMatchObject({
       issuer: "https://login.microsoftonline.com/t/v2.0",
       issuers: [
@@ -373,11 +373,26 @@ describe("Entra sign-in", () => {
         AUTH_REQUIRED_SCOPE: "api://cms/payload.access",
       })?.requiredScope
     ).toEqual({ uri: "api://cms/payload.access", name: "payload.access" })
+
+    // An Entra issuer set explicitly still takes v1 tokens; any other is alone.
+    expect(
+      readEntraConfig({
+        ...base,
+        AUTH_ISSUER: "https://login.microsoftonline.com/t/v2.0",
+      })?.issuers
+    ).toEqual([
+      "https://login.microsoftonline.com/t/v2.0",
+      "https://sts.windows.net/t/",
+    ])
+    expect(
+      readEntraConfig({ ...base, AUTH_ISSUER: "http://mock.test/t/v2.0" })
+        ?.issuers
+    ).toEqual(["http://mock.test/t/v2.0"])
   })
 
   it("answers 404 when Entra isn't configured", async () => {
     expect(readEntraConfig({})).toBeNull()
-    expect(readEntraConfig({ ENTRA_TENANT_ID: "t" })).toBeNull()
+    expect(readEntraConfig({ AUTH_TENANT_ID: "t" })).toBeNull()
     expect(entraCallback(null).status).toBe(404)
     const finish = await finishSignIn(
       new Request(`${ORIGIN}/auth/entra/finish`, { method: "POST" }),

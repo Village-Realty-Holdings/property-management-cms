@@ -67,8 +67,8 @@ export function siteEnv(): NodeJS.ProcessEnv {
     // Sign in with Microsoft is off, so the screens look the same on every
     // machine whether or not its .env has an Entra app (the baselines have
     // only the dev sign-in button).
-    ENTRA_TENANT_ID: "",
-    ENTRA_CLIENT_ID: "",
+    AUTH_TENANT_ID: "",
+    AUTH_CLIENT_ID: "",
     // No Workflows platform: the Guest feedback survey's feedback can't be passed on,
     // whatever the machine's .env says.
     WORKFLOWS_URL: "",

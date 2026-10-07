@@ -39,16 +39,17 @@ const list = (value: string | undefined) =>
     .filter(Boolean)
 
 export function readEntraConfig(env: Env = process.env): EntraConfig | null {
-  const tenantId = env.ENTRA_TENANT_ID?.trim()
-  const clientId = env.ENTRA_CLIENT_ID?.trim()
+  const tenantId = env.AUTH_TENANT_ID?.trim()
+  const clientId = env.AUTH_CLIENT_ID?.trim()
   if (!tenantId || !clientId) return null
 
-  const override = env.ENTRA_ISSUER?.trim()
   const issuer =
-    override || `https://login.microsoftonline.com/${tenantId}/v2.0`
-  const issuers = override
-    ? [override]
-    : [issuer, `https://sts.windows.net/${tenantId}/`]
+    env.AUTH_ISSUER?.trim() ||
+    `https://login.microsoftonline.com/${tenantId}/v2.0`
+  // Entra's v1 access tokens (a custom API scope's default) come from sts.
+  const issuers = issuer.startsWith("https://login.microsoftonline.com/")
+    ? [issuer, `https://sts.windows.net/${tenantId}/`]
+    : [issuer]
   const audiences = list(env.AUTH_AUDIENCE)
   const scope = env.AUTH_REQUIRED_SCOPE?.trim()
 
@@ -58,7 +59,7 @@ export function readEntraConfig(env: Env = process.env): EntraConfig | null {
     issuer,
     issuers,
     audiences: audiences.length ? audiences : [clientId, `api://${clientId}`],
-    redirectUri: env.ENTRA_REDIRECT_URI?.trim() || undefined,
+    redirectUri: env.AUTH_REDIRECT_URI?.trim() || undefined,
     requiredScope: scope
       ? {
           // A bare name is a scope of this registration's API.
