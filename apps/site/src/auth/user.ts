@@ -48,12 +48,18 @@ export async function registerThisSite(
 /**
  * The Registry User for verified Entra claims. The required app role
  * (AUTH_REQUIRED_ROLE) is re-read every time: without it, Entra doesn't let
- * you in at all. Which Sites you may use is the Registry's to say.
+ * you in at all. Entra also decides a new User's access: Site Access to this
+ * Site, and Super Admin with the AUTH_ADMIN_ROLE app role. After that, which
+ * Sites you may use is the Registry's to say.
  */
 export async function registryUserForEntra(
   payload: Payload,
   claims: EntraClaims,
-  { requiredRole, roleClaim }: Pick<EntraConfig, "requiredRole" | "roleClaim">
+  {
+    requiredRole,
+    roleClaim,
+    adminRole,
+  }: Pick<EntraConfig, "requiredRole" | "roleClaim" | "adminRole">
 ): Promise<RegistryUser> {
   const claimed = claims[roleClaim]
   const roles = Array.isArray(claimed) ? claimed : []
@@ -68,11 +74,15 @@ export async function registryUserForEntra(
     throw new SignInError("token", `Entra user ${claims.oid} has no email`)
   }
   try {
-    return await userForEntra(registryDb(payload), {
-      oid: claims.oid,
-      email,
-      name: claims.name,
-    })
+    const site = await registerThisSite(payload)
+    return await userForEntra(
+      registryDb(payload),
+      { oid: claims.oid, email, name: claims.name },
+      {
+        isSuperAdmin: adminRole !== undefined && roles.includes(adminRole),
+        siteId: site.id,
+      }
+    )
   } catch (error) {
     if (error instanceof RegistryError) {
       throw new SignInError("account-conflict", error.message)

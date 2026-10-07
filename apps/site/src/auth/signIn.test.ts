@@ -219,14 +219,51 @@ describe("Entra sign-in", () => {
     expect(totalDocs).toBe(0)
   })
 
-  it("rejects an Entra user with no Site Access, and remembers them", async () => {
+  it("gives a new Entra user Site Access here, once", async () => {
+    const email = "newcomer@awayday.example"
+    expect((await signIn({ claims: { email } })).headers.get("location")).toBe(
+      "/admin"
+    )
+    const newcomer = await findUser(db, { email })
+    expect(newcomer).toMatchObject({
+      entraOid: `oid-${oidCounter}`,
+      isSuperAdmin: false,
+    })
+
+    // Taken away in the Users screen, it stays taken away.
+    await revokeSite(db, newcomer!.id, here.id)
+    rejectedWith(await signIn({ claims: { email } }), "not-assigned")
+  })
+
+  it("makes a new Entra user with the admin role a Super Admin, once", async () => {
+    const entra = { ...config, adminRole: "cms_admin" }
+    const email = "boss@awayday.example"
+    const roles = [SITE_USER_ROLE, "cms_admin"]
+    await signIn({ entra, claims: { email, roles } })
+    const boss = await findUser(db, { email })
+    expect(boss).toMatchObject({ isSuperAdmin: true })
+
+    // Entra roles don't change an existing User.
+    await updateUser(db, boss!.id, { isSuperAdmin: false })
+    await signIn({ entra, claims: { email, roles } })
+    expect(await findUser(db, { email })).toMatchObject({ isSuperAdmin: false })
+  })
+
+  it("leaves a User added by email as they were", async () => {
+    const email = "added@awayday.example"
+    const added = await createUser(db, { email })
     rejectedWith(
-      await signIn({ claims: { email: "newcomer@awayday.example" } }),
+      await signIn({
+        entra: { ...config, adminRole: "cms_admin" },
+        claims: { email, roles: [SITE_USER_ROLE, "cms_admin"] },
+      }),
       "not-assigned"
     )
-    expect(
-      await findUser(db, { email: "newcomer@awayday.example" })
-    ).toMatchObject({ entraOid: `oid-${oidCounter}`, isSuperAdmin: false })
+    expect(await findUser(db, { email })).toMatchObject({
+      id: added.id,
+      entraOid: `oid-${oidCounter}`,
+      isSuperAdmin: false,
+    })
   })
 
   it("rejects a callback whose state doesn't match", async () => {
@@ -311,14 +348,20 @@ describe("Entra sign-in", () => {
     expect(readEntraConfig(base)).toMatchObject({
       requiredRole: SITE_USER_ROLE,
       roleClaim: "roles",
+      adminRole: undefined,
     })
     expect(
       readEntraConfig({
         ...base,
         AUTH_REQUIRED_ROLE: " payload_cms_user ",
         AUTH_ROLE_CLAIM: "groups",
+        AUTH_ADMIN_ROLE: "payload_cms_admin",
       })
-    ).toMatchObject({ requiredRole: "payload_cms_user", roleClaim: "groups" })
+    ).toMatchObject({
+      requiredRole: "payload_cms_user",
+      roleClaim: "groups",
+      adminRole: "payload_cms_admin",
+    })
   })
 
   it("answers 404 when Entra isn't configured", async () => {

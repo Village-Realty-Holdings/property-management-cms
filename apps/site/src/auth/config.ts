@@ -15,6 +15,8 @@ export type EntraConfig = {
   requiredRole: string
   /** ID token claim that lists the account's app roles. */
   roleClaim: string
+  /** App role that makes a new User a Super Admin; none when unset. */
+  adminRole?: string
 }
 
 type Env = Record<string, string | undefined>
@@ -31,6 +33,7 @@ export function readEntraConfig(env: Env = process.env): EntraConfig | null {
   const redirectUri = env.ENTRA_REDIRECT_URI?.trim() || undefined
   const requiredRole = env.AUTH_REQUIRED_ROLE?.trim() || SITE_USER_ROLE
   const roleClaim = env.AUTH_ROLE_CLAIM?.trim() || "roles"
+  const adminRole = env.AUTH_ADMIN_ROLE?.trim() || undefined
 
   return {
     tenantId,
@@ -40,6 +43,7 @@ export function readEntraConfig(env: Env = process.env): EntraConfig | null {
     redirectUri,
     requiredRole,
     roleClaim,
+    adminRole,
   }
 }
 

@@ -172,13 +172,15 @@ export async function canUseSite(
 /**
  * The Registry User for verified Entra claims: found by `oid`; or a User
  * created with the same email and no Entra link yet, which is linked now
- * (a Super Admin added them by their work email); or a new User, who has no
- * Site Access until a Super Admin grants it. A User already linked to another
- * `oid` is never relinked.
+ * (a Super Admin added them by their work email); or a new User, created with
+ * the access in `onCreate` (which Entra decides). After that, only the Users
+ * screen changes their access. A User already linked to another `oid` is
+ * never relinked.
  */
 export async function userForEntra(
   db: Db,
-  claims: { oid: string; email: string; name?: string }
+  claims: { oid: string; email: string; name?: string },
+  onCreate: { isSuperAdmin?: boolean; siteId?: number } = {}
 ): Promise<RegistryUser> {
   const email = normalizeEmail(claims.email)
   const name = claims.name?.trim() || null
@@ -205,9 +207,9 @@ export async function userForEntra(
   if (linked.rows[0]) return toUser(linked.rows[0])
 
   const created = await db.query<UserRow>(
-    `INSERT INTO registry.users (email, name, entra_oid) VALUES ($1, $2, $3)
-     ON CONFLICT (email) DO NOTHING RETURNING ${USER_COLUMNS}`,
-    [email, name, claims.oid]
+    `INSERT INTO registry.users (email, name, entra_oid, is_super_admin)
+     VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING ${USER_COLUMNS}`,
+    [email, name, claims.oid, onCreate.isSuperAdmin ?? false]
   )
   if (!created.rows[0]) {
     throw new RegistryError(
@@ -215,7 +217,10 @@ export async function userForEntra(
       `${email} is linked to another Entra account`
     )
   }
-  return toUser(created.rows[0])
+  const user = toUser(created.rows[0])
+  if (onCreate.siteId !== undefined)
+    await grantSite(db, user.id, onCreate.siteId)
+  return user
 }
 
 /**
