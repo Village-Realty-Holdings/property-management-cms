@@ -20,4 +20,4 @@ The browser never learns where the platform is. The Block's form posts to the Si
 - Until `WORKFLOWS_URL` is set and the workflow exists, a guest who sends feedback is told it could not be sent. The review path does not depend on it.
 - The route is open to visitors. It is protected by size limits, the answer checks and the trap field, not by a rate limit: that belongs at the edge, or in the platform.
 - A run that is queued and later fails inside the platform is the platform's to report; the guest has already been thanked.
-- The Workflows platform's run endpoint showed no authentication when this was written. If it gains a key, the Site sends it from the server's environment and nothing else here changes.
+- The `guest-feedback-survey` run endpoint requires an API key. The Site sends `WORKFLOWS_API_KEY` from the server's environment as `x-api-key`; it must match the platform's `WORKFLOW_GUEST_FEEDBACK_SURVEY_API_KEY` workflow variable, or every submission is refused.

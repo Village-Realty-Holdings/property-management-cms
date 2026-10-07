@@ -8,6 +8,8 @@ import type { GuestFeedback } from "./guestSurvey"
  *
  *   WORKFLOWS_URL            the platform's origin
  *   GUEST_FEEDBACK_WORKFLOW  the workflow's id (default: guest-feedback-survey)
+ *   WORKFLOWS_API_KEY        the workflow's key, sent as `x-api-key`, when it
+ *                            asks for one
  */
 
 export const DEFAULT_WORKFLOW = "guest-feedback-survey"
@@ -32,6 +34,15 @@ export function feedbackEndpoint(env: FeedbackDelivery["env"]): string | null {
   return `${origin}/api/run/${encodeURIComponent(workflow)}`
 }
 
+/** JSON, with the workflow's API key when one is configured. */
+function feedbackHeaders(env: FeedbackDelivery["env"]): HeadersInit {
+  const key = env.WORKFLOWS_API_KEY?.trim()
+  return {
+    "content-type": "application/json",
+    ...(key ? { "x-api-key": key } : {}),
+  }
+}
+
 export async function deliverGuestFeedback(
   feedback: GuestFeedback & { site: string; siteUrl: string | null },
   { env, fetch }: FeedbackDelivery
@@ -41,7 +52,7 @@ export async function deliverGuestFeedback(
   try {
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: feedbackHeaders(env),
       body: JSON.stringify(feedback),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })

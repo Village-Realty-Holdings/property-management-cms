@@ -51,6 +51,21 @@ describe("delivering feedback", () => {
     expect(JSON.parse(init.body as string)).toEqual(feedback)
   })
 
+  it("sends the workflow's API key when one is set, and none otherwise", async () => {
+    const fetch = vi.fn(async () => new Response("{}", { status: 202 }))
+    await deliverGuestFeedback(feedback, {
+      env: { ...env, WORKFLOWS_API_KEY: " secret-key " },
+      fetch,
+    })
+    await deliverGuestFeedback(feedback, { env, fetch })
+    const headers = fetch.mock.calls.map(
+      (call) =>
+        new Headers((call as unknown as [string, RequestInit])[1].headers)
+    )
+    expect(headers[0]!.get("x-api-key")).toBe("secret-key")
+    expect(headers[1]!.has("x-api-key")).toBe(false)
+  })
+
   it("says why it didn't go, without throwing", async () => {
     const never = vi.fn()
     expect(
