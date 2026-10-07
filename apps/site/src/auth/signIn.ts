@@ -115,7 +115,7 @@ export async function finishSignIn(
     })
     const user = await signInAs(
       payload,
-      await registryUserForEntra(payload, claims)
+      await registryUserForEntra(payload, claims, config)
     )
 
     response = redirect(flow.returnTo)

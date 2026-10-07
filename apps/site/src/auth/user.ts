@@ -11,7 +11,7 @@ import {
   type RegistrySite,
   type RegistryUser,
 } from "../registry"
-import { SITE_USER_ROLE } from "./config"
+import type { EntraConfig } from "./config"
 import { SignInError, type EntraClaims } from "./oidc"
 
 /**
@@ -46,19 +46,21 @@ export async function registerThisSite(
 }
 
 /**
- * The Registry User for verified Entra claims. The `bds_campaign_user` app role is
- * re-read every time: without it, Entra doesn't let you in at all. Which
- * Sites you may use is the Registry's to say.
+ * The Registry User for verified Entra claims. The required app role
+ * (AUTH_REQUIRED_ROLE) is re-read every time: without it, Entra doesn't let
+ * you in at all. Which Sites you may use is the Registry's to say.
  */
 export async function registryUserForEntra(
   payload: Payload,
-  claims: EntraClaims
+  claims: EntraClaims,
+  { requiredRole, roleClaim }: Pick<EntraConfig, "requiredRole" | "roleClaim">
 ): Promise<RegistryUser> {
-  const roles = Array.isArray(claims.roles) ? claims.roles : []
-  if (!roles.includes(SITE_USER_ROLE)) {
+  const claimed = claims[roleClaim]
+  const roles = Array.isArray(claimed) ? claimed : []
+  if (!roles.includes(requiredRole)) {
     throw new SignInError(
       "not-allowed",
-      `Entra user ${claims.oid} lacks the ${SITE_USER_ROLE} app role`
+      `Entra user ${claims.oid} lacks the ${requiredRole} app role`
     )
   }
   const email = (claims.email || claims.preferred_username || "").trim()

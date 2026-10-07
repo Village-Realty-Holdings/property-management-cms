@@ -58,6 +58,8 @@ beforeAll(async () => {
     clientId: mock.clientId,
     clientSecret: mock.clientSecret,
     issuer: mock.issuer,
+    requiredRole: SITE_USER_ROLE,
+    roleClaim: "roles",
   }
 })
 
@@ -96,16 +98,18 @@ async function signIn({
   claims = {},
   startPath = "/auth/entra/start",
   tamper,
+  entra = config,
 }: {
   claims?: JWTPayload
   startPath?: string
+  entra?: EntraConfig
   tamper?: (callback: URL, cookie: string) => { url: URL; cookie: string }
 } = {}): Promise<Response> {
   mock.user = { ...mock.user, ...claims }
   const start = await startSignIn(
     new Request(`${ORIGIN}${startPath}`),
     t.payload,
-    config
+    entra
   )
   expect(start.status).toBe(302)
   const authorize = new URL(start.headers.get("location") ?? "")
@@ -123,7 +127,7 @@ async function signIn({
   return finishSignIn(
     new Request(url, { headers: { cookie } }),
     t.payload,
-    config
+    entra
   )
 }
 
@@ -184,6 +188,22 @@ describe("Entra sign-in", () => {
       where: { email: { equals: `staff${oidCounter}@awayday.example` } },
     })
     expect(totalDocs).toBe(0)
+  })
+
+  it("requires the configured app role, read from the configured claim", async () => {
+    const entra = { ...config, requiredRole: "cms_user", roleClaim: "groups" }
+    rejectedWith(
+      await signIn({
+        entra,
+        claims: { roles: ["cms_user"], groups: [SITE_USER_ROLE] },
+      }),
+      "not-allowed"
+    )
+    const response = await signIn({
+      entra,
+      claims: { roles: [], groups: ["cms_user"] },
+    })
+    expect(response.headers.get("location")).toBe("/admin")
   })
 
   it("rejects users without the required app role", async () => {
@@ -280,6 +300,25 @@ describe("Entra sign-in", () => {
       "https://site.test/auth/entra/callback"
     )
     expect(start.headers.getSetCookie()[0]).toMatch(/; Secure/)
+  })
+
+  it("reads the required role and its claim, with defaults", () => {
+    const base = {
+      ENTRA_TENANT_ID: "t",
+      ENTRA_CLIENT_ID: "c",
+      ENTRA_CLIENT_SECRET: "s",
+    }
+    expect(readEntraConfig(base)).toMatchObject({
+      requiredRole: SITE_USER_ROLE,
+      roleClaim: "roles",
+    })
+    expect(
+      readEntraConfig({
+        ...base,
+        AUTH_REQUIRED_ROLE: " payload_cms_user ",
+        AUTH_ROLE_CLAIM: "groups",
+      })
+    ).toMatchObject({ requiredRole: "payload_cms_user", roleClaim: "groups" })
   })
 
   it("answers 404 when Entra isn't configured", async () => {

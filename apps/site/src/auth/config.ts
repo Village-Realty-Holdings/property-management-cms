@@ -11,6 +11,10 @@ export type EntraConfig = {
   issuer: string
   /** Fixed redirect URI; derived from the request origin when unset. */
   redirectUri?: string
+  /** App role a Microsoft account needs to sign in at all. */
+  requiredRole: string
+  /** ID token claim that lists the account's app roles. */
+  roleClaim: string
 }
 
 type Env = Record<string, string | undefined>
@@ -25,13 +29,23 @@ export function readEntraConfig(env: Env = process.env): EntraConfig | null {
     env.ENTRA_ISSUER?.trim() ||
     `https://login.microsoftonline.com/${tenantId}/v2.0`
   const redirectUri = env.ENTRA_REDIRECT_URI?.trim() || undefined
+  const requiredRole = env.AUTH_REQUIRED_ROLE?.trim() || SITE_USER_ROLE
+  const roleClaim = env.AUTH_ROLE_CLAIM?.trim() || "roles"
 
-  return { tenantId, clientId, clientSecret, issuer, redirectUri }
+  return {
+    tenantId,
+    clientId,
+    clientSecret,
+    issuer,
+    redirectUri,
+    requiredRole,
+    roleClaim,
+  }
 }
 
 /**
- * Entra app role required to sign in at all: the same role the Awayday
- * Workflows platform requires (its AUTH_REQUIRED_ROLE default).
+ * Default Entra app role required to sign in at all, when AUTH_REQUIRED_ROLE
+ * is unset: the same role the Awayday Workflows platform requires by default.
  */
 export const SITE_USER_ROLE = "bds_campaign_user"
 
