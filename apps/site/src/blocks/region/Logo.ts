@@ -1,9 +1,12 @@
 import type { Block } from "payload"
 
+import { navLink } from "../../fields/navLink"
+
 /**
  * The Site's logo, from the Brand (its logo, or its name when it has none),
- * linking Home. The image is not chosen here: change it in the Brand. On a
- * Primary or Dark band it is the Brand's light logo, when the Brand has one.
+ * linking Home unless the editor chooses another link. The image is not
+ * chosen here: change it in the Brand. On a Primary or Dark band it is the
+ * Brand's light logo, when the Brand has one.
  */
 export const Logo: Block = {
   slug: "logo",
@@ -27,6 +30,11 @@ export const Logo: Block = {
       label: "Show the Brand's tagline",
       type: "checkbox",
       defaultValue: false,
+    },
+    {
+      ...navLink("link"),
+      label: "Link",
+      admin: { description: "Leave empty to link to Home." },
     },
   ],
 }

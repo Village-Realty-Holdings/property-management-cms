@@ -1043,6 +1043,17 @@ export interface Layout {
 export interface LogoBlock {
   size: 'small' | 'medium' | 'large' | 'xlarge';
   showTagline?: boolean | null;
+  /**
+   * Leave empty to link to Home.
+   */
+  link?: {
+    type?: ('page' | 'url') | null;
+    page?: (number | null) | Page;
+    /**
+     * A Site path like "/about", or a full URL.
+     */
+    url?: string | null;
+  };
   id?: string | null;
   blockName?: string | null;
   blockType: 'logo';
@@ -2189,6 +2200,13 @@ export interface LayoutsSelect<T extends boolean = true> {
 export interface LogoBlockSelect<T extends boolean = true> {
   size?: T;
   showTagline?: T;
+  link?:
+    | T
+    | {
+        type?: T;
+        page?: T;
+        url?: T;
+      };
   id?: T;
   blockName?: T;
 }

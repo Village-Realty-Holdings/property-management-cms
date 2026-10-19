@@ -4,6 +4,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { LogoBlock } from "../../payload-types"
 import { displayFont } from "../display"
+import { hrefOf } from "./links"
 import { focusOutline, RegionLink } from "./RegionLink"
 import type { RegionContext } from "./types"
 
@@ -16,9 +17,10 @@ const sizes = {
 
 /**
  * The Site's logo from the Brand (never chosen here): the Brand's logo image,
- * or its name as a wordmark when it has none. It links home. In a Container
- * on a Primary or Dark background it is the Brand's light logo, when there
- * is one, and the wordmark takes the band's text colour.
+ * or its name as a wordmark when it has none. It links Home unless the
+ * editor chose another link. In a Container on a Primary or Dark background
+ * it is the Brand's light logo, when there is one, and the wordmark takes
+ * the band's text colour.
  */
 export function Logo({
   block,
@@ -34,7 +36,7 @@ export function Logo({
   return (
     <div className="flex min-w-0 flex-col">
       <RegionLink
-        href="/"
+        href={hrefOf(block.link) ?? "/"}
         className={cn(
           "inline-flex items-center gap-3",
           onColour

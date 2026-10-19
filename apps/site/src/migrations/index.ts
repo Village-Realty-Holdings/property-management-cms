@@ -17,6 +17,7 @@ import * as migration_20261002_210426_theme_button_text from './20261002_210426_
 import * as migration_20261002_213303_block_style from './20261002_213303_block_style';
 import * as migration_20261004_212449_page_updated_by from './20261004_212449_page_updated_by';
 import * as migration_20261005_082531_shared_registry from './20261005_082531_shared_registry';
+import * as migration_20261019_181849_logo_link from './20261019_181849_logo_link';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20261005_082531_shared_registry.up,
     down: migration_20261005_082531_shared_registry.down,
-    name: '20261005_082531_shared_registry'
+    name: '20261005_082531_shared_registry',
+  },
+  {
+    up: migration_20261019_181849_logo_link.up,
+    down: migration_20261019_181849_logo_link.down,
+    name: '20261019_181849_logo_link'
   },
 ];
